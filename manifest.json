@@ -22,5 +22,13 @@
     "file": "projecao-frete.html",
     "icon": "🚚",
     "color": "#ff6b5b"
+  },
+  {
+    "title": "teste",
+    "category": "",
+    "description": "",
+    "file": "GoPlant.html",
+    "icon": "🧩",
+    "color": "#3ecf8e"
   }
 ]
