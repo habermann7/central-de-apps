@@ -22,9 +22,22 @@
     background:var(--bg);
     color:var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
-    padding: 48px 24px 32px;
+    padding: 0 24px 32px;
     position:relative;
     overflow-x:hidden;
+  }
+  .ruler{
+    height:32px;
+    margin: 0 -24px 40px -24px;
+    background-image:
+      repeating-linear-gradient(to right, var(--accent-default) 0 1.5px, transparent 1.5px 200px),
+      repeating-linear-gradient(to right, var(--border) 0 1px, transparent 1px 40px);
+    background-size: 100% 16px, 100% 8px;
+    background-position: left bottom, left bottom;
+    background-repeat: repeat-x, repeat-x;
+    border-bottom: 1px solid var(--border);
+    opacity:.7;
+    position:relative; z-index:1;
   }
   /* fundo tipo planta técnica, bem sutil */
   body::before{
@@ -52,6 +65,8 @@
   .pill .dot{ width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); animation: pulseDot 2.2s ease-in-out infinite; }
   @keyframes pulseDot{ 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
 
+  .eyebrow{ font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:11px; letter-spacing:.12em; color:var(--text-faint); text-transform:uppercase; margin-bottom:10px; }
+
   h1{ font-size: 40px; font-weight: 800; margin: 0 0 14px; letter-spacing: -0.5px; }
   h1 .accent{ color:var(--accent-default); }
   .sub{ color: var(--text-dim); font-size: 15.5px; line-height: 1.6; max-width: 640px; margin-bottom: 40px; }
@@ -74,9 +89,19 @@
     border-radius: 10px;
     padding: 22px;
     display:flex; flex-direction:column;
+    position:relative; overflow:hidden;
     transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
     text-decoration:none; color:inherit;
   }
+  .card::after{
+    content:'';
+    position:absolute; top:0; left:-60%; width:35%; height:100%;
+    background:linear-gradient(115deg, transparent, rgba(255,255,255,.05), transparent);
+    transform:skewX(-15deg);
+    transition:left .6s ease;
+    pointer-events:none;
+  }
+  .card:hover::after{ left:130%; }
   .card:hover{
     transform: translateY(-3px);
     border-color: #2a3140;
@@ -140,16 +165,46 @@
   .error{ color:#ff8f80; grid-column:1/-1; font-size:14px; padding:20px 0; }
   footer{ display:flex; justify-content:space-between; color:var(--text-faint); font-size:12.5px; margin-top:44px; border-top:1px solid var(--border); padding-top:20px; }
 
+  .card-wrap{ position:relative; opacity:0; transform:translateY(12px); animation:fadeIn .55s ease forwards; }
+  .card-wrap .card{ opacity:1; transform:none; animation:none; }
+  .del-btn{
+    position:absolute; bottom:20px; right:20px; z-index:2;
+    width:24px; height:24px; border-radius:6px;
+    background:rgba(10,13,18,.65); border:1px solid var(--border);
+    color:var(--text-faint); font-size:12px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    opacity:.4; transition:opacity .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .del-btn:hover, .del-btn:focus-visible{ opacity:1; color:#ff8f80; border-color:#ff8f80; }
+
+  .modal-bg{ position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; z-index:10; padding:20px; }
+  .modal-bg.show{ display:flex; }
+  .modal{ background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:26px; max-width:400px; width:100%; }
+  .modal h3{ margin:0 0 10px; font-size:17px; }
+  .modal-text{ color:var(--text-dim); font-size:13px; line-height:1.6; margin:0 0 18px; }
+  .modal label{ display:block; font-size:12.5px; color:var(--text-dim); margin-bottom:6px; }
+  .modal input{ width:100%; background:#0d1117; border:1px solid var(--border); border-radius:7px; padding:9px 11px; color:var(--text); font-size:14px; font-family:inherit; box-sizing:border-box; }
+  .modal-actions{ display:flex; gap:10px; margin-top:18px; }
+  .modal-actions button{ flex:1; padding:10px; border-radius:7px; font-size:13.5px; font-weight:600; cursor:pointer; border:none; }
+  .btn-ghost{ background:transparent; border:1px solid var(--border) !important; color:var(--text-dim); }
+  .btn-danger{ background:#e2564a; color:#fff; }
+  .modal-status{ font-size:12.5px; margin-top:12px; min-height:1px; }
+  .modal-status.err{ color:#ff8f80; }
+  .modal-status.loading{ color:var(--accent-default); }
+
   @media (prefers-reduced-motion: reduce){
     body::before{ animation:none; }
     .pill .dot{ animation:none; }
-    .card, .add-card, .empty-state{ animation:none; opacity:1; transform:none; }
+    .card, .add-card, .empty-state, .card-wrap{ animation:none; opacity:1; transform:none; }
+    .card::after{ transition:none; }
   }
 </style>
 </head>
 <body>
+  <div class="ruler" aria-hidden="true"></div>
   <div class="wrap">
     <div class="pill"><span class="dot"></span> <span id="statusText">carregando...</span></div>
+    <div class="eyebrow">Catálogo interno</div>
     <h1>Central de <span class="accent">Apps</span></h1>
     <p class="sub">Ferramentas internas que fomos construindo juntos. Clique num card para abrir. Sempre que alguém adiciona uma nova, ela aparece aqui pra todo mundo.</p>
     <div class="grid" id="grid"></div>
@@ -159,7 +214,69 @@
     </footer>
   </div>
 
+  <div class="modal-bg" id="modalBg">
+    <div class="modal">
+      <h3>Remover <span id="modalAppName"></span>?</h3>
+      <p class="modal-text">O app sai da galeria e o arquivo é apagado do repositório. Não dá pra desfazer.</p>
+      <label>Senha do time</label>
+      <input type="password" id="modalPassword" autocomplete="off">
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeModal()">Cancelar</button>
+        <button class="btn-danger" onclick="confirmDelete()">Remover</button>
+      </div>
+      <div class="modal-status" id="modalStatus"></div>
+    </div>
+  </div>
+
 <script>
+const API_BASE = 'https://central-de-apps.vercel.app';
+let pendingDeleteFile = null;
+
+function openDeleteModal(file, title){
+  pendingDeleteFile = file;
+  document.getElementById('modalAppName').textContent = title;
+  document.getElementById('modalPassword').value = '';
+  const statusEl = document.getElementById('modalStatus');
+  statusEl.className = 'modal-status';
+  statusEl.textContent = '';
+  document.getElementById('modalBg').classList.add('show');
+}
+function closeModal(){
+  document.getElementById('modalBg').classList.remove('show');
+  pendingDeleteFile = null;
+}
+async function confirmDelete(){
+  const password = document.getElementById('modalPassword').value.trim();
+  const statusEl = document.getElementById('modalStatus');
+  if(!password){
+    statusEl.className = 'modal-status err';
+    statusEl.textContent = 'Digita a senha do time';
+    return;
+  }
+  statusEl.className = 'modal-status loading';
+  statusEl.textContent = 'Removendo...';
+  try{
+    const res = await fetch(API_BASE + '/api/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password, filename: pendingDeleteFile })
+    });
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok) throw new Error(data.error || 'Falha ao remover');
+    closeModal();
+    loadApps();
+  }catch(err){
+    statusEl.className = 'modal-status err';
+    statusEl.textContent = err.message;
+  }
+}
+
+function escapeAttr(str){
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
 async function loadApps(){
   const grid = document.getElementById('grid');
   const statusText = document.getElementById('statusText');
@@ -185,16 +302,19 @@ async function loadApps(){
     }
 
     grid.innerHTML = apps.map((app, i) => `
-      <a class="card" href="./${app.file}" style="--accent-card:${app.color || '#4d9fff'}; animation-delay:${i * 70}ms">
-        <div class="card-top">
-          <div class="icon">${app.icon || '🧩'}</div>
-          <div class="status"><span class="dot"></span> online</div>
-        </div>
-        <div class="tag">${app.category || 'FERRAMENTA'}</div>
-        <div class="title">${app.title}</div>
-        <div class="desc">${app.description || ''}</div>
-        <div class="open">Abrir app →</div>
-      </a>
+      <div class="card-wrap" style="animation-delay:${i * 70}ms">
+        <a class="card" href="./${app.file}" style="--accent-card:${app.color || '#4d9fff'}">
+          <div class="card-top">
+            <div class="icon">${app.icon || '🧩'}</div>
+            <div class="status"><span class="dot"></span> online</div>
+          </div>
+          <div class="tag">${app.category || 'FERRAMENTA'}</div>
+          <div class="title">${app.title}</div>
+          <div class="desc">${app.description || ''}</div>
+          <div class="open">Abrir app →</div>
+        </a>
+        <button class="del-btn" title="Remover app" data-file="${escapeAttr(app.file)}" data-title="${escapeAttr(app.title)}" onclick="openDeleteModal(this.dataset.file, this.dataset.title)">✕</button>
+      </div>
     `).join('') + `
       <a class="add-card" href="./adicionar.html" style="animation-delay:${apps.length * 70}ms">
         <div class="plus">+</div>
