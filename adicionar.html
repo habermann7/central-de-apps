@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adicionar app — Central de Apps</title>
+<style>
+  :root{
+    --bg:#0a0d12; --bg-card:#12161d; --border:#1f2530; --text:#eef1f5;
+    --text-dim:#8a93a3; --text-faint:#5a6270; --green:#3ecf8e; --accent-default:#4d9fff;
+    --red:#ff6b5b;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+    padding:48px 24px 60px; }
+  .wrap{ max-width:560px; margin:0 auto; }
+  .back{ color:var(--text-dim); font-size:13.5px; text-decoration:none; display:inline-block; margin-bottom:24px; }
+  .back:hover{ color:var(--text); }
+  h1{ font-size:32px; font-weight:800; margin:0 0 10px; letter-spacing:-0.5px; }
+  .sub{ color:var(--text-dim); font-size:15px; line-height:1.6; margin-bottom:30px; }
+
+  details{ background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:16px 18px; margin-bottom:26px; }
+  summary{ cursor:pointer; font-size:13.5px; font-weight:600; color:var(--accent-default); }
+  details ol{ color:var(--text-dim); font-size:13px; line-height:1.8; padding-left:20px; margin:14px 0 0; }
+  details a{ color:var(--accent-default); }
+  details code{ background:#1a2029; padding:1px 5px; border-radius:4px; font-size:12px; color:var(--green); }
+
+  form{ background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:26px; }
+  label{ display:block; font-size:13px; color:var(--text-dim); margin:16px 0 6px; }
+  label:first-of-type{ margin-top:0; }
+  input[type=text], input[type=password], textarea{
+    width:100%; background:#0d1117; border:1px solid var(--border); border-radius:7px;
+    padding:10px 12px; color:var(--text); font-size:14px; font-family:inherit;
+  }
+  textarea{ resize:vertical; min-height:64px; }
+  input[type=file]{ color:var(--text-dim); font-size:13px; }
+  .hint{ font-size:11.5px; color:var(--text-faint); margin-top:5px; }
+  .btn{ margin-top:24px; width:100%; background:var(--accent-default); border:none; color:#fff;
+    padding:12px 20px; border-radius:8px; font-size:14.5px; font-weight:700; cursor:pointer; }
+  .btn:disabled{ opacity:.5; cursor:default; }
+  .status{ margin-top:16px; padding:12px 14px; border-radius:8px; font-size:13.5px; display:none; }
+  .status.show{ display:block; }
+  .status.err{ background:rgba(255,107,91,.1); border:1px solid rgba(255,107,91,.3); color:#ff8f80; }
+  .status.ok{ background:rgba(62,207,142,.1); border:1px solid rgba(62,207,142,.3); color:var(--green); }
+  .status.loading{ background:rgba(77,159,255,.1); border:1px solid rgba(77,159,255,.3); color:var(--accent-default); }
+  .status a{ color:inherit; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="./index.html">← voltar pra galeria</a>
+  <h1>Adicionar app</h1>
+  <p class="sub">Preenche os campos, escolhe o arquivo .html do seu app e manda.</p>
+
+  <form id="form">
+    <label>Senha do time</label>
+    <input type="password" id="password" autocomplete="off" required>
+
+    <label>Nome do app</label>
+    <input type="text" id="title" maxlength="60" required>
+
+    <label>Categoria (ex: PCP · OPERAÇÕES)</label>
+    <input type="text" id="category" maxlength="40">
+
+    <label>Descrição curta</label>
+    <textarea id="description" maxlength="220"></textarea>
+
+    <label>Arquivo .html</label>
+    <input type="file" id="file" accept=".html" required>
+
+    <button class="btn" id="submitBtn" type="submit">Publicar app</button>
+    <div class="status" id="status"></div>
+  </form>
+</div>
+
+<script>
+const API_URL = 'https://central-de-apps.vercel.app/api/upload';
+
+const form = document.getElementById('form');
+const statusEl = document.getElementById('status');
+const submitBtn = document.getElementById('submitBtn');
+
+function showStatus(msg, kind){
+  statusEl.className = 'status show ' + kind;
+  statusEl.innerHTML = msg;
+}
+
+function fileToBase64(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const password = document.getElementById('password').value.trim();
+  const title = document.getElementById('title').value.trim();
+  const category = document.getElementById('category').value.trim();
+  const description = document.getElementById('description').value.trim();
+  const file = document.getElementById('file').files[0];
+
+  if(!password || !title || !file){
+    showStatus('Preenche a senha, o nome do app e escolhe o arquivo .html', 'err');
+    return;
+  }
+  if(!file.name.toLowerCase().endsWith('.html')){
+    showStatus('Só arquivos .html são aceitos', 'err');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  showStatus('Publicando...', 'loading');
+
+  try{
+    const fileBase64 = await fileToBase64(file);
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password, title, category, description, filename: file.name, fileBase64 })
+    });
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok){
+      throw new Error(data.error || 'Falha ao publicar');
+    }
+    showStatus('Publicado! <a href="./index.html">Voltar pra galeria →</a>', 'ok');
+    form.reset();
+  }catch(err){
+    showStatus(err.message, 'err');
+  }finally{
+    submitBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
