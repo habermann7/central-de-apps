@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Painel PCP",
+    "category": "PCP · OPERAÇÕES",
+    "description": "Suba a planilha do dia e veja status de pedidos por data, separado por grupo Gelado/Seco, com relatório de atrasados exportável em Excel e PDF.",
+    "file": "painel-pcp.html",
+    "icon": "🔷",
+    "color": "#4d9fff"
+  },
+  {
+    "title": "GoPlant",
+    "category": "OPERAÇÕES · LAYOUT",
+    "description": "Editor visual de layout operacional: monte blocos, fluxos e plantas de ambiente, com guias de alinhamento, minimapa e multi-seleção.",
+    "file": "goplant.html",
+    "icon": "🟧",
+    "color": "#ff8a3d"
+  },
+  {
+    "title": "Projeção de Frete",
+    "category": "LOGÍSTICA · SIMULAÇÃO",
+    "description": "Simule quanto o frete sobe conforme as vendas crescem, mês a mês e por estado, com taxas e distribuição editáveis.",
+    "file": "projecao-frete.html",
+    "icon": "🚚",
+    "color": "#ff6b5b"
+  }
+]
