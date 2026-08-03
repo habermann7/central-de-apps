@@ -6,5 +6,13 @@
     "file": "GoPlant.html",
     "icon": "🧩",
     "color": "#4d9fff"
+  },
+  {
+    "title": "Qualidade",
+    "category": "Operações",
+    "description": "",
+    "file": "qualidade.html",
+    "icon": "🧩",
+    "color": "#ff8a3d"
   }
 ]
