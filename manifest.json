@@ -14,5 +14,13 @@
     "file": "qualidade.html",
     "icon": "🧩",
     "color": "#ff8a3d"
+  },
+  {
+    "title": "Cauculadora Frete",
+    "category": "OPERAÇÕES",
+    "description": "",
+    "file": "calculadora frete v4.html",
+    "icon": "🧩",
+    "color": "#ff6b5b"
   }
 ]
