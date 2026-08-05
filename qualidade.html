@@ -237,12 +237,17 @@ input:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 
 
   <section id="tab-backup" class="tabpanel" style="display:none;">
     <div class="card">
+      <h2>🔄 Migrar dados deste navegador</h2>
+      <div class="desc">Use isso <b>uma única vez</b>, no navegador que já tem os registros reais, logo depois de publicar esta versão. Copia tudo (registros, cadastros, logo, fotos) pro banco compartilhado. Depois disso, ninguém mais precisa usar esse botão — tudo já sincroniza sozinho.</div>
+      <button class="btn btn-amber btn-block" id="btn-migrar" onclick="migrarDadosLocais()">Migrar dados locais para o banco compartilhado</button>
+    </div>
+    <div class="card">
       <h2>Backup dos dados</h2>
       <div class="desc">Exporta registros, tipos de avaria, ofensores e fotos em um arquivo. Guarde este arquivo — ele é sua cópia de segurança.</div>
       <button class="btn btn-primary btn-block" onclick="exportarBackup()">Exportar backup (.json)</button>
       <label style="margin-top:16px;">Restaurar backup</label>
       <input type="file" id="backup-input" accept="application/json">
-      <div class="hint">Restaurar substitui os registros e cadastros atuais nesta sessão.</div>
+      <div class="hint">Restaurar substitui os registros e cadastros de todo mundo no banco compartilhado.</div>
     </div>
   </section>
 
@@ -252,6 +257,9 @@ input:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 
 <div class="modal-bg" id="modal-bg"><div class="modal" id="modal-content"></div></div>
 <div id="print-area"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
 <script>
 'use strict';
 
@@ -280,7 +288,105 @@ function safeRun(fn, label){
   try{ fn(); }catch(e){ console.error(label, e); if(!isStorageMsg(e.message)) showErrorBanner(label + ': ' + e.message); }
 }
 
-/* ================= Storage (IndexedDB local — fica salvo neste navegador/computador) ================= */
+/* ================= Firebase (banco compartilhado — sincroniza em tempo real pra todo mundo) ================= */
+var firebaseConfig = {
+  apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+  authDomain: "stinpharma-qualidade.firebaseapp.com",
+  databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+  projectId: "stinpharma-qualidade",
+  storageBucket: "stinpharma-qualidade.firebasestorage.app",
+  messagingSenderId: "422803826984",
+  appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+  measurementId: "G-6C0TLHH2VP"
+};
+firebase.initializeApp(firebaseConfig);
+var fbdb = firebase.database();
+var DB_ROOT = 'qualidade';
+function fbRef(path){ return fbdb.ref(DB_ROOT + (path ? '/' + path : '')); }
+
+function proximoIdTransacao(){
+  return fbRef('proximoId').transaction(function(atual){ return (atual || 0) + 1; })
+    .then(function(result){ return result.snapshot.val(); });
+}
+
+function conectarFirebase(){
+  firebase.auth().signInAnonymously().catch(function(err){
+    showErrorBanner('Não foi possível conectar ao banco compartilhado: ' + err.message);
+  });
+  var jaConectou = false;
+  firebase.auth().onAuthStateChanged(function(user){
+    if(!user || jaConectou) return;
+    jaConectou = true;
+    wireRealtimeListeners();
+  });
+  fbdb.ref('.info/connected').on('value', function(snap){
+    var slot = document.getElementById('storage-notice-slot');
+    if(!slot) return;
+    slot.innerHTML = snap.val()
+      ? '<div class="notice">🟢 Sincronizado — dados compartilhados em tempo real com o time.</div>'
+      : '<div class="notice" style="background:var(--crack-bg);color:var(--crack);">🟠 Sem conexão no momento — o que você fizer aqui será enviado assim que a internet voltar.</div>';
+  });
+}
+
+function wireRealtimeListeners(){
+  fbRef('tipos').on('value', function(snap){
+    var v = snap.val();
+    TYPES = (v && v.length) ? v : [];
+    safeRun(function(){ renderTypeList(); renderAvariaSelect(); renderFilters(); renderDashFilters(); }, 'tipos de avaria');
+  });
+  fbRef('ofensores').on('value', function(snap){
+    var v = snap.val();
+    OFENSORES = (v && v.length) ? v : [];
+    safeRun(function(){ renderOfensorList(); renderOfensorSelect(); renderFilters(); renderDashFilters(); }, 'ofensores');
+  });
+  fbRef('registros').on('value', function(snap){
+    var v = snap.val() || {};
+    RECORDS = Object.keys(v).map(function(k){ return v[k]; });
+    safeRun(function(){ refreshDatalists(); renderLista(); renderDash(); }, 'registros');
+  });
+  fbRef('logo').on('value', function(snap){
+    var v = snap.val();
+    if(v) LOGO = v;
+    var lp = document.getElementById('logo-preview');
+    if(lp && LOGO){ lp.src = LOGO; lp.style.display = 'block'; }
+  });
+}
+
+/* ================= Migração — copia os dados que já existem neste navegador pro banco compartilhado (rodar 1x) ================= */
+async function migrarDadosLocais(){
+  if(!confirm('Isso envia os registros, cadastros, logo e fotos DESTE navegador pro banco compartilhado, substituindo o que já estiver lá. Use apenas uma vez, no navegador que tem os dados reais. Continuar?')) return;
+  var btn = document.getElementById('btn-migrar');
+  if(btn) btn.disabled = true;
+  toast('Migrando dados...');
+  try{
+    var tiposLocal = (await stGet('tipos-avaria')) || SEED_TYPES;
+    var ofensoresLocal = (await stGet('tipos-ofensor')) || SEED_OFENSORES;
+    var registrosLocal = (await stGet('registros-list')) || SEED_RECORDS;
+    var logoLocal = await stGet('logo-empresa');
+
+    await fbRef('tipos').set(tiposLocal);
+    await fbRef('ofensores').set(ofensoresLocal);
+    var registrosObj = {};
+    registrosLocal.forEach(function(r){ registrosObj[r.id] = r; });
+    await fbRef('registros').set(registrosObj);
+    if(logoLocal) await fbRef('logo').set(logoLocal);
+    var maxId = registrosLocal.length ? Math.max.apply(null, registrosLocal.map(function(r){ return r.id; })) : 0;
+    await fbRef('proximoId').set(maxId);
+
+    for(var i=0;i<registrosLocal.length;i++){
+      var rid = registrosLocal[i].id;
+      var fotosLocal = await stGet('fotos:'+rid);
+      if(fotosLocal && fotosLocal.length) await fbRef('fotos/'+rid).set(fotosLocal);
+    }
+    toast('Migração concluída! Dados agora compartilhados em tempo real.');
+  }catch(err){
+    showErrorBanner('Falha na migração: ' + err.message);
+  }finally{
+    if(btn) btn.disabled = false;
+  }
+}
+
+/* ================= IndexedDB local (mantido só pra ler os dados antigos na hora de migrar) ================= */
 var DB_NAME = 'qualidade-nc-db';
 var STORE_NAME = 'kv';
 var PHOTO_CACHE = {}; // guarda as fotos na memória da página como reforço extra durante a sessão
@@ -291,8 +397,8 @@ function openDB(){
     if(!window.indexedDB){ reject(new Error('IndexedDB indisponível neste navegador')); return; }
     var req = indexedDB.open(DB_NAME, 1);
     req.onupgradeneeded = function(e){
-      var db = e.target.result;
-      if(!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
+      var idb = e.target.result;
+      if(!idb.objectStoreNames.contains(STORE_NAME)) idb.createObjectStore(STORE_NAME);
     };
     req.onsuccess = function(e){ resolve(e.target.result); };
     req.onerror = function(e){ reject(e.target.error); };
@@ -301,36 +407,14 @@ function openDB(){
 }
 async function stGet(key){
   try{
-    var db = await openDB();
+    var idb = await openDB();
     return await new Promise(function(resolve, reject){
-      var tx = db.transaction(STORE_NAME, 'readonly');
+      var tx = idb.transaction(STORE_NAME, 'readonly');
       var req = tx.objectStore(STORE_NAME).get(key);
       req.onsuccess = function(){ resolve(req.result === undefined ? null : req.result); };
       req.onerror = function(){ reject(req.error); };
     });
   }catch(e){ console.error('storage get failed', e); return null; }
-}
-async function stSet(key, value){
-  try{
-    var db = await openDB();
-    return await new Promise(function(resolve, reject){
-      var tx = db.transaction(STORE_NAME, 'readwrite');
-      tx.objectStore(STORE_NAME).put(value, key);
-      tx.oncomplete = function(){ resolve(true); };
-      tx.onerror = function(){ reject(tx.error); };
-    });
-  }catch(e){ console.error('storage set failed', e); return false; }
-}
-async function stDelete(key){
-  try{
-    var db = await openDB();
-    return await new Promise(function(resolve, reject){
-      var tx = db.transaction(STORE_NAME, 'readwrite');
-      tx.objectStore(STORE_NAME).delete(key);
-      tx.oncomplete = function(){ resolve(true); };
-      tx.onerror = function(){ reject(tx.error); };
-    });
-  }catch(e){ console.error('storage delete failed', e); return false; }
 }
 
 /* ================= Seed data (from the original spreadsheet) ================= */
@@ -373,39 +457,20 @@ function openTab(name){
 function boot(){
   // Navigation works immediately, independent of any data loading.
   wireTabs();
-  document.getElementById('f-data').value = new Date().toISOString().slice(0,10);
+  document.getElementById('f-data').value = localDateStr();
 
-  if(!window.indexedDB){
-    document.getElementById('storage-notice-slot').innerHTML =
-      '<div class="notice">Este navegador não suporta armazenamento local (IndexedDB), então os dados ficam salvos apenas enquanto esta aba estiver aberta. Use "Backup &gt; Exportar" antes de fechar, e "Importar" ao reabrir.</div>';
-  }
+  var nome = localStorage.getItem('meu-usuario');
+  if(nome) document.getElementById('meu-nome').value = nome;
 
   safeRun(renderAll, 'tela inicial');
   safeRun(wireLogoInput, 'logo');
   safeRun(wireBackupInput, 'backup');
 
-  loadFromStorage();
-}
-
-async function loadFromStorage(){
-  if(!window.indexedDB) return;
-  try{
-    var t = await stGet('tipos-avaria'); if(t && t.length) TYPES = t; else await stSet('tipos-avaria', TYPES);
-    var o = await stGet('tipos-ofensor'); if(o && o.length) OFENSORES = o; else await stSet('tipos-ofensor', OFENSORES);
-    var r = await stGet('registros-list'); if(r && r.length) RECORDS = r; else await stSet('registros-list', RECORDS);
-    var l = await stGet('logo-empresa'); if(l) LOGO = l;
-    var nome = await stGet('meu-usuario'); if(nome) document.getElementById('meu-nome').value = nome;
-    safeRun(renderAll, 'atualização dos dados salvos');
-    var lp = document.getElementById('logo-preview');
-    if(LOGO){ lp.src = LOGO; lp.style.display = 'block'; }
-  }catch(e){
-    console.error('loadFromStorage failed', e);
-    showErrorBanner('Não deu para carregar dados salvos anteriormente, mantendo os de exemplo. (' + e.message + ')');
-  }
+  conectarFirebase();
 }
 
 document.getElementById('meu-nome').addEventListener('change', function(){
-  stSet('meu-usuario', this.value.trim());
+  try{ localStorage.setItem('meu-usuario', this.value.trim()); }catch(e){}
 });
 
 document.addEventListener('DOMContentLoaded', boot);
@@ -436,7 +501,9 @@ function toast(msg){
 }
 function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function fmtDate(d){ if(!d) return '-'; var p = d.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
-function fmtDateTime(iso){ if(!iso) return '-'; var d = new Date(iso); return fmtDate(d.toISOString().slice(0,10)) + ' ' + d.toTimeString().slice(0,5); }
+// Data local (não UTC) — evita pular pro dia seguinte à noite (Brasília é UTC-3)
+function localDateStr(d){ d = d || new Date(); var y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0'); return y+'-'+m+'-'+day; }
+function fmtDateTime(iso){ if(!iso) return '-'; var d = new Date(iso); return fmtDate(localDateStr(d)) + ' ' + d.toTimeString().slice(0,5); }
 function meuNomeAtual(){ var v = document.getElementById('meu-nome').value.trim(); return v || 'Não identificado'; }
 
 /* ================= Novo registro ================= */
@@ -462,10 +529,9 @@ async function salvarRegistro(){
     toast('Preencha todos os campos obrigatórios.');
     return;
   }
-  var nextId = RECORDS.length ? Math.max.apply(null, RECORDS.map(function(r){ return r.id; })) + 1 : 1;
+  var nextId = await proximoIdTransacao();
   var novo = {id:nextId, data:data, usuario:meuNomeAtual(), produto:produto, quantidade:quantidade, ofensor:ofensor, avaria:avaria, status:'aberta', fotoCount:0, criadoEm:new Date().toISOString()};
-  RECORDS.push(novo);
-  await stSet('registros-list', RECORDS);
+  await fbRef('registros/'+nextId).set(novo);
   toast('Registro NC-' + String(nextId).padStart(4,'0') + ' salvo.');
   var icon = document.querySelector('.brand-logo');
   icon.classList.remove('pulse'); void icon.offsetWidth; icon.classList.add('pulse');
@@ -486,14 +552,14 @@ async function adicionarTipo(){
   var val = input.value.trim().toUpperCase();
   if(!val) return;
   if(TYPES.indexOf(val) !== -1){ toast('Esse tipo já existe.'); return; }
-  TYPES.push(val); await stSet('tipos-avaria', TYPES);
+  TYPES.push(val); await fbRef('tipos').set(TYPES);
   input.value = ''; renderTypeList(); renderAvariaSelect(); renderFilters(); renderDashFilters();
   toast('Tipo de avaria adicionado.');
 }
 async function removerTipo(val){
   if(RECORDS.some(function(r){ return r.avaria === val; })){ toast('Não é possível remover: em uso em registros existentes.'); return; }
   TYPES = TYPES.filter(function(t){ return t !== val; });
-  await stSet('tipos-avaria', TYPES);
+  await fbRef('tipos').set(TYPES);
   renderTypeList(); renderAvariaSelect(); renderFilters(); renderDashFilters();
 }
 
@@ -507,14 +573,14 @@ async function adicionarOfensor(){
   var val = input.value.trim().toUpperCase();
   if(!val) return;
   if(OFENSORES.indexOf(val) !== -1){ toast('Esse ofensor já existe.'); return; }
-  OFENSORES.push(val); await stSet('tipos-ofensor', OFENSORES);
+  OFENSORES.push(val); await fbRef('ofensores').set(OFENSORES);
   input.value = ''; renderOfensorList(); renderOfensorSelect(); renderFilters(); renderDashFilters();
   toast('Ofensor adicionado.');
 }
 async function removerOfensor(val){
   if(RECORDS.some(function(r){ return r.ofensor === val; })){ toast('Não é possível remover: em uso em registros existentes.'); return; }
   OFENSORES = OFENSORES.filter(function(t){ return t !== val; });
-  await stSet('tipos-ofensor', OFENSORES);
+  await fbRef('ofensores').set(OFENSORES);
   renderOfensorList(); renderOfensorSelect(); renderFilters(); renderDashFilters();
 }
 
@@ -582,10 +648,8 @@ function renderLista(){
 
 async function excluirRegistro(id){
   if(!confirm('Excluir permanentemente o registro NC-'+String(id).padStart(4,'0')+'? Esta ação não pode ser desfeita.')) return;
-  RECORDS = RECORDS.filter(function(r){ return r.id !== id; });
-  await stSet('registros-list', RECORDS);
-  try{ await stDelete('fotos:'+id); }catch(e){}
-  renderLista(); renderDash();
+  await fbRef('registros/'+id).remove();
+  try{ await fbRef('fotos/'+id).remove(); }catch(e){}
   toast('Registro excluído.');
 }
 
@@ -615,8 +679,7 @@ async function salvarEdicao(id){
   rec.avaria = document.getElementById('e-avaria').value;
   rec.editadoEm = new Date().toISOString();
   rec.editadoPor = meuNomeAtual();
-  await stSet('registros-list', RECORDS);
-  renderLista(); renderDash(); refreshDatalists();
+  await fbRef('registros/'+id).set(rec);
   toast('Registro atualizado.');
   closeModal();
 }
@@ -626,7 +689,7 @@ async function abrirDetalhe(id){
   var rec = RECORDS.find(function(r){ return r.id === id; });
   if(!rec) return;
   var fotos = PHOTO_CACHE[id];
-  if(!fotos){ fotos = (await stGet('fotos:'+id)) || []; }
+  if(!fotos){ var snap = await fbRef('fotos/'+id).once('value'); fotos = snap.val() || []; }
   PHOTO_CACHE[id] = fotos;
   var bg = document.getElementById('modal-bg'), content = document.getElementById('modal-content');
   content.innerHTML =
@@ -660,50 +723,46 @@ async function abrirDetalhe(id){
       try{ fotos.push(await resizeImage(files[i], 900, 0.72)); }catch(err){ console.error('foto falhou', err); }
     }
     PHOTO_CACHE[id] = fotos;
-    var salvou = await stSet('fotos:'+id, fotos);
-    if(!salvou && fotos.length){
-      // arquivo pode ter ficado grande demais para o storage — tenta de novo com mais compressão
+    var salvou = true;
+    try{
+      await fbRef('fotos/'+id).set(fotos);
+      await fbRef('registros/'+id+'/fotoCount').set(fotos.length);
+    }catch(err){
+      salvou = false;
       try{
+        // foto pode ter ficado grande demais — tenta de novo com mais compressão
         var fotosComprimidas = [];
         for(var j=0;j<fotos.length;j++){ fotosComprimidas.push(await recomprimir(fotos[j], 700, 0.55)); }
-        salvou = await stSet('fotos:'+id, fotosComprimidas);
-        if(salvou){ fotos = fotosComprimidas; PHOTO_CACHE[id] = fotos; }
-      }catch(e){ console.error('recompressão falhou', e); }
+        await fbRef('fotos/'+id).set(fotosComprimidas);
+        await fbRef('registros/'+id+'/fotoCount').set(fotosComprimidas.length);
+        fotos = fotosComprimidas; PHOTO_CACHE[id] = fotos; salvou = true;
+      }catch(e2){ console.error('recompressão falhou', e2); }
     }
-    rec.fotoCount = fotos.length;
-    await stSet('registros-list', RECORDS);
-    renderPhotos(fotos); renderLista();
-    if(!salvou) toast('Fotos mantidas nesta sessão, mas não foi possível salvá-las de forma permanente. Exporte um backup para não perdê-las.');
+    renderPhotos(fotos);
+    if(!salvou) toast('Não foi possível enviar as fotos ao banco compartilhado. Exporte um backup para não perdê-las.');
   });
 
   window.removerFoto = async function(rid, idx){
     fotos.splice(idx,1);
     PHOTO_CACHE[rid] = fotos;
-    await stSet('fotos:'+rid, fotos);
-    var r2 = RECORDS.find(function(r){ return r.id === rid; });
-    if(r2){ r2.fotoCount = fotos.length; await stSet('registros-list', RECORDS); }
-    renderPhotos(fotos); renderLista();
+    await fbRef('fotos/'+rid).set(fotos);
+    await fbRef('registros/'+rid+'/fotoCount').set(fotos.length);
+    renderPhotos(fotos);
   };
 
   var btnF = document.getElementById('btn-fechar');
   if(btnF){
     btnF.addEventListener('click', async function(){
       if(fotos.length === 0){ toast('Adicione ao menos 1 foto para fechar.'); return; }
-      rec.status = 'fechada';
-      rec.fechadoEm = new Date().toISOString();
-      rec.fechadoPor = meuNomeAtual();
-      await stSet('registros-list', RECORDS);
+      await fbRef('registros/'+id).update({ status:'fechada', fechadoEm:new Date().toISOString(), fechadoPor:meuNomeAtual() });
       toast('Não conformidade fechada.');
-      renderLista(); closeModal();
+      closeModal();
     });
   }
 }
 async function reabrir(id){
-  var rec = RECORDS.find(function(r){ return r.id === id; });
-  if(!rec) return;
-  rec.status = 'aberta'; rec.fechadoEm = null; rec.fechadoPor = null;
-  await stSet('registros-list', RECORDS);
-  renderLista(); closeModal();
+  await fbRef('registros/'+id).update({ status:'aberta', fechadoEm:null, fechadoPor:null });
+  closeModal();
 }
 function closeModal(){ document.getElementById('modal-bg').classList.remove('show'); }
 document.getElementById('modal-bg').addEventListener('click', function(e){ if(e.target.id === 'modal-bg') closeModal(); });
@@ -892,7 +951,7 @@ function wireLogoInput(){
     var file = e.target.files[0]; if(!file) return;
     try{
       var dataUrl = await resizeImage(file, 300, 0.85);
-      LOGO = dataUrl; await stSet('logo-empresa', LOGO);
+      LOGO = dataUrl; await fbRef('logo').set(LOGO);
       preview.src = LOGO; preview.style.display = 'block';
       toast('Logo salva.');
     }catch(err){ toast('Não foi possível carregar essa imagem.'); }
@@ -923,7 +982,7 @@ async function gerarRelatorio(){
   html += '<div style="display:flex;align-items:center;gap:14px;border-bottom:2px solid #16171A;padding-bottom:10px;">';
   if(LOGO) html += '<img class="pr-logo" src="'+LOGO+'">';
   html += '<div><h2 style="margin:0;font-size:19px;color:#16171A;">Relatório de Não Conformidades</h2>';
-  html += '<div style="font-size:11px;color:#6B7075;">'+periodoTxt+' · Emitido em '+fmtDate(new Date().toISOString().slice(0,10))+'</div></div></div>';
+  html += '<div style="font-size:11px;color:#6B7075;">'+periodoTxt+' · Emitido em '+fmtDate(localDateStr())+'</div></div></div>';
   html += '<p style="font-size:12px;"><b>'+list.length+'</b> registros &nbsp;·&nbsp; <b>'+totalPecas+'</b> peças perdidas &nbsp;·&nbsp; <b>'+abertas+'</b> abertas</p>';
   html += tabelaTop('Top produtos com mais defeitos', topNFrom(list,'produto',10));
   html += tabelaTop('Top ofensores', topNFrom(list,'ofensor',10));
@@ -942,7 +1001,7 @@ async function gerarRelatorio(){
     html += '<h3 style="margin-top:18px;font-size:14px;">Fotos das não conformidades</h3>';
     for(var i=0;i<comFotos.length;i++){
       var rf = comFotos[i];
-      var fotosRf = (await stGet('fotos:'+rf.id)) || PHOTO_CACHE[rf.id] || [];
+      var fotosRf = PHOTO_CACHE[rf.id] || (await fbRef('fotos/'+rf.id).once('value')).val() || [];
       if(!fotosRf.length) continue;
       html += '<div class="pr-fotos-item"><div class="pr-fotos-titulo">NC-'+String(rf.id).padStart(4,'0')+' — '+esc(rf.produto)+' ('+fmtDate(rf.data)+')</div><div class="pr-fotos-grid">';
       fotosRf.forEach(function(f){ html += '<img class="pr-foto" src="'+f+'">'; });
@@ -959,14 +1018,14 @@ async function exportarBackup(){
   var fotos = {};
   for(var i=0;i<RECORDS.length;i++){
     var r = RECORDS[i];
-    var f = (await stGet('fotos:'+r.id)) || PHOTO_CACHE[r.id];
+    var f = PHOTO_CACHE[r.id] || (await fbRef('fotos/'+r.id).once('value')).val();
     if(f && f.length) fotos[r.id] = f;
   }
   var payload = { versao:1, exportadoEm:new Date().toISOString(), registros:RECORDS, tiposAvaria:TYPES, ofensores:OFENSORES, logo:LOGO, fotos:fotos };
   var blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
-  a.href = url; a.download = 'backup-qualidade-' + new Date().toISOString().slice(0,10) + '.json';
+  a.href = url; a.download = 'backup-qualidade-' + localDateStr() + '.json';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
   toast('Backup exportado.');
@@ -974,24 +1033,26 @@ async function exportarBackup(){
 function wireBackupInput(){
   document.getElementById('backup-input').addEventListener('change', function(e){
     var file = e.target.files[0]; if(!file) return;
-    if(!confirm('Restaurar este backup vai substituir os registros e cadastros atuais nesta sessão. Continuar?')) return;
+    if(!confirm('Restaurar este backup vai substituir os registros e cadastros de TODO MUNDO no banco compartilhado. Continuar?')) return;
     var reader = new FileReader();
     reader.onload = async function(ev){
       try{
         var payload = JSON.parse(ev.target.result);
-        RECORDS = payload.registros || [];
-        TYPES = (payload.tiposAvaria && payload.tiposAvaria.length) ? payload.tiposAvaria : SEED_TYPES;
-        OFENSORES = (payload.ofensores && payload.ofensores.length) ? payload.ofensores : SEED_OFENSORES;
-        LOGO = payload.logo || null;
-        await stSet('registros-list', RECORDS);
-        await stSet('tipos-avaria', TYPES);
-        await stSet('tipos-ofensor', OFENSORES);
-        if(LOGO) await stSet('logo-empresa', LOGO);
-        if(payload.fotos){ for(var id in payload.fotos){ PHOTO_CACHE[id] = payload.fotos[id]; await stSet('fotos:'+id, payload.fotos[id]); } }
-        renderAll();
-        var lp = document.getElementById('logo-preview');
-        if(LOGO){ lp.src = LOGO; lp.style.display = 'block'; }
-        toast('Backup restaurado.');
+        var registros = payload.registros || [];
+        var tipos = (payload.tiposAvaria && payload.tiposAvaria.length) ? payload.tiposAvaria : SEED_TYPES;
+        var ofensores = (payload.ofensores && payload.ofensores.length) ? payload.ofensores : SEED_OFENSORES;
+        var logo = payload.logo || null;
+
+        var registrosObj = {};
+        registros.forEach(function(r){ registrosObj[r.id] = r; });
+        await fbRef('registros').set(registrosObj);
+        await fbRef('tipos').set(tipos);
+        await fbRef('ofensores').set(ofensores);
+        if(logo) await fbRef('logo').set(logo);
+        var maxId = registros.length ? Math.max.apply(null, registros.map(function(r){ return r.id; })) : 0;
+        await fbRef('proximoId').set(maxId);
+        if(payload.fotos){ for(var id in payload.fotos){ await fbRef('fotos/'+id).set(payload.fotos[id]); } }
+        toast('Backup restaurado — sincronizando com todo mundo.');
       }catch(err){ toast('Arquivo de backup inválido.'); }
     };
     reader.readAsText(file);
