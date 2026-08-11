@@ -418,6 +418,12 @@ firebase.auth().onAuthStateChanged(function(user){
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('galleryWrap').style.display = 'block';
     loadApps();
+  }).catch(function(err){
+    const status = document.getElementById('loginStatus');
+    status.className = 'login-status err';
+    status.textContent = 'Não consegui checar sua permissão (' + err.message + '). Confere se as regras do banco foram publicadas.';
+    setTicker('erro ao checar permissão');
+    firebase.auth().signOut();
   });
 });
 
