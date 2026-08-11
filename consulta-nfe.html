@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consulta de Chave NFe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --paper:#FAF6EC;
+    --paper-alt:#F1EADA;
+    --ink:#1C2B45;
+    --ink-soft:#5B6478;
+    --green:#2F6F4E;
+    --green-soft:#E4EEE7;
+    --amber:#D98E2B;
+    --rule:#D9D0B8;
+    --red:#B3452C;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(28,43,69,0.05) 1px, transparent 0);
+    background-size: 22px 22px;
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    min-height:100vh;
+    padding: 32px 16px 80px;
+  }
+  .wrap{max-width:720px;margin:0 auto;}
+
+  header{margin-bottom:28px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--green);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:6px;
+  }
+  .eyebrow::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;}
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size:clamp(28px,5vw,38px);
+    margin:0 0 6px;
+    letter-spacing:-0.01em;
+  }
+  .sub{color:var(--ink-soft);font-size:14.5px;line-height:1.5;max-width:52ch;}
+
+  /* upload zone */
+  .dropzone{
+    margin-top:22px;
+    border:1.5px dashed var(--rule);
+    border-radius:10px;
+    background:var(--paper-alt);
+    padding:16px 18px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+  }
+  .dropzone:hover, .dropzone.drag{border-color:var(--green);background:var(--green-soft);}
+  .dropzone input{display:none;}
+  .dz-icon{
+    width:38px;height:38px;flex:none;border-radius:8px;
+    background:var(--ink);color:var(--paper);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;font-size:16px;
+  }
+  .dz-text{font-size:13.5px;color:var(--ink-soft);line-height:1.4;}
+  .dz-text strong{color:var(--ink);font-weight:600;}
+  #fileStatus{font-family:'IBM Plex Mono', monospace;font-size:12px;color:var(--green);margin-top:8px;min-height:16px;}
+  #fileStatus.empty{color:var(--ink-soft);}
+
+  /* search */
+  .search-box{
+    margin-top:26px;
+    position:relative;
+  }
+  #searchInput{
+    width:100%;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:22px;
+    letter-spacing:.02em;
+    padding:16px 52px 16px 18px;
+    border:2px solid var(--ink);
+    border-radius:10px;
+    background:#fff;
+    color:var(--ink);
+    outline:none;
+  }
+  #searchInput:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-soft);}
+  #searchInput::placeholder{color:#B7BECB;font-weight:400;}
+  .search-hint{
+    display:flex;justify-content:space-between;
+    font-size:12px;color:var(--ink-soft);margin-top:8px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  kbd{
+    background:var(--paper-alt);border:1px solid var(--rule);border-radius:4px;
+    padding:1px 6px;font-family:inherit;font-size:11px;
+  }
+
+  /* results */
+  #results{margin-top:22px;display:flex;flex-direction:column;gap:0;}
+  .receipt{
+    background:#fff;
+    border:1px solid var(--rule);
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 1px 2px rgba(28,43,69,.04);
+  }
+  .row{
+    padding:16px 18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    position:relative;
+  }
+  .row + .row{
+    border-top:1.5px dashed var(--rule);
+  }
+  .row-main{min-width:0;}
+  .row-label{
+    font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--ink-soft);margin-bottom:3px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .row-numero{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:15px; font-weight:500; color:var(--ink);
+    margin-bottom:8px;
+  }
+  .row-numero mark{background:#FBE4B8;color:var(--ink);border-radius:2px;padding:0 1px;}
+  .row-chave{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color:var(--ink-soft);
+    word-break:break-all;
+    line-height:1.5;
+  }
+  .row-chave mark{background:#FBE4B8;color:var(--ink);border-radius:2px;padding:0 1px;}
+  .row-transp{
+    font-size:11px;color:var(--ink-soft);margin-top:6px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .copy-btn{
+    flex:none;
+    display:flex;align-items:center;gap:6px;
+    background:var(--ink);color:var(--paper);
+    border:none;border-radius:8px;
+    padding:10px 14px;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:12.5px;font-weight:600;
+    cursor:pointer;
+    transition:background .15s, transform .1s;
+  }
+  .copy-btn:hover{background:var(--green);}
+  .copy-btn:active{transform:scale(.96);}
+  .copy-btn.copied{background:var(--green);}
+  .no-chave{color:var(--red);font-style:italic;}
+
+  .barcode{
+    height:22px;margin-top:10px;
+    background: repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 4px, var(--ink) 4px 5px, transparent 5px 9px, var(--ink) 9px 12px, transparent 12px 14px);
+    opacity:.5;
+  }
+
+  /* states */
+  .state{
+    text-align:center;
+    padding:40px 20px;
+    color:var(--ink-soft);
+    font-size:14px;
+  }
+  .state strong{display:block;color:var(--ink);font-family:'Fraunces',serif;font-size:19px;font-weight:600;margin-bottom:6px;}
+  .count-bar{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;color:var(--ink-soft);
+    margin-bottom:10px;padding-left:2px;
+  }
+
+  /* stamp toast */
+  #stamp{
+    position:fixed;
+    left:50%;bottom:34px;transform:translateX(-50%) scale(.85) rotate(-4deg);
+    background:var(--green);color:#fff;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+    padding:12px 22px;
+    border-radius:8px;
+    border:2px solid #fff;
+    box-shadow:0 6px 18px rgba(47,111,78,.35);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease;
+    z-index:50;
+  }
+  #stamp.show{opacity:1;transform:translateX(-50%) scale(1) rotate(-4deg);}
+
+  footer{
+    max-width:720px;margin:34px auto 0;
+    font-size:12px;color:var(--ink-soft);
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Consulta local · sem envio de dados</div>
+    <h1>Chave da Nota Fiscal</h1>
+    <p class="sub">Carregue a planilha, digite o número da nota e copie a chave de acesso em um clique.</p>
+
+    <label class="dropzone" id="dropzone">
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+      <div class="dz-icon">XLS</div>
+      <div class="dz-text">
+        <strong>Clique para carregar</strong> ou arraste a planilha aqui<br>
+        Aceita .xlsx, .xls ou .csv — colunas: Numero, Transp., Chave NFe
+      </div>
+    </label>
+    <div id="fileStatus" class="empty">Nenhuma planilha carregada nesta sessão.</div>
+
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Digite o número da nota…" autocomplete="off" disabled>
+    </div>
+    <div class="search-hint">
+      <span>Busca por número ou trecho da chave</span>
+      <span><kbd>Enter</kbd> copia automaticamente se houver 1 resultado</span>
+    </div>
+  </header>
+
+  <div class="count-bar" id="countBar" style="display:none;"></div>
+  <div id="results"></div>
+</div>
+
+<footer>Os dados ficam apenas no seu navegador, nesta sessão. Recarregue a planilha sempre que ela for atualizada.</footer>
+
+<div id="stamp">✓ Chave copiada</div>
+
+<script>
+let DATA = [];
+let loaded = false;
+
+const fileInput = document.getElementById('fileInput');
+const dropzone = document.getElementById('dropzone');
+const fileStatus = document.getElementById('fileStatus');
+const searchInput = document.getElementById('searchInput');
+const resultsEl = document.getElementById('results');
+const countBar = document.getElementById('countBar');
+const stamp = document.getElementById('stamp');
+
+function findCol(headerRow, names){
+  for(let i=0;i<headerRow.length;i++){
+    const h = (headerRow[i]||'').toString().trim().toLowerCase();
+    if(names.some(n => h.includes(n))) return i;
+  }
+  return -1;
+}
+
+function loadFile(file){
+  fileStatus.className = '';
+  fileStatus.textContent = 'Lendo "' + file.name + '"…';
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      const wb = XLSX.read(e.target.result, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      if(!rows.length) throw new Error('Planilha vazia');
+
+      const header = rows[0];
+      let iNum = findCol(header, ['numero','número','num']);
+      let iTransp = findCol(header, ['transp']);
+      let iChave = findCol(header, ['chave']);
+      if(iNum === -1) iNum = 0;
+      if(iTransp === -1) iTransp = 1;
+      if(iChave === -1) iChave = 2;
+
+      const startRow = (iNum===0 && iTransp===1 && iChave===2 && /numero|número/i.test((header[0]||''))) ? 1 : 1;
+
+      DATA = [];
+      for(let r=startRow;r<rows.length;r++){
+        const row = rows[r];
+        if(!row || row.length===0) continue;
+        const numero = (row[iNum]!==undefined ? row[iNum] : '').toString().trim();
+        const transp = (row[iTransp]!==undefined ? row[iTransp] : '').toString().trim();
+        const chave = (row[iChave]!==undefined ? row[iChave] : '').toString().trim();
+        if(!numero) continue;
+        DATA.push({numero, transp, chave});
+      }
+
+      loaded = true;
+      searchInput.disabled = false;
+      const now = new Date();
+      const time = now.toLocaleDateString('pt-BR') + ' às ' + now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      fileStatus.textContent = DATA.length.toLocaleString('pt-BR') + ' notas carregadas de "' + file.name + '" · ' + time;
+      searchInput.focus();
+      renderEmptyState('idle');
+    }catch(err){
+      fileStatus.textContent = 'Não foi possível ler o arquivo: ' + err.message;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+dropzone.addEventListener('click', (e)=>{ /* label triggers input natively */ });
+fileInput.addEventListener('change', (e)=>{
+  if(e.target.files[0]) loadFile(e.target.files[0]);
+});
+['dragover'].forEach(ev=>dropzone.addEventListener(ev, e=>{e.preventDefault();dropzone.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>dropzone.addEventListener(ev, e=>{dropzone.classList.remove('drag');}));
+dropzone.addEventListener('drop', e=>{
+  e.preventDefault();
+  const f = e.dataTransfer.files[0];
+  if(f) loadFile(f);
+});
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function highlight(text, q){
+  if(!q) return escapeHtml(text);
+  const idx = text.indexOf(q);
+  if(idx === -1) return escapeHtml(text);
+  return escapeHtml(text.slice(0,idx)) + '<mark>' + escapeHtml(text.slice(idx, idx+q.length)) + '</mark>' + escapeHtml(text.slice(idx+q.length));
+}
+
+function renderEmptyState(kind){
+  countBar.style.display = 'none';
+  if(!loaded){
+    resultsEl.innerHTML = '<div class="state"><strong>Aguardando planilha</strong>Carregue o arquivo acima para começar a consultar.</div>';
+    return;
+  }
+  if(kind === 'idle'){
+    resultsEl.innerHTML = '<div class="state"><strong>Pronto para buscar</strong>Digite o número da nota fiscal no campo acima.</div>';
+    return;
+  }
+  if(kind === 'notfound'){
+    resultsEl.innerHTML = '<div class="state"><strong>Nenhuma nota encontrada</strong>Confira o número digitado ou tente um trecho da chave.</div>';
+    return;
+  }
+}
+
+function search(rawQuery){
+  const q = rawQuery.trim();
+  if(!q){ renderEmptyState('idle'); return; }
+  const qDigits = q.replace(/\D/g,'');
+  if(!qDigits){ renderEmptyState('idle'); return; }
+
+  const qNum = parseInt(qDigits, 10);
+  let results = DATA.filter(item => {
+    const numeroNum = parseInt(item.numero, 10);
+    const matchNumero = !isNaN(qNum) && !isNaN(numeroNum) && numeroNum === qNum;
+    const matchChave = item.chave && item.chave.includes(qDigits) && qDigits.length >= 4;
+    return matchNumero || matchChave;
+  });
+
+  if(results.length === 0){
+    results = DATA.filter(item =>
+      item.numero.includes(qDigits) || (item.chave && item.chave.includes(qDigits))
+    );
+  }
+
+  renderResults(results, qDigits);
+  return results;
+}
+
+function renderResults(results, qDigits){
+  if(results.length === 0){
+    renderEmptyState('notfound');
+    return;
+  }
+  const LIMIT = 200;
+  const shown = results.slice(0, LIMIT);
+  countBar.style.display = 'block';
+  countBar.textContent = results.length.toLocaleString('pt-BR') + ' resultado' + (results.length>1?'s':'') +
+    (results.length > LIMIT ? ' · mostrando os primeiros ' + LIMIT + ' — refine a busca' : '');
+
+  resultsEl.innerHTML = '<div class="receipt">' + shown.map((item, i) => {
+    const hasChave = !!item.chave;
+    return '<div class="row">' +
+      '<div class="row-main">' +
+        '<div class="row-label">Nota</div>' +
+        '<div class="row-numero">' + highlight(item.numero, qDigits) + (item.transp ? ' <span class="row-transp" style="display:inline">· Transp. ' + escapeHtml(item.transp) + '</span>' : '') + '</div>' +
+        '<div class="row-label">Chave NFe</div>' +
+        (hasChave
+          ? '<div class="row-chave">' + highlight(item.chave, qDigits) + '</div>'
+          : '<div class="row-chave no-chave">Sem chave cadastrada</div>') +
+      '</div>' +
+      (hasChave ? '<button class="copy-btn" data-chave="' + escapeHtml(item.chave) + '">Copiar</button>' : '') +
+    '</div>';
+  }).join('') + '</div>';
+}
+
+resultsEl.addEventListener('click', (e)=>{
+  const btn = e.target.closest('.copy-btn');
+  if(!btn) return;
+  copyChave(btn.dataset.chave, btn);
+});
+
+function copyChave(chave, btnEl){
+  navigator.clipboard.writeText(chave).then(()=>{
+    showStamp();
+    if(btnEl){
+      const original = btnEl.textContent;
+      btnEl.textContent = 'Copiado ✓';
+      btnEl.classList.add('copied');
+      setTimeout(()=>{ btnEl.textContent = original; btnEl.classList.remove('copied'); }, 1400);
+    }
+  }).catch(()=>{
+    alert('Não foi possível copiar automaticamente. Chave: ' + chave);
+  });
+}
+
+let stampTimer;
+function showStamp(){
+  clearTimeout(stampTimer);
+  stamp.classList.add('show');
+  stampTimer = setTimeout(()=>stamp.classList.remove('show'), 1300);
+}
+
+let debounceTimer;
+searchInput.addEventListener('input', (e)=>{
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(()=>search(e.target.value), 60);
+});
+
+searchInput.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter'){
+    const results = search(searchInput.value);
+    if(results && results.length === 1 && results[0].chave){
+      copyChave(results[0].chave, null);
+    }
+  }
+});
+</script>
+
+<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
+  <div style="max-width:320px;width:100%;">
+    <div id="__gateMsg" style="font-size:14px;color:#8a93a3;line-height:1.6;">Verificando acesso...</div>
+  </div>
+</div>
+<style id="__gateStyle">body > *:not(#__gateOverlay){ display:none !important; }</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
+<script>
+(function(){
+  var GRUPOS_PERMITIDOS = ["PCP"];
+  var firebaseConfig = {
+    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+    authDomain: "stinpharma-qualidade.firebaseapp.com",
+    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+    projectId: "stinpharma-qualidade",
+    storageBucket: "stinpharma-qualidade.firebasestorage.app",
+    messagingSenderId: "422803826984",
+    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+    measurementId: "G-6C0TLHH2VP"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  function liberar(){
+    var st = document.getElementById('__gateStyle');
+    var ov = document.getElementById('__gateOverlay');
+    if(st) st.remove();
+    if(ov) ov.remove();
+  }
+  function negar(msg){
+    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Central de Apps</a>';
+  }
+  var jaResolveu = false;
+  setTimeout(function(){
+    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
+  }, 10000);
+  firebase.auth().onAuthStateChanged(function(user){
+    jaResolveu = true;
+    if(!user){ negar('Você precisa entrar pela Central de Apps.'); return; }
+    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
+      var dados = snap.val();
+      var meusGrupos = (dados && dados.grupos) || [];
+      var permitido = GRUPOS_PERMITIDOS.some(function(g){ return meusGrupos.indexOf(g) !== -1; });
+      if(permitido){ liberar(); } else { negar('Você não tem permissão pra acessar este app.'); }
+    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
+  });
+})();
+</script>
+</body>
+</html>
