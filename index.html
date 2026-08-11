@@ -203,6 +203,31 @@
   .empty-state h2, .no-access h2{ font-family:var(--display); font-size:19px; margin:0 0 10px; font-weight:600; }
   .empty-state p, .no-access p{ color:var(--mist); font-size:13.5px; max-width:380px; margin:0 auto 26px; line-height:1.6; }
   .no-access{ color:var(--mist); font-size:14px; padding:60px 20px; }
+
+  /* ---------- painel de administração ---------- */
+  .admin-user-row{ background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:16px 18px; margin-bottom:10px; }
+  .admin-user-head{ display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:14px; flex-wrap:wrap; }
+  .admin-user-head b{ font-family:var(--display); }
+  .admin-user-email{ font-family:var(--mono); font-size:11px; color:var(--mist); }
+  .admin-badge{ font-family:var(--mono); font-size:10px; color:var(--warn); border:1px solid var(--warn); padding:1px 6px; border-radius:10px; }
+  .grupos-check{ display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+  .grupos-check label{ display:flex; align-items:center; gap:6px; background:var(--ink); border:1px solid var(--line); border-radius:3px; padding:7px 11px; font-size:12.5px; cursor:pointer; color:var(--paper); }
+  .grupos-check input{ margin:0; }
+  .admin-user-actions{ display:flex; gap:8px; margin-top:8px; }
+  .admin-user-actions button{ font-family:var(--mono); font-size:11px; padding:7px 12px; border-radius:3px; border:1px solid var(--line); background:transparent; color:var(--mist); cursor:pointer; }
+  .admin-user-actions button:hover{ color:var(--paper); border-color:var(--signal); }
+  .admin-user-actions button.danger:hover{ color:#ff8f80; border-color:#ff8f80; }
+  .admin-card{ background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:26px; max-width:480px; margin-bottom:40px; }
+  .admin-card h3{ font-family:var(--display); font-size:17px; margin:0 0 18px; font-weight:600; }
+  .admin-card label{ display:block; font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--mist); margin:14px 0 7px; }
+  .admin-card label:first-of-type{ margin-top:0; }
+  .admin-card input[type=text], .admin-card input[type=email], .admin-card input[type=password]{ width:100%; background:var(--ink); border:1px solid var(--line); border-radius:3px; padding:10px 12px; color:var(--paper); font-size:14px; font-family:var(--body); box-sizing:border-box; }
+  .admin-card input:focus{ outline:none; border-color:var(--signal); }
+  .admin-card > button{ margin-top:18px; background:var(--signal); border:none; color:#04070c; padding:11px 20px; border-radius:3px; font-size:13.5px; font-weight:600; cursor:pointer; font-family:var(--body); }
+  .section-title{ font-family:var(--display); font-size:19px; font-weight:600; margin:0 0 16px; }
+
+  .toast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--panel); border:1px solid var(--line); color:var(--paper); padding:12px 20px; border-radius:6px; font-size:13px; font-family:var(--body); opacity:0; transition:opacity .25s ease, transform .25s ease; z-index:50; pointer-events:none; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
   .empty-cta{
     display:inline-block; background:var(--signal); color:#04070c; text-decoration:none;
     font-family:var(--mono); font-size:12.5px; font-weight:600; padding:11px 22px; border-radius:3px;
@@ -306,6 +331,7 @@
   <div class="wrap" id="galleryWrap" style="display:none;">
     <div class="user-bar boot-in">
       <span class="who" id="whoText"></span>
+      <button id="adminBtn" onclick="abrirAdmin()" style="display:none;">Administração</button>
       <button onclick="fazerLogout()">Sair</button>
     </div>
     <div class="pill boot-in" style="animation-delay:.05s;"><span class="dot"></span> <span id="statusText">carregando...</span></div>
@@ -318,6 +344,40 @@
       <span id="countText">0 ferramentas</span>
     </footer>
   </div>
+
+  <div class="wrap" id="adminWrap" style="display:none;">
+    <div class="user-bar boot-in">
+      <button onclick="fecharAdmin()">&larr; Voltar pra galeria</button>
+    </div>
+    <div class="eyebrow boot-in">Administração</div>
+    <h1 class="boot-in">Gerenciar <span class="accent">acesso</span></h1>
+    <p class="sub boot-in">Cria contas novas e define quem acessa o quê.</p>
+
+    <div class="admin-card boot-in">
+      <h3>Criar novo usuário</h3>
+      <label>Nome</label>
+      <input type="text" id="adm-nome">
+      <label>E-mail</label>
+      <input type="email" id="adm-email" placeholder="nome@stinpharma.com.br">
+      <label>Senha</label>
+      <input type="password" id="adm-senha" placeholder="mínimo 6 caracteres">
+      <label>Grupos</label>
+      <div class="grupos-check">
+        <label><input type="checkbox" name="adm-grupo" value="Geral"> Geral</label>
+        <label><input type="checkbox" name="adm-grupo" value="TI"> TI</label>
+        <label><input type="checkbox" name="adm-grupo" value="Qualidade"> Qualidade</label>
+        <label><input type="checkbox" name="adm-grupo" value="PCP"> PCP</label>
+      </div>
+      <button onclick="criarUsuario()">Criar usuário</button>
+      <div class="login-status" id="adm-status"></div>
+    </div>
+
+    <div class="section-title">Usuários existentes</div>
+    <div id="adm-lista"><div class="hint">Carregando...</div></div>
+  </div>
+
+  <div class="toast" id="toastEl"></div>
+
 
   <div class="modal-bg" id="modalBg">
     <div class="modal">
@@ -415,6 +475,9 @@ firebase.auth().onAuthStateChanged(function(user){
     }
     MEUS_GRUPOS = dados.grupos || [];
     document.getElementById('whoText').innerHTML = '<b>' + (dados.nome || user.email) + '</b> · ' + MEUS_GRUPOS.join(', ');
+    if(dados.admin === true){
+      document.getElementById('adminBtn').style.display = '';
+    }
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('galleryWrap').style.display = 'block';
     loadApps();
@@ -475,6 +538,115 @@ function escapeAttr(str){
 function tenhoAcesso(app){
   const grupos = app.grupos && app.grupos.length ? app.grupos : ['Geral'];
   return grupos.some(g => MEUS_GRUPOS.indexOf(g) !== -1);
+}
+
+function toast(msg){
+  const el = document.getElementById('toastEl');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+/* ================= Painel de administração ================= */
+function abrirAdmin(){
+  document.getElementById('galleryWrap').style.display = 'none';
+  document.getElementById('adminWrap').style.display = 'block';
+  carregarListaUsuarios();
+}
+function fecharAdmin(){
+  document.getElementById('adminWrap').style.display = 'none';
+  document.getElementById('galleryWrap').style.display = 'block';
+}
+
+async function criarUsuario(){
+  const nome = document.getElementById('adm-nome').value.trim();
+  const email = document.getElementById('adm-email').value.trim();
+  const senha = document.getElementById('adm-senha').value;
+  const grupos = Array.from(document.querySelectorAll('input[name=adm-grupo]:checked')).map(el => el.value);
+  const status = document.getElementById('adm-status');
+
+  if(!nome || !email || !senha || grupos.length === 0){
+    status.className = 'login-status err';
+    status.textContent = 'Preenche nome, e-mail, senha e marca pelo menos um grupo.';
+    return;
+  }
+  status.className = 'login-status';
+  status.textContent = 'Criando...';
+  try{
+    const idToken = await firebase.auth().currentUser.getIdToken();
+    const res = await fetch('https://central-de-apps.vercel.app/api/criar-usuario', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken, email, senha, nome, grupos })
+    });
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok) throw new Error(data.error || 'Falha ao criar usuário');
+    status.className = 'login-status';
+    status.style.color = 'var(--ok)';
+    status.textContent = 'Usuário criado: ' + email;
+    document.getElementById('adm-nome').value = '';
+    document.getElementById('adm-email').value = '';
+    document.getElementById('adm-senha').value = '';
+    document.querySelectorAll('input[name=adm-grupo]').forEach(el => el.checked = false);
+    carregarListaUsuarios();
+  }catch(err){
+    status.className = 'login-status err';
+    status.style.color = '';
+    status.textContent = err.message;
+  }
+}
+
+async function carregarListaUsuarios(){
+  const lista = document.getElementById('adm-lista');
+  lista.innerHTML = '<div class="hint">Carregando...</div>';
+  try{
+    const snap = await firebase.database().ref('centralApps/usuarios').once('value');
+    const usuarios = snap.val() || {};
+    const uids = Object.keys(usuarios);
+    if(uids.length === 0){ lista.innerHTML = '<div class="hint">Nenhum usuário cadastrado.</div>'; return; }
+    const gruposDisponiveis = ['Geral','TI','Qualidade','PCP'];
+    lista.innerHTML = uids.map(function(uid){
+      const u = usuarios[uid] || {};
+      const grupos = u.grupos || [];
+      return '<div class="admin-user-row" data-uid="' + uid + '">' +
+        '<div class="admin-user-head"><b>' + (u.nome || '(sem nome)') + '</b>' +
+        (u.admin ? ' <span class="admin-badge">admin</span>' : '') +
+        '<span class="admin-user-email">' + (u.email || uid) + '</span></div>' +
+        '<div class="grupos-check">' + gruposDisponiveis.map(function(g){
+          return '<label><input type="checkbox" class="adm-edit-grupo" value="' + g + '" ' + (grupos.indexOf(g) !== -1 ? 'checked' : '') + '> ' + g + '</label>';
+        }).join('') + '</div>' +
+        '<div class="admin-user-actions">' +
+          '<button onclick="salvarGrupos(\'' + uid + '\')">Salvar grupos</button>' +
+          '<button class="danger" onclick="removerAcesso(\'' + uid + '\',\'' + (u.nome || uid).replace(/'/g,"\\'") + '\')">Remover acesso</button>' +
+        '</div></div>';
+    }).join('');
+  }catch(err){
+    lista.innerHTML = '<div class="error">Erro ao carregar: ' + err.message + '</div>';
+  }
+}
+
+async function salvarGrupos(uid){
+  const row = document.querySelector('.admin-user-row[data-uid="' + uid + '"]');
+  const grupos = Array.from(row.querySelectorAll('.adm-edit-grupo:checked')).map(el => el.value);
+  if(grupos.length === 0){ toast('Marca pelo menos um grupo antes de salvar.'); return; }
+  try{
+    await firebase.database().ref('centralApps/usuarios/' + uid + '/grupos').set(grupos);
+    toast('Grupos atualizados.');
+  }catch(err){
+    toast('Erro ao salvar: ' + err.message);
+  }
+}
+
+async function removerAcesso(uid, nome){
+  if(!confirm('Remover o acesso de ' + nome + '? A pessoa não vai mais conseguir entrar (a conta de e-mail em si continua existindo no Firebase, só perde a permissão).')) return;
+  try{
+    await firebase.database().ref('centralApps/usuarios/' + uid).remove();
+    toast('Acesso removido.');
+    carregarListaUsuarios();
+  }catch(err){
+    toast('Erro ao remover: ' + err.message);
+  }
 }
 
 async function loadApps(){
