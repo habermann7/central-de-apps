@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const { password, title, category, description, filename, fileBase64 } = req.body || {};
+  const { password, title, category, description, filename, fileBase64, grupos } = req.body || {};
 
   if (!password || password !== process.env.TEAM_PASSWORD) {
     return res.status(401).json({ error: 'Senha incorreta' });
@@ -28,6 +28,61 @@ export default async function handler(req, res) {
   const token = process.env.GITHUB_TOKEN;
   const COLORS = ['#4d9fff', '#ff8a3d', '#ff6b5b', '#3ecf8e', '#c084fc', '#ffd54d'];
   const cleanName = filename.replace(/[^a-zA-Z0-9.\-_ ]/g, '_');
+  const gruposFinal = Array.isArray(grupos) && grupos.length ? grupos : ['Geral'];
+
+  // Injeta um cadeado de login+grupo no HTML do app antes de subir.
+  // Só libera o conteúdo se a pessoa estiver logada (Firebase Auth) E pertencer
+  // a um dos grupos permitidos abaixo. O login em si acontece na Central de Apps.
+  const htmlContent = Buffer.from(fileBase64, 'base64').toString('utf-8');
+  const gateSnippet = `
+<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
+  <div style="max-width:320px;width:100%;">
+    <div id="__gateMsg" style="font-size:14px;color:#8a93a3;line-height:1.6;">Verificando acesso...</div>
+  </div>
+</div>
+<style id="__gateStyle">body > *:not(#__gateOverlay){ display:none !important; }</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
+<script>
+(function(){
+  var GRUPOS_PERMITIDOS = ${JSON.stringify(gruposFinal)};
+  var firebaseConfig = {
+    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+    authDomain: "stinpharma-qualidade.firebaseapp.com",
+    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+    projectId: "stinpharma-qualidade",
+    storageBucket: "stinpharma-qualidade.firebasestorage.app",
+    messagingSenderId: "422803826984",
+    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+    measurementId: "G-6C0TLHH2VP"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  function liberar(){
+    var st = document.getElementById('__gateStyle');
+    var ov = document.getElementById('__gateOverlay');
+    if(st) st.remove();
+    if(ov) ov.remove();
+  }
+  function negar(msg){
+    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Central de Apps</a>';
+  }
+  firebase.auth().onAuthStateChanged(function(user){
+    if(!user){ negar('Você precisa entrar pela Central de Apps.'); return; }
+    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
+      var dados = snap.val();
+      var meusGrupos = (dados && dados.grupos) || [];
+      var permitido = GRUPOS_PERMITIDOS.some(function(g){ return meusGrupos.indexOf(g) !== -1; });
+      if(permitido){ liberar(); } else { negar('Você não tem permissão pra acessar este app.'); }
+    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
+  });
+})();
+</script>
+`;
+  const injectedHtml = /<\/body>/i.test(htmlContent)
+    ? htmlContent.replace(/<\/body>/i, gateSnippet + '</body>')
+    : htmlContent + gateSnippet;
+  const finalFileBase64 = Buffer.from(injectedHtml, 'utf-8').toString('base64');
 
   const ghHeaders = {
     Authorization: `Bearer ${token}`,
@@ -47,7 +102,7 @@ export default async function handler(req, res) {
       existingSha = existingData.sha;
     }
 
-    const putFileBody = { message: `Adiciona app: ${title}`, content: fileBase64, branch: BRANCH };
+    const putFileBody = { message: `Adiciona app: ${title}`, content: finalFileBase64, branch: BRANCH };
     if (existingSha) putFileBody.sha = existingSha;
 
     const putFileRes = await fetch(
@@ -81,7 +136,8 @@ export default async function handler(req, res) {
       description: description || '',
       file: cleanName,
       icon: '🧩',
-      color: COLORS[apps.length % COLORS.length]
+      color: COLORS[apps.length % COLORS.length],
+      grupos: gruposFinal
     });
 
     const newManifestContent = Buffer.from(JSON.stringify(apps, null, 2), 'utf-8').toString('base64');
