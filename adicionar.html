@@ -45,6 +45,9 @@
   .status.ok{ background:rgba(62,207,142,.1); border:1px solid rgba(62,207,142,.3); color:var(--green); }
   .status.loading{ background:rgba(77,159,255,.1); border:1px solid rgba(77,159,255,.3); color:var(--accent-default); }
   .status a{ color:inherit; font-weight:700; }
+  .grupos{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chk{ display:flex !important; align-items:center; gap:6px; margin:0 !important; background:#0d1117; border:1px solid var(--border); border-radius:7px; padding:8px 12px; font-size:13px; color:var(--text); cursor:pointer; }
+  .chk input{ margin:0; width:auto; }
 </style>
 </head>
 <body>
@@ -68,6 +71,15 @@
 
     <label>Arquivo .html</label>
     <input type="file" id="file" accept=".html" required>
+
+    <label>Quem pode acessar este app</label>
+    <div class="grupos">
+      <label class="chk"><input type="checkbox" name="grupo" value="Geral"> Geral (todo mundo)</label>
+      <label class="chk"><input type="checkbox" name="grupo" value="TI"> TI</label>
+      <label class="chk"><input type="checkbox" name="grupo" value="Qualidade"> Qualidade</label>
+      <label class="chk"><input type="checkbox" name="grupo" value="PCP"> PCP</label>
+    </div>
+    <div class="hint">Marque pelo menos um grupo. Só quem estiver num desses grupos vê e consegue abrir o app.</div>
 
     <button class="btn" id="submitBtn" type="submit">Publicar app</button>
     <div class="status" id="status"></div>
@@ -101,10 +113,15 @@ form.addEventListener('submit', async (e) => {
   const title = document.getElementById('title').value.trim();
   const category = document.getElementById('category').value.trim();
   const description = document.getElementById('description').value.trim();
+  const grupos = Array.from(document.querySelectorAll('input[name=grupo]:checked')).map(el => el.value);
   const file = document.getElementById('file').files[0];
 
   if(!password || !title || !file){
     showStatus('Preenche a senha, o nome do app e escolhe o arquivo .html', 'err');
+    return;
+  }
+  if(grupos.length === 0){
+    showStatus('Marca pelo menos um grupo com acesso a este app', 'err');
     return;
   }
   if(!file.name.toLowerCase().endsWith('.html')){
@@ -120,7 +137,7 @@ form.addEventListener('submit', async (e) => {
     const res = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password, title, category, description, filename: file.name, fileBase64 })
+      body: JSON.stringify({ password, title, category, description, filename: file.name, fileBase64, grupos })
     });
     const data = await res.json().catch(() => ({}));
     if(!res.ok){
