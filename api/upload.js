@@ -67,7 +67,12 @@ export default async function handler(req, res) {
   function negar(msg){
     document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Central de Apps</a>';
   }
+  var jaResolveu = false;
+  setTimeout(function(){
+    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
+  }, 10000);
   firebase.auth().onAuthStateChanged(function(user){
+    jaResolveu = true;
     if(!user){ negar('Você precisa entrar pela Central de Apps.'); return; }
     firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
       var dados = snap.val();
