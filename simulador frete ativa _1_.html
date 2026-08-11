@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Frete — Rodoviário até 3 dias | ATIVA</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --navy:#13233F;
+    --navy2:#1E3A5F;
+    --blue-accent:#3B6FE0;
+    --teal:#0FA88F;
+    --bg:#F3F5F8;
+    --card:#FFFFFF;
+    --border:#E3E7ED;
+    --text:#1B2432;
+    --muted:#667085;
+    --orange:#B5522A;
+    --warn-bg:#FFF7E6;
+    --warn-border:#F0D897;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+    font-size:14px; line-height:1.5;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:28px 20px 60px;}
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+    margin-bottom:22px;
+  }
+  .topbar h1{font-size:20px; margin:0 0 4px; color:var(--navy); font-weight:800;}
+  .topbar .sub{color:var(--muted); font-size:13px;}
+  .profile-badge{
+    background:var(--navy); color:#fff; font-weight:700; font-size:12.5px;
+    padding:8px 14px; border-radius:8px; white-space:nowrap;
+  }
+  .grid{display:grid; grid-template-columns: 1.05fr 0.95fr; gap:22px; align-items:start;}
+  @media (max-width:920px){ .grid{grid-template-columns:1fr;} }
+
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:12px;
+    padding:20px 22px; margin-bottom:18px;
+  }
+  .card h2{
+    font-size:14.5px; margin:0 0 4px; color:var(--navy); display:flex; align-items:center; gap:8px;
+  }
+  .step-num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:20px; height:20px; border-radius:50%; background:var(--navy); color:#fff;
+    font-size:11.5px; font-weight:700; flex:none;
+  }
+  .card .desc{color:var(--muted); font-size:12.5px; margin:0 0 14px;}
+
+  label{display:block; font-size:11.5px; font-weight:700; color:var(--navy2); margin-bottom:5px; letter-spacing:.2px;}
+  input[type=text], input[type=number], select{
+    width:100%; padding:9px 11px; border:1px solid #CBD3DD; border-radius:8px;
+    font-size:13.5px; color:var(--text); background:#fff;
+  }
+  input:focus, select:focus{outline:2px solid var(--blue-accent); outline-offset:1px;}
+  .row{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;}
+  .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px;}
+  @media (max-width:520px){.row,.row3{grid-template-columns:1fr;}}
+
+  button{
+    cursor:pointer; border:none; border-radius:8px; font-weight:700; font-size:13px;
+    padding:10px 16px; transition:opacity .15s;
+  }
+  button:hover{opacity:.88;}
+  .btn-primary{background:var(--navy); color:#fff;}
+  .btn-secondary{background:#fff; color:var(--navy); border:1px solid #CBD3DD !important; border:1px solid #CBD3DD;}
+  .btn-row{display:flex; gap:10px; margin-top:6px; flex-wrap:wrap;}
+
+  .result-card{
+    background:var(--navy); color:#fff; border-radius:14px; padding:24px 26px;
+  }
+  .result-label{font-size:11px; letter-spacing:.6px; color:#9FB0C9; font-weight:700; text-transform:uppercase;}
+  .result-value{font-size:34px; font-weight:800; margin:4px 0 10px;}
+  .result-tag{
+    display:inline-flex; gap:6px; align-items:center; background:#24406B; color:#CFE0FF;
+    font-size:11.5px; font-weight:700; padding:5px 10px; border-radius:20px; margin-bottom:16px;
+  }
+  .line{
+    display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed #2C4770;
+    font-size:13px;
+  }
+  .line:last-of-type{border-bottom:none;}
+  .line .lname{color:#C9D6E8;}
+  .line .lval{font-weight:700;}
+  .line.total{border-top:1px solid #3A5B87; margin-top:6px; padding-top:12px; font-size:15px;}
+  .line.total .lname{color:#fff; font-weight:700;}
+
+  .badge{
+    display:inline-block; font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:6px;
+    background:#EAF1FF; color:#2451B8; margin-right:6px;
+  }
+  .badge.green{background:#E4F7F0; color:#0B7A5E;}
+  .badge.orange{background:#FDECE3; color:var(--orange);}
+
+  .resolved-box{
+    background:#F6F8FB; border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-top:12px;
+  }
+  .resolved-box .city{font-weight:800; color:var(--navy); font-size:14.5px;}
+  .resolved-box .meta{color:var(--muted); font-size:12px; margin-top:2px;}
+
+  .msg{font-size:12.5px; padding:10px 12px; border-radius:8px; margin-top:10px;}
+  .msg.err{background:#FDECEC; color:#B3261E; border:1px solid #F5C6C2;}
+  .msg.ok{background:#EAF7EF; color:#1C7C4C; border:1px solid #BFE6CE;}
+
+  .check-row{
+    display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid #F0F2F5;
+  }
+  .check-row:last-child{border-bottom:none;}
+  .check-row input[type=checkbox]{margin-top:3px; width:16px; height:16px; flex:none;}
+  .check-row .ct-title{font-weight:700; font-size:13px; color:var(--text);}
+  .check-row .ct-desc{font-size:11.5px; color:var(--muted); margin-top:1px;}
+  .check-row .ct-qty{width:70px; margin-left:auto;}
+
+  .toggle-link{
+    color:var(--blue-accent); font-weight:700; font-size:12.5px; cursor:pointer; user-select:none;
+    display:inline-flex; align-items:center; gap:5px;
+  }
+  .collapsible{display:none; margin-top:14px;}
+  .collapsible.open{display:block;}
+
+  .warn-box{
+    background:var(--warn-bg); border:1px solid var(--warn-border); border-radius:10px; padding:14px 16px;
+    font-size:12.5px; color:#6B5017; margin-top:8px;
+  }
+  .warn-box b{color:#4A3510;}
+
+  table{width:100%; border-collapse:collapse; font-size:12px; margin-top:10px;}
+  th,td{padding:6px 8px; border-bottom:1px solid var(--border); text-align:right;}
+  th:first-child, td:first-child{text-align:left;}
+  th{background:#F6F8FB; color:var(--navy2); font-weight:700; font-size:11px;}
+  .ref-block{margin-bottom:18px;}
+  .ref-block h3{font-size:12.5px; color:var(--navy); margin:14px 0 4px;}
+
+  .footer-note{text-align:center; color:#9AA4B2; font-size:11px; margin-top:26px;}
+
+  input[type=file]{font-size:12.5px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div>
+      <h1>Simulador de Frete — Rodoviário até 3 dias úteis</h1>
+      <div class="sub">ATIVA Logística · Origem: São Paulo/SP · Proposta STIN PHARMA, 31/07/2026 (válida até 30/08/2026)</div>
+    </div>
+    <div class="profile-badge">Perfil fixo da carga: 5 kg · 1 volume</div>
+  </div>
+
+  <div class="grid">
+    <!-- LEFT COLUMN -->
+    <div>
+
+      <div class="card">
+        <h2><span class="step-num">1</span> Buscar pelo CEP</h2>
+        <p class="desc">Informe o CEP de destino e o valor da nota fiscal.</p>
+        <div class="row">
+          <div>
+            <label>CEP DE DESTINO</label>
+            <input type="text" id="cepInput" placeholder="00000-000" maxlength="9">
+          </div>
+          <div>
+            <label>VALOR DA NOTA FISCAL (R$)</label>
+            <input type="text" id="nfInput" placeholder="R$ 0,00">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" onclick="calcularPorCEP()">Calcular por CEP</button>
+        </div>
+        <div id="cepMsg"></div>
+        <div id="resolvedBox" class="resolved-box" style="display:none;">
+          <div class="city" id="resolvedCity">—</div>
+          <div class="meta" id="resolvedMeta">—</div>
+          <div style="margin-top:8px;" id="resolvedBadges"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <span class="toggle-link" onclick="toggleBlock('manualBlock', this)">▸ 2. Selecionar manualmente (opcional)</span>
+        <p class="desc" style="margin-top:8px;">Use se preferir escolher o destino sem digitar o CEP, ou para ajustar o resultado da busca.</p>
+        <div id="manualBlock" class="collapsible">
+          <div class="row">
+            <div>
+              <label>UF DESTINO</label>
+              <select id="ufSelect" onchange="onUfChange()">
+                <option value="">Selecione…</option>
+                <option value="SP">SP</option>
+                <option value="RJ">RJ</option>
+                <option value="MG">MG</option>
+                <option value="ES">ES</option>
+                <option value="PR">PR</option>
+              </select>
+            </div>
+            <div>
+              <label>PRAÇA</label>
+              <select id="pracaSelect">
+                <option value="">Selecione a UF primeiro</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn-secondary" onclick="calcularManual()">Calcular manualmente</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="step-num">3</span> Condições do destino</h2>
+        <p class="desc">Marque manualmente as condições aplicáveis a este destinatário — a planilha de abrangência não traz esses sinalizadores por CEP, então eles não são detectados automaticamente.</p>
+
+        <div class="check-row">
+          <input type="checkbox" id="chkEmex">
+          <div style="flex:1;">
+            <div class="ct-title">EMEX — emergência excepcional</div>
+            <div class="ct-desc">0,15% s/ NF, mínimo R$ 15,85 por fração de 100 kg</div>
+          </div>
+        </div>
+        <div class="check-row">
+          <input type="checkbox" id="chkTrt">
+          <div style="flex:1;">
+            <div class="ct-title">TRT — restrição de trânsito</div>
+            <div class="ct-desc">Mínimo R$ 7,00 sobre o frete original</div>
+          </div>
+        </div>
+        <div class="check-row">
+          <input type="checkbox" id="chkTde">
+          <div style="flex:1;">
+            <div class="ct-title">TDE — dificuldade na entrega</div>
+            <div class="ct-desc">20% s/ frete original, mínimo R$ 250,00 · soma +2 dias ao prazo</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <span class="toggle-link" onclick="toggleBlock('servicosBlock', this)">▸ 4. Serviços adicionais (opcional)</span>
+        <p class="desc" style="margin-top:8px;">Marque apenas se a entrega tiver essa condição específica.</p>
+        <div id="servicosBlock" class="collapsible">
+          <div class="check-row">
+            <input type="checkbox" id="chkTag">
+            <div style="flex:1;"><div class="ct-title">TAG — taxa de agendamento</div><div class="ct-desc">R$ 30,00 por nota fiscal</div></div>
+          </div>
+          <div class="check-row">
+            <input type="checkbox" id="chkReentrega">
+            <div style="flex:1;"><div class="ct-title">Reentrega</div><div class="ct-desc">50% s/ frete original, mínimo R$ 101,88</div></div>
+          </div>
+          <div class="check-row">
+            <input type="checkbox" id="chkDevolucao">
+            <div style="flex:1;"><div class="ct-title">Devolução</div><div class="ct-desc">100% s/ frete original</div></div>
+          </div>
+          <div class="check-row">
+            <input type="checkbox" id="chkTce">
+            <div style="flex:1;"><div class="ct-title">TCE — coleta especial</div><div class="ct-desc">30% s/ frete original · sábados, domingos e feriados</div></div>
+          </div>
+          <div class="check-row">
+            <input type="checkbox" id="chkTda">
+            <div style="flex:1;"><div class="ct-title">TDA — difícil acesso</div><div class="ct-desc">40% s/ frete original, mínimo R$ 208,65</div></div>
+          </div>
+          <div class="check-row">
+            <input type="checkbox" id="chkTsf">
+            <div style="flex:1;"><div class="ct-title">TSF — separação de fatura</div><div class="ct-desc">R$ 7,30 por fatura</div></div>
+          </div>
+          <div class="check-row">
+            <input type="checkbox" id="chkCap">
+            <div style="flex:1;"><div class="ct-title">CAP — paletização e filmagem</div><div class="ct-desc">R$ 67,63 por palete</div></div>
+            <input type="number" min="1" value="1" class="ct-qty" id="qtyCap">
+          </div>
+          <div class="check-row">
+            <input type="checkbox" id="chkGelo">
+            <div style="flex:1;"><div class="ct-title">Manutenção do gelo</div><div class="ct-desc">R$ 45,00 por volume</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div>
+      <div class="result-card">
+        <div class="result-label">Valor total estimado do frete</div>
+        <div class="result-value" id="resultTotal">R$ 0,00</div>
+        <div class="result-tag" id="resultTag">RODOVIÁRIO · ATIVA</div>
+
+        <div id="resultLines"><div class="line"><span class="lname">Preencha o CEP ou selecione manualmente o destino ao lado.</span></div></div>
+
+        <div class="btn-row" style="margin-top:14px;">
+          <button class="btn-secondary" onclick="copiarCotacao()">Copiar cotação</button>
+          <button class="btn-secondary" onclick="window.print()">Imprimir / salvar PDF</button>
+        </div>
+      </div>
+
+      <div class="warn-box" style="margin-top:16px;">
+        <b>Sobre esta estimativa:</b> os cálculos usam a tabela CIF por faixa de peso da proposta comercial ATIVA
+        (STIN PHARMA, filial SAO, 31/07/2026) para o perfil fixo de 5 kg e 1 volume, considerando a faixa
+        "até 10 kg". Despacho é R$ 10,00 quando o destino é SP e R$ 20,00 para os demais estados. EMEX, TRT, TDE
+        e os serviços adicionais só entram no cálculo se você marcar a condição correspondente — a planilha de
+        abrangência não indica esses sinalizadores por CEP. Confirme condições especiais e vigência da proposta
+        antes de fechar.
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <h2 style="display:flex; align-items:center; gap:6px;"><span>🔄</span> Atualizar base de abrangência</h2>
+        <p class="desc">
+          Envie uma nova versão da planilha de abrangência (mesmo modelo de colunas: UNIDADE ORIGEM, UF ORIGEM,
+          UF DESTINO, CIDADE DESTINO, FILIAL, COD IBGE, PRAZO, CLASSIFICAÇÃO, REGIÃO) para atualizar as cidades
+          usadas nesta sessão do navegador.
+        </p>
+        <input type="file" id="fileUpdate" accept=".xlsx,.xls" onchange="handleFileUpload(event)">
+        <div id="uploadMsg"></div>
+        <p class="desc" style="margin-top:10px;">
+          Esta atualização vale apenas para esta aba/sessão do navegador. Ao fechar ou recarregar a página,
+          a base volta para a versão original deste arquivo.
+        </p>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <span class="toggle-link" onclick="toggleBlock('refBlock', this)">▸ Ver tabela completa de referência</span>
+        <div id="refBlock" class="collapsible"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer-note">Ferramenta de apoio interno · valores baseados na proposta comercial ATIVA (STIN PHARMA, 31/07/2026) e na planilha de abrangência rodoviária até 3 dias úteis.</div>
+</div>
+
+<script>
+// ---------- Embedded data ----------
+const PRICING = {"SP": {"Capital": [20.57, 26.74, 34.77, 48.96, 78.34, 100.72, 0.9166, 0.002], "Interior": [24.69, 32.09, 41.72, 58.75, 94.01, 120.87, 1.0999, 0.002], "Interior2": [27.15, 35.3, 45.89, 64.63, 103.41, 132.95, 1.2098, 0.002]}, "RJ": {"Capital": [30.17, 39.22, 50.99, 66.29, 86.17, 110.79, 1.0082, 0.0025], "Interior": [37.71, 49.03, 63.74, 82.86, 107.71, 138.49, 1.2602, 0.003], "Interior2": [41.49, 53.93, 70.11, 91.14, 118.49, 152.34, 1.3863, 0.0035]}, "MG": {"Capital": [31.54, 41.01, 53.3, 69.3, 90.09, 115.83, 1.0541, 0.0025], "Interior": [39.43, 51.26, 66.64, 86.63, 112.62, 144.79, 1.3176, 0.003], "Interior2": [43.37, 56.39, 73.3, 95.29, 123.87, 159.27, 1.4494, 0.0035]}, "ES": {"Capital": [39.83, 51.77, 67.31, 87.5, 113.75, 170.63, 1.5527, 0.0025], "Interior": [49.78, 64.72, 84.14, 109.37, 142.19, 213.28, 1.9408, 0.003]}, "PR": {"Capital": [28.8, 37.44, 48.67, 63.27, 82.25, 105.76, 0.9624, 0.0025], "Interior": [36.0, 46.8, 60.85, 79.1, 102.82, 132.19, 1.203, 0.003]}};
+let COVERAGE = {"VITORIA|ES":{"cidade":"VITORIA","uf":"ES","prazo":3,"classificacao":"CAPITAL","regiao":"SUDESTE"},"CARIACICA|ES":{"cidade":"CARIACICA","uf":"ES","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SERRA|ES":{"cidade":"SERRA","uf":"ES","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"VIANA|ES":{"cidade":"VIANA","uf":"ES","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"VILA VELHA|ES":{"cidade":"VILA VELHA","uf":"ES","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"BELO HORIZONTE|MG":{"cidade":"BELO HORIZONTE","uf":"MG","prazo":2,"classificacao":"CAPITAL","regiao":"SUDESTE"},"EXTREMA|MG":{"cidade":"EXTREMA","uf":"MG","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"JUIZ DE FORA|MG":{"cidade":"JUIZ DE FORA","uf":"MG","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"POUSO ALEGRE|MG":{"cidade":"POUSO ALEGRE","uf":"MG","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"BARBACENA|MG":{"cidade":"BARBACENA","uf":"MG","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"BETIM|MG":{"cidade":"BETIM","uf":"MG","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CAMBUI|MG":{"cidade":"CAMBUI","uf":"MG","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CATAGUASES|MG":{"cidade":"CATAGUASES","uf":"MG","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CONTAGEM|MG":{"cidade":"CONTAGEM","uf":"MG","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"IBIRITE|MG":{"cidade":"IBIRITE","uf":"MG","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"JUATUBA|MG":{"cidade":"JUATUBA","uf":"MG","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"NOVA LIMA|MG":{"cidade":"NOVA LIMA","uf":"MG","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"POCOS DE CALDAS|MG":{"cidade":"POCOS DE CALDAS","uf":"MG","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"RIBEIRAO DAS NEVES|MG":{"cidade":"RIBEIRAO DAS NEVES","uf":"MG","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SABARA|MG":{"cidade":"SABARA","uf":"MG","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SANTA LUZIA|MG":{"cidade":"SANTA LUZIA","uf":"MG","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SAO JOAQUIM DE BICAS|MG":{"cidade":"SAO JOAQUIM DE BICAS","uf":"MG","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SAO JOSE DA LAPA|MG":{"cidade":"SAO JOSE DA LAPA","uf":"MG","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SETE LAGOAS|MG":{"cidade":"SETE LAGOAS","uf":"MG","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"UBA|MG":{"cidade":"UBA","uf":"MG","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"UBERABA|MG":{"cidade":"UBERABA","uf":"MG","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"UBERLANDIA|MG":{"cidade":"UBERLANDIA","uf":"MG","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"VESPASIANO|MG":{"cidade":"VESPASIANO","uf":"MG","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ARGIRITA|MG":{"cidade":"ARGIRITA","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BICAS|MG":{"cidade":"BICAS","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CONFINS|MG":{"cidade":"CONFINS","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CONGONHAL|MG":{"cidade":"CONGONHAL","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ESTIVA|MG":{"cidade":"ESTIVA","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"EWBANK DA CAMARA|MG":{"cidade":"EWBANK DA CAMARA","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"GUARARA|MG":{"cidade":"GUARARA","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"LAGOA SANTA|MG":{"cidade":"LAGOA SANTA","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"LEOPOLDINA|MG":{"cidade":"LEOPOLDINA","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MARIPA DE MINAS|MG":{"cidade":"MARIPA DE MINAS","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MATEUS LEME|MG":{"cidade":"MATEUS LEME","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MATIAS BARBOSA|MG":{"cidade":"MATIAS BARBOSA","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MERCES|MG":{"cidade":"MERCES","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PARAOPEBA|MG":{"cidade":"PARAOPEBA","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PEDRO LEOPOLDO|MG":{"cidade":"PEDRO LEOPOLDO","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PIAU|MG":{"cidade":"PIAU","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PIRAUBA|MG":{"cidade":"PIRAUBA","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"RAPOSOS|MG":{"cidade":"RAPOSOS","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"RIO ACIMA|MG":{"cidade":"RIO ACIMA","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"RIO NOVO|MG":{"cidade":"RIO NOVO","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"RIO POMBA|MG":{"cidade":"RIO POMBA","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SANTOS DUMONT|MG":{"cidade":"SANTOS DUMONT","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TABULEIRO|MG":{"cidade":"TABULEIRO","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TIRADENTES|MG":{"cidade":"TIRADENTES","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TOCANTINS|MG":{"cidade":"TOCANTINS","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"VISCONDE DO RIO BRANCO|MG":{"cidade":"VISCONDE DO RIO BRANCO","uf":"MG","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CURITIBA|PR":{"cidade":"CURITIBA","uf":"PR","prazo":2,"classificacao":"CAPITAL","regiao":"SUL"},"ALMIRANTE TAMANDARE|PR":{"cidade":"ALMIRANTE TAMANDARE","uf":"PR","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUL"},"ARAUCARIA|PR":{"cidade":"ARAUCARIA","uf":"PR","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUL"},"CAMPINA GRANDE DO SUL|PR":{"cidade":"CAMPINA GRANDE DO SUL","uf":"PR","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUL"},"CAMPO LARGO|PR":{"cidade":"CAMPO LARGO","uf":"PR","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUL"},"COLOMBO|PR":{"cidade":"COLOMBO","uf":"PR","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUL"},"FAZENDA RIO GRANDE|PR":{"cidade":"FAZENDA RIO GRANDE","uf":"PR","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUL"},"PINHAIS|PR":{"cidade":"PINHAIS","uf":"PR","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUL"},"PIRAQUARA|PR":{"cidade":"PIRAQUARA","uf":"PR","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUL"},"PONTA GROSSA|PR":{"cidade":"PONTA GROSSA","uf":"PR","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUL"},"QUATRO BARRAS|PR":{"cidade":"QUATRO BARRAS","uf":"PR","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUL"},"SAO JOSE DOS PINHAIS|PR":{"cidade":"SAO JOSE DOS PINHAIS","uf":"PR","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUL"},"RIO DE JANEIRO|RJ":{"cidade":"RIO DE JANEIRO","uf":"RJ","prazo":2,"classificacao":"CAPITAL","regiao":"SUDESTE"},"BELFORD ROXO|RJ":{"cidade":"BELFORD ROXO","uf":"RJ","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"DUQUE DE CAXIAS|RJ":{"cidade":"DUQUE DE CAXIAS","uf":"RJ","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"MESQUITA|RJ":{"cidade":"MESQUITA","uf":"RJ","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"NILOPOLIS|RJ":{"cidade":"NILOPOLIS","uf":"RJ","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"NITEROI|RJ":{"cidade":"NITEROI","uf":"RJ","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"NOVA IGUACU|RJ":{"cidade":"NOVA IGUACU","uf":"RJ","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"QUEIMADOS|RJ":{"cidade":"QUEIMADOS","uf":"RJ","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SAO GONCALO|RJ":{"cidade":"SAO GONCALO","uf":"RJ","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SAO JOAO DE MERITI|RJ":{"cidade":"SAO JOAO DE MERITI","uf":"RJ","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"BARRA MANSA|RJ":{"cidade":"BARRA MANSA","uf":"RJ","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CAMPOS DOS GOYTACAZES|RJ":{"cidade":"CAMPOS DOS GOYTACAZES","uf":"RJ","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ITABORAI|RJ":{"cidade":"ITABORAI","uf":"RJ","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ITATIAIA|RJ":{"cidade":"ITATIAIA","uf":"RJ","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"JAPERI|RJ":{"cidade":"JAPERI","uf":"RJ","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"MAGE|RJ":{"cidade":"MAGE","uf":"RJ","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"PETROPOLIS|RJ":{"cidade":"PETROPOLIS","uf":"RJ","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"PINHEIRAL|RJ":{"cidade":"PINHEIRAL","uf":"RJ","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"PORTO REAL|RJ":{"cidade":"PORTO REAL","uf":"RJ","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"QUATIS|RJ":{"cidade":"QUATIS","uf":"RJ","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"RESENDE|RJ":{"cidade":"RESENDE","uf":"RJ","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SEROPEDICA|RJ":{"cidade":"SEROPEDICA","uf":"RJ","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"VOLTA REDONDA|RJ":{"cidade":"VOLTA REDONDA","uf":"RJ","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"GUAPIMIRIM|RJ":{"cidade":"GUAPIMIRIM","uf":"RJ","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SAO PAULO|SP":{"cidade":"SAO PAULO","uf":"SP","prazo":1,"classificacao":"CAPITAL","regiao":"SUDESTE"},"ARUJA|SP":{"cidade":"ARUJA","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"BARUERI|SP":{"cidade":"BARUERI","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CAIEIRAS|SP":{"cidade":"CAIEIRAS","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CAJAMAR|SP":{"cidade":"CAJAMAR","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CARAPICUIBA|SP":{"cidade":"CARAPICUIBA","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"COTIA|SP":{"cidade":"COTIA","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"DIADEMA|SP":{"cidade":"DIADEMA","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"EMBU DAS ARTES|SP":{"cidade":"EMBU DAS ARTES","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"EMBU GUACU|SP":{"cidade":"EMBU GUACU","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"FERRAZ DE VASCONCELOS|SP":{"cidade":"FERRAZ DE VASCONCELOS","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"FRANCISCO MORATO|SP":{"cidade":"FRANCISCO MORATO","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"FRANCO DA ROCHA|SP":{"cidade":"FRANCO DA ROCHA","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"GUARULHOS|SP":{"cidade":"GUARULHOS","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ITAPECERICA DA SERRA|SP":{"cidade":"ITAPECERICA DA SERRA","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ITAPEVI|SP":{"cidade":"ITAPEVI","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ITAQUAQUECETUBA|SP":{"cidade":"ITAQUAQUECETUBA","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"JANDIRA|SP":{"cidade":"JANDIRA","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"MAUA|SP":{"cidade":"MAUA","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"MOGI DAS CRUZES|SP":{"cidade":"MOGI DAS CRUZES","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"OSASCO|SP":{"cidade":"OSASCO","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"POA|SP":{"cidade":"POA","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"RIBEIRAO PIRES|SP":{"cidade":"RIBEIRAO PIRES","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SANTA ISABEL|SP":{"cidade":"SANTA ISABEL","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SANTANA DE PARNAIBA|SP":{"cidade":"SANTANA DE PARNAIBA","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SANTO ANDRE|SP":{"cidade":"SANTO ANDRE","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SAO BERNARDO DO CAMPO|SP":{"cidade":"SAO BERNARDO DO CAMPO","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SAO CAETANO DO SUL|SP":{"cidade":"SAO CAETANO DO SUL","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SUZANO|SP":{"cidade":"SUZANO","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"TABOAO DA SERRA|SP":{"cidade":"TABOAO DA SERRA","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"VARGEM GRANDE PAULISTA|SP":{"cidade":"VARGEM GRANDE PAULISTA","uf":"SP","prazo":1,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"AGUDOS|SP":{"cidade":"AGUDOS","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ALUMINIO|SP":{"cidade":"ALUMINIO","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"AMERICANA|SP":{"cidade":"AMERICANA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"APARECIDA|SP":{"cidade":"APARECIDA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ARACARIGUAMA|SP":{"cidade":"ARACARIGUAMA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ARACOIABA DA SERRA|SP":{"cidade":"ARACOIABA DA SERRA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"BADY BASSITT|SP":{"cidade":"BADY BASSITT","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"BARRETOS|SP":{"cidade":"BARRETOS","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"BAURU|SP":{"cidade":"BAURU","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CACAPAVA|SP":{"cidade":"CACAPAVA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CAMPINAS|SP":{"cidade":"CAMPINAS","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CATANDUVA|SP":{"cidade":"CATANDUVA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CEDRAL|SP":{"cidade":"CEDRAL","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CUBATAO|SP":{"cidade":"CUBATAO","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"GUARATINGUETA|SP":{"cidade":"GUARATINGUETA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"HORTOLANDIA|SP":{"cidade":"HORTOLANDIA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"IBIUNA|SP":{"cidade":"IBIUNA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"INDAIATUBA|SP":{"cidade":"INDAIATUBA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ITAPUI|SP":{"cidade":"ITAPUI","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"JACAREI|SP":{"cidade":"JACAREI","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"JAGUARIUNA|SP":{"cidade":"JAGUARIUNA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"JAU|SP":{"cidade":"JAU","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"JUNDIAI|SP":{"cidade":"JUNDIAI","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"JUQUITIBA|SP":{"cidade":"JUQUITIBA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"LENCOIS PAULISTA|SP":{"cidade":"LENCOIS PAULISTA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"LIMEIRA|SP":{"cidade":"LIMEIRA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"MAIRINQUE|SP":{"cidade":"MAIRINQUE","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"MAIRIPORA|SP":{"cidade":"MAIRIPORA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"MARILIA|SP":{"cidade":"MARILIA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"MIRASSOL|SP":{"cidade":"MIRASSOL","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"MONGAGUA|SP":{"cidade":"MONGAGUA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"MONTE APRAZIVEL|SP":{"cidade":"MONTE APRAZIVEL","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"MONTE MOR|SP":{"cidade":"MONTE MOR","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"NOVA ODESSA|SP":{"cidade":"NOVA ODESSA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"OLIMPIA|SP":{"cidade":"OLIMPIA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"PAULINIA|SP":{"cidade":"PAULINIA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"PEDERNEIRAS|SP":{"cidade":"PEDERNEIRAS","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"PEDREIRA|SP":{"cidade":"PEDREIRA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"PIEDADE|SP":{"cidade":"PIEDADE","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"PINDAMONHANGABA|SP":{"cidade":"PINDAMONHANGABA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"PIRACICABA|SP":{"cidade":"PIRACICABA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"PIRATININGA|SP":{"cidade":"PIRATININGA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"POTIRENDABA|SP":{"cidade":"POTIRENDABA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"RIBEIRAO PRETO|SP":{"cidade":"RIBEIRAO PRETO","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"RIO GRANDE DA SERRA|SP":{"cidade":"RIO GRANDE DA SERRA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SALTO DE PIRAPORA|SP":{"cidade":"SALTO DE PIRAPORA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SANTA BARBARA D OESTE|SP":{"cidade":"SANTA BARBARA D OESTE","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SAO JOSE DO RIO PRETO|SP":{"cidade":"SAO JOSE DO RIO PRETO","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SAO JOSE DOS CAMPOS|SP":{"cidade":"SAO JOSE DOS CAMPOS","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SAO LOURENCO DA SERRA|SP":{"cidade":"SAO LOURENCO DA SERRA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SAO ROQUE|SP":{"cidade":"SAO ROQUE","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SERTAOZINHO|SP":{"cidade":"SERTAOZINHO","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SUMARE|SP":{"cidade":"SUMARE","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"TANABI|SP":{"cidade":"TANABI","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"TAUBATE|SP":{"cidade":"TAUBATE","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"UCHOA|SP":{"cidade":"UCHOA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"VALINHOS|SP":{"cidade":"VALINHOS","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"VINHEDO|SP":{"cidade":"VINHEDO","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"VOTORANTIM|SP":{"cidade":"VOTORANTIM","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"VOTUPORANGA|SP":{"cidade":"VOTUPORANGA","uf":"SP","prazo":2,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"AMERICO BRASILIENSE|SP":{"cidade":"AMERICO BRASILIENSE","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"AMPARO|SP":{"cidade":"AMPARO","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ARARAQUARA|SP":{"cidade":"ARARAQUARA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ARARAS|SP":{"cidade":"ARARAS","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ARTUR NOGUEIRA|SP":{"cidade":"ARTUR NOGUEIRA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ASSIS|SP":{"cidade":"ASSIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ATIBAIA|SP":{"cidade":"ATIBAIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"AVARE|SP":{"cidade":"AVARE","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"BATATAIS|SP":{"cidade":"BATATAIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"BEBEDOURO|SP":{"cidade":"BEBEDOURO","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"BERTIOGA|SP":{"cidade":"BERTIOGA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"BOITUVA|SP":{"cidade":"BOITUVA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"BOTUCATU|SP":{"cidade":"BOTUCATU","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"BRAGANCA PAULISTA|SP":{"cidade":"BRAGANCA PAULISTA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CABREUVA|SP":{"cidade":"CABREUVA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CAMPO LIMPO PAULISTA|SP":{"cidade":"CAMPO LIMPO PAULISTA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CAMPOS DO JORDAO|SP":{"cidade":"CAMPOS DO JORDAO","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CAPIVARI|SP":{"cidade":"CAPIVARI","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CARAGUATATUBA|SP":{"cidade":"CARAGUATATUBA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CERQUILHO|SP":{"cidade":"CERQUILHO","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CONCHAL|SP":{"cidade":"CONCHAL","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"COSMOPOLIS|SP":{"cidade":"COSMOPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"CRAVINHOS|SP":{"cidade":"CRAVINHOS","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"DUARTINA|SP":{"cidade":"DUARTINA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"FRANCA|SP":{"cidade":"FRANCA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"GARCA|SP":{"cidade":"GARCA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"GUARAREMA|SP":{"cidade":"GUARAREMA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"GUARIBA|SP":{"cidade":"GUARIBA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"GUARUJA|SP":{"cidade":"GUARUJA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"HOLAMBRA|SP":{"cidade":"HOLAMBRA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"IBITINGA|SP":{"cidade":"IBITINGA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"IRACEMAPOLIS|SP":{"cidade":"IRACEMAPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ITANHAEM|SP":{"cidade":"ITANHAEM","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ITAPETININGA|SP":{"cidade":"ITAPETININGA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ITAPIRA|SP":{"cidade":"ITAPIRA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ITATIBA|SP":{"cidade":"ITATIBA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ITU|SP":{"cidade":"ITU","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ITUPEVA|SP":{"cidade":"ITUPEVA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"JABOTICABAL|SP":{"cidade":"JABOTICABAL","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"JARDINOPOLIS|SP":{"cidade":"JARDINOPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"JARINU|SP":{"cidade":"JARINU","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"LOUVEIRA|SP":{"cidade":"LOUVEIRA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"MATAO|SP":{"cidade":"MATAO","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"MOCOCA|SP":{"cidade":"MOCOCA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"MOGI GUACU|SP":{"cidade":"MOGI GUACU","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"MOGI MIRIM|SP":{"cidade":"MOGI MIRIM","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"MONTE ALTO|SP":{"cidade":"MONTE ALTO","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"NOVO HORIZONTE|SP":{"cidade":"NOVO HORIZONTE","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ORLANDIA|SP":{"cidade":"ORLANDIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"OURINHOS|SP":{"cidade":"OURINHOS","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"PERUIBE|SP":{"cidade":"PERUIBE","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"PORTO FELIZ|SP":{"cidade":"PORTO FELIZ","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"PRADOPOLIS|SP":{"cidade":"PRADOPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"PRAIA GRANDE|SP":{"cidade":"PRAIA GRANDE","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"RIO CLARO|SP":{"cidade":"RIO CLARO","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SALTO|SP":{"cidade":"SALTO","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SANTA CRUZ DO RIO PARDO|SP":{"cidade":"SANTA CRUZ DO RIO PARDO","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SANTO ANTONIO DE POSSE|SP":{"cidade":"SANTO ANTONIO DE POSSE","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SANTOS|SP":{"cidade":"SANTOS","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SAO CARLOS|SP":{"cidade":"SAO CARLOS","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SAO PEDRO|SP":{"cidade":"SAO PEDRO","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SAO VICENTE|SP":{"cidade":"SAO VICENTE","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SERRANA|SP":{"cidade":"SERRANA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SOCORRO|SP":{"cidade":"SOCORRO","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"SOROCABA|SP":{"cidade":"SOROCABA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"TATUI|SP":{"cidade":"TATUI","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"VARZEA PAULISTA|SP":{"cidade":"VARZEA PAULISTA","uf":"SP","prazo":3,"classificacao":"INTERIOR 1","regiao":"SUDESTE"},"ADOLFO|SP":{"cidade":"ADOLFO","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ALTAIR|SP":{"cidade":"ALTAIR","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ALVARES FLORENCE|SP":{"cidade":"ALVARES FLORENCE","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"AREALVA|SP":{"cidade":"AREALVA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"AVAI|SP":{"cidade":"AVAI","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BALSAMO|SP":{"cidade":"BALSAMO","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BIRIGUI|SP":{"cidade":"BIRIGUI","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BURITAMA|SP":{"cidade":"BURITAMA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CATIGUA|SP":{"cidade":"CATIGUA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"COLOMBIA|SP":{"cidade":"COLOMBIA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"GUAPIACU|SP":{"cidade":"GUAPIACU","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"GUARACI|SP":{"cidade":"GUARACI","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"IBIRA|SP":{"cidade":"IBIRA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"IPIGUA|SP":{"cidade":"IPIGUA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"JACI|SP":{"cidade":"JACI","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"LINS|SP":{"cidade":"LINS","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"LOURDES|SP":{"cidade":"LOURDES","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MENDONCA|SP":{"cidade":"MENDONCA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MIRASSOLANDIA|SP":{"cidade":"MIRASSOLANDIA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MONTEIRO LOBATO|SP":{"cidade":"MONTEIRO LOBATO","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"NEVES PAULISTA|SP":{"cidade":"NEVES PAULISTA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"NHANDEARA|SP":{"cidade":"NHANDEARA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"NIPOA|SP":{"cidade":"NIPOA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"NOVA ALIANCA|SP":{"cidade":"NOVA ALIANCA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"NOVA GRANADA|SP":{"cidade":"NOVA GRANADA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ONDA VERDE|SP":{"cidade":"ONDA VERDE","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PALESTINA|SP":{"cidade":"PALESTINA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PARAIBUNA|SP":{"cidade":"PARAIBUNA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PLANALTO|SP":{"cidade":"PLANALTO","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"POLONI|SP":{"cidade":"POLONI","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PRESIDENTE ALVES|SP":{"cidade":"PRESIDENTE ALVES","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ROSEIRA|SP":{"cidade":"ROSEIRA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SANTA BRANCA|SP":{"cidade":"SANTA BRANCA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SAO MANUEL|SP":{"cidade":"SAO MANUEL","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SEVERINIA|SP":{"cidade":"SEVERINIA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TABAPUA|SP":{"cidade":"TABAPUA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TREMEMBE|SP":{"cidade":"TREMEMBE","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"UBARANA|SP":{"cidade":"UBARANA","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ZACARIAS|SP":{"cidade":"ZACARIAS","uf":"SP","prazo":2,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ADAMANTINA|SP":{"cidade":"ADAMANTINA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"AGUAS DE LINDOIA|SP":{"cidade":"AGUAS DE LINDOIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"AGUAS DE SANTA BARBARA|SP":{"cidade":"AGUAS DE SANTA BARBARA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"AGUAS DE SAO PEDRO|SP":{"cidade":"AGUAS DE SAO PEDRO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ALTO ALEGRE|SP":{"cidade":"ALTO ALEGRE","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ALVARO DE CARVALHO|SP":{"cidade":"ALVARO DE CARVALHO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ALVINLANDIA|SP":{"cidade":"ALVINLANDIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"AMERICO DE CAMPOS|SP":{"cidade":"AMERICO DE CAMPOS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ANDRADINA|SP":{"cidade":"ANDRADINA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ANHEMBI|SP":{"cidade":"ANHEMBI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"APARECIDA D OESTE|SP":{"cidade":"APARECIDA D OESTE","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ARACATUBA|SP":{"cidade":"ARACATUBA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ARANDU|SP":{"cidade":"ARANDU","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ARCO IRIS|SP":{"cidade":"ARCO IRIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"AREIOPOLIS|SP":{"cidade":"AREIOPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ASPASIA|SP":{"cidade":"ASPASIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"AURIFLAMA|SP":{"cidade":"AURIFLAMA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"AVANHANDAVA|SP":{"cidade":"AVANHANDAVA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BALBINOS|SP":{"cidade":"BALBINOS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BARBOSA|SP":{"cidade":"BARBOSA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BARIRI|SP":{"cidade":"BARIRI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BARRA BONITA|SP":{"cidade":"BARRA BONITA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BARRINHA|SP":{"cidade":"BARRINHA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BASTOS|SP":{"cidade":"BASTOS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BENTO DE ABREU|SP":{"cidade":"BENTO DE ABREU","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BERNARDINO DE CAMPOS|SP":{"cidade":"BERNARDINO DE CAMPOS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BILAC|SP":{"cidade":"BILAC","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BIRITIBA MIRIM|SP":{"cidade":"BIRITIBA MIRIM","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BOA ESPERANCA DO SUL|SP":{"cidade":"BOA ESPERANCA DO SUL","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BOCAINA|SP":{"cidade":"BOCAINA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BOFETE|SP":{"cidade":"BOFETE","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BOM JESUS DOS PERDOES|SP":{"cidade":"BOM JESUS DOS PERDOES","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BORA|SP":{"cidade":"BORA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BORACEIA|SP":{"cidade":"BORACEIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BORBOREMA|SP":{"cidade":"BORBOREMA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BOREBI|SP":{"cidade":"BOREBI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BRAUNA|SP":{"cidade":"BRAUNA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BREJO ALEGRE|SP":{"cidade":"BREJO ALEGRE","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BRODOWSKI|SP":{"cidade":"BRODOWSKI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"BROTAS|SP":{"cidade":"BROTAS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CABRALIA PAULISTA|SP":{"cidade":"CABRALIA PAULISTA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CACHOEIRA PAULISTA|SP":{"cidade":"CACHOEIRA PAULISTA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CAFELANDIA|SP":{"cidade":"CAFELANDIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CAJURU|SP":{"cidade":"CAJURU","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CANAS|SP":{"cidade":"CANAS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CANDIDO MOTA|SP":{"cidade":"CANDIDO MOTA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CANITAR|SP":{"cidade":"CANITAR","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CARDOSO|SP":{"cidade":"CARDOSO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CASTILHO|SP":{"cidade":"CASTILHO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CERQUEIRA CESAR|SP":{"cidade":"CERQUEIRA CESAR","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CESARIO LANGE|SP":{"cidade":"CESARIO LANGE","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CHARQUEADA|SP":{"cidade":"CHARQUEADA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CHAVANTES|SP":{"cidade":"CHAVANTES","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CLEMENTINA|SP":{"cidade":"CLEMENTINA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CORDEIROPOLIS|SP":{"cidade":"CORDEIROPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"COROADOS|SP":{"cidade":"COROADOS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"COSMORAMA|SP":{"cidade":"COSMORAMA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"CRUZEIRO|SP":{"cidade":"CRUZEIRO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"DIRCE REIS|SP":{"cidade":"DIRCE REIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"DOIS CORREGOS|SP":{"cidade":"DOIS CORREGOS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"DOLCINOPOLIS|SP":{"cidade":"DOLCINOPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"DOURADO|SP":{"cidade":"DOURADO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"DRACENA|SP":{"cidade":"DRACENA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"DUMONT|SP":{"cidade":"DUMONT","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ECHAPORA|SP":{"cidade":"ECHAPORA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ELDORADO|SP":{"cidade":"ELDORADO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ELIAS FAUSTO|SP":{"cidade":"ELIAS FAUSTO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ELISIARIO|SP":{"cidade":"ELISIARIO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"EMBAUBA|SP":{"cidade":"EMBAUBA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ENGENHEIRO COELHO|SP":{"cidade":"ENGENHEIRO COELHO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ESPIRITO SANTO DO PINHAL|SP":{"cidade":"ESPIRITO SANTO DO PINHAL","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ESPIRITO SANTO DO TURVO|SP":{"cidade":"ESPIRITO SANTO DO TURVO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ESTIVA GERBI|SP":{"cidade":"ESTIVA GERBI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ESTRELA D OESTE|SP":{"cidade":"ESTRELA D OESTE","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"FARTURA|SP":{"cidade":"FARTURA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"FERNANDOPOLIS|SP":{"cidade":"FERNANDOPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"FERNAO|SP":{"cidade":"FERNAO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"FLORA RICA|SP":{"cidade":"FLORA RICA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"FLOREAL|SP":{"cidade":"FLOREAL","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"FLORIDA PAULISTA|SP":{"cidade":"FLORIDA PAULISTA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"GABRIEL MONTEIRO|SP":{"cidade":"GABRIEL MONTEIRO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"GALIA|SP":{"cidade":"GALIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"GASTAO VIDIGAL|SP":{"cidade":"GASTAO VIDIGAL","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"GENERAL SALGADO|SP":{"cidade":"GENERAL SALGADO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"GETULINA|SP":{"cidade":"GETULINA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"GLICERIO|SP":{"cidade":"GLICERIO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"GUAICARA|SP":{"cidade":"GUAICARA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"GUAIMBE|SP":{"cidade":"GUAIMBE","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"GUARA|SP":{"cidade":"GUARA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"GUARACAI|SP":{"cidade":"GUARACAI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"GUARANI D OESTE|SP":{"cidade":"GUARANI D OESTE","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"GUARANTA|SP":{"cidade":"GUARANTA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"GUARARAPES|SP":{"cidade":"GUARARAPES","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"GUATAPARA|SP":{"cidade":"GUATAPARA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"GUZOLANDIA|SP":{"cidade":"GUZOLANDIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"HERCULANDIA|SP":{"cidade":"HERCULANDIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"IACANGA|SP":{"cidade":"IACANGA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"IACRI|SP":{"cidade":"IACRI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"IARAS|SP":{"cidade":"IARAS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"IBIRAREMA|SP":{"cidade":"IBIRAREMA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ICEM|SP":{"cidade":"ICEM","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"IGARACU DO TIETE|SP":{"cidade":"IGARACU DO TIETE","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"IGARATA|SP":{"cidade":"IGARATA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ILHA SOLTEIRA|SP":{"cidade":"ILHA SOLTEIRA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"INDIAPORA|SP":{"cidade":"INDIAPORA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"INUBIA PAULISTA|SP":{"cidade":"INUBIA PAULISTA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"IPAUSSU|SP":{"cidade":"IPAUSSU","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"IPERO|SP":{"cidade":"IPERO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"IRAPUA|SP":{"cidade":"IRAPUA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"IRAPURU|SP":{"cidade":"IRAPURU","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ITAI|SP":{"cidade":"ITAI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ITAJOBI|SP":{"cidade":"ITAJOBI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ITAJU|SP":{"cidade":"ITAJU","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ITAPOLIS|SP":{"cidade":"ITAPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ITAPORANGA|SP":{"cidade":"ITAPORANGA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ITAPURA|SP":{"cidade":"ITAPURA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ITATINGA|SP":{"cidade":"ITATINGA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"JALES|SP":{"cidade":"JALES","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"JAMBEIRO|SP":{"cidade":"JAMBEIRO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"JOAO RAMALHO|SP":{"cidade":"JOAO RAMALHO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"JULIO MESQUITA|SP":{"cidade":"JULIO MESQUITA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"JUNQUEIROPOLIS|SP":{"cidade":"JUNQUEIROPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"LAGOINHA|SP":{"cidade":"LAGOINHA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"LAVINIA|SP":{"cidade":"LAVINIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"LINDOIA|SP":{"cidade":"LINDOIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"LORENA|SP":{"cidade":"LORENA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"LUCELIA|SP":{"cidade":"LUCELIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"LUCIANOPOLIS|SP":{"cidade":"LUCIANOPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"LUTECIA|SP":{"cidade":"LUTECIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MACATUBA|SP":{"cidade":"MACATUBA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MACAUBAL|SP":{"cidade":"MACAUBAL","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MACEDONIA|SP":{"cidade":"MACEDONIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MAGDA|SP":{"cidade":"MAGDA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MANDURI|SP":{"cidade":"MANDURI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MARACAI|SP":{"cidade":"MARACAI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MARAPOAMA|SP":{"cidade":"MARAPOAMA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MARINOPOLIS|SP":{"cidade":"MARINOPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MERIDIANO|SP":{"cidade":"MERIDIANO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MESOPOLIS|SP":{"cidade":"MESOPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MINEIROS DO TIETE|SP":{"cidade":"MINEIROS DO TIETE","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MIRA ESTRELA|SP":{"cidade":"MIRA ESTRELA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MIRANDOPOLIS|SP":{"cidade":"MIRANDOPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MONCOES|SP":{"cidade":"MONCOES","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MONTE ALEGRE DO SUL|SP":{"cidade":"MONTE ALEGRE DO SUL","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MORUNGABA|SP":{"cidade":"MORUNGABA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"MURUTINGA DO SUL|SP":{"cidade":"MURUTINGA DO SUL","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"NATIVIDADE DA SERRA|SP":{"cidade":"NATIVIDADE DA SERRA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"NAZARE PAULISTA|SP":{"cidade":"NAZARE PAULISTA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"NOVA CANAA PAULISTA|SP":{"cidade":"NOVA CANAA PAULISTA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"NOVA CASTILHO|SP":{"cidade":"NOVA CASTILHO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"NOVA EUROPA|SP":{"cidade":"NOVA EUROPA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"NOVA INDEPENDENCIA|SP":{"cidade":"NOVA INDEPENDENCIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"NOVA LUZITANIA|SP":{"cidade":"NOVA LUZITANIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"NOVAIS|SP":{"cidade":"NOVAIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"OCAUCU|SP":{"cidade":"OCAUCU","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"OLEO|SP":{"cidade":"OLEO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ORIENTE|SP":{"cidade":"ORIENTE","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"ORINDIUVA|SP":{"cidade":"ORINDIUVA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"OSCAR BRESSANE|SP":{"cidade":"OSCAR BRESSANE","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"OSVALDO CRUZ|SP":{"cidade":"OSVALDO CRUZ","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"OUROESTE|SP":{"cidade":"OUROESTE","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PACAEMBU|SP":{"cidade":"PACAEMBU","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PALMARES PAULISTA|SP":{"cidade":"PALMARES PAULISTA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PALMEIRA D OESTE|SP":{"cidade":"PALMEIRA D OESTE","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PALMITAL|SP":{"cidade":"PALMITAL","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PARAGUACU PAULISTA|SP":{"cidade":"PARAGUACU PAULISTA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PARAISO|SP":{"cidade":"PARAISO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PARANAPANEMA|SP":{"cidade":"PARANAPANEMA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PARANAPUA|SP":{"cidade":"PARANAPUA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PARAPUA|SP":{"cidade":"PARAPUA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PARDINHO|SP":{"cidade":"PARDINHO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PARISI|SP":{"cidade":"PARISI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PAULISTANIA|SP":{"cidade":"PAULISTANIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PAULO DE FARIA|SP":{"cidade":"PAULO DE FARIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PEDRANOPOLIS|SP":{"cidade":"PEDRANOPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PENAPOLIS|SP":{"cidade":"PENAPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PEREIRA BARRETO|SP":{"cidade":"PEREIRA BARRETO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PILAR DO SUL|SP":{"cidade":"PILAR DO SUL","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PINDORAMA|SP":{"cidade":"PINDORAMA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PINHALZINHO|SP":{"cidade":"PINHALZINHO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PIRAJU|SP":{"cidade":"PIRAJU","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PIRAJUI|SP":{"cidade":"PIRAJUI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PIRAPORA DO BOM JESUS|SP":{"cidade":"PIRAPORA DO BOM JESUS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PITANGUEIRAS|SP":{"cidade":"PITANGUEIRAS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PLATINA|SP":{"cidade":"PLATINA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"POMPEIA|SP":{"cidade":"POMPEIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PONGAI|SP":{"cidade":"PONGAI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PONTAL|SP":{"cidade":"PONTAL","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PONTALINDA|SP":{"cidade":"PONTALINDA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PONTES GESTAL|SP":{"cidade":"PONTES GESTAL","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"POPULINA|SP":{"cidade":"POPULINA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"POTIM|SP":{"cidade":"POTIM","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PRATANIA|SP":{"cidade":"PRATANIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"PROMISSAO|SP":{"cidade":"PROMISSAO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"QUATA|SP":{"cidade":"QUATA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"QUEIROZ|SP":{"cidade":"QUEIROZ","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"QUINTANA|SP":{"cidade":"QUINTANA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"RAFARD|SP":{"cidade":"RAFARD","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"RANCHARIA|SP":{"cidade":"RANCHARIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"REDENCAO DA SERRA|SP":{"cidade":"REDENCAO DA SERRA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"REGINOPOLIS|SP":{"cidade":"REGINOPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"REGISTRO|SP":{"cidade":"REGISTRO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"RIBEIRAO BONITO|SP":{"cidade":"RIBEIRAO BONITO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"RIBEIRAO DO SUL|SP":{"cidade":"RIBEIRAO DO SUL","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"RINCAO|SP":{"cidade":"RINCAO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"RINOPOLIS|SP":{"cidade":"RINOPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"RIO DAS PEDRAS|SP":{"cidade":"RIO DAS PEDRAS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"RIOLANDIA|SP":{"cidade":"RIOLANDIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"RUBIACEA|SP":{"cidade":"RUBIACEA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"RUBINEIA|SP":{"cidade":"RUBINEIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SABINO|SP":{"cidade":"SABINO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SALES|SP":{"cidade":"SALES","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SALESOPOLIS|SP":{"cidade":"SALESOPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SALMOURAO|SP":{"cidade":"SALMOURAO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SALTINHO|SP":{"cidade":"SALTINHO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SALTO GRANDE|SP":{"cidade":"SALTO GRANDE","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SANTA ALBERTINA|SP":{"cidade":"SANTA ALBERTINA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SANTA CLARA D OESTE|SP":{"cidade":"SANTA CLARA D OESTE","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SANTA CRUZ DA ESPERANCA|SP":{"cidade":"SANTA CRUZ DA ESPERANCA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SANTA FE DO SUL|SP":{"cidade":"SANTA FE DO SUL","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SANTA GERTRUDES|SP":{"cidade":"SANTA GERTRUDES","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SANTA LUCIA|SP":{"cidade":"SANTA LUCIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SANTA MARIA DA SERRA|SP":{"cidade":"SANTA MARIA DA SERRA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SANTA RITA D OESTE|SP":{"cidade":"SANTA RITA D OESTE","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SANTA ROSA DE VITERBO|SP":{"cidade":"SANTA ROSA DE VITERBO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SANTA SALETE|SP":{"cidade":"SANTA SALETE","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SANTANA DA PONTE PENSA|SP":{"cidade":"SANTANA DA PONTE PENSA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SANTO ANTONIO DO ARACANGUA|SP":{"cidade":"SANTO ANTONIO DO ARACANGUA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SANTO ANTONIO DO PINHAL|SP":{"cidade":"SANTO ANTONIO DO PINHAL","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SAO BENTO DO SAPUCAI|SP":{"cidade":"SAO BENTO DO SAPUCAI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SAO FRANCISCO|SP":{"cidade":"SAO FRANCISCO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SAO JOAO DAS DUAS PONTES|SP":{"cidade":"SAO JOAO DAS DUAS PONTES","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SAO JOAO DE IRACEMA|SP":{"cidade":"SAO JOAO DE IRACEMA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SAO LUIZ DO PARAITINGA|SP":{"cidade":"SAO LUIZ DO PARAITINGA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SAO PEDRO DO TURVO|SP":{"cidade":"SAO PEDRO DO TURVO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SAO SIMAO|SP":{"cidade":"SAO SIMAO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SARAPUI|SP":{"cidade":"SARAPUI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SARUTAIA|SP":{"cidade":"SARUTAIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SEBASTIANOPOLIS DO SUL|SP":{"cidade":"SEBASTIANOPOLIS DO SUL","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SERRA AZUL|SP":{"cidade":"SERRA AZUL","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SERRA NEGRA|SP":{"cidade":"SERRA NEGRA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SUD MENNUCCI|SP":{"cidade":"SUD MENNUCCI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"SUZANAPOLIS|SP":{"cidade":"SUZANAPOLIS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TABATINGA|SP":{"cidade":"TABATINGA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TAGUAI|SP":{"cidade":"TAGUAI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TAPIRAI|SP":{"cidade":"TAPIRAI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TAQUARITUBA|SP":{"cidade":"TAQUARITUBA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TARUMA|SP":{"cidade":"TARUMA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TEJUPA|SP":{"cidade":"TEJUPA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TIETE|SP":{"cidade":"TIETE","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TIMBURI|SP":{"cidade":"TIMBURI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TORRINHA|SP":{"cidade":"TORRINHA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TRABIJU|SP":{"cidade":"TRABIJU","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TRES FRONTEIRAS|SP":{"cidade":"TRES FRONTEIRAS","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TUIUTI|SP":{"cidade":"TUIUTI","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TUPA|SP":{"cidade":"TUPA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TUPI PAULISTA|SP":{"cidade":"TUPI PAULISTA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TURIUBA|SP":{"cidade":"TURIUBA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"TURMALINA|SP":{"cidade":"TURMALINA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"UBATUBA|SP":{"cidade":"UBATUBA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"UBIRAJARA|SP":{"cidade":"UBIRAJARA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"UNIAO PAULISTA|SP":{"cidade":"UNIAO PAULISTA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"URANIA|SP":{"cidade":"URANIA","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"URU|SP":{"cidade":"URU","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"URUPES|SP":{"cidade":"URUPES","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"VALENTIM GENTIL|SP":{"cidade":"VALENTIM GENTIL","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"VALPARAISO|SP":{"cidade":"VALPARAISO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"VERA CRUZ|SP":{"cidade":"VERA CRUZ","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"VIRADOURO|SP":{"cidade":"VIRADOURO","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"},"VITORIA BRASIL|SP":{"cidade":"VITORIA BRASIL","uf":"SP","prazo":3,"classificacao":"INTERIOR 2","regiao":"SUDESTE"}};
+
+const GENERALIDADES = {
+  gris: 0.0020,
+  tso: 0.0005, tsoMin: 4.90,
+  pedagio: 6.50,
+  emexPct: 0.0015, emexMin: 15.85,
+  trtMin: 7.00,
+  tdeePct: 0.20, tdeMin: 250.00,
+  cam: 0.20,
+  tag: 30.00,
+  reentregaPct: 0.50, reentregaMin: 101.88,
+  devolucaoPct: 1.00,
+  tcePct: 0.30,
+  tdaPct: 0.40, tdaMin: 208.65,
+  tsf: 7.30,
+  cap: 67.63,
+  gelo: 45.00,
+};
+
+const CLASS_MAP = { "CAPITAL":"Capital", "INTERIOR 1":"Interior", "INTERIOR 2":"Interior2" };
+const CLASS_LABEL = { "Capital":"Capital", "Interior":"Interior", "Interior2":"Interior 2" };
+const WEIGHT_LABELS = ["Até 10kg","De 10 a 20kg","De 20 a 30kg","De 30 a 50kg","De 50 a 70kg","De 70 a 100kg","Acima 100kg (kg exced.)","Frete Valor (% s/NF)"];
+
+function normStr(s){
+  return (s||"").toString().trim().toUpperCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+}
+
+function fmtBRL(v){
+  return "R$ " + v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function parseNF(str){
+  if(!str) return 0;
+  let s = str.replace(/[^\d,.-]/g,"");
+  if(s.indexOf(",")>-1 && s.indexOf(".")>-1){
+    s = s.replace(/\./g,"").replace(",",".");
+  } else if(s.indexOf(",")>-1){
+    s = s.replace(",",".");
+  }
+  const v = parseFloat(s);
+  return isNaN(v)?0:v;
+}
+
+function toggleBlock(id, el){
+  const block = document.getElementById(id);
+  const open = block.classList.toggle('open');
+  el.textContent = el.textContent.replace(open?'▸':'▾', open?'▾':'▸');
+}
+
+function onUfChange(){
+  const uf = document.getElementById('ufSelect').value;
+  const pracaSelect = document.getElementById('pracaSelect');
+  pracaSelect.innerHTML = "";
+  if(!uf || !PRICING[uf]){
+    pracaSelect.innerHTML = '<option value="">Selecione a UF primeiro</option>';
+    return;
+  }
+  Object.keys(PRICING[uf]).forEach(k=>{
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = CLASS_LABEL[k];
+    pracaSelect.appendChild(opt);
+  });
+}
+
+async function calcularPorCEP(){
+  const cepRaw = document.getElementById('cepInput').value.trim();
+  const cep = cepRaw.replace(/\D/g,"");
+  const msgBox = document.getElementById('cepMsg');
+  const resolvedBox = document.getElementById('resolvedBox');
+  msgBox.innerHTML = "";
+  resolvedBox.style.display = "none";
+
+  if(cep.length !== 8){
+    msgBox.innerHTML = '<div class="msg err">CEP inválido. Digite os 8 dígitos do CEP de destino.</div>';
+    return;
+  }
+
+  msgBox.innerHTML = '<div class="msg ok">Buscando CEP…</div>';
+
+  let data;
+  try{
+    const resp = await fetch("https://viacep.com.br/ws/" + cep + "/json/");
+    data = await resp.json();
+  }catch(e){
+    msgBox.innerHTML = '<div class="msg err">Não foi possível consultar o CEP agora (sem conexão com o serviço de CEP). Use a opção "Selecionar manualmente" abaixo.</div>';
+    return;
+  }
+
+  if(data.erro){
+    msgBox.innerHTML = '<div class="msg err">CEP não encontrado. Confira o número ou use a opção "Selecionar manualmente".</div>';
+    return;
+  }
+
+  const cidade = data.localidade;
+  const uf = data.uf;
+  const key = normStr(cidade) + "|" + normStr(uf);
+  const cov = COVERAGE[key];
+
+  if(!cov){
+    msgBox.innerHTML = '<div class="msg err">'+cidade+'/'+uf+' não consta na base de abrangência rodoviária até 3 dias (cobre SP, RJ, MG, ES e PR). Use "Selecionar manualmente" para uma praça próxima, ou confirme com outra modalidade.</div>';
+    return;
+  }
+
+  msgBox.innerHTML = "";
+  const classKey = CLASS_MAP[cov.classificacao] || null;
+  if(!classKey || !PRICING[uf] || !PRICING[uf][classKey]){
+    msgBox.innerHTML = '<div class="msg err">Classificação "'+cov.classificacao+'" não tem tarifa cadastrada nesta proposta para '+uf+'.</div>';
+    return;
+  }
+
+  resolvedBox.style.display = "block";
+  document.getElementById('resolvedCity').textContent = cidade + "/" + uf;
+  document.getElementById('resolvedMeta').textContent = "Rodoviário · ATIVA · Praça: " + CLASS_LABEL[classKey] + " · Região: " + cov.regiao;
+  document.getElementById('resolvedBadges').innerHTML =
+    '<span class="badge">Prazo: ' + cov.prazo + ' dia(s) útil(eis)</span>';
+
+  runCalc(uf, classKey, cov.prazo);
+}
+
+function calcularManual(){
+  const uf = document.getElementById('ufSelect').value;
+  const classKey = document.getElementById('pracaSelect').value;
+  if(!uf || !classKey){
+    alert("Selecione a UF e a praça de destino.");
+    return;
+  }
+  document.getElementById('resolvedBox').style.display = "block";
+  document.getElementById('resolvedCity').textContent = "Seleção manual — " + uf;
+  document.getElementById('resolvedMeta').textContent = "Rodoviário · ATIVA · Praça: " + CLASS_LABEL[classKey];
+  document.getElementById('resolvedBadges').innerHTML = '<span class="badge">Prazo não indicado na seleção manual</span>';
+  runCalc(uf, classKey, null);
+}
+
+function runCalc(uf, classKey, prazo){
+  const nf = parseNF(document.getElementById('nfInput').value);
+  const row = PRICING[uf][classKey];
+  const fretePeso = row[0];
+  const freteValorPct = row[7];
+  const freteValor = nf * freteValorPct;
+  const despacho = (uf === 'SP') ? 10.00 : 20.00;
+  const gris = nf * GENERALIDADES.gris;
+  const tso = Math.max(nf * GENERALIDADES.tso, GENERALIDADES.tsoMin);
+  const fracoes100kg = 1; // perfil fixo 5kg
+  const pedagio = GENERALIDADES.pedagio * fracoes100kg;
+  const cam = GENERALIDADES.cam * 1; // 1 volume
+
+  const freteOriginal = fretePeso + freteValor;
+
+  const lines = [
+    {name:"Frete peso (até 10kg)", val: fretePeso},
+    {name:"Frete valor ("+(freteValorPct*100).toFixed(2).replace('.',',')+"% s/ NF)", val: freteValor},
+    {name:"Despacho (por CT-e)", val: despacho},
+    {name:"GRIS (0,20% s/ NF)", val: gris},
+    {name:"TSO — seguro obrigatório", val: tso},
+    {name:"Pedágio (por fração de 100kg)", val: pedagio},
+    {name:"CAM (manuseio/separação)", val: cam},
+  ];
+
+  if(document.getElementById('chkEmex').checked){
+    const emex = Math.max(nf * GENERALIDADES.emexPct, GENERALIDADES.emexMin * fracoes100kg);
+    lines.push({name:"EMEX — emergência excepcional", val: emex});
+  }
+  if(document.getElementById('chkTrt').checked){
+    lines.push({name:"TRT — restrição de trânsito", val: GENERALIDADES.trtMin});
+  }
+  if(document.getElementById('chkTde').checked){
+    const tde = Math.max(freteOriginal * GENERALIDADES.tdeePct, GENERALIDADES.tdeMin);
+    lines.push({name:"TDE — dificuldade na entrega", val: tde});
+  }
+  if(document.getElementById('chkTag').checked){
+    lines.push({name:"TAG — agendamento", val: GENERALIDADES.tag});
+  }
+  if(document.getElementById('chkReentrega').checked){
+    const v = Math.max(freteOriginal * GENERALIDADES.reentregaPct, GENERALIDADES.reentregaMin);
+    lines.push({name:"Reentrega", val: v});
+  }
+  if(document.getElementById('chkDevolucao').checked){
+    lines.push({name:"Devolução", val: freteOriginal * GENERALIDADES.devolucaoPct});
+  }
+  if(document.getElementById('chkTce').checked){
+    lines.push({name:"TCE — coleta especial", val: freteOriginal * GENERALIDADES.tcePct});
+  }
+  if(document.getElementById('chkTda').checked){
+    const v = Math.max(freteOriginal * GENERALIDADES.tdaPct, GENERALIDADES.tdaMin);
+    lines.push({name:"TDA — difícil acesso", val: v});
+  }
+  if(document.getElementById('chkTsf').checked){
+    lines.push({name:"TSF — separação de fatura", val: GENERALIDADES.tsf});
+  }
+  if(document.getElementById('chkCap').checked){
+    const qty = parseInt(document.getElementById('qtyCap').value) || 1;
+    lines.push({name:"CAP — paletização ("+qty+" palete(s))", val: GENERALIDADES.cap * qty});
+  }
+  if(document.getElementById('chkGelo').checked){
+    lines.push({name:"Manutenção do gelo (1 volume)", val: GENERALIDADES.gelo});
+  }
+
+  const total = lines.reduce((s,l)=>s+l.val,0);
+
+  document.getElementById('resultTotal').textContent = fmtBRL(total);
+  document.getElementById('resultTag').textContent = "RODOVIÁRIO · ATIVA" + (prazo ? " · Prazo " + prazo + " dia(s)" : "");
+
+  document.getElementById('resultLines').innerHTML = lines.map(l =>
+    '<div class="line"><span class="lname">'+l.name+'</span><span class="lval">'+fmtBRL(l.val)+'</span></div>'
+  ).join("") + '<div class="line total"><span class="lname">Total</span><span class="lval">'+fmtBRL(total)+'</span></div>';
+
+  window._lastQuote = {uf, classKey, prazo, nf, lines, total};
+}
+
+// re-run calc automatically if checkboxes change and a quote already exists
+function recalcIfNeeded(e){
+  if(e.target.type === 'checkbox' || e.target.id === 'qtyCap'){
+    if(window._lastQuote){
+      runCalc(window._lastQuote.uf, window._lastQuote.classKey, window._lastQuote.prazo);
+    }
+  }
+}
+document.addEventListener('change', recalcIfNeeded);
+document.addEventListener('input', recalcIfNeeded);
+
+function copiarCotacao(){
+  if(!window._lastQuote){
+    alert("Calcule uma cotação primeiro.");
+    return;
+  }
+  const q = window._lastQuote;
+  let txt = "Simulação de frete — Rodoviário até 3 dias (ATIVA)\n";
+  txt += "Destino: " + q.uf + " / " + CLASS_LABEL[q.classKey] + (q.prazo?(" · Prazo " + q.prazo + " dia(s)"):"") + "\n";
+  txt += "Valor da NF: " + fmtBRL(q.nf) + "\n\n";
+  q.lines.forEach(l=>{ txt += l.name + ": " + fmtBRL(l.val) + "\n"; });
+  txt += "\nTOTAL: " + fmtBRL(q.total);
+  navigator.clipboard.writeText(txt).then(()=>{
+    alert("Cotação copiada!");
+  }).catch(()=>{
+    alert("Não foi possível copiar automaticamente. Selecione e copie o texto manualmente:\n\n" + txt);
+  });
+}
+
+function handleFileUpload(evt){
+  const file = evt.target.files[0];
+  const msg = document.getElementById('uploadMsg');
+  if(!file){ return; }
+  msg.innerHTML = '<div class="msg ok">Lendo planilha…</div>';
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+      // find header row (contains UF DESTINO)
+      let headerIdx = -1;
+      for(let i=0;i<rows.length;i++){
+        if(rows[i] && rows[i].some(c => (c||"").toString().toUpperCase().includes("UF DESTINO"))){
+          headerIdx = i; break;
+        }
+      }
+      if(headerIdx === -1){ throw new Error("Não encontrei o cabeçalho esperado (UF DESTINO)."); }
+      const headers = rows[headerIdx].map(h => (h||"").toString().trim().toUpperCase());
+      const idx = {
+        ufDest: headers.indexOf("UF DESTINO"),
+        cidade: headers.indexOf("CIDADE DESTINO"),
+        prazo: headers.indexOf("PRAZO"),
+        classificacao: headers.indexOf("CLASSIFICAÇÃO"),
+        regiao: headers.indexOf("REGIÃO"),
+      };
+      if(idx.ufDest===-1 || idx.cidade===-1 || idx.prazo===-1 || idx.classificacao===-1){
+        throw new Error("Colunas obrigatórias não encontradas. Use o mesmo modelo de colunas.");
+      }
+      const newCoverage = {};
+      let count = 0;
+      for(let i=headerIdx+1;i<rows.length;i++){
+        const r = rows[i];
+        if(!r || !r[idx.cidade] || !r[idx.ufDest]) continue;
+        const key = normStr(r[idx.cidade]) + "|" + normStr(r[idx.ufDest]);
+        newCoverage[key] = {
+          cidade: r[idx.cidade].toString().trim(),
+          uf: r[idx.ufDest].toString().trim(),
+          prazo: r[idx.prazo],
+          classificacao: (r[idx.classificacao]||"").toString().trim(),
+          regiao: idx.regiao>-1 ? (r[idx.regiao]||"").toString().trim() : ""
+        };
+        count++;
+      }
+      if(count === 0){ throw new Error("Nenhuma linha válida encontrada na planilha."); }
+      COVERAGE = newCoverage;
+      msg.innerHTML = '<div class="msg ok">Base atualizada nesta sessão: ' + count + ' cidades carregadas.</div>';
+    }catch(err){
+      msg.innerHTML = '<div class="msg err">Erro ao ler a planilha: ' + err.message + '</div>';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function buildRefTable(){
+  const el = document.getElementById('refBlock');
+  let html = "";
+  Object.keys(PRICING).forEach(uf=>{
+    html += '<div class="ref-block"><h3>'+uf+' — Frete Peso (R$/Conhecimento)</h3>';
+    html += '<table><tr><th>Praça</th>' + WEIGHT_LABELS.map(w=>'<th>'+w+'</th>').join('') + '</tr>';
+    Object.keys(PRICING[uf]).forEach(classKey=>{
+      const row = PRICING[uf][classKey];
+      html += '<tr><td>'+CLASS_LABEL[classKey]+'</td>' +
+        row.slice(0,7).map(v=>'<td>'+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:4})+'</td>').join('') +
+        '<td>'+(row[7]*100).toFixed(2).replace('.',',')+'%</td></tr>';
+    });
+    html += '</table></div>';
+  });
+  html += '<div class="ref-block"><h3>Generalidades (fixas)</h3><table>' +
+    '<tr><th>Componente</th><th>Valor</th><th>Mínimo</th></tr>' +
+    '<tr><td>Despacho (SP)</td><td>R$ 10,00</td><td>—</td></tr>' +
+    '<tr><td>Despacho (demais UF)</td><td>R$ 20,00</td><td>—</td></tr>' +
+    '<tr><td>GRIS</td><td>0,20% s/ NF</td><td>—</td></tr>' +
+    '<tr><td>TSO</td><td>0,05% s/ NF</td><td>R$ 4,90</td></tr>' +
+    '<tr><td>Pedágio</td><td>R$ 6,50 / fração 100kg</td><td>—</td></tr>' +
+    '<tr><td>EMEX</td><td>0,15% s/ NF</td><td>R$ 15,85 / fração 100kg</td></tr>' +
+    '<tr><td>TRT</td><td>0,00% s/ frete original</td><td>R$ 7,00</td></tr>' +
+    '<tr><td>TDE</td><td>20% s/ frete original</td><td>R$ 250,00</td></tr>' +
+    '<tr><td>CAM</td><td>R$ 0,20 / volume</td><td>—</td></tr>' +
+    '<tr><td>TAG</td><td>R$ 30,00 / NF</td><td>—</td></tr>' +
+    '</table></div>';
+  el.innerHTML = html;
+}
+
+buildRefTable();
+</script>
+
+<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
+  <div style="max-width:320px;width:100%;">
+    <div id="__gateMsg" style="font-size:14px;color:#8a93a3;line-height:1.6;">Verificando acesso...</div>
+  </div>
+</div>
+<style id="__gateStyle">body > *:not(#__gateOverlay){ display:none !important; }</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
+<script>
+(function(){
+  var GRUPOS_PERMITIDOS = ["PCP"];
+  var firebaseConfig = {
+    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+    authDomain: "stinpharma-qualidade.firebaseapp.com",
+    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+    projectId: "stinpharma-qualidade",
+    storageBucket: "stinpharma-qualidade.firebasestorage.app",
+    messagingSenderId: "422803826984",
+    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+    measurementId: "G-6C0TLHH2VP"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  function liberar(){
+    var st = document.getElementById('__gateStyle');
+    var ov = document.getElementById('__gateOverlay');
+    if(st) st.remove();
+    if(ov) ov.remove();
+  }
+  function negar(msg){
+    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Central de Apps</a>';
+  }
+  var jaResolveu = false;
+  setTimeout(function(){
+    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
+  }, 10000);
+  firebase.auth().onAuthStateChanged(function(user){
+    jaResolveu = true;
+    if(!user){ negar('Você precisa entrar pela Central de Apps.'); return; }
+    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
+      var dados = snap.val();
+      var meusGrupos = (dados && dados.grupos) || [];
+      var permitido = GRUPOS_PERMITIDOS.some(function(g){ return meusGrupos.indexOf(g) !== -1; });
+      if(permitido){ liberar(); } else { negar('Você não tem permissão pra acessar este app.'); }
+    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
+  });
+})();
+</script>
+</body>
+</html>
