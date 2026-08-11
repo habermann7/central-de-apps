@@ -44,5 +44,16 @@
     "grupos": [
       "PCP"
     ]
+  },
+  {
+    "title": "Consulta de Chave de Nota FIscal",
+    "category": "Fiscal - Chave de Nfe",
+    "description": "Consultar chaves das notas fiscais para pedidos",
+    "file": "consulta-nfe.html",
+    "icon": "🧩",
+    "color": "#ffd54d",
+    "grupos": [
+      "PCP"
+    ]
   }
 ]
