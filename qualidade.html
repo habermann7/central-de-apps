@@ -237,9 +237,10 @@ input:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 
 
   <section id="tab-backup" class="tabpanel" style="display:none;">
     <div class="card">
-      <h2>🔄 Migrar dados deste navegador</h2>
-      <div class="desc">Use isso <b>uma única vez</b>, no navegador que já tem os registros reais, logo depois de publicar esta versão. Copia tudo (registros, cadastros, logo, fotos) pro banco compartilhado. Depois disso, ninguém mais precisa usar esse botão — tudo já sincroniza sozinho.</div>
-      <button class="btn btn-amber btn-block" id="btn-migrar" onclick="migrarDadosLocais()">Migrar dados locais para o banco compartilhado</button>
+      <h2>🔍 Recuperar dados deste navegador</h2>
+      <div class="desc">Ferramenta só de leitura — <b>nunca altera o banco compartilhado</b>. Verifica se este navegador ainda guarda uma cópia antiga dos registros (de antes da sincronização em tempo real) e, se achar, baixa um arquivo. Use "Restaurar backup" logo abaixo pra reenviar esse arquivo.</div>
+      <button class="btn btn-outline btn-block" onclick="exportarDadosLocaisIndexedDB()">Verificar e exportar dados antigos deste navegador</button>
+      <div id="recovery-status" class="hint" style="margin-top:10px;"></div>
     </div>
     <div class="card">
       <h2>Backup dos dados</h2>
@@ -247,7 +248,7 @@ input:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 
       <button class="btn btn-primary btn-block" onclick="exportarBackup()">Exportar backup (.json)</button>
       <label style="margin-top:16px;">Restaurar backup</label>
       <input type="file" id="backup-input" accept="application/json">
-      <div class="hint">Restaurar substitui os registros e cadastros de todo mundo no banco compartilhado.</div>
+      <div class="hint">Substitui os registros e cadastros de todo mundo no banco compartilhado. Pede confirmação por escrito antes de aplicar.</div>
     </div>
   </section>
 
@@ -352,37 +353,34 @@ function wireRealtimeListeners(){
   });
 }
 
-/* ================= Migração — copia os dados que já existem neste navegador pro banco compartilhado (rodar 1x) ================= */
-async function migrarDadosLocais(){
-  if(!confirm('Isso envia os registros, cadastros, logo e fotos DESTE navegador pro banco compartilhado, substituindo o que já estiver lá. Use apenas uma vez, no navegador que tem os dados reais. Continuar?')) return;
-  var btn = document.getElementById('btn-migrar');
-  if(btn) btn.disabled = true;
-  toast('Migrando dados...');
+/* ================= Recuperação — só LÊ o que existe neste navegador e baixa um arquivo. Nunca escreve no Firebase. ================= */
+async function exportarDadosLocaisIndexedDB(){
+  var status = document.getElementById('recovery-status');
+  status.textContent = 'Lendo dados salvos neste navegador...';
   try{
-    var tiposLocal = (await stGet('tipos-avaria')) || SEED_TYPES;
-    var ofensoresLocal = (await stGet('tipos-ofensor')) || SEED_OFENSORES;
-    var registrosLocal = (await stGet('registros-list')) || SEED_RECORDS;
-    var logoLocal = await stGet('logo-empresa');
-
-    await fbRef('tipos').set(tiposLocal);
-    await fbRef('ofensores').set(ofensoresLocal);
-    var registrosObj = {};
-    registrosLocal.forEach(function(r){ registrosObj[r.id] = r; });
-    await fbRef('registros').set(registrosObj);
-    if(logoLocal) await fbRef('logo').set(logoLocal);
-    var maxId = registrosLocal.length ? Math.max.apply(null, registrosLocal.map(function(r){ return r.id; })) : 0;
-    await fbRef('proximoId').set(maxId);
-
-    for(var i=0;i<registrosLocal.length;i++){
-      var rid = registrosLocal[i].id;
-      var fotosLocal = await stGet('fotos:'+rid);
-      if(fotosLocal && fotosLocal.length) await fbRef('fotos/'+rid).set(fotosLocal);
+    var registros = (await stGet('registros-list')) || [];
+    if(!registros.length){
+      status.textContent = 'Não encontrei registros salvos neste navegador. (Normal se este não for o computador original, ou se ele nunca usou a versão antiga do app.)';
+      return;
     }
-    toast('Migração concluída! Dados agora compartilhados em tempo real.');
+    var tipos = (await stGet('tipos-avaria')) || [];
+    var ofensores = (await stGet('tipos-ofensor')) || [];
+    var logo = await stGet('logo-empresa');
+    var fotos = {};
+    for(var i=0;i<registros.length;i++){
+      var f = await stGet('fotos:'+registros[i].id);
+      if(f && f.length) fotos[registros[i].id] = f;
+    }
+    var payload = { versao:1, exportadoEm:new Date().toISOString(), registros:registros, tiposAvaria:tipos, ofensores:ofensores, logo:logo, fotos:fotos };
+    var blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'recuperacao-local-' + localDateStr() + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    status.innerHTML = '&#10003; Encontrei ' + registros.length + ' registro(s) aqui. Arquivo baixado — use "Restaurar backup" logo abaixo pra reenviar pro banco compartilhado.';
   }catch(err){
-    showErrorBanner('Falha na migração: ' + err.message);
-  }finally{
-    if(btn) btn.disabled = false;
+    status.textContent = 'Erro ao ler: ' + err.message;
   }
 }
 
@@ -1033,7 +1031,8 @@ async function exportarBackup(){
 function wireBackupInput(){
   document.getElementById('backup-input').addEventListener('change', function(e){
     var file = e.target.files[0]; if(!file) return;
-    if(!confirm('Restaurar este backup vai substituir os registros e cadastros de TODO MUNDO no banco compartilhado. Continuar?')) return;
+    var resposta = prompt('Isso vai SUBSTITUIR os registros e cadastros de TODO MUNDO no banco compartilhado pelo conteúdo deste arquivo. Não tem como desfazer.\n\nPra confirmar, digite CONFIRMAR (em maiúsculas):');
+    if(resposta !== 'CONFIRMAR'){ e.target.value = ''; toast('Restauração cancelada.'); return; }
     var reader = new FileReader();
     reader.onload = async function(ev){
       try{
