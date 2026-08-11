@@ -47,5 +47,19 @@
     "grupos": [
       "PCP"
     ]
+  },
+  {
+    "title": "GoPlant",
+    "category": "Operações",
+    "description": "Desenho de fluxos e plantas",
+    "file": "GoPlant.html",
+    "icon": "🧩",
+    "color": "#ffd54d",
+    "grupos": [
+      "Geral",
+      "TI",
+      "Qualidade",
+      "PCP"
+    ]
   }
 ]
