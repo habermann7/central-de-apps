@@ -4,253 +4,317 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Central de Apps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
 <style>
   :root{
-    --bg: #0a0d12;
-    --bg-card: #12161d;
-    --border: #1f2530;
-    --text: #eef1f5;
-    --text-dim: #8a93a3;
-    --text-faint: #5a6270;
-    --green: #3ecf8e;
-    --accent-default: #4d9fff;
+    --ink:#05070a;
+    --panel:#0e131b;
+    --panel-2:#141c28;
+    --line:#1c2430;
+    --line-soft:#161d27;
+    --signal:#4d9fff;
+    --warn:#ffb454;
+    --ok:#3ecf8e;
+    --paper:#eef1f5;
+    --mist:#8a93a3;
+    --dim:#4a5262;
+    --display: 'Space Grotesk', sans-serif;
+    --body: 'Inter', -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
   }
-  *{ box-sizing: border-box; }
-  html{ background:var(--bg); }
+  *{ box-sizing:border-box; }
+  html{ background:var(--ink); }
   body{
     margin:0;
-    background:var(--bg);
-    color:var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
-    padding: 0 24px 32px;
+    background:var(--ink);
+    color:var(--paper);
+    font-family:var(--body);
     position:relative;
     overflow-x:hidden;
+    min-height:100vh;
+    cursor:default;
   }
-  .ruler{
-    height:32px;
-    margin: 0 -24px 40px -24px;
-    background-image:
-      repeating-linear-gradient(to right, var(--accent-default) 0 1.5px, transparent 1.5px 200px),
-      repeating-linear-gradient(to right, var(--border) 0 1px, transparent 1px 40px);
-    background-size: 100% 16px, 100% 8px;
-    background-position: left bottom, left bottom;
-    background-repeat: repeat-x, repeat-x;
-    border-bottom: 1px solid var(--border);
-    opacity:.7;
-    position:relative; z-index:1;
-  }
-  /* fundo tipo planta técnica, bem sutil */
+
+  /* ---------- textura de fundo ---------- */
   body::before{
     content:'';
     position:fixed; inset:-10%;
     background-image:
-      linear-gradient(rgba(77,159,255,0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(77,159,255,0.05) 1px, transparent 1px);
-    background-size: 34px 34px;
-    animation: driftGrid 50s linear infinite;
+      linear-gradient(rgba(77,159,255,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(77,159,255,0.045) 1px, transparent 1px);
+    background-size: 36px 36px;
+    animation: driftGrid 60s linear infinite;
     pointer-events:none;
     z-index:0;
   }
-  @keyframes driftGrid{ from{ transform:translate(0,0); } to{ transform:translate(34px,34px); } }
+  @keyframes driftGrid{ from{ transform:translate(0,0); } to{ transform:translate(36px,36px); } }
+  body::after{
+    content:'';
+    position:fixed; inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    opacity:.025; pointer-events:none; z-index:1; mix-blend-mode:overlay;
+  }
 
-  .wrap{ max-width: 980px; margin: 0 auto; position:relative; z-index:1; }
+  /* ---------- moldura de instrumento ---------- */
+  .frame-corner{ position:fixed; width:22px; height:22px; z-index:5; pointer-events:none; opacity:.5; }
+  .frame-corner.tl{ top:14px; left:14px; border-top:1px solid var(--signal); border-left:1px solid var(--signal); }
+  .frame-corner.tr{ top:14px; right:14px; border-top:1px solid var(--signal); border-right:1px solid var(--signal); }
+  .frame-corner.bl{ bottom:14px; left:14px; border-bottom:1px solid var(--signal); border-left:1px solid var(--signal); }
+  .frame-corner.br{ bottom:14px; right:14px; border-bottom:1px solid var(--signal); border-right:1px solid var(--signal); }
+
+  /* ---------- HUD de telemetria (elemento-assinatura) ---------- */
+  .hud{
+    position:fixed; top:22px; right:28px; z-index:6;
+    font-family:var(--mono); font-size:11px; color:var(--dim);
+    text-align:right; line-height:1.9; letter-spacing:.02em;
+    user-select:none;
+  }
+  .hud b{ color:var(--mist); font-weight:500; }
+  .hud .sig{ color:var(--ok); }
+  .hud .coord{ color:var(--warn); min-width:112px; display:inline-block; }
+  @media (max-width: 760px){ .hud{ display:none; } }
+
+  /* ---------- régua superior ---------- */
+  .ruler{
+    height:34px; position:relative; z-index:2;
+    border-bottom:1px solid var(--line-soft);
+    overflow:hidden;
+  }
+  .ruler-track{
+    position:absolute; inset:0;
+    background-image:
+      repeating-linear-gradient(to right, var(--signal) 0 1.5px, transparent 1.5px 220px),
+      repeating-linear-gradient(to right, var(--line) 0 1px, transparent 1px 44px);
+    background-size: 100% 15px, 100% 8px;
+    background-position: left bottom, left bottom;
+    background-repeat: repeat-x;
+    opacity:0;
+    animation: rulerIn 1s .1s ease forwards;
+  }
+  @keyframes rulerIn{ to{ opacity:.65; } }
+
+  .wrap{ max-width: 1040px; margin: 0 auto; padding: 0 28px 60px; position:relative; z-index:2; }
+
+  /* ---------- entrada (boot) ---------- */
+  .boot-in{ opacity:0; transform:translateY(10px); animation: bootIn .6s cubic-bezier(.16,.9,.35,1) forwards; }
+  @keyframes bootIn{ to{ opacity:1; transform:translateY(0); } }
+
   .pill{
-    display:inline-flex; align-items:center; gap:8px;
-    background: rgba(62,207,142,0.08);
-    border: 1px solid rgba(62,207,142,0.25);
-    color: var(--green);
-    font-size: 12.5px; font-family: ui-monospace, "SF Mono", Menlo, monospace;
-    padding: 6px 14px; border-radius: 999px; margin-bottom: 22px;
+    display:inline-flex; align-items:center; gap:9px;
+    background: rgba(62,207,142,0.07);
+    border: 1px solid rgba(62,207,142,0.22);
+    color: var(--ok);
+    font-family:var(--mono); font-size: 11.5px;
+    padding: 7px 14px 7px 11px; border-radius: 3px; margin: 28px 0 26px;
   }
-  .pill .dot{ width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); animation: pulseDot 2.2s ease-in-out infinite; }
-  @keyframes pulseDot{ 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
+  .pill .dot{ width:6px; height:6px; border-radius:50%; background:var(--ok); box-shadow:0 0 8px var(--ok); animation: pulseDot 2.4s ease-in-out infinite; flex-shrink:0; }
+  @keyframes pulseDot{ 0%,100%{ opacity:1; } 50%{ opacity:.3; } }
 
-  .eyebrow{ font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:11px; letter-spacing:.12em; color:var(--text-faint); text-transform:uppercase; margin-bottom:10px; }
+  .eyebrow{ font-family:var(--mono); font-size:11px; letter-spacing:.16em; color:var(--dim); text-transform:uppercase; margin-bottom:14px; }
+  .eyebrow span{ color:var(--signal); }
 
-  h1{ font-size: 40px; font-weight: 800; margin: 0 0 14px; letter-spacing: -0.5px; }
-  h1 .accent{ color:var(--accent-default); }
-  .sub{ color: var(--text-dim); font-size: 15.5px; line-height: 1.6; max-width: 640px; margin-bottom: 40px; }
+  h1{ font-family:var(--display); font-size: 46px; font-weight:600; margin:0 0 16px; letter-spacing:-0.01em; line-height:1.05; }
+  h1 .accent{ color:var(--signal); }
+  .sub{ color: var(--mist); font-size: 15.5px; line-height: 1.65; max-width: 560px; margin-bottom: 46px; font-weight:400; }
 
-  .grid{
-    display:grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 18px;
-  }
-  .card, .add-card, .empty-state{
-    opacity:0; transform:translateY(12px);
-    animation: fadeIn .55s ease forwards;
-  }
-  @keyframes fadeIn{ to{ opacity:1; transform:translateY(0); } }
+  /* ---------- barra de usuário ---------- */
+  .user-bar{ display:flex; justify-content:flex-end; align-items:center; gap:14px; padding:20px 0 0; }
+  .user-bar .who{ font-family:var(--mono); font-size:11.5px; color:var(--mist); }
+  .user-bar .who b{ color:var(--paper); font-weight:500; }
+  .user-bar button{ background:transparent; border:1px solid var(--line); color:var(--mist); font-family:var(--mono); font-size:11px; padding:7px 13px; border-radius:3px; cursor:pointer; transition:border-color .15s, color .15s; }
+  .user-bar button:hover{ color:var(--paper); border-color:var(--signal); }
+
+  /* ---------- grade de apps ---------- */
+  .grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .card-wrap{ position:relative; opacity:0; transform:translateY(14px); animation:cardIn .6s cubic-bezier(.16,.9,.35,1) forwards; }
+  @keyframes cardIn{ to{ opacity:1; transform:translateY(0); } }
 
   .card{
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent-card, var(--accent-default));
-    border-radius: 10px;
-    padding: 22px;
+    --mx:50%; --my:50%;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 24px 22px;
     display:flex; flex-direction:column;
     position:relative; overflow:hidden;
-    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    transition: transform .25s cubic-bezier(.16,.9,.35,1), border-color .2s ease;
     text-decoration:none; color:inherit;
+    transform-style: preserve-3d;
+    will-change: transform;
   }
+  .card::before{
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(280px circle at var(--mx) var(--my), color-mix(in srgb, var(--accent-card, var(--signal)) 14%, transparent), transparent 70%);
+    opacity:0; transition:opacity .3s ease; pointer-events:none;
+  }
+  .card:hover::before{ opacity:1; }
   .card::after{
-    content:'';
-    position:absolute; top:0; left:-60%; width:35%; height:100%;
-    background:linear-gradient(115deg, transparent, rgba(255,255,255,.05), transparent);
-    transform:skewX(-15deg);
-    transition:left .6s ease;
-    pointer-events:none;
+    content:''; position:absolute; left:0; right:0; top:-40%; height:40%;
+    background:linear-gradient(to bottom, transparent, color-mix(in srgb, var(--accent-card, var(--signal)) 55%, transparent), transparent);
+    opacity:0; pointer-events:none;
   }
-  .card:hover::after{ left:130%; }
-  .card:hover{
-    transform: translateY(-3px);
-    border-color: #2a3140;
-    box-shadow: 0 10px 28px -10px color-mix(in srgb, var(--accent-card, var(--accent-default)) 45%, transparent);
-  }
-  .card-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; }
+  .card:hover::after{ animation: scan 1s ease; }
+  @keyframes scan{ 0%{ top:-40%; opacity:0; } 15%{ opacity:.8; } 100%{ top:100%; opacity:0; } }
+  .card:hover{ border-color: color-mix(in srgb, var(--accent-card, var(--signal)) 45%, var(--line)); }
+
+  .card-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; }
   .icon{
-    width:38px; height:38px; border-radius:8px;
-    display:flex; align-items:center; justify-content:center;
-    font-size:18px;
-    background: color-mix(in srgb, var(--accent-card, var(--accent-default)) 18%, transparent);
+    width:36px; height:36px; border-radius:3px;
+    display:flex; align-items:center; justify-content:center; font-size:16px;
+    background: color-mix(in srgb, var(--accent-card, var(--signal)) 16%, transparent);
+    border:1px solid color-mix(in srgb, var(--accent-card, var(--signal)) 30%, transparent);
   }
-  .status{ font-size:11.5px; color: var(--green); display:flex; align-items:center; gap:5px; font-family: ui-monospace, monospace; }
-  .status .dot{ width:5px; height:5px; border-radius:50%; background:var(--green); }
-  .tag{ font-size:10.5px; letter-spacing:.06em; color: var(--accent-card, var(--accent-default)); font-weight:700; text-transform:uppercase; margin-bottom:6px; }
-  .title{ font-size:18px; font-weight:700; margin-bottom:10px; }
-  .desc{ font-size:13.5px; color:var(--text-dim); line-height:1.55; flex:1; margin-bottom:18px; }
-  .open{ font-size:13.5px; font-weight:600; color: var(--accent-card, var(--accent-default)); }
+  .status{ font-size:10.5px; color: var(--ok); display:flex; align-items:center; gap:5px; font-family: var(--mono); }
+  .status .dot{ width:5px; height:5px; border-radius:50%; background:var(--ok); }
+  .tag{ font-family:var(--mono); font-size:10px; letter-spacing:.1em; color: var(--accent-card, var(--signal)); font-weight:500; text-transform:uppercase; margin-bottom:8px; }
+  .title{ font-family:var(--display); font-size:18px; font-weight:600; margin-bottom:9px; letter-spacing:-.005em; }
+  .desc{ font-size:13.5px; color:var(--mist); line-height:1.55; flex:1; margin-bottom:20px; }
+  .open{ font-family:var(--mono); font-size:12px; font-weight:500; color: var(--accent-card, var(--signal)); display:flex; align-items:center; gap:5px; }
+  .open .arrow{ transition:transform .2s ease; }
+  .card:hover .open .arrow{ transform:translateX(3px); }
 
   .add-card{
-    border: 1.5px dashed var(--border);
-    border-radius:10px;
+    border: 1px dashed var(--line); border-radius:4px;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:10px; padding:40px 20px; color:var(--text-faint); font-size:13.5px;
+    gap:12px; padding:40px 20px; color:var(--dim); font-family:var(--mono); font-size:12px;
     cursor:pointer; background:transparent; text-decoration:none;
     transition: border-color .18s ease, color .18s ease;
   }
-  .add-card:hover{ border-color:var(--accent-default); color:var(--text-dim); }
-  .plus{ width:34px; height:34px; border-radius:50%; border:1.5px dashed var(--text-faint); display:flex; align-items:center; justify-content:center; font-size:18px; transition:border-color .18s ease; }
-  .add-card:hover .plus{ border-color:var(--accent-default); }
+  .add-card:hover{ border-color:var(--signal); color:var(--mist); }
+  .plus{ width:32px; height:32px; border-radius:50%; border:1px dashed var(--dim); display:flex; align-items:center; justify-content:center; font-size:16px; transition:border-color .18s ease; font-family:var(--body); }
+  .add-card:hover .plus{ border-color:var(--signal); }
 
-  /* estado vazio: convite com cantos tipo planta/blueprint */
-  .empty-state{
-    grid-column: 1 / -1;
-    position:relative;
-    border:1.5px dashed var(--border);
-    border-radius:14px;
-    padding:72px 40px;
-    text-align:center;
+  .empty-state, .no-access{
+    grid-column: 1 / -1; position:relative;
+    border:1px dashed var(--line); border-radius:6px;
+    padding:72px 40px; text-align:center;
     background: rgba(77,159,255,0.02);
   }
-  .corner{ position:absolute; width:20px; height:20px; }
-  .corner.tl{ top:-1px; left:-1px; border-top:2px solid var(--accent-default); border-left:2px solid var(--accent-default); }
-  .corner.tr{ top:-1px; right:-1px; border-top:2px solid var(--accent-default); border-right:2px solid var(--accent-default); }
-  .corner.bl{ bottom:-1px; left:-1px; border-bottom:2px solid var(--accent-default); border-left:2px solid var(--accent-default); }
-  .corner.br{ bottom:-1px; right:-1px; border-bottom:2px solid var(--accent-default); border-right:2px solid var(--accent-default); }
   .empty-icon{
-    width:52px; height:52px; margin:0 auto 22px; border-radius:50%;
-    border:1.5px dashed var(--accent-default); display:flex; align-items:center; justify-content:center;
-    font-size:24px; color:var(--accent-default);
+    width:48px; height:48px; margin:0 auto 22px; border-radius:50%;
+    border:1px dashed var(--signal); display:flex; align-items:center; justify-content:center;
+    font-size:20px; color:var(--signal);
   }
-  .empty-state h2{ font-size:20px; margin:0 0 10px; font-weight:700; }
-  .empty-state p{ color:var(--text-dim); font-size:14px; max-width:380px; margin:0 auto 26px; line-height:1.6; }
+  .empty-state h2, .no-access h2{ font-family:var(--display); font-size:19px; margin:0 0 10px; font-weight:600; }
+  .empty-state p, .no-access p{ color:var(--mist); font-size:13.5px; max-width:380px; margin:0 auto 26px; line-height:1.6; }
+  .no-access{ color:var(--mist); font-size:14px; padding:60px 20px; }
   .empty-cta{
-    display:inline-block; background:var(--accent-default); color:#fff; text-decoration:none;
-    font-size:13.5px; font-weight:700; padding:11px 22px; border-radius:8px;
+    display:inline-block; background:var(--signal); color:#04070c; text-decoration:none;
+    font-family:var(--mono); font-size:12.5px; font-weight:600; padding:11px 22px; border-radius:3px;
     transition: transform .15s ease, box-shadow .15s ease;
   }
   .empty-cta:hover{ transform:translateY(-2px); box-shadow:0 8px 20px -6px rgba(77,159,255,.5); }
 
-  .error{ color:#ff8f80; grid-column:1/-1; font-size:14px; padding:20px 0; }
-  footer{ display:flex; justify-content:space-between; color:var(--text-faint); font-size:12.5px; margin-top:44px; border-top:1px solid var(--border); padding-top:20px; }
+  .error{ color:#ff8f80; grid-column:1/-1; font-size:14px; padding:20px 0; font-family:var(--mono); }
+  footer{ display:flex; justify-content:space-between; align-items:center; color:var(--dim); font-family:var(--mono); font-size:11px; margin-top:52px; border-top:1px solid var(--line-soft); padding-top:22px; }
 
-  .card-wrap{ position:relative; opacity:0; transform:translateY(12px); animation:fadeIn .55s ease forwards; }
-  .card-wrap .card{ opacity:1; transform:none; animation:none; }
   .del-btn{
-    position:absolute; bottom:20px; right:20px; z-index:2;
-    width:24px; height:24px; border-radius:6px;
-    background:rgba(10,13,18,.65); border:1px solid var(--border);
-    color:var(--text-faint); font-size:12px; cursor:pointer;
+    position:absolute; bottom:22px; right:20px; z-index:2;
+    width:24px; height:24px; border-radius:3px;
+    background:rgba(5,7,10,.7); border:1px solid var(--line);
+    color:var(--dim); font-size:12px; cursor:pointer;
     display:flex; align-items:center; justify-content:center;
-    opacity:.4; transition:opacity .15s ease, color .15s ease, border-color .15s ease;
+    opacity:0; transition:opacity .15s ease, color .15s ease, border-color .15s ease;
   }
-  .del-btn:hover, .del-btn:focus-visible{ opacity:1; color:#ff8f80; border-color:#ff8f80; }
+  .card-wrap:hover .del-btn{ opacity:.55; }
+  .del-btn:hover, .del-btn:focus-visible{ opacity:1 !important; color:#ff8f80; border-color:#ff8f80; }
 
-  .modal-bg{ position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; z-index:10; padding:20px; }
+  /* ---------- modal remover ---------- */
+  .modal-bg{ position:fixed; inset:0; background:rgba(2,3,5,.7); backdrop-filter:blur(2px); display:none; align-items:center; justify-content:center; z-index:10; padding:20px; }
   .modal-bg.show{ display:flex; }
-  .modal{ background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:26px; max-width:400px; width:100%; }
-  .modal h3{ margin:0 0 10px; font-size:17px; }
-  .modal-text{ color:var(--text-dim); font-size:13px; line-height:1.6; margin:0 0 18px; }
-  .modal label{ display:block; font-size:12.5px; color:var(--text-dim); margin-bottom:6px; }
-  .modal input{ width:100%; background:#0d1117; border:1px solid var(--border); border-radius:7px; padding:9px 11px; color:var(--text); font-size:14px; font-family:inherit; box-sizing:border-box; }
+  .modal{ background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:26px; max-width:380px; width:100%; }
+  .modal h3{ margin:0 0 10px; font-size:16px; font-family:var(--display); font-weight:600; }
+  .modal-text{ color:var(--mist); font-size:13px; line-height:1.6; margin:0 0 18px; }
+  .modal label{ display:block; font-family:var(--mono); font-size:11px; color:var(--mist); margin-bottom:7px; text-transform:uppercase; letter-spacing:.06em; }
+  .modal input{ width:100%; background:var(--ink); border:1px solid var(--line); border-radius:3px; padding:10px 11px; color:var(--paper); font-size:14px; font-family:var(--body); box-sizing:border-box; }
+  .modal input:focus{ outline:none; border-color:var(--signal); }
   .modal-actions{ display:flex; gap:10px; margin-top:18px; }
-  .modal-actions button{ flex:1; padding:10px; border-radius:7px; font-size:13.5px; font-weight:600; cursor:pointer; border:none; }
-  .btn-ghost{ background:transparent; border:1px solid var(--border) !important; color:var(--text-dim); }
-  .btn-danger{ background:#e2564a; color:#fff; }
-  .modal-status{ font-size:12.5px; margin-top:12px; min-height:1px; }
+  .modal-actions button{ flex:1; padding:10px; border-radius:3px; font-size:13px; font-weight:600; cursor:pointer; border:none; font-family:var(--body); }
+  .btn-ghost{ background:transparent; border:1px solid var(--line) !important; color:var(--mist); }
+  .btn-ghost:hover{ color:var(--paper); }
+  .btn-danger{ background:#c9463a; color:#fff; }
+  .modal-status{ font-family:var(--mono); font-size:11.5px; margin-top:12px; min-height:1px; }
   .modal-status.err{ color:#ff8f80; }
-  .modal-status.loading{ color:var(--accent-default); }
+  .modal-status.loading{ color:var(--signal); }
+
+  /* ---------- login ---------- */
+  .login-screen{ min-height:calc(100vh - 34px); display:flex; align-items:center; justify-content:center; position:relative; z-index:2; padding:20px; }
+  .login-box{ background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:36px 34px; max-width:360px; width:100%; position:relative; }
+  .login-eyebrow{ font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; color:var(--dim); text-transform:uppercase; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .login-eyebrow .dot{ width:5px; height:5px; border-radius:50%; background:var(--ok); animation:pulseDot 2.4s ease-in-out infinite; }
+  .login-box h1{ font-size:25px; margin:0 0 8px; }
+  .login-box .sub{ font-size:13.5px; margin-bottom:26px; max-width:none; }
+  .login-box label{ display:block; font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--mist); margin:16px 0 7px; }
+  .login-box label:first-of-type{ margin-top:0; }
+  .login-box input{ width:100%; background:var(--ink); border:1px solid var(--line); border-radius:3px; padding:11px 12px; color:var(--paper); font-size:14px; font-family:var(--body); box-sizing:border-box; transition:border-color .15s; }
+  .login-box input:focus{ outline:none; border-color:var(--signal); }
+  .login-box button{ margin-top:24px; width:100%; background:var(--signal); border:none; color:#04070c; padding:12px 20px; border-radius:3px; font-size:13.5px; font-weight:600; cursor:pointer; font-family:var(--body); transition:filter .15s, transform .15s; position:relative; }
+  .login-box button:hover:not(:disabled){ filter:brightness(1.08); }
+  .login-box button:active:not(:disabled){ transform:scale(.985); }
+  .login-box button:disabled{ opacity:.55; cursor:default; }
+  .login-status{ margin-top:14px; font-family:var(--mono); font-size:12px; min-height:1px; }
+  .login-status.err{ color:#ff8f80; }
+  .login-ticker{ font-family:var(--mono); font-size:11px; color:var(--dim); margin-top:22px; padding-top:18px; border-top:1px solid var(--line-soft); min-height:14px; }
+  .login-ticker .cursor{ display:inline-block; width:6px; height:11px; background:var(--dim); margin-left:2px; vertical-align:-1px; animation:blink 1s step-end infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  @media (max-width: 640px){
+    h1{ font-size:34px; }
+    .wrap{ padding:0 18px 40px; }
+  }
 
   @media (prefers-reduced-motion: reduce){
     body::before{ animation:none; }
-    .pill .dot{ animation:none; }
-    .card, .add-card, .empty-state, .card-wrap{ animation:none; opacity:1; transform:none; }
+    .pill .dot, .login-eyebrow .dot, .login-ticker .cursor{ animation:none; }
+    .card, .add-card, .empty-state, .card-wrap, .boot-in, .ruler-track{ animation:none !important; opacity:1 !important; transform:none !important; }
     .card::after{ transition:none; }
+    .card:hover::after{ animation:none; }
   }
-
-  /* Login */
-  .login-screen{ min-height:100vh; display:flex; align-items:center; justify-content:center; position:relative; z-index:1; }
-  .login-box{ background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:32px; max-width:340px; width:100%; }
-  .login-box h1{ font-size:24px; margin:0 0 6px; }
-  .login-box .sub{ font-size:13.5px; margin-bottom:22px; }
-  .login-box label{ display:block; font-size:12.5px; color:var(--text-dim); margin:14px 0 6px; }
-  .login-box label:first-of-type{ margin-top:0; }
-  .login-box input{ width:100%; background:#0d1117; border:1px solid var(--border); border-radius:7px; padding:10px 12px; color:var(--text); font-size:14px; font-family:inherit; box-sizing:border-box; }
-  .login-box button{ margin-top:20px; width:100%; background:var(--accent-default); border:none; color:#fff; padding:11px 20px; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; }
-  .login-box button:disabled{ opacity:.5; cursor:default; }
-  .login-status{ margin-top:14px; font-size:12.5px; min-height:1px; }
-  .login-status.err{ color:#ff8f80; }
-
-  /* Cabeçalho de usuário */
-  .user-bar{ display:flex; justify-content:flex-end; align-items:center; gap:12px; padding:16px 0 0; position:relative; z-index:1; }
-  .user-bar .who{ font-size:12.5px; color:var(--text-dim); }
-  .user-bar button{ background:transparent; border:1px solid var(--border); color:var(--text-dim); font-size:12px; padding:6px 12px; border-radius:7px; cursor:pointer; }
-  .user-bar button:hover{ color:var(--text); border-color:#2a3140; }
-  .no-access{ grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--text-dim); font-size:14px; }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
 </head>
 <body>
-  <div class="ruler" aria-hidden="true"></div>
+  <div class="frame-corner tl"></div><div class="frame-corner tr"></div>
+  <div class="frame-corner bl"></div><div class="frame-corner br"></div>
+  <div class="hud" id="hud">
+    X <span class="coord" id="hudX">000.0</span><br>
+    Y <span class="coord" id="hudY">000.0</span><br>
+    <span class="sig">●</span> <b id="hudStatus">LINK OK</b>
+  </div>
+
+  <div class="ruler"><div class="ruler-track"></div></div>
 
   <div class="login-screen" id="loginScreen">
-    <div class="login-box">
-      <h1>Central de <span class="accent" style="color:var(--accent-default)">Apps</span></h1>
-      <p class="sub" style="margin:0 0 20px;">Entre com a conta que o David criou pra você.</p>
+    <div class="login-box boot-in">
+      <div class="login-eyebrow"><span class="dot"></span> ACESSO RESTRITO</div>
+      <h1>Central de <span class="accent" style="color:var(--signal)">Apps</span></h1>
+      <p class="sub" style="margin:0 0 22px;">Entre com a conta que o David criou pra você.</p>
       <label>E-mail</label>
       <input type="email" id="loginEmail" autocomplete="username">
       <label>Senha</label>
       <input type="password" id="loginPassword" autocomplete="current-password">
       <button id="loginBtn" onclick="fazerLogin()">Entrar</button>
       <div class="login-status" id="loginStatus"></div>
+      <div class="login-ticker" id="loginTicker">&gt; aguardando credenciais<span class="cursor"></span></div>
     </div>
   </div>
 
   <div class="wrap" id="galleryWrap" style="display:none;">
-    <div class="user-bar">
+    <div class="user-bar boot-in">
       <span class="who" id="whoText"></span>
       <button onclick="fazerLogout()">Sair</button>
     </div>
-    <div class="pill"><span class="dot"></span> <span id="statusText">carregando...</span></div>
-    <div class="eyebrow">Catálogo interno</div>
-    <h1>Central de <span class="accent">Apps</span></h1>
-    <p class="sub">Ferramentas internas que fomos construindo juntos. Clique num card para abrir. Sempre que alguém adiciona uma nova, ela aparece aqui pra todo mundo.</p>
+    <div class="pill boot-in" style="animation-delay:.05s;"><span class="dot"></span> <span id="statusText">carregando...</span></div>
+    <div class="eyebrow boot-in" style="animation-delay:.1s;">Catálogo interno <span>·</span> unidade operações</div>
+    <h1 class="boot-in" style="animation-delay:.12s;">Central de <span class="accent">Apps</span></h1>
+    <p class="sub boot-in" style="animation-delay:.16s;">Ferramentas internas que fomos construindo juntos. Clique num card para abrir. Sempre que alguém adiciona uma nova, ela aparece aqui pra todo mundo.</p>
     <div class="grid" id="grid"></div>
     <footer>
-      <span>Central de Apps — atualiza sozinha conforme o time publica ferramentas novas.</span>
+      <span>CENTRAL-DE-APPS — sincroniza sozinha conforme o time publica</span>
       <span id="countText">0 ferramentas</span>
     </footer>
   </div>
@@ -273,7 +337,32 @@
 const API_BASE = 'https://central-de-apps.vercel.app';
 let pendingDeleteFile = null;
 
-/* ================= Firebase (mesmo projeto do app de Qualidade) ================= */
+/* ================= HUD de telemetria ================= */
+(function(){
+  const hx = document.getElementById('hudX'), hy = document.getElementById('hudY');
+  window.addEventListener('mousemove', function(e){
+    hx.textContent = (e.clientX / window.innerWidth * 100).toFixed(1).padStart(5,'0');
+    hy.textContent = (e.clientY / window.innerHeight * 100).toFixed(1).padStart(5,'0');
+  });
+})();
+
+/* ================= tilt + spotlight nos cards ================= */
+function wireCardFX(){
+  document.querySelectorAll('.card').forEach(function(card){
+    if(card.dataset.fxWired) return;
+    card.dataset.fxWired = '1';
+    card.addEventListener('mousemove', function(e){
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+      card.style.setProperty('--mx', (px*100)+'%');
+      card.style.setProperty('--my', (py*100)+'%');
+      card.style.transform = 'perspective(600px) rotateX(' + ((0.5-py)*4) + 'deg) rotateY(' + ((px-0.5)*4) + 'deg) translateY(-2px)';
+    });
+    card.addEventListener('mouseleave', function(){ card.style.transform = ''; });
+  });
+}
+
+/* ================= Firebase ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
   authDomain: "stinpharma-qualidade.firebaseapp.com",
@@ -287,6 +376,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 let MEUS_GRUPOS = [];
 
+function setTicker(msg){ const t = document.getElementById('loginTicker'); if(t) t.innerHTML = '&gt; ' + msg + '<span class="cursor"></span>'; }
+
 function fazerLogin(){
   const email = document.getElementById('loginEmail').value.trim();
   const senha = document.getElementById('loginPassword').value;
@@ -294,11 +385,11 @@ function fazerLogin(){
   const btn = document.getElementById('loginBtn');
   status.className = 'login-status'; status.textContent = '';
   if(!email || !senha){ status.className = 'login-status err'; status.textContent = 'Preenche e-mail e senha.'; return; }
-  btn.disabled = true;
+  btn.disabled = true; setTicker('autenticando...');
   firebase.auth().signInWithEmailAndPassword(email, senha).catch(function(err){
     status.className = 'login-status err';
     status.textContent = err.code === 'auth/invalid-credential' ? 'E-mail ou senha incorretos.' : err.message;
-    btn.disabled = false;
+    btn.disabled = false; setTicker('aguardando credenciais');
   });
 }
 function fazerLogout(){ firebase.auth().signOut(); }
@@ -311,6 +402,8 @@ firebase.auth().onAuthStateChanged(function(user){
     document.getElementById('galleryWrap').style.display = 'none';
     return;
   }
+  setTicker('sessão validada');
+  const hs = document.getElementById('hudStatus'); if(hs) hs.textContent = 'AUTH OK';
   firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
     const dados = snap.val();
     if(!dados){
@@ -321,7 +414,7 @@ firebase.auth().onAuthStateChanged(function(user){
       return;
     }
     MEUS_GRUPOS = dados.grupos || [];
-    document.getElementById('whoText').textContent = (dados.nome || user.email) + ' · ' + MEUS_GRUPOS.join(', ');
+    document.getElementById('whoText').innerHTML = '<b>' + (dados.nome || user.email) + '</b> · ' + MEUS_GRUPOS.join(', ');
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('galleryWrap').style.display = 'block';
     loadApps();
@@ -396,7 +489,7 @@ async function loadApps(){
     }
 
     grid.innerHTML = apps.map((app, i) => `
-      <div class="card-wrap" style="animation-delay:${i * 70}ms">
+      <div class="card-wrap" style="animation-delay:${i * 60}ms">
         <a class="card" href="./${app.file}" style="--accent-card:${app.color || '#4d9fff'}">
           <div class="card-top">
             <div class="icon">${app.icon || '🧩'}</div>
@@ -405,19 +498,20 @@ async function loadApps(){
           <div class="tag">${app.category || 'FERRAMENTA'}</div>
           <div class="title">${app.title}</div>
           <div class="desc">${app.description || ''}</div>
-          <div class="open">Abrir app →</div>
+          <div class="open">Abrir app <span class="arrow">→</span></div>
         </a>
         <button class="del-btn" title="Remover app" data-file="${escapeAttr(app.file)}" data-title="${escapeAttr(app.title)}" onclick="openDeleteModal(this.dataset.file, this.dataset.title)">✕</button>
       </div>
     `).join('') + `
-      <a class="add-card" href="./adicionar.html" style="animation-delay:${apps.length * 70}ms">
+      <a class="add-card" href="./adicionar.html" style="animation-delay:${apps.length * 60}ms">
         <div class="plus">+</div>
-        Adicionar app
+        ADICIONAR APP
       </a>
     `;
 
     statusText.textContent = apps.length + ' apps ativos · sempre atualizado';
     countText.textContent = apps.length + ' ferramenta' + (apps.length > 1 ? 's' : '');
+    wireCardFX();
   }catch(err){
     grid.innerHTML = '<div class="error">Não consegui ler o manifest.json. Confira se este arquivo está sendo aberto por um servidor (http://...), não direto pelo Windows (file://...).</div>';
     statusText.textContent = 'erro ao carregar';
