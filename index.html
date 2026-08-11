@@ -198,11 +198,52 @@
     .card, .add-card, .empty-state, .card-wrap{ animation:none; opacity:1; transform:none; }
     .card::after{ transition:none; }
   }
+
+  /* Login */
+  .login-screen{ min-height:100vh; display:flex; align-items:center; justify-content:center; position:relative; z-index:1; }
+  .login-box{ background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:32px; max-width:340px; width:100%; }
+  .login-box h1{ font-size:24px; margin:0 0 6px; }
+  .login-box .sub{ font-size:13.5px; margin-bottom:22px; }
+  .login-box label{ display:block; font-size:12.5px; color:var(--text-dim); margin:14px 0 6px; }
+  .login-box label:first-of-type{ margin-top:0; }
+  .login-box input{ width:100%; background:#0d1117; border:1px solid var(--border); border-radius:7px; padding:10px 12px; color:var(--text); font-size:14px; font-family:inherit; box-sizing:border-box; }
+  .login-box button{ margin-top:20px; width:100%; background:var(--accent-default); border:none; color:#fff; padding:11px 20px; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; }
+  .login-box button:disabled{ opacity:.5; cursor:default; }
+  .login-status{ margin-top:14px; font-size:12.5px; min-height:1px; }
+  .login-status.err{ color:#ff8f80; }
+
+  /* Cabeçalho de usuário */
+  .user-bar{ display:flex; justify-content:flex-end; align-items:center; gap:12px; padding:16px 0 0; position:relative; z-index:1; }
+  .user-bar .who{ font-size:12.5px; color:var(--text-dim); }
+  .user-bar button{ background:transparent; border:1px solid var(--border); color:var(--text-dim); font-size:12px; padding:6px 12px; border-radius:7px; cursor:pointer; }
+  .user-bar button:hover{ color:var(--text); border-color:#2a3140; }
+  .no-access{ grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--text-dim); font-size:14px; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
 </head>
 <body>
   <div class="ruler" aria-hidden="true"></div>
-  <div class="wrap">
+
+  <div class="login-screen" id="loginScreen">
+    <div class="login-box">
+      <h1>Central de <span class="accent" style="color:var(--accent-default)">Apps</span></h1>
+      <p class="sub" style="margin:0 0 20px;">Entre com a conta que o David criou pra você.</p>
+      <label>E-mail</label>
+      <input type="email" id="loginEmail" autocomplete="username">
+      <label>Senha</label>
+      <input type="password" id="loginPassword" autocomplete="current-password">
+      <button id="loginBtn" onclick="fazerLogin()">Entrar</button>
+      <div class="login-status" id="loginStatus"></div>
+    </div>
+  </div>
+
+  <div class="wrap" id="galleryWrap" style="display:none;">
+    <div class="user-bar">
+      <span class="who" id="whoText"></span>
+      <button onclick="fazerLogout()">Sair</button>
+    </div>
     <div class="pill"><span class="dot"></span> <span id="statusText">carregando...</span></div>
     <div class="eyebrow">Catálogo interno</div>
     <h1>Central de <span class="accent">Apps</span></h1>
@@ -231,6 +272,61 @@
 <script>
 const API_BASE = 'https://central-de-apps.vercel.app';
 let pendingDeleteFile = null;
+
+/* ================= Firebase (mesmo projeto do app de Qualidade) ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+  authDomain: "stinpharma-qualidade.firebaseapp.com",
+  databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+  projectId: "stinpharma-qualidade",
+  storageBucket: "stinpharma-qualidade.firebasestorage.app",
+  messagingSenderId: "422803826984",
+  appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+  measurementId: "G-6C0TLHH2VP"
+};
+firebase.initializeApp(firebaseConfig);
+let MEUS_GRUPOS = [];
+
+function fazerLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const senha = document.getElementById('loginPassword').value;
+  const status = document.getElementById('loginStatus');
+  const btn = document.getElementById('loginBtn');
+  status.className = 'login-status'; status.textContent = '';
+  if(!email || !senha){ status.className = 'login-status err'; status.textContent = 'Preenche e-mail e senha.'; return; }
+  btn.disabled = true;
+  firebase.auth().signInWithEmailAndPassword(email, senha).catch(function(err){
+    status.className = 'login-status err';
+    status.textContent = err.code === 'auth/invalid-credential' ? 'E-mail ou senha incorretos.' : err.message;
+    btn.disabled = false;
+  });
+}
+function fazerLogout(){ firebase.auth().signOut(); }
+
+firebase.auth().onAuthStateChanged(function(user){
+  const btn = document.getElementById('loginBtn');
+  if(btn) btn.disabled = false;
+  if(!user){
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('galleryWrap').style.display = 'none';
+    return;
+  }
+  firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
+    const dados = snap.val();
+    if(!dados){
+      const status = document.getElementById('loginStatus');
+      status.className = 'login-status err';
+      status.textContent = 'Sua conta existe, mas ainda não tem acesso liberado. Fala com o David.';
+      firebase.auth().signOut();
+      return;
+    }
+    MEUS_GRUPOS = dados.grupos || [];
+    document.getElementById('whoText').textContent = (dados.nome || user.email) + ' · ' + MEUS_GRUPOS.join(', ');
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('galleryWrap').style.display = 'block';
+    loadApps();
+  });
+});
 
 function openDeleteModal(file, title){
   pendingDeleteFile = file;
@@ -277,6 +373,11 @@ function escapeAttr(str){
   }[c]));
 }
 
+function tenhoAcesso(app){
+  const grupos = app.grupos && app.grupos.length ? app.grupos : ['Geral'];
+  return grupos.some(g => MEUS_GRUPOS.indexOf(g) !== -1);
+}
+
 async function loadApps(){
   const grid = document.getElementById('grid');
   const statusText = document.getElementById('statusText');
@@ -284,19 +385,12 @@ async function loadApps(){
   try{
     const res = await fetch('./manifest.json?t=' + Date.now(), {cache:'no-store'});
     if(!res.ok) throw new Error('manifest.json não encontrado');
-    const apps = await res.json();
+    const todos = await res.json();
+    const apps = (Array.isArray(todos) ? todos : []).filter(tenhoAcesso);
 
-    if(!Array.isArray(apps) || apps.length === 0){
-      grid.innerHTML = `
-        <div class="empty-state">
-          <span class="corner tl"></span><span class="corner tr"></span>
-          <span class="corner bl"></span><span class="corner br"></span>
-          <div class="empty-icon">+</div>
-          <h2>Nenhum app publicado ainda</h2>
-          <p>Essa vai ser a biblioteca de ferramentas do time. Assim que o primeiro app for publicado, o card dele aparece bem aqui.</p>
-          <a class="empty-cta" href="./adicionar.html">Adicionar o primeiro app →</a>
-        </div>`;
-      statusText.textContent = 'pronta pra receber apps';
+    if(apps.length === 0){
+      grid.innerHTML = `<div class="no-access">Nenhum app liberado pro seu grupo (${MEUS_GRUPOS.join(', ') || '—'}) ainda. Fala com o David se acha que deveria ter acesso a algo.</div>`;
+      statusText.textContent = 'sem apps liberados pro seu grupo';
       countText.textContent = '0 ferramentas';
       return;
     }
@@ -329,7 +423,6 @@ async function loadApps(){
     statusText.textContent = 'erro ao carregar';
   }
 }
-loadApps();
 </script>
 </body>
 </html>
