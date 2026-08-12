@@ -5,7 +5,10 @@
     "description": "",
     "file": "qualidade.html",
     "icon": "🧩",
-    "color": "#ff8a3d"
+    "color": "#ff8a3d",
+    "grupos": [
+      "EXPEDIÇÃO"
+    ]
   },
   {
     "title": "Cauculadora Frete",
