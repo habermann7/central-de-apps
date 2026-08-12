@@ -16,7 +16,10 @@
     "description": "",
     "file": "calculadora frete v4.html",
     "icon": "🧩",
-    "color": "#ff6b5b"
+    "color": "#ff6b5b",
+    "grupos": [
+      "PCP"
+    ]
   },
   {
     "title": "Calculadora de Frete V2",
