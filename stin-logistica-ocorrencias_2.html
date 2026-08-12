@@ -275,6 +275,8 @@
   .tv-card.p-Baixa{border-left-color:var(--green);}
   .tv-card-top{display:flex;justify-content:space-between;align-items:center;gap:6px;}
   .tv-card-pedido{font-family:'Space Grotesk';font-weight:700;font-size:15px;color:#EAF0FE;}
+  .tv-card-nf{font-family:'Space Grotesk';font-weight:700;font-size:15px;color:#8FA8F5;}
+  .tv-card-topline{display:flex;flex-direction:column;gap:1px;}
   .tv-card-id-sub{font-family:'IBM Plex Mono';font-size:9.5px;color:#8FA8F5;margin-top:1px;}
   .tv-card-tipo{font-family:'Inter';font-size:12px;font-weight:600;margin:5px 0 2px;color:#C7D2EA;line-height:1.3;}
   .tv-card-meta{font-size:10.5px;color:#8B9BC2;}
@@ -329,6 +331,8 @@
         <label>Nº do pedido <span style="color:var(--red);">*</span></label>
         <input type="text" id="f-pedido" placeholder="Ex: 021" oninput="checarPedidoDuplicado()">
         <div id="f-pedido-aviso" style="display:none;font-size:12px;color:var(--red);margin-top:4px;"></div>
+        <label>Nº da nota NF</label>
+        <input type="text" id="f-nf" placeholder="Ex: 123456">
         <label>Vendedor</label>
         <input type="text" id="f-vendedor" placeholder="Nome de quem atendeu o pedido">
         <label>Tipo de ocorrência</label>
@@ -722,6 +726,7 @@ function checarPedidoDuplicado(){
 
 function registrarOcorrencia(){
   const pedido = document.getElementById('f-pedido').value.trim();
+  const nf = document.getElementById('f-nf').value.trim();
   const vendedor = document.getElementById('f-vendedor').value.trim();
   const tipo = document.getElementById('f-tipo').value;
   const prioridade = document.querySelector('.prio-opt.active').dataset.p;
@@ -747,9 +752,10 @@ function registrarOcorrencia(){
   }
 
   seq++;
-  occurrences.unshift({id:'OC-0'+seq, pedido, vendedor, tipo, prioridade, desc, status:'Aberta', responsavel:'', tempo:'agora'});
+  occurrences.unshift({id:'OC-0'+seq, pedido, nf, vendedor, tipo, prioridade, desc, status:'Aberta', responsavel:'', tempo:'agora'});
   document.getElementById('f-pedido').value='';
   document.getElementById('f-pedido-aviso').style.display='none';
+  document.getElementById('f-nf').value='';
   document.getElementById('f-vendedor').value='';
   document.getElementById('f-desc').value='';
   const toast = document.getElementById('toast');
@@ -882,7 +888,7 @@ function renderLista(){
   body.innerHTML = occurrences.map(o=>`
     <div class="lt-row">
       <div class="lt-id mono">${o.id}</div>
-      <div class="lt-desc">${o.tipo}<div class="meta">${o.vendedor} · pedido ${o.pedido}</div></div>
+      <div class="lt-desc">${o.tipo}<div class="meta">${o.vendedor} · pedido ${o.pedido}${o.nf ? ' · NF ' + o.nf : ''}</div></div>
       <div><span class="prio-tag prio-${o.prioridade}">${o.prioridade}</span></div>
       <div><span class="status-pill ${statusClass(o.status)}"><span class="dot"></span>${o.status}</span></div>
     </div>
@@ -936,6 +942,7 @@ function occCardHTML(o, colKey){
       <div class="occ-meta">
         <span>${o.vendedor}</span>
         <span>Pedido ${o.pedido}</span>
+        ${o.nf ? `<span>NF ${o.nf}</span>` : ''}
         ${respLine}
       </div>
       <div class="occ-desc">${o.desc}</div>
@@ -1251,7 +1258,10 @@ function renderTV(advance){
     : pageItems.map(o=>`
       <div class="tv-card p-${o.prioridade}">
         <div class="tv-card-top">
-          <span class="tv-card-pedido">Pedido ${o.pedido}</span>
+          <div class="tv-card-topline">
+            <span class="tv-card-pedido">Pedido ${o.pedido}</span>
+            ${o.nf ? `<span class="tv-card-nf">NF ${o.nf}</span>` : ''}
+          </div>
           <span class="prio-tag prio-${o.prioridade}">${o.prioridade}</span>
         </div>
         <div class="tv-card-id-sub mono">${o.id}</div>
