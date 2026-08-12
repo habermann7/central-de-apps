@@ -258,6 +258,17 @@
   .table-hint{ padding:30px 18px; text-align:center; color:var(--text-faint); font-size:13px; }
   .table-hint.err{ color:var(--danger); }
 
+  .admin-card{ background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius); padding:22px 24px; }
+  .admin-card h3{ font-family:var(--display); font-size:15.5px; margin:0 0 14px; font-weight:700; }
+  .admin-card label{ display:block; font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); margin:14px 0 7px; }
+  .admin-card label:first-of-type{ margin-top:0; }
+  .grupo-nome-input{ width:100%; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px 10px; color:var(--text); font-size:13px; font-family:var(--body); }
+  .grupo-nome-input:focus{ outline:none; border-color:var(--accent); }
+
+  .kebab-edit{ right:46px; }
+  .kebab-delete{ right:16px; }
+  .card-wrap:hover:has(.kebab-btn) .card-status{ opacity:0; transition:opacity .1s ease; }
+
   /* ===================== MODAIS ===================== */
   .modal-bg{ position:fixed; inset:0; background:rgba(4,6,9,.72); backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; z-index:100; padding:20px; }
   .modal-bg.show{ display:flex; }
@@ -355,7 +366,8 @@
         <button class="nav-item active" id="nav-galeria" onclick="mostrarGaleria()"><span class="nav-icon">▦</span> Galeria</button>
 
         <div class="nav-label" id="adminNavLabel" style="display:none;">Administração</div>
-        <button class="nav-item" id="adminBtn" onclick="abrirAdmin()" style="display:none;"><span class="nav-icon">👥</span> Usuários</button>
+        <button class="nav-item" id="nav-admin" onclick="abrirAdmin()" style="display:none;"><span class="nav-icon">👥</span> Usuários</button>
+        <button class="nav-item" id="nav-grupos" onclick="mostrarGrupos()" style="display:none;"><span class="nav-icon">🏷️</span> Grupos</button>
       </nav>
 
       <div class="sidebar-footer">
@@ -417,6 +429,32 @@
         </div>
       </div>
 
+      <!-- ===================== GRUPOS ===================== -->
+      <div id="gruposWrap" style="display:none;">
+        <div class="page-header fade-in">
+          <div>
+            <div class="page-eyebrow">Administração</div>
+            <h1>Gerenciar <span class="accent">grupos</span></h1>
+            <p class="page-sub">Grupos definem quem acessa cada app. Cria, renomeia ou remove conforme o time muda — depois vai em cada app pra escolher os grupos dele.</p>
+          </div>
+        </div>
+
+        <div class="admin-card fade-in" style="max-width:420px;">
+          <h3>Novo grupo</h3>
+          <label>Nome</label>
+          <input type="text" id="novoGrupoNome" placeholder="Ex: EXPEDIÇÃO">
+          <button class="btn-primary" style="margin-top:14px;width:100%;" onclick="criarGrupo()">Adicionar grupo</button>
+          <div class="login-status" id="grupoStatus"></div>
+        </div>
+
+        <div class="table-wrap fade-in" style="margin-top:22px;max-width:480px;animation-delay:.06s;">
+          <table class="user-table">
+            <thead><tr><th>Grupo</th><th></th></tr></thead>
+            <tbody id="gruposLista"><tr><td colspan="2" class="table-hint">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
     </main>
   </div>
 
@@ -466,12 +504,7 @@
       <label>Senha</label>
       <input type="password" id="adm-senha" placeholder="mínimo 6 caracteres">
       <label>Grupos</label>
-      <div class="grupos-check">
-        <label><input type="checkbox" name="adm-grupo" value="Geral"> Geral</label>
-        <label><input type="checkbox" name="adm-grupo" value="TI"> TI</label>
-        <label><input type="checkbox" name="adm-grupo" value="Qualidade"> Qualidade</label>
-        <label><input type="checkbox" name="adm-grupo" value="PCP"> PCP</label>
-      </div>
+      <div class="grupos-check" id="createUserGrupos"></div>
       <div class="modal-actions">
         <button class="btn-ghost" onclick="fecharCriarUsuario()">Cancelar</button>
         <button class="btn-primary" onclick="criarUsuario()">Criar usuário</button>
@@ -491,11 +524,8 @@
       <label>E-mail</label>
       <input type="email" id="editUserEmail">
       <label>Grupos</label>
-      <div class="grupos-check">
-        <label><input type="checkbox" class="edit-user-grupo" value="Geral"> Geral</label>
-        <label><input type="checkbox" class="edit-user-grupo" value="TI"> TI</label>
-        <label><input type="checkbox" class="edit-user-grupo" value="Qualidade"> Qualidade</label>
-        <label><input type="checkbox" class="edit-user-grupo" value="PCP"> PCP</label>
+      <div class="grupos-check" id="editUserGrupos"></div>
+      <div class="grupos-check" style="margin-top:8px;">
         <label><input type="checkbox" id="editUserAdmin"> admin</label>
       </div>
       <div class="modal-actions">
@@ -507,10 +537,31 @@
     </div>
   </div>
 
+  <!-- ===================== MODAL: editar app ===================== -->
+  <div class="modal-bg" id="editAppModalBg">
+    <div class="modal">
+      <h3>Editar <span id="editAppTitleLabel">app</span></h3>
+      <label>Título</label>
+      <input type="text" id="editAppTitulo">
+      <label>Categoria (etiqueta exibida no card)</label>
+      <input type="text" id="editAppCategoria" placeholder="Ex: Operações, Logística...">
+      <label>Descrição</label>
+      <input type="text" id="editAppDescricao">
+      <label>Grupos com acesso</label>
+      <div class="grupos-check" id="editAppGrupos"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="fecharEditarApp()">Cancelar</button>
+        <button class="btn-primary" onclick="salvarApp()">Salvar</button>
+      </div>
+      <div class="modal-status" id="editAppStatus"></div>
+    </div>
+  </div>
+
 <script>
 const API_BASE = 'https://central-de-apps.vercel.app';
 let pendingDeleteFile = null;
-const GRUPOS_DISPONIVEIS = ['Geral','TI','Qualidade','PCP'];
+let GRUPOS_DISPONIVEIS = [];
+let SOU_ADMIN = false;
 
 function escapeAttr(str){
   return String(str).replace(/[&<>"']/g, c => ({
@@ -531,6 +582,14 @@ function toast(msg){
   clearTimeout(window.__toastTimer);
   window.__toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
 }
+function renderGruposCheckboxes(containerEl, cssClass, checkedList){
+  checkedList = checkedList || [];
+  const lista = GRUPOS_DISPONIVEIS.length ? GRUPOS_DISPONIVEIS : ['Geral'];
+  containerEl.innerHTML = lista.map(function(g){
+    const marcado = checkedList.indexOf(g) !== -1 ? 'checked' : '';
+    return '<label><input type="checkbox" class="' + cssClass + '" value="' + escapeAttr(g) + '" ' + marcado + '> ' + escapeAttr(g) + '</label>';
+  }).join('');
+}
 
 /* ================= navegação (sidebar) ================= */
 function setActiveNav(which){
@@ -538,16 +597,22 @@ function setActiveNav(which){
   const el = document.getElementById('nav-' + which);
   if(el) el.classList.add('active');
 }
+function mostrarView(nome){
+  document.getElementById('galleryWrap').style.display = nome === 'galeria' ? 'block' : 'none';
+  document.getElementById('adminWrap').style.display = nome === 'admin' ? 'block' : 'none';
+  document.getElementById('gruposWrap').style.display = nome === 'grupos' ? 'block' : 'none';
+  setActiveNav(nome);
+}
 function mostrarGaleria(){
-  document.getElementById('adminWrap').style.display = 'none';
-  document.getElementById('galleryWrap').style.display = 'block';
-  setActiveNav('galeria');
+  mostrarView('galeria');
 }
 function abrirAdmin(){
-  document.getElementById('galleryWrap').style.display = 'none';
-  document.getElementById('adminWrap').style.display = 'block';
-  setActiveNav('admin');
+  mostrarView('admin');
   carregarListaUsuarios();
+}
+function mostrarGrupos(){
+  mostrarView('grupos');
+  carregarGruposAdmin();
 }
 
 /* ================= Firebase ================= */
@@ -563,6 +628,15 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 let MEUS_GRUPOS = [];
+
+function carregarGrupos(){
+  firebase.database().ref('centralApps/grupos').on('value', function(snap){
+    const v = snap.val();
+    if(Array.isArray(v)) GRUPOS_DISPONIVEIS = v;
+    else if(v && typeof v === 'object') GRUPOS_DISPONIVEIS = Object.values(v);
+    else GRUPOS_DISPONIVEIS = [];
+  });
+}
 
 function setTicker(msg){ const t = document.getElementById('loginTicker'); if(t) t.innerHTML = '&gt; ' + msg; }
 
@@ -646,9 +720,12 @@ firebase.auth().onAuthStateChanged(function(user){
     document.getElementById('whoGroups').textContent = MEUS_GRUPOS.join(', ') || 'sem grupo';
     document.getElementById('whoAvatar').textContent = iniciais(nomeExibicao);
     if(dados.admin === true){
-      document.getElementById('adminBtn').style.display = '';
+      SOU_ADMIN = true;
+      document.getElementById('nav-admin').style.display = '';
+      document.getElementById('nav-grupos').style.display = '';
       document.getElementById('adminNavLabel').style.display = '';
     }
+    carregarGrupos();
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('appShell').style.display = 'flex';
     mostrarGaleria();
@@ -747,7 +824,10 @@ async function loadApps(){
             <div class="card-open">Abrir app <span class="arrow">→</span></div>
           </div>
         </a>
-        <button class="kebab-btn" title="Remover app" data-file="${escapeAttr(app.file)}" data-title="${escapeAttr(app.title)}" onclick="openDeleteModal(this.dataset.file, this.dataset.title)">✕</button>
+        ${SOU_ADMIN ? `
+        <button class="kebab-btn kebab-edit" title="Editar app" data-file="${escapeAttr(app.file)}" data-title="${escapeAttr(app.title)}" data-category="${escapeAttr(app.category || '')}" data-description="${escapeAttr(app.description || '')}" data-grupos="${escapeAttr(JSON.stringify(app.grupos || []))}" onclick="abrirEditarAppFromButton(this)">✎</button>
+        <button class="kebab-btn kebab-delete" title="Remover app" data-file="${escapeAttr(app.file)}" data-title="${escapeAttr(app.title)}" onclick="openDeleteModal(this.dataset.file, this.dataset.title)">✕</button>
+        ` : ''}
       </div>
     `).join('') + `
       <a class="add-card" href="./adicionar.html" style="animation-delay:${apps.length * 55}ms">
@@ -769,7 +849,7 @@ function abrirCriarUsuario(){
   document.getElementById('adm-nome').value = '';
   document.getElementById('adm-email').value = '';
   document.getElementById('adm-senha').value = '';
-  document.querySelectorAll('input[name=adm-grupo]').forEach(el => el.checked = false);
+  renderGruposCheckboxes(document.getElementById('createUserGrupos'), 'grupo-cb-create', []);
   const status = document.getElementById('adm-status');
   status.className = 'login-status'; status.textContent = '';
   document.getElementById('createUserModalBg').classList.add('show');
@@ -782,7 +862,7 @@ async function criarUsuario(){
   const nome = document.getElementById('adm-nome').value.trim();
   const email = document.getElementById('adm-email').value.trim();
   const senha = document.getElementById('adm-senha').value;
-  const grupos = Array.from(document.querySelectorAll('input[name=adm-grupo]:checked')).map(el => el.value);
+  const grupos = Array.from(document.querySelectorAll('.grupo-cb-create:checked')).map(el => el.value);
   const status = document.getElementById('adm-status');
 
   if(!nome || !email || !senha || grupos.length === 0){
@@ -846,7 +926,7 @@ function abrirEditarUsuarioFromButton(btn){
   document.getElementById('editUserTitle').textContent = btn.dataset.nome || btn.dataset.email || 'usuário';
   document.getElementById('editUserNome').value = btn.dataset.nome || '';
   document.getElementById('editUserEmail').value = btn.dataset.email || '';
-  document.querySelectorAll('.edit-user-grupo').forEach(cb => cb.checked = grupos.indexOf(cb.value) !== -1);
+  renderGruposCheckboxes(document.getElementById('editUserGrupos'), 'grupo-cb-edit', grupos);
   document.getElementById('editUserAdmin').checked = btn.dataset.admin === '1';
   const statusEl = document.getElementById('editUserStatus');
   statusEl.className = 'modal-status'; statusEl.textContent = '';
@@ -860,7 +940,7 @@ async function salvarUsuarioModal(){
   if(!editingUid) return;
   const nome = document.getElementById('editUserNome').value.trim();
   const email = document.getElementById('editUserEmail').value.trim();
-  const grupos = Array.from(document.querySelectorAll('.edit-user-grupo:checked')).map(el => el.value);
+  const grupos = Array.from(document.querySelectorAll('.grupo-cb-edit:checked')).map(el => el.value);
   const ehAdmin = document.getElementById('editUserAdmin').checked;
   const statusEl = document.getElementById('editUserStatus');
   if(!nome || !email){ statusEl.className = 'modal-status err'; statusEl.textContent = 'Preenche nome e e-mail.'; return; }
@@ -892,6 +972,127 @@ async function removerAcessoModal(){
     fecharEditarUsuario();
     toast('Acesso removido.');
     carregarListaUsuarios();
+  }catch(err){
+    toast('Erro ao remover: ' + err.message);
+  }
+}
+
+/* ================= Editar app (categoria + grupos) ================= */
+let editingAppFile = null;
+function abrirEditarAppFromButton(btn){
+  const grupos = JSON.parse(btn.dataset.grupos || '[]');
+  editingAppFile = btn.dataset.file;
+  document.getElementById('editAppTitleLabel').textContent = btn.dataset.title || btn.dataset.file;
+  document.getElementById('editAppTitulo').value = btn.dataset.title || '';
+  document.getElementById('editAppCategoria').value = btn.dataset.category || '';
+  document.getElementById('editAppDescricao').value = btn.dataset.description || '';
+  renderGruposCheckboxes(document.getElementById('editAppGrupos'), 'grupo-cb-app', grupos);
+  const statusEl = document.getElementById('editAppStatus');
+  statusEl.className = 'modal-status'; statusEl.textContent = '';
+  document.getElementById('editAppModalBg').classList.add('show');
+}
+function fecharEditarApp(){
+  document.getElementById('editAppModalBg').classList.remove('show');
+  editingAppFile = null;
+}
+async function salvarApp(){
+  if(!editingAppFile) return;
+  const title = document.getElementById('editAppTitulo').value.trim();
+  const category = document.getElementById('editAppCategoria').value.trim();
+  const description = document.getElementById('editAppDescricao').value.trim();
+  const grupos = Array.from(document.querySelectorAll('.grupo-cb-app:checked')).map(el => el.value);
+  const statusEl = document.getElementById('editAppStatus');
+  if(!title){ statusEl.className = 'modal-status err'; statusEl.textContent = 'Preenche o título.'; return; }
+  if(grupos.length === 0){ statusEl.className = 'modal-status err'; statusEl.textContent = 'Marca pelo menos um grupo.'; return; }
+  statusEl.className = 'modal-status loading'; statusEl.textContent = 'Salvando... (isso reescreve o arquivo no GitHub, pode levar alguns segundos)';
+  try{
+    const idToken = await firebase.auth().currentUser.getIdToken();
+    const res = await fetch(API_BASE + '/api/atualizar-app', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken, filename: editingAppFile, title, category, description, grupos })
+    });
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok) throw new Error(data.error || 'Falha ao salvar');
+    fecharEditarApp();
+    toast('App atualizado.');
+    loadApps();
+  }catch(err){
+    statusEl.className = 'modal-status err';
+    statusEl.textContent = err.message;
+  }
+}
+
+/* ================= Gerenciar grupos ================= */
+async function carregarGruposAdmin(){
+  const tbody = document.getElementById('gruposLista');
+  tbody.innerHTML = '<tr><td colspan="2" class="table-hint">Carregando...</td></tr>';
+  try{
+    const snap = await firebase.database().ref('centralApps/grupos').once('value');
+    const v = snap.val();
+    const grupos = Array.isArray(v) ? v : (v && typeof v === 'object' ? Object.values(v) : []);
+    if(grupos.length === 0){ tbody.innerHTML = '<tr><td colspan="2" class="table-hint">Nenhum grupo criado ainda. Cria o primeiro ali em cima.</td></tr>'; return; }
+    tbody.innerHTML = grupos.map(function(g, i){
+      return '<tr>' +
+        '<td><input type="text" class="grupo-nome-input" id="grupoNome-' + i + '" value="' + escapeAttr(g) + '"></td>' +
+        '<td style="white-space:nowrap;">' +
+          '<button class="btn-row" onclick="salvarNomeGrupo(' + i + ', \'' + escapeAttr(g).replace(/'/g,"\\'") + '\')">Salvar</button> ' +
+          '<button class="btn-row" style="color:var(--danger);border-color:var(--danger);" onclick="removerGrupo(\'' + escapeAttr(g).replace(/'/g,"\\'") + '\')">Remover</button>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+  }catch(err){
+    tbody.innerHTML = '<tr><td colspan="2" class="table-hint err">Erro ao carregar: ' + err.message + '</td></tr>';
+  }
+}
+async function criarGrupo(){
+  const input = document.getElementById('novoGrupoNome');
+  const nome = input.value.trim();
+  const statusEl = document.getElementById('grupoStatus');
+  if(!nome){ statusEl.className = 'login-status err'; statusEl.textContent = 'Digita um nome pro grupo.'; return; }
+  try{
+    const ref = firebase.database().ref('centralApps/grupos');
+    const snap = await ref.once('value');
+    const v = snap.val();
+    const grupos = Array.isArray(v) ? v : (v && typeof v === 'object' ? Object.values(v) : []);
+    if(grupos.indexOf(nome) !== -1){ statusEl.className = 'login-status err'; statusEl.textContent = 'Esse grupo já existe.'; return; }
+    grupos.push(nome);
+    await ref.set(grupos);
+    input.value = '';
+    statusEl.className = 'login-status'; statusEl.style.color = 'var(--accent)'; statusEl.textContent = 'Grupo criado.';
+    carregarGruposAdmin();
+  }catch(err){
+    statusEl.className = 'login-status err'; statusEl.textContent = err.message;
+  }
+}
+async function salvarNomeGrupo(indice, nomeAntigo){
+  const input = document.getElementById('grupoNome-' + indice);
+  const novoNome = input.value.trim();
+  if(!novoNome){ toast('O nome do grupo não pode ficar vazio.'); return; }
+  try{
+    const ref = firebase.database().ref('centralApps/grupos');
+    const snap = await ref.once('value');
+    const v = snap.val();
+    let grupos = Array.isArray(v) ? v : (v && typeof v === 'object' ? Object.values(v) : []);
+    grupos = grupos.map(g => g === nomeAntigo ? novoNome : g);
+    await ref.set(grupos);
+    toast(nomeAntigo === novoNome ? 'Grupo salvo.' : 'Grupo renomeado. Lembra de reabrir os apps/usuários que usavam "' + nomeAntigo + '" e marcar "' + novoNome + '".');
+    carregarGruposAdmin();
+  }catch(err){
+    toast('Erro ao salvar: ' + err.message);
+  }
+}
+async function removerGrupo(nome){
+  if(!confirm('Remover o grupo "' + nome + '"? Usuários e apps que só tinham esse grupo perdem o acesso até você reatribuir outro. Não apaga nada automaticamente, só tira "' + nome + '" da lista de opções.')) return;
+  try{
+    const ref = firebase.database().ref('centralApps/grupos');
+    const snap = await ref.once('value');
+    const v = snap.val();
+    let grupos = Array.isArray(v) ? v : (v && typeof v === 'object' ? Object.values(v) : []);
+    grupos = grupos.filter(g => g !== nome);
+    await ref.set(grupos);
+    toast('Grupo removido da lista.');
+    carregarGruposAdmin();
   }catch(err){
     toast('Erro ao remover: ' + err.message);
   }
