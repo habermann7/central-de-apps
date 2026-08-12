@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Stin Logística — Ocorrências de Transporte</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF1F6;
+    --card:#FFFFFF;
+    --ink:#182233;
+    --muted:#6B7686;
+    --line:#E3E7EF;
+    --primary:#2451D6;
+    --primary-dark:#1B3CA8;
+    --primary-tint:#EAF0FE;
+    --amber:#F2A93B;
+    --amber-tint:#FEF4E4;
+    --red:#E5484D;
+    --red-tint:#FDECEC;
+    --green:#18A968;
+    --green-tint:#E9F9F1;
+    --purple:#7C4DFF;
+    --purple-tint:#F1ECFE;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,.disp{font-family:'Space Grotesk',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  /* topbar */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10;flex-wrap:wrap;gap:12px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#EDA089,#DD8064);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .brand-name{font-weight:700;font-size:17px;letter-spacing:-0.01em;}
+  .brand-sub{font-size:11px;color:var(--muted);margin-top:-2px;}
+  .role-switch{display:flex;background:var(--bg);border-radius:10px;padding:3px;gap:2px;}
+  .role-btn{border:none;background:transparent;padding:8px 16px;border-radius:8px;font-family:'Inter';font-weight:600;font-size:13px;color:var(--muted);cursor:pointer;transition:.15s;white-space:nowrap;}
+  .role-btn.active{background:var(--card);color:var(--primary-dark);box-shadow:0 1px 3px rgba(20,30,60,.12);}
+  .role-btn:hover:not(.active){color:var(--ink);}
+  .role-btn[data-role="admin"].active{color:var(--purple);}
+  .role-btn[data-role="nc"].active{color:#B3691E;}
+  .tv-trigger{border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 14px;border-radius:9px;font-family:'Inter';font-weight:600;font-size:12.5px;cursor:pointer;}
+  .tv-trigger:hover{border-color:var(--primary);color:var(--primary-dark);}
+
+  main{max-width:1180px;margin:0 auto;padding:28px;}
+  .page-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap;gap:12px;}
+  .page-head h1{font-size:22px;margin:0 0 4px;}
+  .page-head p{margin:0;color:var(--muted);font-size:13.5px;}
+  .badge-count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:20px;background:var(--primary);color:#fff;font-size:11px;font-weight:700;font-family:'Inter';}
+
+  /* ---- Registrar view ---- */
+  .registrar-grid{display:grid;grid-template-columns:380px 1fr;gap:22px;align-items:start;}
+  @media(max-width:820px){.registrar-grid{grid-template-columns:1fr;}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;}
+  .card h2{font-size:15px;margin:0 0 16px;}
+  label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:14px 0 6px;}
+  label:first-of-type{margin-top:0;}
+  input[type=text],select,textarea{width:100%;border:1px solid var(--line);background:#FAFBFD;border-radius:9px;padding:10px 12px;font-family:'Inter';font-size:13.5px;color:var(--ink);outline:none;transition:.15s;}
+  input[type=text]:focus,select:focus,textarea:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px var(--primary-tint);}
+  textarea{resize:vertical;min-height:78px;}
+  .prio-row{display:flex;gap:8px;}
+  .prio-opt{flex:1;text-align:center;padding:9px 0;border-radius:9px;border:1px solid var(--line);font-size:12.5px;font-weight:600;cursor:pointer;color:var(--muted);background:#FAFBFD;}
+  .prio-opt[data-p="Baixa"].active{background:var(--green-tint);border-color:var(--green);color:var(--green);}
+  .prio-opt[data-p="Média"].active{background:var(--amber-tint);border-color:var(--amber);color:#9A6A11;}
+  .prio-opt[data-p="Alta"].active{background:var(--red-tint);border-color:var(--red);color:var(--red);}
+  .submit-btn{margin-top:18px;width:100%;background:var(--primary);color:#fff;border:none;padding:12px;border-radius:9px;font-family:'Inter';font-weight:700;font-size:13.5px;cursor:pointer;transition:.15s;}
+  .submit-btn:hover{background:var(--primary-dark);}
+  .toast{margin-top:10px;font-size:12.5px;color:var(--green);font-weight:600;display:none;}
+
+  .list-table{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .lt-row{display:grid;grid-template-columns:88px 1fr 120px 130px;gap:10px;align-items:center;padding:13px 18px;border-bottom:1px solid var(--line);}
+  .lt-row:last-child{border-bottom:none;}
+  .lt-head{background:#FAFBFD;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+  .lt-id{font-size:12.5px;font-weight:600;color:var(--primary-dark);}
+  .lt-desc{font-size:13px;}
+  .lt-desc .meta{color:var(--muted);font-size:11.5px;margin-top:2px;}
+  .empty{padding:36px 18px;text-align:center;color:var(--muted);font-size:13px;}
+
+  .status-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;font-size:11.5px;font-weight:700;white-space:nowrap;}
+  .status-Aberta{background:var(--red-tint);color:var(--red);}
+  .status-EmTratamento{background:var(--amber-tint);color:#9A6A11;}
+  .status-Resolvida{background:var(--green-tint);color:var(--green);}
+  .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+  .prio-tag{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.03em;}
+  .prio-Baixa{background:var(--green-tint);color:var(--green);}
+  .prio-Média{background:var(--amber-tint);color:#9A6A11;}
+  .prio-Alta{background:var(--red-tint);color:var(--red);}
+
+  /* ---- Tratar view (kanban) ---- */
+  .kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  @media(max-width:900px){.kanban{grid-template-columns:1fr;}}
+  .col{background:#F5F7FB;border:1px solid var(--line);border-radius:14px;padding:14px;min-height:120px;}
+  .col-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:0 2px;}
+  .col-head h3{font-size:13.5px;margin:0;}
+  .occ-card{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:11px;padding:13px 14px;margin-bottom:11px;}
+  .occ-card.p-Alta{border-left-color:var(--red);}
+  .occ-card.p-Média{border-left-color:var(--amber);}
+  .occ-card.p-Baixa{border-left-color:var(--green);}
+  .occ-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .occ-id{font-size:12px;font-weight:700;color:var(--primary-dark);}
+  .occ-time{font-size:10.5px;color:var(--muted);margin-top:2px;}
+  .occ-tipo{font-size:13.5px;font-weight:600;margin:8px 0 2px;}
+  .occ-meta{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:2px;margin-top:4px;}
+  .occ-meta .resp{color:var(--primary-dark);font-weight:600;}
+  .occ-desc{font-size:12px;color:var(--ink);background:#FAFBFD;border-radius:8px;padding:8px 9px;margin-top:9px;line-height:1.4;}
+  .occ-actions{display:flex;gap:8px;margin-top:11px;}
+  .btn-sm{flex:1;border:none;border-radius:8px;padding:8px 0;font-family:'Inter';font-weight:700;font-size:12px;cursor:pointer;}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-ghost{background:#fff;color:var(--muted);border:1px solid var(--line);}
+  .btn-ghost:hover{color:var(--ink);}
+  .btn-danger{background:var(--red-tint);color:var(--red);}
+  .btn-danger:hover{background:var(--red);color:#fff;}
+  .resolve-box{margin-top:9px;}
+  .resolve-box textarea{min-height:56px;font-size:12px;}
+  .col-empty{text-align:center;color:var(--muted);font-size:12px;padding:18px 6px;}
+  .resolved-note{margin-top:9px;font-size:11.5px;color:var(--green);background:var(--green-tint);border-radius:8px;padding:7px 9px;}
+
+  /* ---- Admin view ---- */
+  .admin-badge{display:inline-flex;align-items:center;gap:6px;background:var(--purple-tint);color:var(--purple);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;margin-left:8px;vertical-align:middle;}
+  .stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px;}
+  @media(max-width:900px){.stats-row{grid-template-columns:repeat(2,1fr);}}
+  .stat-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 16px;}
+  .stat-num{font-family:'Space Grotesk';font-size:24px;font-weight:700;}
+  .stat-label{font-size:11.5px;color:var(--muted);margin-top:3px;font-weight:600;}
+  .stat-card.accent-red .stat-num{color:var(--red);}
+  .stat-card.accent-amber .stat-num{color:#9A6A11;}
+  .stat-card.accent-green .stat-num{color:var(--green);}
+  .stat-card.accent-purple .stat-num{color:var(--purple);}
+
+  .nc-stats-row .stat-card.accent-nc .stat-num{color:#B3691E;}
+  .nc-row{display:grid;grid-template-columns:78px 80px 1fr 110px 120px;gap:8px;align-items:center;padding:13px 18px;border-bottom:1px solid var(--line);font-size:12.5px;}
+  .nc-row:last-child{border-bottom:none;}
+  .nc-head{background:#FAFBFD;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+  .nc-reversa-tag{font-size:10.5px;font-weight:700;padding:4px 9px;border-radius:20px;}
+  .nc-reversa-tag.sim{background:var(--primary-tint);color:var(--primary-dark);}
+  .nc-reversa-tag.nao{background:var(--bg);color:var(--muted);}
+  .nc-reversa-link{display:block;font-size:10px;color:var(--primary-dark);margin-top:2px;font-family:'IBM Plex Mono';}
+  .nc-row select{padding:5px 6px;font-size:11.5px;border-radius:6px;}
+
+  .admin-grid{display:grid;grid-template-columns:1fr 320px;gap:22px;align-items:start;margin-top:24px;}
+  @media(max-width:980px){.admin-grid{grid-template-columns:1fr;}}
+  .admin-table{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .at-row{display:grid;grid-template-columns:74px 80px 1fr 96px 96px 110px 60px;gap:8px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--line);font-size:12px;}
+  .at-row:last-child{border-bottom:none;}
+  .at-head{background:#FAFBFD;font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;}
+  .at-desc{font-size:11.5px;color:var(--muted);}
+  .at-actions{display:flex;gap:5px;}
+  .icon-btn{border:none;background:var(--primary-tint);color:var(--primary-dark);width:26px;height:26px;border-radius:7px;cursor:pointer;font-size:12px;}
+  .icon-btn.danger{background:var(--red-tint);color:var(--red);}
+  .icon-btn.danger:hover{background:var(--red);color:#fff;}
+  .icon-btn:hover{background:var(--primary);color:#fff;}
+
+  .user-card .u-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);}
+  .user-card .u-row:last-of-type{border-bottom:none;}
+  .u-name{font-size:13px;font-weight:600;}
+  .u-role{font-size:10.5px;color:var(--muted);margin-top:1px;}
+  .u-tag{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;text-transform:uppercase;}
+  .u-tag.Registrar{background:var(--primary-tint);color:var(--primary-dark);}
+  .u-tag.Tratar{background:var(--amber-tint);color:#9A6A11;}
+  .u-tag.Admin{background:var(--purple-tint);color:var(--purple);}
+  .u-remove{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:15px;padding:2px 6px;}
+  .u-remove:hover{color:var(--red);}
+  .add-user-form{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);}
+  .add-user-form select,.add-user-form input{margin-bottom:8px;}
+  .add-user-btn{width:100%;background:var(--purple);color:#fff;border:none;padding:9px;border-radius:8px;font-weight:700;font-size:12.5px;cursor:pointer;}
+  .add-user-btn:hover{opacity:.9;}
+
+  /* ---- Edit modal ---- */
+  .modal-overlay{position:fixed;inset:0;background:rgba(15,20,35,.45);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
+  .modal-overlay.open{display:flex;}
+  .modal-box{background:#fff;border-radius:16px;padding:22px;width:100%;max-width:440px;max-height:88vh;overflow-y:auto;}
+  .modal-box h2{font-size:16px;margin:0 0 4px;}
+  .modal-sub{font-size:12px;color:var(--muted);margin:0 0 14px;}
+  .modal-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .modal-actions{display:flex;gap:10px;margin-top:18px;}
+  .modal-actions button{flex:1;border:none;border-radius:9px;padding:11px;font-weight:700;font-size:13px;cursor:pointer;}
+  .modal-cancel{background:var(--bg);color:var(--muted);}
+  .modal-save{background:var(--primary);color:#fff;}
+  .modal-save:hover{background:var(--primary-dark);}
+
+  /* ---- Floating panels ---- */
+  .fab-wrap{position:fixed;bottom:24px;z-index:60;}
+  .fab-wrap.right{right:24px;}
+  .fab-wrap.left{left:24px;}
+  .fab{width:50px;height:50px;border-radius:50%;border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 6px 18px rgba(20,30,60,.28);display:flex;align-items:center;justify-content:center;transition:.15s;}
+  .fab:hover{transform:translateY(-2px);}
+  .fab.open-icon{background:var(--primary);}
+  .fab.dash-icon{background:var(--purple);}
+  .fab .fab-badge{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+
+  .floating-panel{position:fixed;bottom:86px;width:310px;max-height:64vh;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 16px 40px rgba(20,30,60,.22);z-index:59;display:none;flex-direction:column;overflow:hidden;}
+  .floating-panel.open{display:flex;}
+  .floating-panel.right{right:24px;}
+  .floating-panel.left{left:24px;}
+  .fp-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line);flex-shrink:0;}
+  .fp-head h3{margin:0;font-size:13.5px;}
+  .fp-head .fp-sub{font-size:10.5px;color:var(--muted);margin-top:1px;}
+  .fp-close{border:none;background:var(--bg);color:var(--muted);cursor:pointer;font-size:13px;width:24px;height:24px;border-radius:6px;flex-shrink:0;}
+  .fp-close:hover{color:var(--ink);}
+  .fp-body{padding:6px 16px 14px;overflow-y:auto;}
+  .fp-item{padding:7px 0;border-bottom:1px solid var(--line);}
+  .fp-item:last-child{border-bottom:none;}
+  .fp-item .fp-top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .fp-item .fp-pedido{font-family:'Space Grotesk';font-weight:700;font-size:13px;color:var(--ink);}
+  .fp-item .fp-id-sub{font-size:9.5px;color:var(--muted);margin-top:1px;font-family:'IBM Plex Mono';}
+  .fp-item .fp-tipo{font-size:11.5px;font-weight:600;margin-top:2px;}
+  .fp-item .fp-resp{font-size:10px;margin-top:2px;color:var(--primary-dark);font-weight:600;}
+  .fp-item .fp-resp.unassigned{color:var(--muted);font-weight:500;font-style:italic;}
+  .fp-empty{padding:20px 0;text-align:center;color:var(--muted);font-size:12px;}
+
+  .dash-stat{display:flex;justify-content:space-between;align-items:center;padding:9px 0;font-size:12.5px;border-bottom:1px solid var(--line);}
+  .dash-stat:last-of-type{border-bottom:none;}
+  .dash-stat b{font-family:'Space Grotesk';font-size:14px;}
+  .dash-bars{margin-top:12px;}
+  .dash-bar-row{margin-bottom:10px;}
+  .dash-bar-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px;}
+  .dash-bar-wrap{background:#F0F2F7;border-radius:6px;height:7px;overflow:hidden;}
+  .dash-bar{height:100%;border-radius:6px;}
+
+  /* ---- Loading overlay ---- */
+  .app-loading{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;align-items:center;justify-content:center;}
+  .app-loading-box{display:flex;flex-direction:column;align-items:center;gap:14px;color:var(--muted);font-size:13px;font-weight:600;}
+  .app-loading-spinner{width:32px;height:32px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--primary);animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ---- TV mode (fullscreen monitor) ---- */
+  .tv-overlay{position:fixed;inset:0;background:#0B1220;z-index:200;display:none;flex-direction:column;color:#EAF0FE;font-family:'Inter',sans-serif;}
+  .tv-overlay.open{display:flex;}
+  .tv-head{display:flex;align-items:center;justify-content:space-between;padding:22px 36px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;}
+  .tv-brand{display:flex;align-items:center;gap:12px;}
+  .tv-brand .brand-mark{width:38px;height:38px;}
+  .tv-brand-name{font-family:'Space Grotesk';font-weight:700;font-size:19px;}
+  .tv-brand-sub{font-size:11.5px;color:#8B9BC2;}
+  .tv-head-right{display:flex;align-items:center;gap:20px;}
+  .tv-clock{font-family:'IBM Plex Mono';font-size:15px;color:#8B9BC2;}
+  .tv-clock b{color:#EAF0FE;}
+  .tv-live{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.05em;}
+  .tv-live .pulse{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.6s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(24,169,104,.55);}70%{box-shadow:0 0 0 9px rgba(24,169,104,0);}100%{box-shadow:0 0 0 0 rgba(24,169,104,0);}}
+  .tv-exit{border:1px solid rgba(255,255,255,.18);background:transparent;color:#EAF0FE;padding:9px 16px;border-radius:9px;font-weight:600;font-size:12.5px;cursor:pointer;}
+  .tv-exit:hover{background:rgba(255,255,255,.08);}
+
+  .tv-body{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+  .tv-dash-strip{display:flex;align-items:center;gap:26px;padding:16px 36px;border-bottom:1px solid rgba(255,255,255,.08);flex-wrap:wrap;background:#0E1626;flex-shrink:0;}
+  .tv-stats-inline{display:flex;gap:12px;flex-wrap:wrap;}
+  .tv-stat-mini{background:#131C30;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:9px 16px;text-align:center;min-width:84px;}
+  .tv-stat-mini b{display:block;font-family:'Space Grotesk';font-size:21px;font-weight:700;line-height:1.1;}
+  .tv-stat-mini span{font-size:9.5px;color:#8B9BC2;font-weight:600;text-transform:uppercase;letter-spacing:.03em;}
+  .tv-stat-mini.red b{color:var(--red);}
+  .tv-stat-mini.amber b{color:var(--amber);}
+  .tv-stat-mini.green b{color:var(--green);}
+
+  .tv-bars-inline{display:flex;gap:22px;flex:1;min-width:280px;}
+  .tv-bar-mini{flex:1;min-width:130px;}
+  .tv-bar-mini .dash-bar-label{color:#8B9BC2;font-size:10.5px;display:flex;justify-content:space-between;margin-bottom:4px;}
+  .tv-bar-mini .dash-bar-wrap{background:rgba(255,255,255,.08);border-radius:6px;height:6px;overflow:hidden;}
+
+  .tv-col-full{padding:22px 36px;overflow-y:auto;flex:1;}
+  .tv-section-title{font-family:'Space Grotesk';font-size:15px;font-weight:600;margin:0 0 16px;display:flex;align-items:center;gap:10px;color:#EAF0FE;}
+  .tv-section-title .badge-count{background:var(--red);}
+  .tv-page-indicator{font-size:11px;color:#8B9BC2;font-weight:500;font-family:'Inter';}
+  .tv-interval-label{font-size:11.5px;color:#8B9BC2;display:flex;align-items:center;gap:6px;}
+  .tv-interval-label select{background:#131C30;color:#EAF0FE;border:1px solid rgba(255,255,255,.18);border-radius:7px;padding:5px 8px;font-family:'Inter';font-size:12px;cursor:pointer;}
+
+  .tv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:9px;}
+  .tv-card{background:#131C30;border:1px solid rgba(255,255,255,.08);border-left:3px solid var(--line);border-radius:9px;padding:10px 11px;}
+  .tv-card.p-Alta{border-left-color:var(--red);}
+  .tv-card.p-Média{border-left-color:var(--amber);}
+  .tv-card.p-Baixa{border-left-color:var(--green);}
+  .tv-card-top{display:flex;justify-content:space-between;align-items:center;gap:6px;}
+  .tv-card-pedido{font-family:'Space Grotesk';font-weight:700;font-size:15px;color:#EAF0FE;}
+  .tv-card-id-sub{font-family:'IBM Plex Mono';font-size:9.5px;color:#8FA8F5;margin-top:1px;}
+  .tv-card-tipo{font-family:'Inter';font-size:12px;font-weight:600;margin:5px 0 2px;color:#C7D2EA;line-height:1.3;}
+  .tv-card-meta{font-size:10.5px;color:#8B9BC2;}
+  .tv-card-resp{margin-top:6px;font-size:11px;font-weight:600;color:#EAF0FE;background:rgba(255,255,255,.06);border-radius:6px;padding:4px 7px;display:inline-block;}
+  .tv-card-resp.unassigned{color:#F2A93B;background:rgba(242,169,59,.12);}
+  .tv-card .prio-tag{font-size:9px;padding:2px 6px;}
+  .tv-empty-big{color:#8B9BC2;font-size:13.5px;padding:30px 0;text-align:center;}
+</style>
+</head>
+<body>
+
+<div id="app-loading" class="app-loading">
+  <div class="app-loading-box">
+    <div class="app-loading-spinner"></div>
+    <div>Carregando dados compartilhados…</div>
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M9 4c-.6 3 .3 6 2 8" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><path d="M13 3.5c.3 2.6-.3 5-1.8 6.8" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><path d="M16 5c.6 2.2.2 4.2-1.3 5.9" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><path d="M6.5 20c-1-4 1-8.5 5-9.5 4.5-1.1 8 1.3 8.5 4.7" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+    </div>
+    <div>
+      <div class="brand-name">Stin Logística</div>
+      <div class="brand-sub">Ocorrências de transporte</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <div class="role-switch">
+      <button class="role-btn active" data-role="registrar" onclick="setRole('registrar')">Registrar ocorrência</button>
+      <button class="role-btn" data-role="tratar" onclick="setRole('tratar')">Tratar ocorrência</button>
+      <button class="role-btn" data-role="nc" onclick="setRole('nc')">NC</button>
+      <button class="role-btn" data-role="admin" onclick="setRole('admin')">Admin</button>
+    </div>
+    <button class="tv-trigger" onclick="openTV()" title="Abrir modo monitor em tela cheia">🖥️ Modo TV</button>
+  </div>
+</div>
+
+<main>
+  <!-- REGISTRAR VIEW -->
+  <section id="view-registrar">
+    <div class="page-head">
+      <div>
+        <h1>Registrar ocorrência</h1>
+        <p>Perfil de quem acompanha o pedido em campo — abre a ocorrência para análise da logística.</p>
+      </div>
+    </div>
+    <div class="registrar-grid">
+      <div class="card">
+        <h2>Nova ocorrência</h2>
+        <label>Nº do pedido</label>
+        <input type="text" id="f-pedido" placeholder="Ex: 021">
+        <label>Vendedor</label>
+        <input type="text" id="f-vendedor" placeholder="Nome de quem atendeu o pedido">
+        <label>Tipo de ocorrência</label>
+        <select id="f-tipo">
+          <option>Atraso na entrega</option>
+          <option>Avaria na carga</option>
+          <option>Acidente</option>
+          <option>Extravio de produto</option>
+          <option>Recusa do cliente</option>
+          <option>Outro</option>
+        </select>
+        <label>Prioridade</label>
+        <div class="prio-row" id="f-prio">
+          <div class="prio-opt" data-p="Baixa">Baixa</div>
+          <div class="prio-opt active" data-p="Média">Média</div>
+          <div class="prio-opt" data-p="Alta">Alta</div>
+        </div>
+        <label>Descrição</label>
+        <textarea id="f-desc" placeholder="O que aconteceu na rota?"></textarea>
+        <button class="submit-btn" onclick="registrarOcorrencia()">Registrar ocorrência</button>
+        <div class="toast" id="toast">Ocorrência registrada e enviada para tratamento.</div>
+      </div>
+
+      <div>
+        <h2 style="font-size:14px;margin:0 0 10px;color:var(--muted);">Ocorrências registradas por você</h2>
+        <div class="list-table">
+          <div class="lt-row lt-head"><div>Pedido</div><div>Descrição</div><div>Prioridade</div><div>Status</div></div>
+          <div id="lt-body"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRATAR VIEW -->
+  <section id="view-tratar" style="display:none;">
+    <div class="page-head">
+      <div>
+        <h1>Tratar ocorrências</h1>
+        <p>Perfil da logística — move a ocorrência pelas etapas até a resolução.</p>
+      </div>
+    </div>
+    <div class="kanban" id="kanban"></div>
+  </section>
+
+  <!-- NC VIEW -->
+  <section id="view-nc" style="display:none;">
+    <div class="page-head">
+      <div>
+        <h1>Não conformidades (NC)</h1>
+        <p>Registro e acompanhamento de não conformidades. Quando exigir reversa, a ocorrência é aberta automaticamente no painel de transporte.</p>
+      </div>
+    </div>
+
+    <div class="stats-row nc-stats-row" id="nc-stats-row"></div>
+
+    <div class="registrar-grid">
+      <div class="card">
+        <h2>Nova NC</h2>
+        <label>Nº do pedido</label>
+        <input type="text" id="nc-pedido" placeholder="Ex: 021">
+        <label>Tipo de NC</label>
+        <select id="nc-tipo">
+          <option>Produto avariado</option>
+          <option>Produto vencido</option>
+          <option>Divergência de pedido</option>
+          <option>Documentação incorreta</option>
+          <option>Não conformidade de qualidade</option>
+          <option>Outro</option>
+        </select>
+        <label>Setor responsável</label>
+        <input type="text" id="nc-setor" placeholder="Ex: Qualidade, Expedição...">
+        <label>Descrição</label>
+        <textarea id="nc-desc" placeholder="Descreva a não conformidade identificada"></textarea>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:16px;cursor:pointer;">
+          <input type="checkbox" id="nc-reversa" style="width:auto;accent-color:var(--primary);">
+          Esta NC exige reversa (devolução do produto)?
+        </label>
+        <button class="submit-btn" onclick="registrarNC()">Registrar NC</button>
+        <div class="toast" id="nc-toast">NC registrada com sucesso.</div>
+      </div>
+
+      <div>
+        <h2 style="font-size:14px;margin:0 0 10px;color:var(--muted);">Todas as NCs</h2>
+        <div class="admin-table">
+          <div class="nc-row nc-head"><div>ID</div><div>Pedido</div><div>Tipo</div><div>Reversa</div><div>Status</div></div>
+          <div id="nc-body"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADMIN VIEW -->
+  <section id="view-admin" style="display:none;">
+    <div class="page-head">
+      <div>
+        <h1>Painel administrativo<span class="admin-badge">Acesso total</span></h1>
+        <p>Visão geral de todas as ocorrências, edição/exclusão irrestrita e gestão de usuários.</p>
+      </div>
+    </div>
+
+    <div class="stats-row" id="stats-row"></div>
+
+    <div class="admin-grid">
+      <div>
+        <h2 style="font-size:14px;margin:0 0 10px;color:var(--muted);">Todas as ocorrências</h2>
+        <div class="admin-table">
+          <div class="at-row at-head"><div>ID</div><div>Pedido</div><div>Descrição</div><div>Prioridade</div><div>Status</div><div>Vendedor</div><div></div></div>
+          <div id="at-body"></div>
+        </div>
+      </div>
+
+      <div class="card user-card">
+        <h2>Usuários</h2>
+        <div id="user-list"></div>
+        <div class="add-user-form">
+          <label style="margin-top:0;">Novo usuário</label>
+          <input type="text" id="u-nome" placeholder="Nome">
+          <select id="u-perfil">
+            <option>Registrar</option>
+            <option>Tratar</option>
+            <option>Admin</option>
+          </select>
+          <button class="add-user-btn" onclick="adicionarUsuario()">Adicionar usuário</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- EDIT MODAL (admin) -->
+<div class="modal-overlay" id="edit-overlay">
+  <div class="modal-box">
+    <h2>Editar ocorrência</h2>
+    <p class="modal-sub" id="edit-id-label">OC-000</p>
+    <label style="margin-top:0;">Nº do pedido</label>
+    <input type="text" id="e-pedido">
+    <label>Vendedor</label>
+    <input type="text" id="e-vendedor">
+    <div class="modal-row2">
+      <div>
+        <label>Tipo</label>
+        <select id="e-tipo">
+          <option>Atraso na entrega</option>
+          <option>Avaria na carga</option>
+          <option>Acidente</option>
+          <option>Extravio de produto</option>
+          <option>Recusa do cliente</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div>
+        <label>Prioridade</label>
+        <select id="e-prioridade">
+          <option>Baixa</option>
+          <option>Média</option>
+          <option>Alta</option>
+        </select>
+      </div>
+    </div>
+    <label>Status</label>
+    <select id="e-status">
+      <option>Aberta</option>
+      <option value="Em Tratamento">Em Tratamento</option>
+      <option>Resolvida</option>
+    </select>
+    <label>Responsável pelo tratamento</label>
+    <input type="text" id="e-responsavel" placeholder="Quem está tratando (se houver)">
+    <label>Descrição</label>
+    <textarea id="e-desc"></textarea>
+    <label>Resolução (se resolvida)</label>
+    <textarea id="e-resolucao" placeholder="Como a ocorrência foi resolvida"></textarea>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeEditModal()">Cancelar</button>
+      <button class="modal-save" onclick="saveEdit()">Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- FLOATING PANEL: Abertas -->
+<div class="fab-wrap right">
+  <button class="fab open-icon" onclick="togglePanel('abertas')" title="Ocorrências abertas">📋</button>
+</div>
+<div class="floating-panel right" id="panel-abertas">
+  <div class="fp-head">
+    <div>
+      <h3>Ocorrências abertas</h3>
+      <div class="fp-sub">Aberta ou em tratamento agora</div>
+    </div>
+    <button class="fp-close" onclick="togglePanel('abertas')">✕</button>
+  </div>
+  <div class="fp-body" id="fp-abertas-body"></div>
+</div>
+
+<!-- FLOATING PANEL: Dashboard -->
+<div class="fab-wrap left">
+  <button class="fab dash-icon" onclick="togglePanel('dashboard')" title="Dashboard">📊</button>
+</div>
+<div class="floating-panel left" id="panel-dashboard">
+  <div class="fp-head">
+    <div>
+      <h3>Dashboard</h3>
+      <div class="fp-sub">Panorama geral em tempo real</div>
+    </div>
+    <button class="fp-close" onclick="togglePanel('dashboard')">✕</button>
+  </div>
+  <div class="fp-body" id="fp-dashboard-body"></div>
+</div>
+
+<!-- TV MODE (fullscreen monitor) -->
+<div class="tv-overlay" id="tv-overlay">
+  <div class="tv-head">
+    <div class="tv-brand">
+      <div class="brand-mark">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 4c-.6 3 .3 6 2 8" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><path d="M13 3.5c.3 2.6-.3 5-1.8 6.8" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><path d="M16 5c.6 2.2.2 4.2-1.3 5.9" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><path d="M6.5 20c-1-4 1-8.5 5-9.5 4.5-1.1 8 1.3 8.5 4.7" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      </div>
+      <div>
+        <div class="tv-brand-name">Stin Logística</div>
+        <div class="tv-brand-sub">Monitor de acompanhamento</div>
+      </div>
+    </div>
+    <div class="tv-head-right">
+      <span class="tv-live"><span class="pulse"></span>Ao vivo</span>
+      <label class="tv-interval-label">Atualizar a cada
+        <select id="tv-interval-select" onchange="setRefreshInterval(this.value)">
+          <option value="10">10s</option>
+          <option value="30" selected>30s</option>
+          <option value="60">60s</option>
+        </select>
+      </label>
+      <span class="tv-clock">Atualizado às <b id="tv-clock">--:--:--</b></span>
+      <button class="tv-exit" onclick="closeTV()">Sair da tela cheia ✕</button>
+    </div>
+  </div>
+  <div class="tv-dash-strip">
+    <div class="tv-stats-inline" id="tv-stats"></div>
+    <div class="tv-bars-inline" id="tv-bars"></div>
+  </div>
+  <div class="tv-body">
+    <div class="tv-col-full">
+      <h2 class="tv-section-title">Ocorrências abertas <span class="badge-count" id="tv-open-count">0</span><span class="tv-page-indicator" id="tv-page-indicator"></span></h2>
+      <div class="tv-grid" id="tv-open-grid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'app-data-v1';
+const hasStorage = (typeof window !== 'undefined') && !!window.storage;
+
+function defaultState(){
+  return {
+    seq: 21,
+    ncSeq: 4,
+    occurrences: [
+      {id:'OC-014', pedido:'014', vendedor:'Ana Maria', tipo:'Atraso na entrega', prioridade:'Média', desc:'Trânsito intenso na rota, previsão de +25min sobre o prazo.', status:'Aberta', responsavel:'', tempo:'9 horas'},
+      {id:'OC-017', pedido:'017', vendedor:'Rogério Nunes', tipo:'Avaria na carga', prioridade:'Alta', desc:'Embalagem chegou danificada, cliente recusou o pedido.', status:'Em Tratamento', responsavel:'Camila Duarte', tempo:'5 horas'},
+      {id:'OC-011', pedido:'011', vendedor:'Felipe Silva', tipo:'Extravio de produto', prioridade:'Alta', desc:'Item não estava na sacola na conferência do cliente.', status:'Em Tratamento', responsavel:'Camila Duarte', tempo:'8 horas'},
+      {id:'OC-009', pedido:'009', vendedor:'Marina Costa', tipo:'Atraso na entrega', prioridade:'Baixa', desc:'Entrega concluída com 10min de atraso, cliente avisado.', status:'Resolvida', responsavel:'Camila Duarte', resolucao:'Cliente notificado antecipadamente, sem impacto na avaliação.', tempo:'1 dia'},
+      {id:'OC-005', pedido:'005', vendedor:'João Pedro', tipo:'Acidente', prioridade:'Alta', desc:'Colisão leve de moto, entregador ileso, pedido perdido.', status:'Resolvida', responsavel:'Camila Duarte', resolucao:'Reembolso processado e entregador encaminhado ao suporte.', tempo:'2 dias'},
+      {id:'OC-008R', pedido:'008', vendedor:'—', tipo:'Reversa / Devolução', prioridade:'Média', desc:'Reversa originada da NC-001: caixa com lacre violado identificada na conferência de saída.', status:'Em Tratamento', responsavel:'Camila Duarte', tempo:'6 horas'},
+      {id:'OC-012R', pedido:'012', vendedor:'—', tipo:'Reversa / Devolução', prioridade:'Alta', desc:'Reversa originada da NC-003: lote com validade expirada encontrado no picking.', status:'Aberta', responsavel:'', tempo:'1 hora'},
+    ],
+    usuarios: [
+      {nome:'Felipe Felisberto', perfil:'Registrar'},
+      {nome:'Camila Duarte', perfil:'Tratar'},
+      {nome:'Você', perfil:'Admin'},
+    ],
+    ncs: [
+      {id:'NC-001', pedido:'008', tipo:'Produto avariado', setor:'Qualidade', desc:'Caixa com lacre violado identificada na conferência de saída.', reversa:true, ocorrenciaVinculada:'OC-008R', status:'Em análise', tempo:'6 horas'},
+  {id:'NC-002', pedido:'010', tipo:'Documentação incorreta', setor:'Expedição', desc:'Nota fiscal com divergência de quantidade em relação ao pedido.', reversa:false, ocorrenciaVinculada:null, status:'Concluída', tempo:'2 dias'},
+      {id:'NC-003', pedido:'012', tipo:'Produto vencido', setor:'Qualidade', desc:'Lote com validade expirada encontrado no picking.', reversa:true, ocorrenciaVinculada:'OC-012R', status:'Aberta', tempo:'1 hora'},
+    ]
+  };
+}
+
+/* Estado em memória (populado por loadState) */
+let seq, ncSeq, occurrences, usuarios, ncs;
+
+async function loadState(){
+  if(hasStorage){
+    try{
+      const res = await window.storage.get(STORAGE_KEY, true);
+      if(res && res.value){
+        const data = JSON.parse(res.value);
+        seq = data.seq; ncSeq = data.ncSeq;
+        occurrences = data.occurrences; usuarios = data.usuarios; ncs = data.ncs;
+        return;
+      }
+    }catch(e){
+      /* chave ainda não existe na primeira execução — segue com os dados padrão */
+    }
+  }
+  const d = defaultState();
+  seq = d.seq; ncSeq = d.ncSeq;
+  occurrences = d.occurrences; usuarios = d.usuarios; ncs = d.ncs;
+  if(hasStorage) await saveState();
+}
+
+async function saveState(){
+  if(!hasStorage) return;
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify({seq, ncSeq, occurrences, usuarios, ncs}), true);
+  }catch(e){
+    console.error('Falha ao salvar dados compartilhados:', e);
+  }
+}
+
+function setRole(role){
+  document.getElementById('view-registrar').style.display = role==='registrar' ? 'block' : 'none';
+  document.getElementById('view-tratar').style.display = role==='tratar' ? 'block' : 'none';
+  document.getElementById('view-nc').style.display = role==='nc' ? 'block' : 'none';
+  document.getElementById('view-admin').style.display = role==='admin' ? 'block' : 'none';
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.toggle('active', b.dataset.role===role));
+  if(role==='tratar') renderKanban();
+  if(role==='registrar') renderLista();
+  if(role==='nc') renderNC();
+  if(role==='admin') renderAdmin();
+}
+
+document.getElementById('f-prio').addEventListener('click', e=>{
+  const opt = e.target.closest('.prio-opt');
+  if(!opt) return;
+  document.querySelectorAll('.prio-opt').forEach(o=>o.classList.remove('active'));
+  opt.classList.add('active');
+});
+
+function refreshAll(){
+  renderLista();
+  renderKanban();
+  renderNC();
+  renderAdmin();
+  renderFloating();
+  if(document.getElementById('tv-overlay').classList.contains('open')) renderTV();
+  saveState();
+}
+
+function registrarOcorrencia(){
+  const pedido = document.getElementById('f-pedido').value.trim();
+  const vendedor = document.getElementById('f-vendedor').value.trim();
+  const tipo = document.getElementById('f-tipo').value;
+  const prioridade = document.querySelector('.prio-opt.active').dataset.p;
+  const desc = document.getElementById('f-desc').value.trim();
+  if(!pedido || !vendedor || !desc){
+    alert('Preencha o número do pedido, o vendedor e a descrição.');
+    return;
+  }
+  seq++;
+  occurrences.unshift({id:'OC-0'+seq, pedido, vendedor, tipo, prioridade, desc, status:'Aberta', responsavel:'', tempo:'agora'});
+  document.getElementById('f-pedido').value='';
+  document.getElementById('f-vendedor').value='';
+  document.getElementById('f-desc').value='';
+  const toast = document.getElementById('toast');
+  toast.style.display='block';
+  setTimeout(()=>toast.style.display='none', 2600);
+  refreshAll();
+}
+
+function statusClass(s){
+  return 'status-' + s.replace(/\s/g,'');
+}
+
+/* ---- NC (Não Conformidade) ---- */
+function registrarNC(){
+  const pedido = document.getElementById('nc-pedido').value.trim();
+  const tipo = document.getElementById('nc-tipo').value;
+  const setor = document.getElementById('nc-setor').value.trim();
+  const desc = document.getElementById('nc-desc').value.trim();
+  const precisaReversa = document.getElementById('nc-reversa').checked;
+  if(!pedido || !setor || !desc){
+    alert('Preencha o número do pedido, o setor responsável e a descrição.');
+    return;
+  }
+  ncSeq++;
+  const nc = {
+    id: 'NC-' + String(ncSeq).padStart(3,'0'),
+    pedido, tipo, setor, desc,
+    reversa: precisaReversa,
+    ocorrenciaVinculada: null,
+    status: 'Aberta',
+    tempo: 'agora'
+  };
+
+  let msg = 'NC registrada com sucesso.';
+  if(precisaReversa){
+    const oc = gerarOcorrenciaDeReversa(nc);
+    nc.ocorrenciaVinculada = oc.id;
+    msg = `NC registrada. Reversa enviada para o painel de ocorrências (${oc.id}).`;
+  }
+  ncs.unshift(nc);
+
+  document.getElementById('nc-pedido').value='';
+  document.getElementById('nc-setor').value='';
+  document.getElementById('nc-desc').value='';
+  document.getElementById('nc-reversa').checked=false;
+
+  const toast = document.getElementById('nc-toast');
+  toast.textContent = msg;
+  toast.style.display='block';
+  setTimeout(()=>toast.style.display='none', 3200);
+  refreshAll();
+}
+
+function gerarOcorrenciaDeReversa(nc){
+  seq++;
+  const oc = {
+    id: 'OC-0' + seq,
+    pedido: nc.pedido,
+    vendedor: '—',
+    tipo: 'Reversa / Devolução',
+    prioridade: 'Média',
+    desc: `Reversa originada da ${nc.id}: ${nc.desc}`,
+    status: 'Aberta',
+    responsavel: '',
+    tempo: 'agora'
+  };
+  occurrences.unshift(oc);
+  return oc;
+}
+
+function ncSetStatus(id, status){
+  const nc = ncs.find(n=>n.id===id);
+  nc.status = status;
+  nc.tempo = 'agora';
+  refreshAll();
+}
+
+function renderNC(){
+  const total = ncs.length;
+  const abertas = ncs.filter(n=>n.status==='Aberta').length;
+  const analise = ncs.filter(n=>n.status==='Em análise').length;
+  const concluidas = ncs.filter(n=>n.status==='Concluída').length;
+  const comReversa = ncs.filter(n=>n.reversa).length;
+  const cards = [
+    {n:total, l:'Total de NCs', c:''},
+    {n:abertas, l:'Abertas', c:'accent-red'},
+    {n:analise, l:'Em análise', c:'accent-amber'},
+    {n:concluidas, l:'Concluídas', c:'accent-green'},
+    {n:comReversa, l:'Com reversa', c:'accent-nc'},
+  ];
+  document.getElementById('nc-stats-row').innerHTML = cards.map(c=>`
+    <div class="stat-card ${c.c}">
+      <div class="stat-num">${c.n}</div>
+      <div class="stat-label">${c.l}</div>
+    </div>
+  `).join('');
+
+  const body = document.getElementById('nc-body');
+  if(ncs.length===0){
+    body.innerHTML = '<div class="empty">Nenhuma NC registrada ainda.</div>';
+    return;
+  }
+  body.innerHTML = ncs.map(n=>`
+    <div class="nc-row">
+      <div class="mono">${n.id}</div>
+      <div>${n.pedido}</div>
+      <div>${n.tipo}</div>
+      <div>
+        ${n.reversa
+          ? `<span class="nc-reversa-tag sim">Sim</span>${n.ocorrenciaVinculada ? `<span class="nc-reversa-link">${n.ocorrenciaVinculada}</span>` : ''}`
+          : `<span class="nc-reversa-tag nao">Não</span>`}
+      </div>
+      <div>
+        <select onchange="ncSetStatus('${n.id}', this.value)">
+          <option ${n.status==='Aberta'?'selected':''}>Aberta</option>
+          <option value="Em análise" ${n.status==='Em análise'?'selected':''}>Em análise</option>
+          <option ${n.status==='Concluída'?'selected':''}>Concluída</option>
+        </select>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderLista(){
+  const body = document.getElementById('lt-body');
+  if(occurrences.length===0){
+    body.innerHTML = '<div class="empty">Nenhuma ocorrência registrada ainda.</div>';
+    return;
+  }
+  body.innerHTML = occurrences.map(o=>`
+    <div class="lt-row">
+      <div class="lt-id mono">${o.id}</div>
+      <div class="lt-desc">${o.tipo}<div class="meta">${o.vendedor} · pedido ${o.pedido}</div></div>
+      <div><span class="prio-tag prio-${o.prioridade}">${o.prioridade}</span></div>
+      <div><span class="status-pill ${statusClass(o.status)}"><span class="dot"></span>${o.status}</span></div>
+    </div>
+  `).join('');
+}
+
+function renderKanban(){
+  const cols = [
+    {key:'Aberta', label:'Aberta'},
+    {key:'Em Tratamento', label:'Em tratamento'},
+    {key:'Resolvida', label:'Resolvida'},
+  ];
+  const kb = document.getElementById('kanban');
+  kb.innerHTML = cols.map(c=>{
+    const items = occurrences.filter(o=>o.status===c.key);
+    return `
+    <div class="col">
+      <div class="col-head"><h3>${c.label}</h3><span class="badge-count">${items.length}</span></div>
+      ${items.length===0 ? '<div class="col-empty">Sem ocorrências aqui</div>' : items.map(o=>occCardHTML(o,c.key)).join('')}
+    </div>`;
+  }).join('');
+}
+
+function occCardHTML(o, colKey){
+  let actions = '';
+  if(colKey==='Aberta'){
+    actions = `<div class="occ-actions"><button class="btn-sm btn-primary" onclick="avancar('${o.id}')">Assumir tratamento</button></div>`;
+  } else if(colKey==='Em Tratamento'){
+    actions = `
+      <div class="resolve-box">
+        <textarea id="res-${o.id}" placeholder="Descreva a resolução antes de concluir..."></textarea>
+      </div>
+      <div class="occ-actions">
+        <button class="btn-sm btn-ghost" onclick="voltar('${o.id}')">Devolver</button>
+        <button class="btn-sm btn-primary" onclick="resolver('${o.id}')">Concluir</button>
+      </div>`;
+  } else {
+    actions = `<div class="resolved-note">✓ ${o.resolucao || 'Ocorrência resolvida.'}</div>`;
+  }
+  const respLine = (colKey!=='Aberta' && o.responsavel) ? `<span class="resp">Tratando: ${o.responsavel}</span>` : '';
+  return `
+    <div class="occ-card p-${o.prioridade}">
+      <div class="occ-top">
+        <div>
+          <div class="occ-id mono">${o.id}</div>
+          <div class="occ-time">Há ${o.tempo}</div>
+        </div>
+        <span class="prio-tag prio-${o.prioridade}">${o.prioridade}</span>
+      </div>
+      <div class="occ-tipo">${o.tipo}</div>
+      <div class="occ-meta">
+        <span>${o.vendedor}</span>
+        <span>Pedido ${o.pedido}</span>
+        ${respLine}
+      </div>
+      <div class="occ-desc">${o.desc}</div>
+      ${actions}
+    </div>
+  `;
+}
+
+function avancar(id){
+  const o = occurrences.find(x=>x.id===id);
+  const nome = prompt('Quem vai tratar esta ocorrência?', o.responsavel || '');
+  if(nome === null) return;
+  o.responsavel = nome.trim() || 'Não informado';
+  o.status = 'Em Tratamento';
+  o.tempo = 'agora';
+  refreshAll();
+}
+function voltar(id){
+  const o = occurrences.find(x=>x.id===id);
+  o.status = 'Aberta';
+  refreshAll();
+}
+function resolver(id){
+  const o = occurrences.find(x=>x.id===id);
+  const txt = document.getElementById('res-'+id).value.trim();
+  if(!txt){
+    alert('Descreva como a ocorrência foi resolvida antes de concluir.');
+    return;
+  }
+  o.status = 'Resolvida';
+  o.resolucao = txt;
+  o.tempo = 'agora';
+  refreshAll();
+}
+
+/* ---- ADMIN ---- */
+function renderAdmin(){
+  renderStats();
+  renderAdminTable();
+  renderUserList();
+}
+
+function renderStats(){
+  const total = occurrences.length;
+  const abertas = occurrences.filter(o=>o.status==='Aberta').length;
+  const tratamento = occurrences.filter(o=>o.status==='Em Tratamento').length;
+  const resolvidas = occurrences.filter(o=>o.status==='Resolvida').length;
+  const altas = occurrences.filter(o=>o.prioridade==='Alta').length;
+  const cards = [
+    {n:total, l:'Total de ocorrências', c:''},
+    {n:abertas, l:'Abertas', c:'accent-red'},
+    {n:tratamento, l:'Em tratamento', c:'accent-amber'},
+    {n:resolvidas, l:'Resolvidas', c:'accent-green'},
+    {n:altas, l:'Prioridade alta', c:'accent-purple'},
+  ];
+  document.getElementById('stats-row').innerHTML = cards.map(c=>`
+    <div class="stat-card ${c.c}">
+      <div class="stat-num">${c.n}</div>
+      <div class="stat-label">${c.l}</div>
+    </div>
+  `).join('');
+}
+
+function renderAdminTable(){
+  const body = document.getElementById('at-body');
+  if(occurrences.length===0){
+    body.innerHTML = '<div class="empty">Nenhuma ocorrência no sistema.</div>';
+    return;
+  }
+  body.innerHTML = occurrences.map(o=>`
+    <div class="at-row">
+      <div class="mono">${o.id}</div>
+      <div>${o.pedido}</div>
+      <div class="at-desc" title="${o.desc}">${o.tipo}</div>
+      <div><span class="prio-tag prio-${o.prioridade}">${o.prioridade}</span></div>
+      <div><span class="status-pill ${statusClass(o.status)}">${o.status}</span></div>
+      <div>${o.vendedor}</div>
+      <div class="at-actions">
+        <button class="icon-btn" onclick="openEditModal('${o.id}')" title="Editar">✎</button>
+        <button class="icon-btn danger" onclick="excluirOcorrencia('${o.id}')" title="Excluir">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function excluirOcorrencia(id){
+  if(!confirm('Excluir a ocorrência ' + id + '? Essa ação não pode ser desfeita.')) return;
+  occurrences = occurrences.filter(o=>o.id!==id);
+  refreshAll();
+}
+
+/* ---- Edit modal ---- */
+let editingId = null;
+function openEditModal(id){
+  const o = occurrences.find(x=>x.id===id);
+  if(!o) return;
+  editingId = id;
+  document.getElementById('edit-id-label').textContent = o.id + ' · editar todos os campos';
+  document.getElementById('e-pedido').value = o.pedido;
+  document.getElementById('e-vendedor').value = o.vendedor;
+  document.getElementById('e-tipo').value = o.tipo;
+  document.getElementById('e-prioridade').value = o.prioridade;
+  document.getElementById('e-status').value = o.status;
+  document.getElementById('e-responsavel').value = o.responsavel || '';
+  document.getElementById('e-desc').value = o.desc;
+  document.getElementById('e-resolucao').value = o.resolucao || '';
+  document.getElementById('edit-overlay').classList.add('open');
+}
+function closeEditModal(){
+  editingId = null;
+  document.getElementById('edit-overlay').classList.remove('open');
+}
+function saveEdit(){
+  const o = occurrences.find(x=>x.id===editingId);
+  if(!o) return;
+  o.pedido = document.getElementById('e-pedido').value.trim();
+  o.vendedor = document.getElementById('e-vendedor').value.trim();
+  o.tipo = document.getElementById('e-tipo').value;
+  o.prioridade = document.getElementById('e-prioridade').value;
+  o.status = document.getElementById('e-status').value;
+  o.responsavel = document.getElementById('e-responsavel').value.trim();
+  o.desc = document.getElementById('e-desc').value.trim();
+  o.resolucao = document.getElementById('e-resolucao').value.trim();
+  o.tempo = 'agora';
+  closeEditModal();
+  refreshAll();
+}
+
+function renderUserList(){
+  const list = document.getElementById('user-list');
+  list.innerHTML = usuarios.map((u,i)=>`
+    <div class="u-row">
+      <div>
+        <div class="u-name">${u.nome}</div>
+        <div class="u-role"><span class="u-tag ${u.perfil}">${u.perfil}</span></div>
+      </div>
+      <button class="u-remove" onclick="removerUsuario(${i})" title="Remover">✕</button>
+    </div>
+  `).join('');
+}
+
+function adicionarUsuario(){
+  const nome = document.getElementById('u-nome').value.trim();
+  const perfil = document.getElementById('u-perfil').value;
+  if(!nome){
+    alert('Informe o nome do usuário.');
+    return;
+  }
+  usuarios.push({nome, perfil});
+  document.getElementById('u-nome').value='';
+  renderUserList();
+  saveState();
+}
+function removerUsuario(i){
+  usuarios.splice(i,1);
+  renderUserList();
+  saveState();
+}
+
+/* ---- Floating panels ---- */
+function togglePanel(name){
+  const panel = document.getElementById('panel-' + name);
+  panel.classList.toggle('open');
+  if(panel.classList.contains('open')) renderFloating();
+}
+
+function renderFloating(){
+  renderFloatingAbertas();
+  renderFloatingDashboard();
+}
+
+function renderFloatingAbertas(){
+  const el = document.getElementById('fp-abertas-body');
+  const abertas = occurrences.filter(o=>o.status!=='Resolvida');
+  if(abertas.length===0){
+    el.innerHTML = '<div class="fp-empty">Nenhuma ocorrência aberta no momento.</div>';
+    return;
+  }
+  el.innerHTML = abertas.map(o=>`
+    <div class="fp-item">
+      <div class="fp-top">
+        <span class="fp-pedido">Pedido ${o.pedido}</span>
+        <span class="prio-tag prio-${o.prioridade}">${o.prioridade}</span>
+      </div>
+      <div class="fp-id-sub mono">${o.id}</div>
+      <div class="fp-tipo">${o.tipo}</div>
+      ${o.responsavel
+        ? `<div class="fp-resp">Tratando: ${o.responsavel}</div>`
+        : `<div class="fp-resp unassigned">Aguardando atribuição</div>`}
+    </div>
+  `).join('');
+}
+
+function renderFloatingDashboard(){
+  const el = document.getElementById('fp-dashboard-body');
+  const total = occurrences.length || 1;
+  const abertas = occurrences.filter(o=>o.status==='Aberta').length;
+  const tratamento = occurrences.filter(o=>o.status==='Em Tratamento').length;
+  const resolvidas = occurrences.filter(o=>o.status==='Resolvida').length;
+  const baixa = occurrences.filter(o=>o.prioridade==='Baixa').length;
+  const media = occurrences.filter(o=>o.prioridade==='Média').length;
+  const alta = occurrences.filter(o=>o.prioridade==='Alta').length;
+
+  el.innerHTML = `
+    <div class="dash-stat"><span>Total de ocorrências</span><b>${occurrences.length}</b></div>
+    <div class="dash-stat"><span>Abertas</span><b style="color:var(--red)">${abertas}</b></div>
+    <div class="dash-stat"><span>Em tratamento</span><b style="color:#9A6A11">${tratamento}</b></div>
+    <div class="dash-stat"><span>Resolvidas</span><b style="color:var(--green)">${resolvidas}</b></div>
+    <div class="dash-bars">
+      <div class="dash-bar-row">
+        <div class="dash-bar-label"><span>Prioridade alta</span><span>${alta}</span></div>
+        <div class="dash-bar-wrap"><div class="dash-bar" style="width:${alta/total*100}%;background:var(--red);"></div></div>
+      </div>
+      <div class="dash-bar-row">
+        <div class="dash-bar-label"><span>Prioridade média</span><span>${media}</span></div>
+        <div class="dash-bar-wrap"><div class="dash-bar" style="width:${media/total*100}%;background:var(--amber);"></div></div>
+      </div>
+      <div class="dash-bar-row">
+        <div class="dash-bar-label"><span>Prioridade baixa</span><span>${baixa}</span></div>
+        <div class="dash-bar-wrap"><div class="dash-bar" style="width:${baixa/total*100}%;background:var(--green);"></div></div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---- TV mode (fullscreen monitor) ---- */
+let refreshSeconds = 30;
+let floatingTimer = null;
+let tvTimer = null;
+let tvClockInterval = null;
+let tvPage = 0;
+const TV_PAGE_SIZE = 15;
+
+function setRefreshInterval(seconds){
+  refreshSeconds = parseInt(seconds, 10);
+  restartTimers();
+}
+
+function restartTimers(){
+  if(floatingTimer) clearInterval(floatingTimer);
+  floatingTimer = setInterval(renderFloating, refreshSeconds*1000);
+  if(document.getElementById('tv-overlay').classList.contains('open')){
+    if(tvTimer) clearInterval(tvTimer);
+    tvTimer = setInterval(()=>renderTV(true), refreshSeconds*1000);
+  }
+}
+
+function openTV(){
+  const overlay = document.getElementById('tv-overlay');
+  overlay.classList.add('open');
+  tvPage = 0;
+  renderTV(false);
+  updateTVClock();
+  if(overlay.requestFullscreen){
+    overlay.requestFullscreen().catch(()=>{ /* segue em modo janela se o navegador bloquear */ });
+  }
+  if(tvClockInterval) clearInterval(tvClockInterval);
+  tvClockInterval = setInterval(updateTVClock, 1000);
+  restartTimers();
+}
+
+function closeTV(){
+  const overlay = document.getElementById('tv-overlay');
+  overlay.classList.remove('open');
+  if(document.fullscreenElement) document.exitFullscreen();
+  if(tvTimer) clearInterval(tvTimer);
+  if(tvClockInterval) clearInterval(tvClockInterval);
+}
+
+document.addEventListener('fullscreenchange', ()=>{
+  if(!document.fullscreenElement){
+    document.getElementById('tv-overlay').classList.remove('open');
+    if(tvTimer) clearInterval(tvTimer);
+    if(tvClockInterval) clearInterval(tvClockInterval);
+  }
+});
+
+function updateTVClock(){
+  const el = document.getElementById('tv-clock');
+  if(el) el.textContent = new Date().toLocaleTimeString('pt-BR');
+}
+
+function renderTV(advance){
+  const abertas = occurrences.filter(o=>o.status!=='Resolvida');
+  document.getElementById('tv-open-count').textContent = abertas.length;
+
+  const totalPages = Math.max(1, Math.ceil(abertas.length / TV_PAGE_SIZE));
+  if(tvPage >= totalPages) tvPage = 0;
+  const pageItems = abertas.slice(tvPage*TV_PAGE_SIZE, tvPage*TV_PAGE_SIZE + TV_PAGE_SIZE);
+
+  const indicator = document.getElementById('tv-page-indicator');
+  indicator.textContent = totalPages > 1 ? `· página ${tvPage+1} de ${totalPages}` : '';
+
+  const grid = document.getElementById('tv-open-grid');
+  grid.innerHTML = pageItems.length===0
+    ? '<div class="tv-empty-big">Nenhuma ocorrência aberta no momento.</div>'
+    : pageItems.map(o=>`
+      <div class="tv-card p-${o.prioridade}">
+        <div class="tv-card-top">
+          <span class="tv-card-pedido">Pedido ${o.pedido}</span>
+          <span class="prio-tag prio-${o.prioridade}">${o.prioridade}</span>
+        </div>
+        <div class="tv-card-id-sub mono">${o.id}</div>
+        <div class="tv-card-tipo">${o.tipo}</div>
+        <div class="tv-card-meta">${o.vendedor} · há ${o.tempo}</div>
+        ${o.responsavel
+          ? `<div class="tv-card-resp">Tratando: ${o.responsavel}</div>`
+          : `<div class="tv-card-resp unassigned">Aguardando atribuição</div>`}
+      </div>
+    `).join('');
+
+  if(advance && totalPages > 1){
+    tvPage = (tvPage + 1) % totalPages;
+  }
+
+  const total = occurrences.length || 1;
+  const ab = occurrences.filter(o=>o.status==='Aberta').length;
+  const tr = occurrences.filter(o=>o.status==='Em Tratamento').length;
+  const re = occurrences.filter(o=>o.status==='Resolvida').length;
+  const baixa = occurrences.filter(o=>o.prioridade==='Baixa').length;
+  const media = occurrences.filter(o=>o.prioridade==='Média').length;
+  const alta = occurrences.filter(o=>o.prioridade==='Alta').length;
+
+  document.getElementById('tv-stats').innerHTML = `
+    <div class="tv-stat-mini"><b>${occurrences.length}</b><span>Total</span></div>
+    <div class="tv-stat-mini red"><b>${ab}</b><span>Abertas</span></div>
+    <div class="tv-stat-mini amber"><b>${tr}</b><span>Em trat.</span></div>
+    <div class="tv-stat-mini green"><b>${re}</b><span>Resolvidas</span></div>
+  `;
+  document.getElementById('tv-bars').innerHTML = `
+    <div class="tv-bar-mini">
+      <div class="dash-bar-label"><span>Alta</span><span>${alta}</span></div>
+      <div class="dash-bar-wrap"><div class="dash-bar" style="width:${alta/total*100}%;background:var(--red);"></div></div>
+    </div>
+    <div class="tv-bar-mini">
+      <div class="dash-bar-label"><span>Média</span><span>${media}</span></div>
+      <div class="dash-bar-wrap"><div class="dash-bar" style="width:${media/total*100}%;background:var(--amber);"></div></div>
+    </div>
+    <div class="tv-bar-mini">
+      <div class="dash-bar-label"><span>Baixa</span><span>${baixa}</span></div>
+      <div class="dash-bar-wrap"><div class="dash-bar" style="width:${baixa/total*100}%;background:var(--green);"></div></div>
+    </div>
+  `;
+}
+
+/* ---- Inicialização (carrega dados compartilhados antes de renderizar) ---- */
+async function init(){
+  const loadingEl = document.getElementById('app-loading');
+  await loadState();
+  if(loadingEl) loadingEl.style.display = 'none';
+  refreshAll();
+  restartTimers();
+}
+init();
+</script>
+
+<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
+  <div style="max-width:320px;width:100%;">
+    <div id="__gateMsg" style="font-size:14px;color:#8a93a3;line-height:1.6;">Verificando acesso...</div>
+  </div>
+</div>
+<style id="__gateStyle">body > *:not(#__gateOverlay){ display:none !important; }</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
+<script>
+(function(){
+  var GRUPOS_PERMITIDOS = ["Qualidade","PCP"];
+  var firebaseConfig = {
+    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+    authDomain: "stinpharma-qualidade.firebaseapp.com",
+    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+    projectId: "stinpharma-qualidade",
+    storageBucket: "stinpharma-qualidade.firebasestorage.app",
+    messagingSenderId: "422803826984",
+    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+    measurementId: "G-6C0TLHH2VP"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  function liberar(){
+    var st = document.getElementById('__gateStyle');
+    var ov = document.getElementById('__gateOverlay');
+    if(st) st.remove();
+    if(ov) ov.remove();
+  }
+  function negar(msg){
+    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Central de Apps</a>';
+  }
+  var jaResolveu = false;
+  setTimeout(function(){
+    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
+  }, 10000);
+  firebase.auth().onAuthStateChanged(function(user){
+    jaResolveu = true;
+    if(!user){ negar('Você precisa entrar pela Central de Apps.'); return; }
+    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
+      var dados = snap.val();
+      var meusGrupos = (dados && dados.grupos) || [];
+      var permitido = GRUPOS_PERMITIDOS.some(function(g){ return meusGrupos.indexOf(g) !== -1; });
+      if(permitido){ liberar(); } else { negar('Você não tem permissão pra acessar este app.'); }
+    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
+  });
+})();
+</script>
+</body>
+</html>
