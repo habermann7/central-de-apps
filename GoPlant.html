@@ -1070,6 +1070,25 @@
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
+<script>
+  // Mesma sessão da Central de Apps (a pessoa já logou lá antes de chegar aqui).
+  var __gpFirebaseConfig = {
+    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+    authDomain: "stinpharma-qualidade.firebaseapp.com",
+    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+    projectId: "stinpharma-qualidade",
+    storageBucket: "stinpharma-qualidade.firebasestorage.app",
+    messagingSenderId: "422803826984",
+    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+    measurementId: "G-6C0TLHH2VP"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(__gpFirebaseConfig);
+  var gpFbdb = firebase.database();
+</script>
+
 <script>
 (function(){
   "use strict";
@@ -1078,6 +1097,7 @@
   const MIN_DIM = 0.6;
   const STORE_KEY = "goplant_workspace_v1";
   const LEGACY_KEY = "goplant_project_v1";
+  const FB_PATH = "goplant/workspace";
   const PX_PER_METER = 50;
 
   /* ================= state ================= */
@@ -1286,18 +1306,30 @@
     if(!p.updatedAt) p.updatedAt=p.createdAt;
     return p;
   }
-  function loadWorkspace(){
+  async function loadWorkspace(){
     let loaded=false;
+    // 1) tenta puxar do Firebase primeiro — é o dado mais atual, compartilhado com o time
     try{
-      const raw = localStorage.getItem(STORE_KEY);
-      if(raw){
-        const w = JSON.parse(raw);
-        if(w && Array.isArray(w.projects)){
-          workspace = {v:1, projects:w.projects.map(normalizeProject).filter(Boolean), lastOpenedId:w.lastOpenedId||null};
-          loaded = workspace.projects.length>0;
-        }
+      const snap = await gpFbdb.ref(FB_PATH).once("value");
+      const w = snap.val();
+      if(w && Array.isArray(w.projects)){
+        workspace = {v:1, projects:w.projects.map(normalizeProject).filter(Boolean), lastOpenedId:w.lastOpenedId||null};
+        loaded = workspace.projects.length>0;
       }
-    }catch(e){}
+    }catch(e){ setSaveStatus("Sem conexão — abrindo cópia local"); }
+    // 2) se não veio nada do Firebase (offline, ou primeira vez), usa o que tiver salvo neste navegador
+    if(!loaded){
+      try{
+        const raw = localStorage.getItem(STORE_KEY);
+        if(raw){
+          const w = JSON.parse(raw);
+          if(w && Array.isArray(w.projects)){
+            workspace = {v:1, projects:w.projects.map(normalizeProject).filter(Boolean), lastOpenedId:w.lastOpenedId||null};
+            loaded = workspace.projects.length>0;
+          }
+        }
+      }catch(e){}
+    }
     if(!loaded){
       try{
         const legacy = localStorage.getItem(LEGACY_KEY);
@@ -1310,7 +1342,14 @@
     return loaded;
   }
   function saveWorkspace(){
-    try{ localStorage.setItem(STORE_KEY, JSON.stringify(workspace)); return true; }
+    try{
+      localStorage.setItem(STORE_KEY, JSON.stringify(workspace));
+      // sincroniza com o time em segundo plano — não trava a interface esperando a nuvem responder
+      gpFbdb.ref(FB_PATH).set(workspace).catch(function(){
+        setSaveStatus("Salvo neste computador — sem conexão com o time agora");
+      });
+      return true;
+    }
     catch(e){ return false; }
   }
   function setSaveStatus(text, flash){
@@ -6191,8 +6230,8 @@
   }
 
   /* ================= boot ================= */
-  function boot(){
-    const had = loadWorkspace();
+  async function boot(){
+    const had = await loadWorkspace();
     if(!had && workspace.projects.length===0){
       workspace.projects.push(blankProject("Meu primeiro projeto"));
     }
@@ -6367,7 +6406,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
 <script>
 (function(){
-  var GRUPOS_PERMITIDOS = ["GERAL"];
+  var GRUPOS_PERMITIDOS = ["Geral","TI","Qualidade","PCP"];
   var firebaseConfig = {
     apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
     authDomain: "stinpharma-qualidade.firebaseapp.com",
