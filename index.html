@@ -159,12 +159,20 @@
   .search-input:focus{ outline:none; border-color:var(--accent); }
   .search-input::placeholder{ color:var(--text-faint); }
 
-  /* ===================== APP CARDS (visual "carteira") ===================== */
-  .wallet-stack{ max-width:480px; margin:0 auto; position:relative; }
+  /* ===================== ESTANTE (prateleiras por categoria) ===================== */
+  #grid{ display:flex; flex-wrap:wrap; align-items:flex-start; gap:30px 24px; }
+  .shelf{ width:264px; flex-shrink:0; }
+  .shelf-label{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--text-faint); margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border-soft);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .shelf-count{ background:var(--surface-2); border:1px solid var(--border); border-radius:20px; padding:1px 7px; font-size:9.5px; color:var(--text-dim); }
+  .wallet-stack{ position:relative; }
   .wallet-stack .card-wrap:not(:first-child){ margin-top:-86px; }
   .wallet-stack .card-wrap{ position:relative; }
   .wallet-stack .card-wrap:hover, .wallet-stack .card-wrap:focus-within{ z-index:50; }
-  .wallet-stack .add-card{ margin-top:20px; }
+  #grid .add-card{ width:264px; flex-shrink:0; align-self:stretch; min-height:120px; }
   .card-wrap{
     position:relative; opacity:0; transform:translateY(10px); animation:fadeUp .5s cubic-bezier(.16,.9,.35,1) forwards;
     perspective:900px;
@@ -421,7 +429,7 @@
         <div class="search-row fade-in" style="animation-delay:.06s;">
           <input type="text" id="appSearch" class="search-input" placeholder="Buscar um app..." oninput="filtrarApps()">
         </div>
-        <div class="wallet-stack" id="grid"></div>
+        <div id="grid"></div>
         <footer>
           <span>CENTRAL-DE-APPS — sincroniza sozinha conforme o time publica</span>
           <span id="countText">0 ferramentas</span>
@@ -806,10 +814,51 @@ function tenhoAcesso(app){
 
 function filtrarApps(){
   const q = document.getElementById('appSearch').value.trim().toLowerCase();
-  document.querySelectorAll('#grid .card-wrap').forEach(function(el){
-    const texto = el.textContent.toLowerCase();
-    el.style.display = (!q || texto.indexOf(q) !== -1) ? '' : 'none';
+  document.querySelectorAll('#grid .shelf').forEach(function(shelf){
+    let algumVisivel = false;
+    const categoriaTexto = shelf.dataset.categoria || '';
+    shelf.querySelectorAll('.card-wrap').forEach(function(el){
+      const texto = el.textContent.toLowerCase();
+      const bate = !q || texto.indexOf(q) !== -1 || categoriaTexto.indexOf(q) !== -1;
+      el.style.display = bate ? '' : 'none';
+      if(bate) algumVisivel = true;
+    });
+    shelf.style.display = algumVisivel ? '' : 'none';
   });
+}
+
+function formatarCategoria(cat){
+  const limpo = (cat || '').trim();
+  if(!limpo) return 'Sem categoria';
+  // preserva siglas curtas em maiúsculo (PCP, TI...) e só ajusta o resto pra Título
+  if(limpo.length <= 5 && limpo === limpo.toUpperCase()) return limpo;
+  return limpo.toLowerCase().replace(/(^|\s)\S/g, function(c){ return c.toUpperCase(); });
+}
+
+function cardHtml(app, i){
+  const acessoNormal = tenhoAcesso(app);
+  return `
+    <div class="card-wrap" style="animation-delay:${i * 55}ms">
+      <a class="card" href="./${app.file}" style="--accent-card:${app.color || '#39D6AE'}">
+        <div class="card-body">
+          <div class="card-top">
+            <div class="card-icon">${app.icon || '🧩'}</div>
+            ${acessoNormal
+              ? '<div class="card-status"><span class="dot"></span> online</div>'
+              : '<div class="card-status" style="color:var(--warn);"><span class="dot" style="background:var(--warn);"></span> sem seu acesso</div>'}
+          </div>
+          <div class="card-tag">${app.category || 'FERRAMENTA'}</div>
+          <div class="card-title">${app.title}</div>
+          <div class="card-desc">${app.description || ''}</div>
+          <div class="card-open">Abrir app <span class="arrow">→</span></div>
+        </div>
+      </a>
+      ${SOU_ADMIN ? `
+      <button class="kebab-btn kebab-edit" title="Editar app" data-file="${escapeAttr(app.file)}" data-title="${escapeAttr(app.title)}" data-category="${escapeAttr(app.category || '')}" data-description="${escapeAttr(app.description || '')}" data-grupos="${escapeAttr(JSON.stringify(app.grupos || []))}" onclick="abrirEditarAppFromButton(this)">✎</button>
+      <button class="kebab-btn kebab-delete" title="Remover app" data-file="${escapeAttr(app.file)}" data-title="${escapeAttr(app.title)}" onclick="openDeleteModal(this.dataset.file, this.dataset.title)">✕</button>
+      ` : ''}
+    </div>
+  `;
 }
 
 async function loadApps(){
@@ -829,32 +878,25 @@ async function loadApps(){
       return;
     }
 
-    grid.innerHTML = apps.map((app, i) => {
-      const acessoNormal = tenhoAcesso(app);
+    // agrupa em "prateleiras" por categoria — nomes parecidos (Operações / OPERAÇÕES) caem juntos
+    const prateleiras = {};
+    apps.forEach(function(app){
+      const chave = formatarCategoria(app.category);
+      if(!prateleiras[chave]) prateleiras[chave] = [];
+      prateleiras[chave].push(app);
+    });
+    const categorias = Object.keys(prateleiras).sort(function(a,b){ return a.localeCompare(b, 'pt-BR'); });
+
+    grid.innerHTML = categorias.map(function(cat){
+      const appsDaCategoria = prateleiras[cat];
       return `
-      <div class="card-wrap" style="animation-delay:${i * 55}ms">
-        <a class="card" href="./${app.file}" style="--accent-card:${app.color || '#39D6AE'}">
-          <div class="card-body">
-            <div class="card-top">
-              <div class="card-icon">${app.icon || '🧩'}</div>
-              ${acessoNormal
-                ? '<div class="card-status"><span class="dot"></span> online</div>'
-                : '<div class="card-status" style="color:var(--warn);"><span class="dot" style="background:var(--warn);"></span> sem seu acesso</div>'}
-            </div>
-            <div class="card-tag">${app.category || 'FERRAMENTA'}</div>
-            <div class="card-title">${app.title}</div>
-            <div class="card-desc">${app.description || ''}</div>
-            <div class="card-open">Abrir app <span class="arrow">→</span></div>
-          </div>
-        </a>
-        ${SOU_ADMIN ? `
-        <button class="kebab-btn kebab-edit" title="Editar app" data-file="${escapeAttr(app.file)}" data-title="${escapeAttr(app.title)}" data-category="${escapeAttr(app.category || '')}" data-description="${escapeAttr(app.description || '')}" data-grupos="${escapeAttr(JSON.stringify(app.grupos || []))}" onclick="abrirEditarAppFromButton(this)">✎</button>
-        <button class="kebab-btn kebab-delete" title="Remover app" data-file="${escapeAttr(app.file)}" data-title="${escapeAttr(app.title)}" onclick="openDeleteModal(this.dataset.file, this.dataset.title)">✕</button>
-        ` : ''}
-      </div>
-    `;
+        <div class="shelf" data-categoria="${escapeAttr(cat.toLowerCase())}">
+          <div class="shelf-label">${escapeAttr(cat)} <span class="shelf-count">${appsDaCategoria.length}</span></div>
+          <div class="wallet-stack">${appsDaCategoria.map(cardHtml).join('')}</div>
+        </div>
+      `;
     }).join('') + `
-      <a class="add-card" href="./adicionar.html" style="animation-delay:${apps.length * 55}ms">
+      <a class="add-card" href="./adicionar.html">
         <div class="add-plus">+</div>
         Adicionar app
       </a>
