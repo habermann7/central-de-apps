@@ -159,27 +159,48 @@
   .search-input:focus{ outline:none; border-color:var(--accent); }
   .search-input::placeholder{ color:var(--text-faint); }
 
-  /* ===================== APP CARDS ===================== */
-  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(268px, 1fr)); gap:14px; }
-  .card-wrap{ position:relative; opacity:0; transform:translateY(10px); animation:fadeUp .5s cubic-bezier(.16,.9,.35,1) forwards; }
-  .card{
-    display:flex; flex-direction:column; height:100%;
-    background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius);
-    overflow:hidden; text-decoration:none; color:inherit;
-    transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+  /* ===================== APP CARDS (visual "carteira") ===================== */
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(268px, 1fr)); gap:22px 14px; }
+  .card-wrap{
+    position:relative; opacity:0; transform:translateY(10px); animation:fadeUp .5s cubic-bezier(.16,.9,.35,1) forwards;
+    perspective:900px;
   }
-  .card-stripe{ height:3px; background:var(--accent-card, var(--accent)); }
-  .card-body{ padding:19px 19px 17px; display:flex; flex-direction:column; flex:1; }
-  .card:hover{
-    transform:translateY(-3px);
-    border-color:color-mix(in srgb, var(--accent-card, var(--accent)) 45%, var(--border));
-    box-shadow:0 14px 28px -16px rgba(0,0,0,.55);
+  .card-wrap::before{
+    /* sombra de um "segundo cartão" espiando atrás, como numa carteira */
+    content:''; position:absolute; inset:8px -5px -8px 5px; z-index:0;
+    background:var(--surface-2); border:1px solid var(--border); border-radius:17px;
+    opacity:.5; transition:transform .28s cubic-bezier(.16,.9,.35,1), opacity .28s ease;
+  }
+  .card-wrap:hover::before{ transform:translate(7px, 9px); opacity:.85; }
+  .card{
+    display:flex; flex-direction:column; height:100%; position:relative; z-index:1;
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--accent-card, var(--accent)) 24%, transparent) 0%, transparent 55%),
+      linear-gradient(160deg, var(--surface-2), var(--bg) 130%);
+    border:1px solid color-mix(in srgb, var(--accent-card, var(--accent)) 32%, var(--border));
+    border-radius:17px;
+    overflow:hidden; text-decoration:none; color:inherit;
+    box-shadow:0 10px 22px -16px rgba(0,0,0,.6);
+    transform-style:preserve-3d; will-change:transform;
+    transition:transform .2s cubic-bezier(.16,.9,.35,1), border-color .2s ease, box-shadow .2s ease;
+  }
+  .card::after{
+    /* brilho diagonal sutil, como o verniz de um cartão */
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(120deg, rgba(255,255,255,.09) 0%, transparent 32%, transparent 68%, rgba(255,255,255,.03) 100%);
+  }
+  .card-body{ padding:19px 19px 17px; display:flex; flex-direction:column; flex:1; position:relative; z-index:1; }
+  .card-wrap:hover .card{
+    transform:translateY(-9px) scale(1.015);
+    border-color:color-mix(in srgb, var(--accent-card, var(--accent)) 60%, var(--border));
+    box-shadow:0 28px 46px -20px rgba(0,0,0,.65), 0 6px 16px -4px color-mix(in srgb, var(--accent-card, var(--accent)) 35%, transparent);
   }
   .card-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; }
   .card-icon{
-    width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center;
-    font-size:16px; background:color-mix(in srgb, var(--accent-card, var(--accent)) 16%, transparent);
-    border:1px solid color-mix(in srgb, var(--accent-card, var(--accent)) 32%, transparent);
+    width:38px; height:29px; border-radius:7px; display:flex; align-items:center; justify-content:center;
+    font-size:15px;
+    background:linear-gradient(135deg, color-mix(in srgb, var(--accent-card, var(--accent)) 34%, transparent), color-mix(in srgb, var(--accent-card, var(--accent)) 12%, transparent));
+    border:1px solid color-mix(in srgb, var(--accent-card, var(--accent)) 48%, transparent);
   }
   .card-status{ font-size:10px; color:var(--accent); display:flex; align-items:center; gap:5px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.04em; padding-top:3px; }
   .card-status .dot{ width:5px; height:5px; border-radius:50%; background:var(--accent); }
@@ -188,10 +209,10 @@
   .card-desc{ font-size:13px; color:var(--text-dim); line-height:1.55; flex:1; margin-bottom:16px; }
   .card-open{ font-family:var(--mono); font-size:11.5px; font-weight:500; color:var(--accent-card, var(--accent)); display:flex; align-items:center; gap:5px; }
   .card-open .arrow{ transition:transform .15s ease; }
-  .card:hover .card-open .arrow{ transform:translateX(3px); }
+  .card-wrap:hover .card-open .arrow{ transform:translateX(3px); }
 
   .kebab-btn{
-    position:absolute; top:16px; right:16px; z-index:2;
+    position:absolute; top:16px; right:16px; z-index:3;
     width:24px; height:24px; border-radius:6px; background:rgba(10,13,17,.75);
     border:1px solid var(--border); color:var(--text-faint); font-size:13px; cursor:pointer;
     display:flex; align-items:center; justify-content:center;
@@ -201,12 +222,12 @@
   .kebab-btn:hover, .kebab-btn:focus-visible{ color:var(--danger); border-color:var(--danger); }
 
   .add-card{
-    border:1.5px dashed var(--border); border-radius:var(--radius); background:transparent;
+    border:1.5px dashed var(--border); border-radius:17px; background:transparent;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
     padding:34px 16px; color:var(--text-faint); font-family:var(--mono); font-size:11.5px; text-transform:uppercase; letter-spacing:.05em;
-    text-decoration:none; cursor:pointer; transition:border-color .15s ease, color .15s ease;
+    text-decoration:none; cursor:pointer; transition:border-color .15s ease, color .15s ease, transform .2s ease;
   }
-  .add-card:hover{ border-color:var(--accent); color:var(--text-dim); }
+  .add-card:hover{ border-color:var(--accent); color:var(--text-dim); transform:translateY(-4px); }
   .add-plus{ width:32px; height:32px; border-radius:50%; border:1.5px dashed var(--text-faint); display:flex; align-items:center; justify-content:center; font-size:16px; font-family:var(--body); transition:border-color .15s ease; }
   .add-card:hover .add-plus{ border-color:var(--accent); }
 
@@ -324,6 +345,8 @@
 
   @media (prefers-reduced-motion: reduce){
     .fade-in, .card-wrap, .login-badge .dot, .meta-pill .dot, .sync-dot{ animation:none !important; opacity:1 !important; transform:none !important; }
+    .card, .card-wrap::before{ transition:none !important; }
+    .card-wrap:hover .card{ transform:none !important; }
   }
 </style>
 </head>
@@ -394,7 +417,7 @@
           <div>
             <div class="page-eyebrow">Catálogo interno · unidade operações</div>
             <h1>Galeria de <span class="accent">apps</span></h1>
-            <p class="page-sub">Ferramentas internas que fomos construindo juntos. Clique num card pra abrir — sempre que alguém publica uma nova, ela aparece aqui pra todo mundo.</p>
+            <p class="page-sub">Ferramentas internas do time, sincronizadas em tempo real — o que um preenche, todo mundo vê na hora. Clique num card pra abrir.</p>
           </div>
           <div class="meta-pill"><span class="dot"></span><span id="statusText">carregando...</span></div>
         </div>
@@ -800,7 +823,7 @@ async function loadApps(){
     const res = await fetch('./manifest.json?t=' + Date.now(), {cache:'no-store'});
     if(!res.ok) throw new Error('manifest.json não encontrado');
     const todos = await res.json();
-    const apps = (Array.isArray(todos) ? todos : []).filter(tenhoAcesso);
+    const apps = (Array.isArray(todos) ? todos : []).filter(app => SOU_ADMIN || tenhoAcesso(app));
 
     if(apps.length === 0){
       grid.innerHTML = `<div class="no-access"><div class="empty-icon">🔒</div><h2>Nenhum app liberado ainda</h2><p>Seu grupo (${MEUS_GRUPOS.join(', ') || '—'}) não tem acesso a nenhuma ferramenta por enquanto. Fala com o David se acha que deveria ter acesso a algo.</p></div>`;
@@ -809,14 +832,17 @@ async function loadApps(){
       return;
     }
 
-    grid.innerHTML = apps.map((app, i) => `
+    grid.innerHTML = apps.map((app, i) => {
+      const acessoNormal = tenhoAcesso(app);
+      return `
       <div class="card-wrap" style="animation-delay:${i * 55}ms">
         <a class="card" href="./${app.file}" style="--accent-card:${app.color || '#39D6AE'}">
-          <div class="card-stripe"></div>
           <div class="card-body">
             <div class="card-top">
               <div class="card-icon">${app.icon || '🧩'}</div>
-              <div class="card-status"><span class="dot"></span> online</div>
+              ${acessoNormal
+                ? '<div class="card-status"><span class="dot"></span> online</div>'
+                : '<div class="card-status" style="color:var(--warn);"><span class="dot" style="background:var(--warn);"></span> sem seu acesso</div>'}
             </div>
             <div class="card-tag">${app.category || 'FERRAMENTA'}</div>
             <div class="card-title">${app.title}</div>
@@ -829,7 +855,8 @@ async function loadApps(){
         <button class="kebab-btn kebab-delete" title="Remover app" data-file="${escapeAttr(app.file)}" data-title="${escapeAttr(app.title)}" onclick="openDeleteModal(this.dataset.file, this.dataset.title)">✕</button>
         ` : ''}
       </div>
-    `).join('') + `
+    `;
+    }).join('') + `
       <a class="add-card" href="./adicionar.html" style="animation-delay:${apps.length * 55}ms">
         <div class="add-plus">+</div>
         Adicionar app
@@ -838,10 +865,28 @@ async function loadApps(){
 
     statusText.textContent = apps.length + ' apps ativos · sempre atualizado';
     countText.textContent = apps.length + ' ferramenta' + (apps.length > 1 ? 's' : '');
+    wireCardFX();
   }catch(err){
     grid.innerHTML = '<div class="error">Não consegui ler o manifest.json. Confira se este arquivo está sendo aberto por um servidor (http://...), não direto pelo Windows (file://...).</div>';
     statusText.textContent = 'erro ao carregar';
   }
+}
+
+/* ================= efeito de "puxar da carteira": tilt 3D leve seguindo o mouse ================= */
+function wireCardFX(){
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduceMotion) return;
+  document.querySelectorAll('.card').forEach(function(card){
+    if(card.dataset.fxWired) return;
+    card.dataset.fxWired = '1';
+    card.addEventListener('mousemove', function(e){
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+      const rx = (0.5 - py) * 7, ry = (px - 0.5) * 7;
+      card.style.transform = 'perspective(900px) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) translateY(-9px) scale(1.015)';
+    });
+    card.addEventListener('mouseleave', function(){ card.style.transform = ''; });
+  });
 }
 
 /* ================= Painel de administração ================= */
