@@ -326,8 +326,9 @@
     <div class="registrar-grid">
       <div class="card">
         <h2>Nova ocorrência</h2>
-        <label>Nº do pedido</label>
-        <input type="text" id="f-pedido" placeholder="Ex: 021">
+        <label>Nº do pedido <span style="color:var(--red);">*</span></label>
+        <input type="text" id="f-pedido" placeholder="Ex: 021" oninput="checarPedidoDuplicado()">
+        <div id="f-pedido-aviso" style="display:none;font-size:12px;color:var(--red);margin-top:4px;"></div>
         <label>Vendedor</label>
         <input type="text" id="f-vendedor" placeholder="Nome de quem atendeu o pedido">
         <label>Tipo de ocorrência</label>
@@ -700,19 +701,55 @@ function refreshAll(){
   saveState();
 }
 
+function pedidoJaRegistrado(pedido){
+  return occurrences.filter(function(o){
+    return o.pedido && o.pedido.trim().toLowerCase() === pedido.toLowerCase();
+  });
+}
+
+function checarPedidoDuplicado(){
+  const aviso = document.getElementById('f-pedido-aviso');
+  const pedido = document.getElementById('f-pedido').value.trim();
+  if(!pedido){ aviso.style.display = 'none'; return; }
+  const existentes = pedidoJaRegistrado(pedido);
+  if(existentes.length){
+    aviso.textContent = '⚠ Esse pedido já tem ' + existentes.length + ' ocorrência(s) registrada(s) (' + existentes.map(function(o){return o.id;}).join(', ') + ').';
+    aviso.style.display = 'block';
+  } else {
+    aviso.style.display = 'none';
+  }
+}
+
 function registrarOcorrencia(){
   const pedido = document.getElementById('f-pedido').value.trim();
   const vendedor = document.getElementById('f-vendedor').value.trim();
   const tipo = document.getElementById('f-tipo').value;
   const prioridade = document.querySelector('.prio-opt.active').dataset.p;
   const desc = document.getElementById('f-desc').value.trim();
-  if(!pedido || !vendedor || !desc){
-    alert('Preencha o número do pedido, o vendedor e a descrição.');
+
+  const faltando = [];
+  if(!pedido) faltando.push('número do pedido');
+  if(!vendedor) faltando.push('vendedor');
+  if(!desc) faltando.push('descrição');
+  if(faltando.length){
+    alert('Preenche antes de registrar: ' + faltando.join(', ') + '.');
     return;
   }
+
+  const existentes = pedidoJaRegistrado(pedido);
+  if(existentes.length){
+    const resumo = existentes.map(function(o){ return o.id + ' — ' + o.status; }).join('\n');
+    const seguir = confirm(
+      'O pedido ' + pedido + ' já tem ' + existentes.length + ' ocorrência(s) registrada(s):\n\n' + resumo +
+      '\n\nQuer registrar uma nova ocorrência mesmo assim?'
+    );
+    if(!seguir) return;
+  }
+
   seq++;
   occurrences.unshift({id:'OC-0'+seq, pedido, vendedor, tipo, prioridade, desc, status:'Aberta', responsavel:'', tempo:'agora'});
   document.getElementById('f-pedido').value='';
+  document.getElementById('f-pedido-aviso').style.display='none';
   document.getElementById('f-vendedor').value='';
   document.getElementById('f-desc').value='';
   const toast = document.getElementById('toast');
