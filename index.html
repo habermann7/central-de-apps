@@ -206,6 +206,8 @@
 
   /* ---------- painel de administração ---------- */
   .admin-user-row{ background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:16px 18px; margin-bottom:10px; }
+  .admin-user-row input[type=text], .admin-user-row input[type=email]{ width:100%; background:var(--ink); border:1px solid var(--line); border-radius:3px; padding:9px 11px; color:var(--paper); font-size:13px; font-family:var(--body); box-sizing:border-box; }
+  .admin-user-row input:focus{ outline:none; border-color:var(--signal); }
   .admin-user-head{ display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:14px; flex-wrap:wrap; }
   .admin-user-head b{ font-family:var(--display); }
   .admin-user-email{ font-family:var(--mono); font-size:11px; color:var(--mist); }
@@ -668,14 +670,17 @@ async function carregarListaUsuarios(){
       const u = usuarios[uid] || {};
       const grupos = u.grupos || [];
       return '<div class="admin-user-row" data-uid="' + uid + '">' +
-        '<div class="admin-user-head"><b>' + (u.nome || '(sem nome)') + '</b>' +
-        (u.admin ? ' <span class="admin-badge">admin</span>' : '') +
-        '<span class="admin-user-email">' + (u.email || uid) + '</span></div>' +
+        '<label style="font-size:11px;color:var(--mist);">Nome</label>' +
+        '<input type="text" class="adm-edit-nome" value="' + escapeAttr(u.nome || '') + '">' +
+        '<label style="font-size:11px;color:var(--mist);margin-top:8px;display:block;">E-mail</label>' +
+        '<input type="email" class="adm-edit-email" value="' + escapeAttr(u.email || '') + '">' +
         '<div class="grupos-check">' + gruposDisponiveis.map(function(g){
           return '<label><input type="checkbox" class="adm-edit-grupo" value="' + g + '" ' + (grupos.indexOf(g) !== -1 ? 'checked' : '') + '> ' + g + '</label>';
-        }).join('') + '</div>' +
+        }).join('') +
+        '<label><input type="checkbox" class="adm-edit-admin" ' + (u.admin ? 'checked' : '') + '> admin</label>' +
+        '</div>' +
         '<div class="admin-user-actions">' +
-          '<button onclick="salvarGrupos(\'' + uid + '\')">Salvar grupos</button>' +
+          '<button onclick="salvarUsuario(\'' + uid + '\')">Salvar</button>' +
           '<button class="danger" onclick="removerAcesso(\'' + uid + '\',\'' + (u.nome || uid).replace(/'/g,"\\'") + '\')">Remover acesso</button>' +
         '</div></div>';
     }).join('');
@@ -684,13 +689,25 @@ async function carregarListaUsuarios(){
   }
 }
 
-async function salvarGrupos(uid){
+async function salvarUsuario(uid){
   const row = document.querySelector('.admin-user-row[data-uid="' + uid + '"]');
+  const nome = row.querySelector('.adm-edit-nome').value.trim();
+  const email = row.querySelector('.adm-edit-email').value.trim();
   const grupos = Array.from(row.querySelectorAll('.adm-edit-grupo:checked')).map(el => el.value);
-  if(grupos.length === 0){ toast('Marca pelo menos um grupo antes de salvar.'); return; }
+  const ehAdmin = row.querySelector('.adm-edit-admin').checked;
+  if(!nome || !email){ toast('Preenche nome e e-mail.'); return; }
+  if(grupos.length === 0){ toast('Marca pelo menos um grupo.'); return; }
   try{
-    await firebase.database().ref('centralApps/usuarios/' + uid + '/grupos').set(grupos);
-    toast('Grupos atualizados.');
+    const idToken = await firebase.auth().currentUser.getIdToken();
+    const res = await fetch('https://central-de-apps.vercel.app/api/editar-usuario', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken, uid, nome, email, grupos, admin: ehAdmin })
+    });
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok) throw new Error(data.error || 'Falha ao salvar');
+    toast('Usuário atualizado.');
+    carregarListaUsuarios();
   }catch(err){
     toast('Erro ao salvar: ' + err.message);
   }
