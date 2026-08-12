@@ -246,9 +246,28 @@
   <div id="results"></div>
 </div>
 
-<footer>Os dados ficam apenas no seu navegador, nesta sessão. Recarregue a planilha sempre que ela for atualizada.</footer>
+<footer>Compartilhado com o time — a última planilha enviada por qualquer pessoa fica disponível pra todos. Recarregue a planilha sempre que ela for atualizada.</footer>
 
 <div id="stamp">✓ Chave copiada</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
+<script>
+  // Mesma sessão da Central de Apps (a pessoa já logou lá antes de chegar aqui).
+  var __nfFirebaseConfig = {
+    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+    authDomain: "stinpharma-qualidade.firebaseapp.com",
+    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+    projectId: "stinpharma-qualidade",
+    storageBucket: "stinpharma-qualidade.firebasestorage.app",
+    messagingSenderId: "422803826984",
+    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+    measurementId: "G-6C0TLHH2VP"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(__nfFirebaseConfig);
+  var __nfFbdb = firebase.database();
+</script>
 
 <script>
 let DATA = [];
@@ -309,12 +328,34 @@ function loadFile(file){
       fileStatus.textContent = DATA.length.toLocaleString('pt-BR') + ' notas carregadas de "' + file.name + '" · ' + time;
       searchInput.focus();
       renderEmptyState('idle');
+      __nfFbdb.ref('consultaNfe/dados').set({ registros: DATA, fileName: file.name, atualizadoEm: Date.now() }).catch(function(){
+        fileStatus.textContent += ' · sem conexão pra sincronizar com o time agora';
+      });
     }catch(err){
       fileStatus.textContent = 'Não foi possível ler o arquivo: ' + err.message;
     }
   };
   reader.readAsArrayBuffer(file);
 }
+
+function restaurarDaNuvem(saved){
+  if(!saved || !saved.registros || !saved.registros.length) return;
+  DATA = saved.registros;
+  loaded = true;
+  searchInput.disabled = false;
+  const quando = saved.atualizadoEm ? (new Date(saved.atualizadoEm)).toLocaleDateString('pt-BR') + ' às ' + (new Date(saved.atualizadoEm)).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
+  fileStatus.textContent = DATA.length.toLocaleString('pt-BR') + ' notas carregadas de "' + (saved.fileName || 'planilha') + '"' + (quando ? ' · enviada por alguém do time em ' + quando : '');
+  renderEmptyState('idle');
+}
+let __nfBooted = false;
+firebase.auth().onAuthStateChanged(function(user){
+  if(user && !__nfBooted){
+    __nfBooted = true;
+    __nfFbdb.ref('consultaNfe/dados').once('value').then(function(snap){
+      restaurarDaNuvem(snap.val());
+    }).catch(function(){});
+  }
+});
 
 dropzone.addEventListener('click', (e)=>{ /* label triggers input natively */ });
 fileInput.addEventListener('change', (e)=>{
