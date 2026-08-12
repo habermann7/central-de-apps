@@ -1179,15 +1179,31 @@ function restartTimers(){
   floatingTimer = setInterval(renderFloating, refreshSeconds*1000);
   if(document.getElementById('tv-overlay').classList.contains('open')){
     if(tvTimer) clearInterval(tvTimer);
-    tvTimer = setInterval(()=>renderTV(true), refreshSeconds*1000);
+    tvTimer = setInterval(function(){ buscarDadosFrescosEAtualizarTV(true); }, refreshSeconds*1000);
   }
+}
+
+function buscarDadosFrescosEAtualizarTV(advance){
+  __loFbdb.ref('logisticaOcorrencias/kv/' + STORAGE_KEY).once('value').then(function(snap){
+    const v = snap.val();
+    if(v){
+      try{
+        const data = JSON.parse(v);
+        seq = data.seq; ncSeq = data.ncSeq;
+        occurrences = data.occurrences; usuarios = data.usuarios; ncs = data.ncs;
+      }catch(e){ /* mantém o que já tinha em memória se o dado vier corrompido */ }
+    }
+    renderTV(advance);
+  }).catch(function(){
+    renderTV(advance); // sem conexão agora — mostra o que já tinha carregado
+  });
 }
 
 function openTV(){
   const overlay = document.getElementById('tv-overlay');
   overlay.classList.add('open');
   tvPage = 0;
-  renderTV(false);
+  buscarDadosFrescosEAtualizarTV(false);
   updateTVClock();
   if(overlay.requestFullscreen){
     overlay.requestFullscreen().catch(()=>{ /* segue em modo janela se o navegador bloquear */ });
