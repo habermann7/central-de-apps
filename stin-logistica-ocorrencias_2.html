@@ -1293,9 +1293,53 @@ var __loInited = false;
 firebase.auth().onAuthStateChanged(function(user){
   if(user && !__loInited){
     __loInited = true;
-    init();
+    init().then(iniciarSincroniaAoVivo);
   }
 });
+
+/* ---- Sincronia ao vivo: quando qualquer pessoa do time salva algo, todo
+   mundo com a tela aberta recebe a atualização sozinho, sem precisar de F5.
+   Se a pessoa estiver digitando uma resolução de ocorrência no momento, a
+   atualização espera ela terminar pra não apagar o que está sendo escrito. ---- */
+var __loEditandoResolucao = false;
+document.addEventListener('focusin', function(e){
+  if(e.target.matches && e.target.matches('.resolve-box textarea')) __loEditandoResolucao = true;
+});
+document.addEventListener('focusout', function(e){
+  if(e.target.matches && e.target.matches('.resolve-box textarea')){
+    __loEditandoResolucao = false;
+    if(__loPendenteRemoto){
+      const p = __loPendenteRemoto; __loPendenteRemoto = null;
+      aplicarPayloadRemoto(p);
+    }
+  }
+});
+var __loPendenteRemoto = null;
+var __loPrimeiroSnapshotIgnorado = false;
+
+function aplicarPayloadRemoto(raw){
+  try{
+    const data = JSON.parse(raw);
+    seq = data.seq; ncSeq = data.ncSeq;
+    occurrences = data.occurrences; usuarios = data.usuarios; ncs = data.ncs;
+  }catch(e){ return; }
+  renderLista();
+  renderKanban();
+  renderNC();
+  renderAdmin();
+  renderFloating();
+  if(document.getElementById('tv-overlay').classList.contains('open')) renderTV();
+}
+
+function iniciarSincroniaAoVivo(){
+  __loFbdb.ref('logisticaOcorrencias/kv/' + STORAGE_KEY).on('value', function(snap){
+    if(!__loPrimeiroSnapshotIgnorado){ __loPrimeiroSnapshotIgnorado = true; return; }
+    const v = snap.val();
+    if(v === null || v === undefined) return;
+    if(__loEditandoResolucao){ __loPendenteRemoto = v; return; }
+    aplicarPayloadRemoto(v);
+  });
+}
 </script>
 
 <div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
