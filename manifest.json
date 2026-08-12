@@ -61,5 +61,17 @@
       "Qualidade",
       "PCP"
     ]
+  },
+  {
+    "title": "Logistica Ocorrencias",
+    "category": "PCP",
+    "description": "",
+    "file": "stin-logistica-ocorrencias_2.html",
+    "icon": "🧩",
+    "color": "#4d9fff",
+    "grupos": [
+      "Qualidade",
+      "PCP"
+    ]
   }
 ]
