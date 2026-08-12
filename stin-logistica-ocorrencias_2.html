@@ -1252,7 +1252,13 @@ async function init(){
   refreshAll();
   restartTimers();
 }
-init();
+var __loInited = false;
+firebase.auth().onAuthStateChanged(function(user){
+  if(user && !__loInited){
+    __loInited = true;
+    init();
+  }
+});
 </script>
 
 <div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
