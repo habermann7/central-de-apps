@@ -160,18 +160,15 @@
   .search-input::placeholder{ color:var(--text-faint); }
 
   /* ===================== APP CARDS (visual "carteira") ===================== */
-  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(268px, 1fr)); gap:22px 14px; }
+  .wallet-stack{ max-width:480px; margin:0 auto; position:relative; }
+  .wallet-stack .card-wrap:not(:first-child){ margin-top:-86px; }
+  .wallet-stack .card-wrap{ position:relative; }
+  .wallet-stack .card-wrap:hover, .wallet-stack .card-wrap:focus-within{ z-index:50; }
+  .wallet-stack .add-card{ margin-top:20px; }
   .card-wrap{
     position:relative; opacity:0; transform:translateY(10px); animation:fadeUp .5s cubic-bezier(.16,.9,.35,1) forwards;
     perspective:900px;
   }
-  .card-wrap::before{
-    /* sombra de um "segundo cartão" espiando atrás, como numa carteira */
-    content:''; position:absolute; inset:8px -5px -8px 5px; z-index:0;
-    background:var(--surface-2); border:1px solid var(--border); border-radius:17px;
-    opacity:.5; transition:transform .28s cubic-bezier(.16,.9,.35,1), opacity .28s ease;
-  }
-  .card-wrap:hover::before{ transform:translate(7px, 9px); opacity:.85; }
   .card{
     display:flex; flex-direction:column; height:100%; position:relative; z-index:1;
     background:
@@ -180,9 +177,9 @@
     border:1px solid color-mix(in srgb, var(--accent-card, var(--accent)) 32%, var(--border));
     border-radius:17px;
     overflow:hidden; text-decoration:none; color:inherit;
-    box-shadow:0 10px 22px -16px rgba(0,0,0,.6);
+    box-shadow:0 6px 16px -10px rgba(0,0,0,.6);
     transform-style:preserve-3d; will-change:transform;
-    transition:transform .2s cubic-bezier(.16,.9,.35,1), border-color .2s ease, box-shadow .2s ease;
+    transition:transform .22s cubic-bezier(.16,.9,.35,1), border-color .22s ease, box-shadow .22s ease;
   }
   .card::after{
     /* brilho diagonal sutil, como o verniz de um cartão */
@@ -190,15 +187,15 @@
     background:linear-gradient(120deg, rgba(255,255,255,.09) 0%, transparent 32%, transparent 68%, rgba(255,255,255,.03) 100%);
   }
   .card-body{ padding:19px 19px 17px; display:flex; flex-direction:column; flex:1; position:relative; z-index:1; }
-  .card-wrap:hover .card{
-    transform:translateY(-9px) scale(1.015);
+  .card-wrap:hover .card, .card-wrap:focus-within .card{
+    transform:translateY(-6px);
     border-color:color-mix(in srgb, var(--accent-card, var(--accent)) 60%, var(--border));
-    box-shadow:0 28px 46px -20px rgba(0,0,0,.65), 0 6px 16px -4px color-mix(in srgb, var(--accent-card, var(--accent)) 35%, transparent);
+    box-shadow:0 30px 50px -18px rgba(0,0,0,.7), 0 8px 18px -4px color-mix(in srgb, var(--accent-card, var(--accent)) 38%, transparent);
   }
   .card-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; }
   .card-icon{
     width:38px; height:29px; border-radius:7px; display:flex; align-items:center; justify-content:center;
-    font-size:15px;
+    font-size:15px; flex-shrink:0;
     background:linear-gradient(135deg, color-mix(in srgb, var(--accent-card, var(--accent)) 34%, transparent), color-mix(in srgb, var(--accent-card, var(--accent)) 12%, transparent));
     border:1px solid color-mix(in srgb, var(--accent-card, var(--accent)) 48%, transparent);
   }
@@ -206,7 +203,7 @@
   .card-status .dot{ width:5px; height:5px; border-radius:50%; background:var(--accent); }
   .card-tag{ font-family:var(--mono); font-size:10px; letter-spacing:.08em; color:var(--accent-card, var(--accent)); font-weight:500; text-transform:uppercase; margin-bottom:7px; }
   .card-title{ font-family:var(--display); font-size:16.5px; font-weight:700; margin-bottom:8px; letter-spacing:-.005em; }
-  .card-desc{ font-size:13px; color:var(--text-dim); line-height:1.55; flex:1; margin-bottom:16px; }
+  .card-desc{ font-size:13px; color:var(--text-dim); line-height:1.55; flex:1; margin-bottom:16px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
   .card-open{ font-family:var(--mono); font-size:11.5px; font-weight:500; color:var(--accent-card, var(--accent)); display:flex; align-items:center; gap:5px; }
   .card-open .arrow{ transition:transform .15s ease; }
   .card-wrap:hover .card-open .arrow{ transform:translateX(3px); }
@@ -345,7 +342,7 @@
 
   @media (prefers-reduced-motion: reduce){
     .fade-in, .card-wrap, .login-badge .dot, .meta-pill .dot, .sync-dot{ animation:none !important; opacity:1 !important; transform:none !important; }
-    .card, .card-wrap::before{ transition:none !important; }
+    .card{ transition:none !important; }
     .card-wrap:hover .card{ transform:none !important; }
   }
 </style>
@@ -424,7 +421,7 @@
         <div class="search-row fade-in" style="animation-delay:.06s;">
           <input type="text" id="appSearch" class="search-input" placeholder="Buscar um app..." oninput="filtrarApps()">
         </div>
-        <div class="grid" id="grid"></div>
+        <div class="wallet-stack" id="grid"></div>
         <footer>
           <span>CENTRAL-DE-APPS — sincroniza sozinha conforme o time publica</span>
           <span id="countText">0 ferramentas</span>
