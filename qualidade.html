@@ -311,9 +311,6 @@ function proximoIdTransacao(){
 }
 
 function conectarFirebase(){
-  firebase.auth().signInAnonymously().catch(function(err){
-    showErrorBanner('Não foi possível conectar ao banco compartilhado: ' + err.message);
-  });
   var jaConectou = false;
   firebase.auth().onAuthStateChanged(function(user){
     if(!user || jaConectou) return;
@@ -1057,6 +1054,41 @@ function wireBackupInput(){
     reader.readAsText(file);
   });
 }
+</script>
+
+<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
+  <div style="max-width:320px;width:100%;">
+    <div id="__gateMsg" style="font-size:14px;color:#8a93a3;line-height:1.6;">Verificando acesso...</div>
+  </div>
+</div>
+<style id="__gateStyle">body > *:not(#__gateOverlay){ display:none !important; }</style>
+<script>
+(function(){
+  var GRUPOS_PERMITIDOS = ["Qualidade"];
+  function liberar(){
+    var st = document.getElementById('__gateStyle');
+    var ov = document.getElementById('__gateOverlay');
+    if(st) st.remove();
+    if(ov) ov.remove();
+  }
+  function negar(msg){
+    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Central de Apps</a>';
+  }
+  var jaResolveu = false;
+  setTimeout(function(){
+    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
+  }, 10000);
+  firebase.auth().onAuthStateChanged(function(user){
+    jaResolveu = true;
+    if(!user){ negar('Você precisa entrar pela Central de Apps.'); return; }
+    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
+      var dados = snap.val();
+      var meusGrupos = (dados && dados.grupos) || [];
+      var permitido = GRUPOS_PERMITIDOS.some(function(g){ return meusGrupos.indexOf(g) !== -1; });
+      if(permitido){ liberar(); } else { negar('Você não tem permissão pra acessar este app.'); }
+    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
+  });
+})();
 </script>
 </body>
 </html>
