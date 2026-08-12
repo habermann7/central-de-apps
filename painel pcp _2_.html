@@ -564,6 +564,25 @@
 <!-- Print-only area used to generate the PDF report -->
 <div id="printArea"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
+<script>
+  // Mesma sessão da Central de Apps (a pessoa já logou lá antes de chegar aqui).
+  var __ppFirebaseConfig = {
+    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+    authDomain: "stinpharma-qualidade.firebaseapp.com",
+    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+    projectId: "stinpharma-qualidade",
+    storageBucket: "stinpharma-qualidade.firebasestorage.app",
+    messagingSenderId: "422803826984",
+    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+    measurementId: "G-6C0TLHH2VP"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(__ppFirebaseConfig);
+  var __ppFbdb = firebase.database();
+</script>
+
 <script>
 (function(){
 
@@ -864,7 +883,72 @@
     els.refDateInput.value = isoFromUTC(state.atraso.refDate);
     render();
     renderAtraso();
+    salvarNaNuvem();
   }
+
+  // ---------- Compartilhar com o time: guarda a última planilha processada no Firebase ----------
+  function salvarNaNuvem(){
+    var payload = {
+      fileName: state.fileName,
+      groupMap: state.groupMap,
+      fallbackGroup: state.fallbackGroup,
+      rawLineCount: state.rawLineCount,
+      records: state.records.map(function(r){
+        return Object.assign({}, r, { dateObj: r.dateObj ? r.dateObj.toISOString() : null });
+      }),
+      atualizadoEm: Date.now()
+    };
+    __ppFbdb.ref('painelPcp/dados').set(payload).catch(function(){
+      showError('Planilha carregada, mas não consegui sincronizar com o time agora (sem conexão). Ela fica só neste computador até você tentar de novo.');
+    });
+  }
+
+  // ---------- Restaura a última planilha que alguém do time subiu, sem precisar enviar de novo ----------
+  function restaurarDaNuvem(saved){
+    if(!saved || !saved.records || !saved.records.length) return false;
+    state.fileName = saved.fileName || '';
+    state.groupMap = saved.groupMap || {};
+    state.fallbackGroup = saved.fallbackGroup || DEFAULT_FALLBACK;
+    state.rawLineCount = saved.rawLineCount || saved.records.length;
+    state.records = saved.records.map(function(r){
+      return Object.assign({}, r, { dateObj: r.dateObj ? new Date(r.dateObj) : null });
+    });
+    state.activeGroup = 'all';
+    state.activeModal = 'all';
+    state.activeFilial = 'all';
+    state.atraso.group = 'all';
+    state.atraso.modal = 'all';
+    state.atraso.filial = 'all';
+    state.atraso.refDate = todayUTC();
+
+    populateFilterOptions();
+    switchView('overview');
+    els.dropzone.style.display = 'none';
+    els.fileMeta.style.display = 'flex';
+    var quando = saved.atualizadoEm ? new Date(saved.atualizadoEm).toLocaleString('pt-BR') : '';
+    els.fileMetaText.textContent = state.fileName + ' · ' + state.records.length.toLocaleString('pt-BR') + ' pedidos' + (quando ? ' · enviada por alguém do time em ' + quando : '');
+    els.dashboard.style.display = 'block';
+    els.refDateInput.value = isoFromUTC(state.atraso.refDate);
+    render();
+    renderAtraso();
+    return true;
+  }
+
+  async function carregarDaNuvem(){
+    try{
+      var snap = await __ppFbdb.ref('painelPcp/dados').once('value');
+      restaurarDaNuvem(snap.val());
+    }catch(e){
+      // sem conexão ou ninguém subiu planilha ainda — fica esperando um upload normalmente
+    }
+  }
+  var __ppBooted = false;
+  firebase.auth().onAuthStateChanged(function(user){
+    if(user && !__ppBooted){
+      __ppBooted = true;
+      carregarDaNuvem();
+    }
+  });
 
   function todayUTC(){
     var n = new Date();
