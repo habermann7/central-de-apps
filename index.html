@@ -332,6 +332,7 @@
     <div class="user-bar boot-in">
       <span class="who" id="whoText"></span>
       <button id="adminBtn" onclick="abrirAdmin()" style="display:none;">Administração</button>
+      <button onclick="openSenhaModal()">Trocar senha</button>
       <button onclick="fazerLogout()">Sair</button>
     </div>
     <div class="pill boot-in" style="animation-delay:.05s;"><span class="dot"></span> <span id="statusText">carregando...</span></div>
@@ -390,6 +391,23 @@
         <button class="btn-danger" onclick="confirmDelete()">Remover</button>
       </div>
       <div class="modal-status" id="modalStatus"></div>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="senhaModalBg">
+    <div class="modal">
+      <h3>Trocar senha</h3>
+      <label>Senha atual</label>
+      <input type="password" id="senhaAtual" autocomplete="off">
+      <label>Nova senha (mínimo 6 caracteres)</label>
+      <input type="password" id="senhaNova" autocomplete="off">
+      <label>Confirmar nova senha</label>
+      <input type="password" id="senhaNovaConfirma" autocomplete="off">
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeSenhaModal()">Cancelar</button>
+        <button class="btn-danger" onclick="confirmarTrocaSenha()">Salvar</button>
+      </div>
+      <div class="modal-status" id="senhaModalStatus"></div>
     </div>
   </div>
 
@@ -453,6 +471,46 @@ function fazerLogin(){
   });
 }
 function fazerLogout(){ firebase.auth().signOut(); }
+
+function openSenhaModal(){
+  document.getElementById('senhaAtual').value = '';
+  document.getElementById('senhaNova').value = '';
+  document.getElementById('senhaNovaConfirma').value = '';
+  const statusEl = document.getElementById('senhaModalStatus');
+  statusEl.className = 'modal-status'; statusEl.textContent = '';
+  document.getElementById('senhaModalBg').classList.add('show');
+}
+function closeSenhaModal(){
+  document.getElementById('senhaModalBg').classList.remove('show');
+}
+function confirmarTrocaSenha(){
+  const atual = document.getElementById('senhaAtual').value;
+  const nova = document.getElementById('senhaNova').value;
+  const confirma = document.getElementById('senhaNovaConfirma').value;
+  const statusEl = document.getElementById('senhaModalStatus');
+  if(!atual || !nova || !confirma){
+    statusEl.className = 'modal-status err'; statusEl.textContent = 'Preenche todos os campos.'; return;
+  }
+  if(nova.length < 6){
+    statusEl.className = 'modal-status err'; statusEl.textContent = 'A nova senha precisa ter pelo menos 6 caracteres.'; return;
+  }
+  if(nova !== confirma){
+    statusEl.className = 'modal-status err'; statusEl.textContent = 'As senhas novas não são iguais.'; return;
+  }
+  statusEl.className = 'modal-status loading'; statusEl.textContent = 'Salvando...';
+  const user = firebase.auth().currentUser;
+  const cred = firebase.auth.EmailAuthProvider.credential(user.email, atual);
+  user.reauthenticateWithCredential(cred)
+    .then(function(){ return user.updatePassword(nova); })
+    .then(function(){
+      closeSenhaModal();
+      toast('Senha alterada com sucesso.');
+    })
+    .catch(function(err){
+      statusEl.className = 'modal-status err';
+      statusEl.textContent = err.code === 'auth/invalid-credential' ? 'Senha atual incorreta.' : err.message;
+    });
+}
 
 firebase.auth().onAuthStateChanged(function(user){
   const btn = document.getElementById('loginBtn');
