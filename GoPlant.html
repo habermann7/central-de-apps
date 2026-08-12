@@ -6240,7 +6240,13 @@
     if(last){ openProject(workspace.lastOpenedId); }
     else { renderDashboard(); showScreen("dashboardScreen"); }
   }
-  boot();
+  var __gpBooted = false;
+  firebase.auth().onAuthStateChanged(function(user){
+    if(user && !__gpBooted){
+      __gpBooted = true;
+      boot();
+    }
+  });
 })();
 </script>
 
