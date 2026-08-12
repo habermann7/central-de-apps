@@ -31,7 +31,7 @@
   },
   {
     "title": "Painel PCP",
-    "category": "PCP PRODUCAO",
+    "category": "PCP",
     "description": "Controle de visao de pedidos da semana",
     "file": "painel pcp _2_.html",
     "icon": "🧩",
