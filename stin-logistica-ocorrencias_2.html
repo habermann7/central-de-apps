@@ -573,6 +573,42 @@
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
+<script>
+  // Mesma sessão da Central de Apps (a pessoa já logou lá antes de chegar aqui).
+  var __loFirebaseConfig = {
+    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+    authDomain: "stinpharma-qualidade.firebaseapp.com",
+    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+    projectId: "stinpharma-qualidade",
+    storageBucket: "stinpharma-qualidade.firebasestorage.app",
+    messagingSenderId: "422803826984",
+    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+    measurementId: "G-6C0TLHH2VP"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(__loFirebaseConfig);
+  var __loFbdb = firebase.database();
+
+  // O app foi escrito esperando o "window.storage" do Claude.ai, que só existe
+  // dentro do claude.ai — aqui fora (GitHub Pages) esse objeto nunca existiu,
+  // então nada era salvo de verdade. Isso recria a mesma "forma" (get/set com
+  // chave), só que usando o Firebase como gaveta de verdade, compartilhada com o time.
+  window.storage = {
+    get: async function(key, shared){
+      const snap = await __loFbdb.ref('logisticaOcorrencias/kv/' + key).once('value');
+      const v = snap.val();
+      if(v === null || v === undefined) throw new Error('chave não encontrada');
+      return { key: key, value: v, shared: !!shared };
+    },
+    set: async function(key, value, shared){
+      await __loFbdb.ref('logisticaOcorrencias/kv/' + key).set(value);
+      return { key: key, value: value, shared: !!shared };
+    }
+  };
+</script>
+
 <script>
 const STORAGE_KEY = 'app-data-v1';
 const hasStorage = (typeof window !== 'undefined') && !!window.storage;
