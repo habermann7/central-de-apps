@@ -159,13 +159,34 @@
   }
   .meta-pill .dot{ width:6px; height:6px; border-radius:50%; background:var(--accent); animation:pulseDot 2.4s ease-in-out infinite; }
 
-  .search-row{ display:flex; gap:10px; margin-bottom:22px; }
+  .search-row{ display:flex; gap:10px; margin-bottom:14px; }
   .search-input{
     flex:1; max-width:320px; background:var(--surface-2); border:1px solid var(--border);
     border-radius:var(--radius-sm); padding:10px 14px; color:var(--text); font-size:13.5px; font-family:var(--body);
   }
   .search-input:focus{ outline:none; border-color:var(--accent); }
   .search-input::placeholder{ color:var(--text-faint); }
+
+  .chip-row{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:26px; }
+  .chip{
+    background:var(--surface-2); border:1px solid var(--border); color:var(--text-dim);
+    font-family:var(--mono); font-size:11.5px; letter-spacing:.02em; padding:6px 13px; border-radius:20px;
+    cursor:pointer; transition:border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .chip:hover{ color:var(--text); border-color:var(--text-faint); }
+  .chip.active{ background:var(--accent-soft); border-color:rgba(57,214,174,.4); color:var(--accent); }
+  .chip .chip-count{ opacity:.6; margin-left:4px; }
+
+  .no-results{
+    border:1px dashed var(--border); border-radius:var(--radius); padding:56px 32px; text-align:center; background:var(--surface-2);
+  }
+  .no-results h2{ font-family:var(--display); font-size:17px; margin:16px 0 8px; }
+  .no-results p{ color:var(--text-dim); font-size:13.5px; margin:0 0 18px; }
+  .btn-clear{
+    background:transparent; border:1px solid var(--border); color:var(--text-dim); font-family:var(--mono);
+    font-size:11.5px; padding:8px 16px; border-radius:var(--radius-sm); cursor:pointer; transition:border-color .15s ease, color .15s ease;
+  }
+  .btn-clear:hover{ border-color:var(--accent); color:var(--accent); }
 
   /* ===================== ESTANTE (prateleiras por categoria) ===================== */
   #grid{ display:flex; flex-wrap:wrap; align-items:flex-start; gap:30px 24px; }
@@ -237,14 +258,28 @@
   .card-wrap:hover .card-open .arrow{ transform:translateX(3px); }
 
   .kebab-btn{
-    position:absolute; top:16px; right:16px; z-index:3;
+    position:absolute; top:16px; right:16px; z-index:5;
     width:24px; height:24px; border-radius:6px; background:rgba(10,13,17,.75);
-    border:1px solid var(--border); color:var(--text-faint); font-size:13px; cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--border); color:var(--text-faint); font-size:15px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; line-height:1;
     opacity:0; transition:opacity .15s ease, color .15s ease, border-color .15s ease;
   }
-  .card-wrap:hover .kebab-btn{ opacity:1; }
-  .kebab-btn:hover, .kebab-btn:focus-visible{ color:var(--danger); border-color:var(--danger); }
+  .card-wrap:hover .kebab-btn, .kebab-btn.open{ opacity:1; }
+  .kebab-btn:hover, .kebab-btn.open{ color:var(--text); border-color:var(--text-faint); }
+  .kebab-menu{
+    position:absolute; top:44px; right:16px; z-index:6; min-width:132px;
+    background:var(--surface-2); border:1px solid var(--border); border-radius:9px;
+    box-shadow:0 14px 30px -10px rgba(0,0,0,.7); overflow:hidden;
+    display:none; flex-direction:column;
+  }
+  .kebab-menu.open{ display:flex; }
+  .kebab-menu button{
+    display:flex; align-items:center; gap:8px; width:100%; text-align:left; background:transparent; border:none;
+    color:var(--text-dim); font-family:var(--body); font-size:12.5px; padding:9px 12px; cursor:pointer;
+    transition:background .12s ease, color .12s ease;
+  }
+  .kebab-menu button:hover{ background:var(--surface-hover); color:var(--text); }
+  .kebab-menu button.item-delete:hover{ color:var(--danger); }
 
   .add-card{
     border:1.5px dashed var(--border); border-radius:17px; background:transparent;
@@ -311,8 +346,6 @@
   .grupo-nome-input{ width:100%; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px 10px; color:var(--text); font-size:13px; font-family:var(--body); }
   .grupo-nome-input:focus{ outline:none; border-color:var(--accent); }
 
-  .kebab-edit{ right:46px; }
-  .kebab-delete{ right:16px; }
   .card-wrap:hover:has(.kebab-btn) .card-status{ opacity:0; transition:opacity .1s ease; }
 
   /* ===================== MODAIS ===================== */
@@ -447,11 +480,18 @@
           <div class="meta-pill"><span class="dot"></span><span id="statusText">carregando...</span></div>
         </div>
         <div class="search-row fade-in" style="animation-delay:.06s;">
-          <input type="text" id="appSearch" class="search-input" placeholder="Buscar um app..." oninput="filtrarApps()">
+          <input type="text" id="appSearch" class="search-input" placeholder="Buscar um app... (atalho: /)" oninput="filtrarApps()">
         </div>
+        <div class="chip-row fade-in" id="categoryChips" style="animation-delay:.08s;"></div>
         <div id="grid"></div>
+        <div class="no-results" id="noResults" style="display:none;">
+          <div class="empty-icon">🔍</div>
+          <h2 id="noResultsTitle">Nenhum app encontrado</h2>
+          <p id="noResultsSub"></p>
+          <button class="btn-clear" onclick="limparFiltros()">Limpar filtros</button>
+        </div>
         <footer>
-          <span>CENTRAL-DE-APPS — sincroniza sozinha conforme o time publica</span>
+          <span>ESTANTE — sincroniza sozinha conforme o time publica</span>
           <span id="countText">0 ferramentas</span>
         </footer>
       </div>
@@ -827,16 +867,38 @@ async function confirmDelete(){
   }
 }
 
+/* ================= menu único (···) dos cards de admin ================= */
+function fecharKebabMenus(){
+  document.querySelectorAll('.kebab-menu.open').forEach(function(m){ m.classList.remove('open'); });
+  document.querySelectorAll('.kebab-btn.open').forEach(function(b){ b.classList.remove('open'); });
+}
+function toggleKebabMenu(btn, e){
+  e.preventDefault(); e.stopPropagation();
+  const menu = btn.nextElementSibling;
+  const jaAberto = menu.classList.contains('open');
+  fecharKebabMenus();
+  if(!jaAberto){ menu.classList.add('open'); btn.classList.add('open'); }
+}
+document.addEventListener('click', fecharKebabMenus);
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape') fecharKebabMenus(); });
+
 function tenhoAcesso(app){
   const grupos = app.grupos && app.grupos.length ? app.grupos : ['Geral'];
   return grupos.some(g => MEUS_GRUPOS.indexOf(g) !== -1);
 }
 
+let categoriaAtiva = null; // null = "Todos"
+
 function filtrarApps(){
   const q = document.getElementById('appSearch').value.trim().toLowerCase();
+  let algumaPrateleiraVisivel = false;
   document.querySelectorAll('#grid .shelf').forEach(function(shelf){
-    let algumVisivel = false;
     const categoriaTexto = shelf.dataset.categoria || '';
+    if(categoriaAtiva && categoriaTexto !== categoriaAtiva){
+      shelf.style.display = 'none';
+      return;
+    }
+    let algumVisivel = false;
     shelf.querySelectorAll('.card-wrap').forEach(function(el){
       const texto = el.textContent.toLowerCase();
       const bate = !q || texto.indexOf(q) !== -1 || categoriaTexto.indexOf(q) !== -1;
@@ -844,8 +906,62 @@ function filtrarApps(){
       if(bate) algumVisivel = true;
     });
     shelf.style.display = algumVisivel ? '' : 'none';
+    if(algumVisivel) algumaPrateleiraVisivel = true;
+  });
+
+  const noResults = document.getElementById('noResults');
+  const grid = document.getElementById('grid');
+  if(!algumaPrateleiraVisivel && grid.querySelector('.shelf')){
+    document.getElementById('noResultsSub').textContent = q
+      ? `Nada bateu com "${q}"${categoriaAtiva ? ' na categoria selecionada' : ''}.`
+      : 'Nenhum app nessa categoria.';
+    noResults.style.display = '';
+    grid.style.display = 'none';
+  } else {
+    noResults.style.display = 'none';
+    grid.style.display = '';
+  }
+}
+
+function limparFiltros(){
+  document.getElementById('appSearch').value = '';
+  categoriaAtiva = null;
+  atualizarChipsAtivos();
+  filtrarApps();
+}
+
+function selecionarCategoria(catLower){
+  categoriaAtiva = catLower;
+  atualizarChipsAtivos();
+  filtrarApps();
+}
+
+function atualizarChipsAtivos(){
+  document.querySelectorAll('#categoryChips .chip').forEach(function(chip){
+    chip.classList.toggle('active', chip.dataset.cat === (categoriaAtiva || ''));
   });
 }
+
+function renderChips(categorias, prateleiras){
+  const total = categorias.reduce(function(soma, cat){ return soma + prateleiras[cat].length; }, 0);
+  const chipsHtml = [`<button class="chip active" data-cat="" onclick="selecionarCategoria(null)">Todos <span class="chip-count">${total}</span></button>`]
+    .concat(categorias.map(function(cat){
+      const lower = cat.toLowerCase();
+      return `<button class="chip" data-cat="${escapeAttr(lower)}" onclick="selecionarCategoria('${lower.replace(/'/g,"\\'")}')">${escapeAttr(cat)} <span class="chip-count">${prateleiras[cat].length}</span></button>`;
+    }));
+  document.getElementById('categoryChips').innerHTML = chipsHtml.join('');
+}
+
+/* atalho de teclado: "/" ou Ctrl+K foca a busca */
+document.addEventListener('keydown', function(e){
+  const alvo = e.target;
+  const digitando = alvo && (alvo.tagName === 'INPUT' || alvo.tagName === 'TEXTAREA' || alvo.isContentEditable);
+  if((e.key === '/' && !digitando) || (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey))){
+    e.preventDefault();
+    const campo = document.getElementById('appSearch');
+    if(campo){ campo.focus(); campo.select(); }
+  }
+});
 
 function formatarCategoria(cat){
   const limpo = (cat || '').trim();
@@ -874,8 +990,11 @@ function cardHtml(app, i){
         </div>
       </a>
       ${SOU_ADMIN ? `
-      <button class="kebab-btn kebab-edit" title="Editar app" data-file="${escapeAttr(app.file)}" data-title="${escapeAttr(app.title)}" data-category="${escapeAttr(app.category || '')}" data-description="${escapeAttr(app.description || '')}" data-grupos="${escapeAttr(JSON.stringify(app.grupos || []))}" onclick="abrirEditarAppFromButton(this)">✎</button>
-      <button class="kebab-btn kebab-delete" title="Remover app" data-file="${escapeAttr(app.file)}" data-title="${escapeAttr(app.title)}" onclick="openDeleteModal(this.dataset.file, this.dataset.title)">✕</button>
+      <button class="kebab-btn" title="Mais opções" onclick="toggleKebabMenu(this, event)">⋯</button>
+      <div class="kebab-menu">
+        <button class="item-edit" data-file="${escapeAttr(app.file)}" data-title="${escapeAttr(app.title)}" data-category="${escapeAttr(app.category || '')}" data-description="${escapeAttr(app.description || '')}" data-grupos="${escapeAttr(JSON.stringify(app.grupos || []))}" onclick="fecharKebabMenus(); abrirEditarAppFromButton(this);">✎ Editar</button>
+        <button class="item-delete" data-file="${escapeAttr(app.file)}" data-title="${escapeAttr(app.title)}" onclick="fecharKebabMenus(); openDeleteModal(this.dataset.file, this.dataset.title);">✕ Remover</button>
+      </div>
       ` : ''}
     </div>
   `;
@@ -895,6 +1014,8 @@ async function loadApps(){
       grid.innerHTML = `<div class="no-access"><div class="empty-icon">🔒</div><h2>Nenhum app liberado ainda</h2><p>Seu grupo (${MEUS_GRUPOS.join(', ') || '—'}) não tem acesso a nenhuma ferramenta por enquanto. Fala com o David se acha que deveria ter acesso a algo.</p></div>`;
       statusText.textContent = 'sem apps liberados pro seu grupo';
       countText.textContent = '0 ferramentas';
+      document.getElementById('categoryChips').innerHTML = '';
+      document.getElementById('noResults').style.display = 'none';
       return;
     }
 
@@ -924,7 +1045,11 @@ async function loadApps(){
 
     statusText.textContent = apps.length + ' apps ativos · sempre atualizado';
     countText.textContent = apps.length + ' ferramenta' + (apps.length > 1 ? 's' : '');
+    categoriaAtiva = null;
+    renderChips(categorias, prateleiras);
+    grid.style.display = '';
     wireCardFX();
+    filtrarApps();
   }catch(err){
     grid.innerHTML = '<div class="error">Não consegui ler o manifest.json. Confira se este arquivo está sendo aberto por um servidor (http://...), não direto pelo Windows (file://...).</div>';
     statusText.textContent = 'erro ao carregar';
