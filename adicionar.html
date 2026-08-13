@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Adicionar app — Central de Apps</title>
+<title>Adicionar app — Estante</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
 <style>
   :root{
     --bg:#0a0d12; --bg-card:#12161d; --border:#1f2530; --text:#eef1f5;
@@ -52,7 +55,7 @@
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="./index.html">← voltar pra galeria</a>
+  <a class="back" href="./index.html">← voltar pra estante</a>
   <h1>Adicionar app</h1>
   <p class="sub">Preenche os campos, escolhe o arquivo .html do seu app e manda.</p>
 
@@ -73,12 +76,10 @@
     <input type="file" id="file" accept=".html" required>
 
     <label>Quem pode acessar este app</label>
-    <div class="grupos">
-      <label class="chk"><input type="checkbox" name="grupo" value="Geral"> Geral (todo mundo)</label>
-      <label class="chk"><input type="checkbox" name="grupo" value="TI"> TI</label>
-      <label class="chk"><input type="checkbox" name="grupo" value="Qualidade"> Qualidade</label>
-      <label class="chk"><input type="checkbox" name="grupo" value="PCP"> PCP</label>
+    <div class="grupos" id="gruposContainer">
+      <span class="hint">carregando grupos…</span>
     </div>
+    <div class="hint" id="gruposAviso"></div>
     <div class="hint">Marque pelo menos um grupo. Só quem estiver num desses grupos vê e consegue abrir o app.</div>
 
     <button class="btn" id="submitBtn" type="submit">Publicar app</button>
@@ -86,6 +87,48 @@
   </form>
 </div>
 
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+  authDomain: "stinpharma-qualidade.firebaseapp.com",
+  databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+  projectId: "stinpharma-qualidade",
+  storageBucket: "stinpharma-qualidade.firebasestorage.app",
+  messagingSenderId: "422803826984",
+  appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+  measurementId: "G-6C0TLHH2VP"
+};
+firebase.initializeApp(firebaseConfig);
+
+function escapeAttr(str){
+  return String(str == null ? '' : str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderGrupos(lista){
+  const container = document.getElementById('gruposContainer');
+  const grupos = lista && lista.length ? lista : ['Geral'];
+  container.innerHTML = grupos.map(function(g){
+    return '<label class="chk"><input type="checkbox" name="grupo" value="' + escapeAttr(g) + '"> ' + escapeAttr(g) + '</label>';
+  }).join('');
+}
+
+firebase.auth().onAuthStateChanged(function(user){
+  const aviso = document.getElementById('gruposAviso');
+  if(!user){
+    document.getElementById('gruposContainer').innerHTML = '';
+    aviso.innerHTML = '⚠️ Não achamos sua sessão. Abre esta página clicando em "+ Adicionar app" <a href="./index.html">dentro da estante</a> pra carregar os grupos.';
+    return;
+  }
+  aviso.textContent = '';
+  firebase.database().ref('centralApps/grupos').on('value', function(snap){
+    const v = snap.val();
+    let grupos = [];
+    if(Array.isArray(v)) grupos = v;
+    else if(v && typeof v === 'object') grupos = Object.values(v);
+    renderGrupos(grupos);
+  });
+});
+</script>
 <script>
 const API_URL = 'https://central-de-apps.vercel.app/api/upload';
 
