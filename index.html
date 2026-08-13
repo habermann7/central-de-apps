@@ -23,13 +23,13 @@
     --text:#EDF0F3;
     --text-dim:#8E96A3;
     --text-faint:#565E6B;
-    --accent:#39D6AE;
-    --accent-soft:rgba(57,214,174,.12);
-    --accent-2:#7C93FF;
-    --accent-2-soft:rgba(124,147,255,.12);
+    --accent:#D9A15A;
+    --accent-soft:rgba(217,161,90,.14);
+    --accent-2:#4E8368;
+    --accent-2-soft:rgba(78,131,104,.16);
     --danger:#F0654E;
     --danger-soft:rgba(240,101,78,.12);
-    --warn:#E8A64B;
+    --warn:#C97A3D;
     --display:'Sora', sans-serif;
     --body:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     --mono:'IBM Plex Mono', ui-monospace, monospace;
@@ -45,8 +45,8 @@
   body::before{
     content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
     background:
-      radial-gradient(560px circle at 14% -6%, rgba(57,214,174,.05), transparent 60%),
-      radial-gradient(520px circle at 100% 0%, rgba(124,147,255,.045), transparent 60%),
+      radial-gradient(560px circle at 14% -6%, rgba(217,161,90,.06), transparent 60%),
+      radial-gradient(520px circle at 100% 0%, rgba(78,131,104,.05), transparent 60%),
       radial-gradient(640px circle at 50% 108%, var(--wood-soft), transparent 62%);
   }
   /* textura sutil de "tábuas" no fundo, dando sentido ao nome estante */
@@ -153,12 +153,6 @@
   .page-eyebrow{ font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:10px; }
   .page-header h1{ font-size:29px; margin-bottom:8px; }
   .page-sub{ color:var(--text-dim); font-size:14px; line-height:1.6; max-width:520px; margin:0; }
-  .meta-pill{
-    display:inline-flex; align-items:center; gap:8px; background:var(--accent-soft);
-    border:1px solid rgba(57,214,174,.3); color:var(--accent);
-    font-family:var(--mono); font-size:11px; padding:7px 13px; border-radius:20px; white-space:nowrap;
-  }
-  .meta-pill .dot{ width:6px; height:6px; border-radius:50%; background:var(--accent); animation:pulseDot 2.4s ease-in-out infinite; }
 
   .search-row{ display:flex; gap:10px; margin-bottom:14px; }
   .search-input{
@@ -175,7 +169,7 @@
     cursor:pointer; transition:border-color .15s ease, color .15s ease, background .15s ease;
   }
   .chip:hover{ color:var(--text); border-color:var(--text-faint); }
-  .chip.active{ background:var(--accent-soft); border-color:rgba(57,214,174,.4); color:var(--accent); }
+  .chip.active{ background:var(--accent-soft); border-color:rgba(217,161,90,.4); color:var(--accent); }
   .chip .chip-count{ opacity:.6; margin-left:4px; }
 
   .no-results{
@@ -326,10 +320,9 @@
     border:1px solid var(--border); color:var(--text-dim); text-transform:uppercase; letter-spacing:.02em; white-space:nowrap;
   }
   .chip-geral{ color:var(--text-dim); }
-  .chip-ti{ color:var(--accent-2); border-color:rgba(124,147,255,.4); }
-  .chip-qualidade{ color:var(--accent); border-color:rgba(57,214,174,.4); }
-  .chip-pcp{ color:var(--warn); border-color:rgba(232,166,75,.4); }
-  .chip-admin{ color:var(--warn); border-color:rgba(232,166,75,.4); }
+  .chip-expedição{ color:var(--accent-2); border-color:rgba(78,131,104,.4); }
+  .chip-pcp{ color:var(--warn); border-color:rgba(201,122,61,.4); }
+  .chip-admin{ color:var(--warn); border-color:rgba(201,122,61,.4); }
   .chip-none{ opacity:.5; }
   .btn-row{
     font-family:var(--body); font-size:12.5px; font-weight:600; padding:6px 14px;
@@ -403,7 +396,7 @@
   }
 
   @media (prefers-reduced-motion: reduce){
-    .fade-in, .card-wrap, .login-badge .dot, .meta-pill .dot, .sync-dot{ animation:none !important; opacity:1 !important; transform:none !important; }
+    .fade-in, .card-wrap, .login-badge .dot, .sync-dot{ animation:none !important; opacity:1 !important; transform:none !important; }
     .card{ transition:none !important; }
     .card-wrap:hover .card{ transform:none !important; }
   }
@@ -488,7 +481,6 @@
             <h1>Sua <span class="accent">estante</span> de apps</h1>
             <p class="page-sub">Ferramentas internas do time, sincronizadas em tempo real — o que um preenche, todo mundo vê na hora. Clique num card pra abrir.</p>
           </div>
-          <div class="meta-pill"><span class="dot"></span><span id="statusText">carregando...</span></div>
         </div>
         <div class="search-row fade-in" style="animation-delay:.06s;">
           <input type="text" id="appSearch" class="search-input" placeholder="Buscar um app... (atalho: /)" oninput="filtrarApps()">
@@ -986,7 +978,7 @@ function cardHtml(app, i){
   const acessoNormal = tenhoAcesso(app);
   return `
     <div class="card-wrap" style="animation-delay:${i * 55}ms">
-      <a class="card" href="./${app.file}" style="--accent-card:${app.color || '#39D6AE'}">
+      <a class="card" href="./${app.file}" style="--accent-card:${app.color || '#D9A15A'}">
         <div class="card-body">
           <div class="card-top">
             <div class="card-icon">${app.icon || '🧩'}</div>
@@ -1013,7 +1005,6 @@ function cardHtml(app, i){
 
 async function loadApps(){
   const grid = document.getElementById('grid');
-  const statusText = document.getElementById('statusText');
   const countText = document.getElementById('countText');
   try{
     const res = await fetch('./manifest.json?t=' + Date.now(), {cache:'no-store'});
@@ -1023,7 +1014,6 @@ async function loadApps(){
 
     if(apps.length === 0){
       grid.innerHTML = `<div class="no-access"><div class="empty-icon">🔒</div><h2>Nenhum app liberado ainda</h2><p>Seu grupo (${MEUS_GRUPOS.join(', ') || '—'}) não tem acesso a nenhuma ferramenta por enquanto. Fala com o David se acha que deveria ter acesso a algo.</p></div>`;
-      statusText.textContent = 'sem apps liberados pro seu grupo';
       countText.textContent = '0 ferramentas';
       document.getElementById('categoryChips').innerHTML = '';
       document.getElementById('noResults').style.display = 'none';
@@ -1054,7 +1044,6 @@ async function loadApps(){
       </a>
     `;
 
-    statusText.textContent = apps.length + ' apps ativos · sempre atualizado';
     countText.textContent = apps.length + ' ferramenta' + (apps.length > 1 ? 's' : '');
     categoriaAtiva = null;
     renderChips(categorias, prateleiras);
@@ -1063,7 +1052,6 @@ async function loadApps(){
     filtrarApps();
   }catch(err){
     grid.innerHTML = '<div class="error">Não consegui ler o manifest.json. Confira se este arquivo está sendo aberto por um servidor (http://...), não direto pelo Windows (file://...).</div>';
-    statusText.textContent = 'erro ao carregar';
   }
 }
 
