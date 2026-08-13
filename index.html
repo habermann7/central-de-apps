@@ -54,6 +54,38 @@
     content:''; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.5;
     background-image:repeating-linear-gradient(180deg, rgba(255,255,255,.012) 0px, rgba(255,255,255,.012) 1px, transparent 1px, transparent 84px);
   }
+
+  /* ===================== FUNDO VIVO: respiração + poeira + halo do mouse ===================== */
+  .ambient{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+  .ambient-glow{ position:absolute; border-radius:50%; filter:blur(90px); animation:breathe 12s ease-in-out infinite; }
+  .ambient-glow.a{ width:520px; height:520px; left:-130px; top:-150px; background:var(--accent-soft); animation-duration:13s; }
+  .ambient-glow.b{ width:460px; height:460px; right:-150px; bottom:-170px; background:var(--accent-2-soft); animation-duration:16s; animation-delay:-6s; }
+  @keyframes breathe{ 0%,100%{ opacity:.45; transform:scale(1); } 50%{ opacity:.85; transform:scale(1.18); } }
+
+  .mote{
+    position:absolute; width:3px; height:3px; border-radius:50%; top:100%;
+    background:var(--accent); box-shadow:0 0 6px var(--accent); opacity:0;
+    animation:motefloat linear infinite;
+  }
+  @keyframes motefloat{
+    0%{ opacity:0; transform:translateY(0) translateX(0); }
+    8%{ opacity:.55; }
+    92%{ opacity:.2; }
+    100%{ opacity:0; transform:translateY(-108vh) translateX(26px); }
+  }
+
+  .cursor-glow{
+    position:absolute; left:0; top:0; width:420px; height:420px; border-radius:50%;
+    background:radial-gradient(circle, var(--accent-soft), transparent 68%);
+    transform:translate3d(-50%,-50%,0); opacity:0; transition:opacity .5s ease;
+    will-change:transform;
+  }
+  .cursor-glow.active{ opacity:1; }
+
+  @media (prefers-reduced-motion: reduce){
+    .ambient-glow, .mote{ animation:none !important; }
+    .cursor-glow{ display:none !important; }
+  }
   a{ color:inherit; }
   button{ font:inherit; }
   ::selection{ background:var(--accent-soft); color:var(--accent); }
@@ -403,6 +435,13 @@
 </style>
 </head>
 <body>
+
+  <div class="ambient" aria-hidden="true">
+    <div class="ambient-glow a"></div>
+    <div class="ambient-glow b"></div>
+    <div class="dust-field" id="dustField"></div>
+    <div class="cursor-glow" id="cursorGlow"></div>
+  </div>
 
   <!-- ===================== LOGIN ===================== -->
   <div class="login-screen" id="loginScreen">
@@ -1327,6 +1366,41 @@ async function removerGrupo(nome){
     toast('Erro ao remover: ' + err.message);
   }
 }
+</script>
+<script>
+/* ================= fundo vivo: poeira flutuante + halo seguindo o mouse ================= */
+(function(){
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduceMotion) return;
+
+  const field = document.getElementById('dustField');
+  if(field){
+    const total = 22;
+    for(let i = 0; i < total; i++){
+      const m = document.createElement('span');
+      m.className = 'mote';
+      m.style.left = (Math.random() * 100) + '%';
+      m.style.animationDuration = (15 + Math.random() * 12) + 's';
+      m.style.animationDelay = (-Math.random() * 22) + 's';
+      field.appendChild(m);
+    }
+  }
+
+  const glow = document.getElementById('cursorGlow');
+  if(glow){
+    let raf = null, pendingX = 0, pendingY = 0;
+    document.addEventListener('mousemove', function(e){
+      pendingX = e.clientX; pendingY = e.clientY;
+      glow.classList.add('active');
+      if(raf) return;
+      raf = requestAnimationFrame(function(){
+        glow.style.transform = 'translate3d(' + pendingX + 'px,' + pendingY + 'px,0) translate(-50%,-50%)';
+        raf = null;
+      });
+    });
+    document.addEventListener('mouseleave', function(){ glow.classList.remove('active'); });
+  }
+})();
 </script>
 </body>
 </html>
