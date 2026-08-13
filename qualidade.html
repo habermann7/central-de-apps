@@ -261,6 +261,7 @@ input:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-storage-compat.min.js"></script>
 <script>
 'use strict';
 
@@ -302,8 +303,37 @@ var firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 var fbdb = firebase.database();
+var fbStorage = firebase.storage();
 var DB_ROOT = 'qualidade';
 function fbRef(path){ return fbdb.ref(DB_ROOT + (path ? '/' + path : '')); }
+
+/* ================= Fotos no Storage (não mais base64 dentro do banco) =================
+   fotos/{id} no Realtime DB agora guarda só um array de {url, path} — leve, rápido de sincronizar.
+   O arquivo de verdade (JPEG comprimido) fica no Storage, em qualidade/{id}/{arquivo}. */
+function dataURLtoBlob(dataurl){
+  var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1];
+  var bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+  while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+  return new Blob([u8arr], {type:mime});
+}
+async function uploadFoto(id, dataUrl){
+  var blob = dataURLtoBlob(dataUrl);
+  var path = 'qualidade/' + id + '/' + Date.now() + '-' + Math.random().toString(36).slice(2,7) + '.jpg';
+  var ref = fbStorage.ref(path);
+  await ref.put(blob, {contentType:'image/jpeg'});
+  var url = await ref.getDownloadURL();
+  return {url:url, path:path};
+}
+function urlToDataURL(url){
+  return fetch(url).then(function(r){ return r.blob(); }).then(function(blob){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onload = function(){ resolve(reader.result); };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  });
+}
 
 function proximoIdTransacao(){
   return fbRef('proximoId').transaction(function(atual){ return (atual || 0) + 1; })
@@ -644,7 +674,14 @@ function renderLista(){
 async function excluirRegistro(id){
   if(!confirm('Excluir permanentemente o registro NC-'+String(id).padStart(4,'0')+'? Esta ação não pode ser desfeita.')) return;
   await fbRef('registros/'+id).remove();
-  try{ await fbRef('fotos/'+id).remove(); }catch(e){}
+  try{
+    var snap = await fbRef('fotos/'+id).once('value');
+    var lista = snap.val() || [];
+    for(var i=0;i<lista.length;i++){
+      if(lista[i] && lista[i].path){ try{ await fbStorage.ref(lista[i].path).delete(); }catch(e){} }
+    }
+    await fbRef('fotos/'+id).remove();
+  }catch(e){}
   toast('Registro excluído.');
 }
 
@@ -702,7 +739,7 @@ async function abrirDetalhe(id){
 
   function renderPhotos(list){
     document.getElementById('photo-grid').innerHTML = list.map(function(f,i){
-      return '<div class="photo-thumb"><img src="'+f+'"><button onclick="removerFoto('+id+','+i+')">&times;</button></div>';
+      return '<div class="photo-thumb"><img src="'+f.url+'"><button onclick="removerFoto('+id+','+i+')">&times;</button></div>';
     }).join('');
     var status = document.getElementById('photo-status');
     status.innerHTML = list.length ? '<div class="photo-ok">&#10003; '+list.length+' foto(s) anexada(s)</div>' : '<div class="photo-req">Obrigatório ao menos 1 foto para fechar</div>';
@@ -713,33 +750,31 @@ async function abrirDetalhe(id){
 
   document.getElementById('photo-input').addEventListener('change', async function(e){
     var files = Array.prototype.slice.call(e.target.files);
-    document.getElementById('photo-status').innerHTML = '<div class="hint">Processando fotos...</div>';
+    document.getElementById('photo-status').innerHTML = '<div class="hint">Processando e enviando fotos...</div>';
+    var falhou = 0;
     for(var i=0;i<files.length;i++){
-      try{ fotos.push(await resizeImage(files[i], 900, 0.72)); }catch(err){ console.error('foto falhou', err); }
+      try{
+        var dataUrl = await resizeImage(files[i], 900, 0.72);
+        fotos.push(await uploadFoto(id, dataUrl));
+      }catch(err){ console.error('foto falhou', err); falhou++; }
     }
     PHOTO_CACHE[id] = fotos;
-    var salvou = true;
     try{
       await fbRef('fotos/'+id).set(fotos);
       await fbRef('registros/'+id+'/fotoCount').set(fotos.length);
     }catch(err){
-      salvou = false;
-      try{
-        // foto pode ter ficado grande demais — tenta de novo com mais compressão
-        var fotosComprimidas = [];
-        for(var j=0;j<fotos.length;j++){ fotosComprimidas.push(await recomprimir(fotos[j], 700, 0.55)); }
-        await fbRef('fotos/'+id).set(fotosComprimidas);
-        await fbRef('registros/'+id+'/fotoCount').set(fotosComprimidas.length);
-        fotos = fotosComprimidas; PHOTO_CACHE[id] = fotos; salvou = true;
-      }catch(e2){ console.error('recompressão falhou', e2); }
+      console.error('salvar lista de fotos falhou', err);
+      toast('Não foi possível salvar a lista de fotos. Tente novamente.');
     }
     renderPhotos(fotos);
-    if(!salvou) toast('Não foi possível enviar as fotos ao banco compartilhado. Exporte um backup para não perdê-las.');
+    if(falhou) toast(falhou+' foto(s) não puderam ser enviadas. Confira sua conexão e tente de novo.');
   });
 
   window.removerFoto = async function(rid, idx){
+    var item = fotos[idx];
     fotos.splice(idx,1);
     PHOTO_CACHE[rid] = fotos;
+    if(item && item.path){ try{ await fbStorage.ref(item.path).delete(); }catch(e){ console.error('excluir foto do storage falhou', e); } }
     await fbRef('fotos/'+rid).set(fotos);
     await fbRef('registros/'+rid+'/fotoCount').set(fotos.length);
     renderPhotos(fotos);
@@ -999,7 +1034,7 @@ async function gerarRelatorio(){
       var fotosRf = PHOTO_CACHE[rf.id] || (await fbRef('fotos/'+rf.id).once('value')).val() || [];
       if(!fotosRf.length) continue;
       html += '<div class="pr-fotos-item"><div class="pr-fotos-titulo">NC-'+String(rf.id).padStart(4,'0')+' — '+esc(rf.produto)+' ('+fmtDate(rf.data)+')</div><div class="pr-fotos-grid">';
-      fotosRf.forEach(function(f){ html += '<img class="pr-foto" src="'+f+'">'; });
+      fotosRf.forEach(function(f){ html += '<img class="pr-foto" src="'+f.url+'">'; });
       html += '</div></div>';
     }
   }
@@ -1013,8 +1048,15 @@ async function exportarBackup(){
   var fotos = {};
   for(var i=0;i<RECORDS.length;i++){
     var r = RECORDS[i];
-    var f = PHOTO_CACHE[r.id] || (await fbRef('fotos/'+r.id).once('value')).val();
-    if(f && f.length) fotos[r.id] = f;
+    var lista = PHOTO_CACHE[r.id] || (await fbRef('fotos/'+r.id).once('value')).val();
+    if(lista && lista.length){
+      var base64s = [];
+      for(var j=0;j<lista.length;j++){
+        try{ base64s.push(await urlToDataURL(lista[j].url)); }
+        catch(e){ console.error('não consegui baixar foto pro backup', e); }
+      }
+      if(base64s.length) fotos[r.id] = base64s;
+    }
   }
   var payload = { versao:1, exportadoEm:new Date().toISOString(), registros:RECORDS, tiposAvaria:TYPES, ofensores:OFENSORES, logo:LOGO, fotos:fotos };
   var blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
@@ -1047,7 +1089,17 @@ function wireBackupInput(){
         if(logo) await fbRef('logo').set(logo);
         var maxId = registros.length ? Math.max.apply(null, registros.map(function(r){ return r.id; })) : 0;
         await fbRef('proximoId').set(maxId);
-        if(payload.fotos){ for(var id in payload.fotos){ await fbRef('fotos/'+id).set(payload.fotos[id]); } }
+        if(payload.fotos){
+          for(var id in payload.fotos){
+            var lista = payload.fotos[id];
+            var objs = [];
+            for(var i=0;i<lista.length;i++){
+              try{ objs.push(await uploadFoto(id, lista[i])); }
+              catch(e){ console.error('falha ao restaurar foto', e); }
+            }
+            await fbRef('fotos/'+id).set(objs);
+          }
+        }
         toast('Backup restaurado — sincronizando com todo mundo.');
       }catch(err){ toast('Arquivo de backup inválido.'); }
     };
