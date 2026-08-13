@@ -82,8 +82,25 @@
   }
   .cursor-glow.active{ opacity:1; }
 
+  /* feixes de luz lentos, tipo persiana de biblioteca */
+  .light-beams{ position:absolute; inset:-15% -10%; pointer-events:none; }
+  .beam{
+    position:absolute; top:-25%; width:110px; height:170%;
+    background:linear-gradient(180deg, transparent, rgba(217,161,90,.045), transparent);
+    transform:rotate(16deg);
+    animation:beamDrift 26s ease-in-out infinite;
+  }
+  .beam:nth-child(1){ left:6%; animation-duration:24s; }
+  .beam:nth-child(2){ left:32%; width:80px; animation-duration:30s; animation-delay:-9s; }
+  .beam:nth-child(3){ left:58%; width:130px; animation-duration:22s; animation-delay:-15s; }
+  .beam:nth-child(4){ left:84%; width:70px; animation-duration:28s; animation-delay:-5s; }
+  @keyframes beamDrift{
+    0%,100%{ opacity:.4; transform:rotate(16deg) translateX(0); }
+    50%{ opacity:.85; transform:rotate(16deg) translateX(34px); }
+  }
+
   @media (prefers-reduced-motion: reduce){
-    .ambient-glow, .mote{ animation:none !important; }
+    .ambient-glow, .mote, .beam{ animation:none !important; }
     .cursor-glow{ display:none !important; }
   }
 
@@ -377,7 +394,7 @@
   .add-plus{ width:32px; height:32px; border-radius:50%; border:1.5px dashed var(--text-faint); display:flex; align-items:center; justify-content:center; font-size:16px; font-family:var(--body); transition:border-color .15s ease; }
   .add-card:hover .add-plus{ border-color:var(--accent); }
 
-  .empty-state, .no-access{
+  .no-access{
     grid-column:1/-1; border:1px dashed var(--border); border-radius:var(--radius);
     padding:64px 32px; text-align:center; background:var(--surface-2);
   }
@@ -386,8 +403,8 @@
     border:1.5px dashed var(--accent); display:flex; align-items:center; justify-content:center;
     font-size:19px; color:var(--accent);
   }
-  .empty-state h2, .no-access h2{ font-family:var(--display); font-size:18px; margin:0 0 9px; }
-  .empty-state p, .no-access p{ color:var(--text-dim); font-size:13.5px; max-width:380px; margin:0 auto; line-height:1.6; }
+  .no-access h2{ font-family:var(--display); font-size:18px; margin:0 0 9px; }
+  .no-access p{ color:var(--text-dim); font-size:13.5px; max-width:380px; margin:0 auto; line-height:1.6; }
   .error{ grid-column:1/-1; color:var(--danger); font-size:13.5px; padding:20px 0; font-family:var(--mono); }
 
   footer{ display:flex; justify-content:space-between; align-items:center; color:var(--text-faint); font-family:var(--mono); font-size:11px; margin-top:44px; border-top:1px solid var(--border-soft); padding-top:20px; }
@@ -534,6 +551,12 @@
   <div class="ambient" aria-hidden="true">
     <div class="ambient-glow a"></div>
     <div class="ambient-glow b"></div>
+    <div class="light-beams">
+      <div class="beam"></div>
+      <div class="beam"></div>
+      <div class="beam"></div>
+      <div class="beam"></div>
+    </div>
     <div class="dust-field" id="dustField"></div>
     <div class="cursor-glow" id="cursorGlow"></div>
   </div>
@@ -613,7 +636,6 @@
           <div>
             <div class="page-eyebrow">Catálogo interno · unidade operações</div>
             <h1>Sua <span class="accent">estante</span> de ferramentas</h1>
-            <p class="page-sub">Acesso centralizado às ferramentas internas do time, sincronizado em tempo real — a atualização feita por um colaborador aparece na hora pros demais. Selecione um app para abri-lo.</p>
           </div>
         </div>
         <div class="search-row fade-in" style="animation-delay:.06s;">
