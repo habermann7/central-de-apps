@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Central de Apps · Stinpharma</title>
+<title>Estante · Stinpharma</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -12,7 +12,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
 <style>
   :root{
-    --bg:#0A0D11;
+    --bg:#0B0A0A;
+    --wood:#C9924F;
+    --wood-soft:rgba(201,146,79,.10);
     --surface:#12161C;
     --surface-2:#161B22;
     --surface-hover:#1D232C;
@@ -44,7 +46,13 @@
     content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
     background:
       radial-gradient(560px circle at 14% -6%, rgba(57,214,174,.05), transparent 60%),
-      radial-gradient(520px circle at 100% 0%, rgba(124,147,255,.045), transparent 60%);
+      radial-gradient(520px circle at 100% 0%, rgba(124,147,255,.045), transparent 60%),
+      radial-gradient(640px circle at 50% 108%, var(--wood-soft), transparent 62%);
+  }
+  /* textura sutil de "tábuas" no fundo, dando sentido ao nome estante */
+  body::after{
+    content:''; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.5;
+    background-image:repeating-linear-gradient(180deg, rgba(255,255,255,.012) 0px, rgba(255,255,255,.012) 1px, transparent 1px, transparent 84px);
   }
   a{ color:inherit; }
   button{ font:inherit; }
@@ -98,7 +106,7 @@
     width:32px; height:32px; border-radius:9px; flex-shrink:0;
     background:linear-gradient(135deg, var(--accent), var(--accent-2));
     display:flex; align-items:center; justify-content:center;
-    font-family:var(--display); font-weight:800; font-size:13px; color:#071019;
+    font-family:var(--display); font-weight:800; font-size:15px; color:#071019;
   }
   .brand-text{ font-family:var(--display); font-weight:700; font-size:14px; line-height:1.25; }
   .brand-text small{ display:block; font-family:var(--mono); font-size:9px; font-weight:400; color:var(--text-faint); letter-spacing:.08em; text-transform:uppercase; margin-top:2px; }
@@ -168,7 +176,12 @@
     display:flex; align-items:center; justify-content:space-between;
   }
   .shelf-count{ background:var(--surface-2); border:1px solid var(--border); border-radius:20px; padding:1px 7px; font-size:9.5px; color:var(--text-dim); }
-  .wallet-stack{ position:relative; }
+  .wallet-stack{ position:relative; padding-bottom:16px; }
+  .wallet-stack::after{
+    content:''; position:absolute; left:-6px; right:-6px; bottom:4px; height:2px; border-radius:2px;
+    background:linear-gradient(90deg, transparent, var(--wood), transparent);
+    opacity:.4; pointer-events:none;
+  }
   .wallet-stack .card-wrap:not(:first-child){ margin-top:-86px; }
   .wallet-stack .card-wrap{ position:relative; }
   .wallet-stack .card-wrap:hover, .wallet-stack .card-wrap:focus-within{ z-index:50; }
@@ -191,9 +204,16 @@
   }
   .card::after{
     /* brilho diagonal sutil, como o verniz de um cartão */
-    content:''; position:absolute; inset:0; pointer-events:none;
+    content:''; position:absolute; inset:0; pointer-events:none; z-index:0;
     background:linear-gradient(120deg, rgba(255,255,255,.09) 0%, transparent 32%, transparent 68%, rgba(255,255,255,.03) 100%);
   }
+  .card::before{
+    /* brilho quente que segue o mouse, tipo luz de leitura passando pelo card */
+    content:''; position:absolute; inset:0; pointer-events:none; z-index:0; border-radius:inherit;
+    background:radial-gradient(220px circle at var(--mx,50%) var(--my,50%), color-mix(in srgb, var(--accent-card, var(--accent)) 30%, transparent), transparent 62%);
+    opacity:0; transition:opacity .3s ease;
+  }
+  .card-wrap:hover .card::before{ opacity:1; }
   .card-body{ padding:19px 19px 17px; display:flex; flex-direction:column; flex:1; position:relative; z-index:1; }
   .card-wrap:hover .card, .card-wrap:focus-within .card{
     transform:translateY(-6px);
@@ -362,8 +382,8 @@
     <div class="login-box fade-in">
       <div class="login-badge"><span class="dot"></span> ACESSO RESTRITO</div>
       <div class="brand" style="border:none; padding:0; margin-bottom:20px;">
-        <div class="brand-mark">CA</div>
-        <div class="brand-text">Central de Apps<small>Stinpharma</small></div>
+        <div class="brand-mark">📚</div>
+        <div class="brand-text">Estante<small>Stinpharma</small></div>
       </div>
       <h1>Entrar na sua conta</h1>
       <p class="sub">Usa a conta que o David criou pra você.</p>
@@ -385,8 +405,8 @@
   <div class="app-shell" id="appShell" style="display:none;">
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand-mark">CA</div>
-        <div class="brand-text">Central de Apps<small>Stinpharma</small></div>
+        <div class="brand-mark">📚</div>
+        <div class="brand-text">Estante<small>Stinpharma</small></div>
       </div>
 
       <nav class="nav">
@@ -421,7 +441,7 @@
         <div class="page-header fade-in">
           <div>
             <div class="page-eyebrow">Catálogo interno · unidade operações</div>
-            <h1>Galeria de <span class="accent">apps</span></h1>
+            <h1>Sua <span class="accent">estante</span> de apps</h1>
             <p class="page-sub">Ferramentas internas do time, sincronizadas em tempo real — o que um preenche, todo mundo vê na hora. Clique num card pra abrir.</p>
           </div>
           <div class="meta-pill"><span class="dot"></span><span id="statusText">carregando...</span></div>
@@ -923,6 +943,8 @@ function wireCardFX(){
       const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
       const rx = (0.5 - py) * 7, ry = (px - 0.5) * 7;
       card.style.transform = 'perspective(900px) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) translateY(-9px) scale(1.015)';
+      card.style.setProperty('--mx', (px * 100) + '%');
+      card.style.setProperty('--my', (py * 100) + '%');
     });
     card.addEventListener('mouseleave', function(){ card.style.transform = ''; });
   });
