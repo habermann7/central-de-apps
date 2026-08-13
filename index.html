@@ -86,6 +86,65 @@
     .ambient-glow, .mote{ animation:none !important; }
     .cursor-glow{ display:none !important; }
   }
+
+  /* ===================== INTRO / APRESENTAÇÃO ===================== */
+  .intro-screen{
+    position:fixed; inset:0; z-index:300; background:var(--bg);
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+    transition:opacity .6s ease, visibility .6s ease;
+  }
+  .intro-screen.hide{ opacity:0; visibility:hidden; pointer-events:none; }
+  .intro-ambient{ position:absolute; inset:0; pointer-events:none; }
+  .intro-sweep{
+    position:absolute; top:-30%; left:-40%; width:55%; height:160%;
+    background:linear-gradient(100deg, transparent, rgba(217,161,90,.10), transparent);
+    transform:translateX(-100%); animation:introSweep 1.9s ease-in-out .15s 1 forwards;
+  }
+  @keyframes introSweep{ to{ transform:translateX(280%); } }
+  .intro-mote{
+    position:absolute; width:3px; height:3px; border-radius:50%; top:100%;
+    background:var(--accent); box-shadow:0 0 8px var(--accent); opacity:0;
+    animation:introMoteFloat 2.8s ease-out forwards;
+  }
+  @keyframes introMoteFloat{
+    0%{ opacity:0; transform:translateY(0) translateX(0) scale(.6); }
+    18%{ opacity:.8; }
+    100%{ opacity:0; transform:translateY(-72vh) translateX(18px) scale(1); }
+  }
+  .intro-content{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; text-align:center; }
+  .intro-shelf{ display:flex; align-items:flex-end; gap:8px; height:64px; margin-bottom:8px; }
+  .intro-book{
+    width:12px; border-radius:2px 2px 0 0;
+    background:linear-gradient(180deg, var(--accent), var(--accent-2));
+    opacity:0; transform:translateY(40px);
+    animation:introBookRise .6s cubic-bezier(.2,.85,.3,1.25) forwards;
+    animation-delay:var(--d);
+  }
+  .intro-book:nth-child(1){ height:34px; }
+  .intro-book:nth-child(2){ height:50px; }
+  .intro-book:nth-child(3){ height:64px; }
+  .intro-book:nth-child(4){ height:44px; }
+  .intro-book:nth-child(5){ height:56px; }
+  @keyframes introBookRise{ to{ opacity:1; transform:translateY(0); } }
+  .intro-ledge{
+    width:132px; height:3px; border-radius:2px; background:linear-gradient(90deg, transparent, var(--wood), transparent);
+    opacity:0; animation:introFadeIn .5s ease forwards; animation-delay:.62s; margin-bottom:24px;
+  }
+  @keyframes introFadeIn{ to{ opacity:.75; } }
+  .intro-title{
+    font-family:var(--display); font-size:32px; font-weight:800; letter-spacing:.16em; margin:0;
+    opacity:0; transform:translateY(10px);
+    animation:introUp .6s cubic-bezier(.16,.9,.35,1) forwards; animation-delay:.78s;
+  }
+  .intro-tagline{
+    font-family:var(--mono); font-size:11.5px; letter-spacing:.06em; color:var(--text-faint); margin:11px 0 0;
+    opacity:0; transform:translateY(8px);
+    animation:introUp .5s ease forwards; animation-delay:1.05s;
+  }
+  @keyframes introUp{ to{ opacity:1; transform:translateY(0); } }
+  @media (prefers-reduced-motion: reduce){
+    .intro-sweep, .intro-mote, .intro-book, .intro-ledge, .intro-title, .intro-tagline{ animation:none !important; opacity:1 !important; transform:none !important; }
+  }
   a{ color:inherit; }
   button{ font:inherit; }
   ::selection{ background:var(--accent-soft); color:var(--accent); }
@@ -435,6 +494,42 @@
 </style>
 </head>
 <body>
+<script>
+  window.__introStart = Date.now();
+  window.esconderIntro = function(){
+    var el = document.getElementById('introScreen');
+    if(!el || el.dataset.hidden) return;
+    el.dataset.hidden = '1';
+    var elapsed = Date.now() - window.__introStart;
+    var wait = Math.max(0, 1500 - elapsed);
+    setTimeout(function(){
+      el.classList.add('hide');
+      setTimeout(function(){ el.remove(); }, 650);
+    }, wait);
+  };
+  setTimeout(function(){ window.esconderIntro && window.esconderIntro(); }, 6000);
+</script>
+
+  <div class="intro-screen" id="introScreen">
+    <div class="intro-ambient">
+      <div class="ambient-glow a" style="animation-duration:7s;"></div>
+      <div class="ambient-glow b" style="animation-duration:9s; animation-delay:-3s;"></div>
+      <div class="intro-sweep"></div>
+      <div id="introDust"></div>
+    </div>
+    <div class="intro-content">
+      <div class="intro-shelf">
+        <span class="intro-book" style="--d:0s;"></span>
+        <span class="intro-book" style="--d:.12s;"></span>
+        <span class="intro-book" style="--d:.24s;"></span>
+        <span class="intro-book" style="--d:.36s;"></span>
+        <span class="intro-book" style="--d:.48s;"></span>
+      </div>
+      <div class="intro-ledge"></div>
+      <h1 class="intro-title">ESTANTE</h1>
+      <p class="intro-tagline">preparando sua estante de apps…</p>
+    </div>
+  </div>
 
   <div class="ambient" aria-hidden="true">
     <div class="ambient-glow a"></div>
@@ -517,8 +612,8 @@
         <div class="page-header fade-in">
           <div>
             <div class="page-eyebrow">Catálogo interno · unidade operações</div>
-            <h1>Sua <span class="accent">estante</span> de apps</h1>
-            <p class="page-sub">Ferramentas internas do time, sincronizadas em tempo real — o que um preenche, todo mundo vê na hora. Clique num card pra abrir.</p>
+            <h1>Sua <span class="accent">estante</span> de ferramentas</h1>
+            <p class="page-sub">Acesso centralizado às ferramentas internas do time, sincronizado em tempo real — a atualização feita por um colaborador aparece na hora pros demais. Selecione um app para abri-lo.</p>
           </div>
         </div>
         <div class="search-row fade-in" style="animation-delay:.06s;">
@@ -832,6 +927,7 @@ firebase.auth().onAuthStateChanged(function(user){
   if(!user){
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('appShell').style.display = 'none';
+    window.esconderIntro && window.esconderIntro();
     return;
   }
   setTicker('sessão validada');
@@ -860,6 +956,7 @@ firebase.auth().onAuthStateChanged(function(user){
     document.getElementById('appShell').style.display = 'flex';
     mostrarGaleria();
     loadApps();
+    window.esconderIntro && window.esconderIntro();
   }).catch(function(err){
     const status = document.getElementById('loginStatus');
     status.className = 'login-status err';
@@ -1383,6 +1480,18 @@ async function removerGrupo(nome){
       m.style.animationDuration = (15 + Math.random() * 12) + 's';
       m.style.animationDelay = (-Math.random() * 22) + 's';
       field.appendChild(m);
+    }
+  }
+
+  const introDust = document.getElementById('introDust');
+  if(introDust){
+    const totalIntro = 34;
+    for(let i = 0; i < totalIntro; i++){
+      const m = document.createElement('span');
+      m.className = 'intro-mote';
+      m.style.left = (Math.random() * 100) + '%';
+      m.style.animationDelay = (Math.random() * 0.9) + 's';
+      introDust.appendChild(m);
     }
   }
 
