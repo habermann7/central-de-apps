@@ -119,6 +119,11 @@
   .resolve-box textarea{min-height:56px;font-size:12px;}
   .col-empty{text-align:center;color:var(--muted);font-size:12px;padding:18px 6px;}
   .resolved-note{margin-top:9px;font-size:11.5px;color:var(--green);background:var(--green-tint);border-radius:8px;padding:7px 9px;}
+  .obs-box{margin-top:9px;}
+  .obs-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:4px;}
+  .obs-box textarea{min-height:44px;font-size:12px;}
+  .obs-save-btn{margin-top:6px;}
+  .occ-obs-view{margin-top:9px;font-size:11.5px;color:var(--muted);background:#FAFBFD;border-radius:8px;padding:7px 9px;}
 
   /* ---- Admin view ---- */
   .admin-badge{display:inline-flex;align-items:center;gap:6px;background:var(--purple-tint);color:var(--purple);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;margin-left:8px;vertical-align:middle;}
@@ -336,14 +341,7 @@
         <label>Vendedor</label>
         <input type="text" id="f-vendedor" placeholder="Nome de quem atendeu o pedido">
         <label>Tipo de ocorrência</label>
-        <select id="f-tipo">
-          <option>Atraso na entrega</option>
-          <option>Avaria na carga</option>
-          <option>Acidente</option>
-          <option>Extravio de produto</option>
-          <option>Recusa do cliente</option>
-          <option>Outro</option>
-        </select>
+        <select id="f-tipo"></select>
         <label>Prioridade</label>
         <div class="prio-row" id="f-prio">
           <div class="prio-opt" data-p="Baixa">Baixa</div>
@@ -444,18 +442,30 @@
         </div>
       </div>
 
-      <div class="card user-card">
-        <h2>Usuários</h2>
-        <div id="user-list"></div>
-        <div class="add-user-form">
-          <label style="margin-top:0;">Novo usuário</label>
-          <input type="text" id="u-nome" placeholder="Nome">
-          <select id="u-perfil">
-            <option>Registrar</option>
-            <option>Tratar</option>
-            <option>Admin</option>
-          </select>
-          <button class="add-user-btn" onclick="adicionarUsuario()">Adicionar usuário</button>
+      <div>
+        <div class="card user-card">
+          <h2>Usuários</h2>
+          <div id="user-list"></div>
+          <div class="add-user-form">
+            <label style="margin-top:0;">Novo usuário</label>
+            <input type="text" id="u-nome" placeholder="Nome">
+            <select id="u-perfil">
+              <option>Registrar</option>
+              <option>Tratar</option>
+              <option>Admin</option>
+            </select>
+            <button class="add-user-btn" onclick="adicionarUsuario()">Adicionar usuário</button>
+          </div>
+        </div>
+
+        <div class="card user-card" style="margin-top:22px;">
+          <h2>Tipos de ocorrência</h2>
+          <div id="tipo-list"></div>
+          <div class="add-user-form">
+            <label style="margin-top:0;">Novo tipo</label>
+            <input type="text" id="t-nome" placeholder="Ex: Pedido incompleto">
+            <button class="add-user-btn" onclick="adicionarTipoOcorrencia()">Adicionar tipo</button>
+          </div>
         </div>
       </div>
     </div>
@@ -474,14 +484,7 @@
     <div class="modal-row2">
       <div>
         <label>Tipo</label>
-        <select id="e-tipo">
-          <option>Atraso na entrega</option>
-          <option>Avaria na carga</option>
-          <option>Acidente</option>
-          <option>Extravio de produto</option>
-          <option>Recusa do cliente</option>
-          <option>Outro</option>
-        </select>
+        <select id="e-tipo"></select>
       </div>
       <div>
         <label>Prioridade</label>
@@ -640,12 +643,13 @@ function defaultState(){
       {id:'NC-001', pedido:'008', tipo:'Produto avariado', setor:'Qualidade', desc:'Caixa com lacre violado identificada na conferência de saída.', reversa:true, ocorrenciaVinculada:'OC-008R', status:'Em análise', tempo:'6 horas'},
   {id:'NC-002', pedido:'010', tipo:'Documentação incorreta', setor:'Expedição', desc:'Nota fiscal com divergência de quantidade em relação ao pedido.', reversa:false, ocorrenciaVinculada:null, status:'Concluída', tempo:'2 dias'},
       {id:'NC-003', pedido:'012', tipo:'Produto vencido', setor:'Qualidade', desc:'Lote com validade expirada encontrado no picking.', reversa:true, ocorrenciaVinculada:'OC-012R', status:'Aberta', tempo:'1 hora'},
-    ]
+    ],
+    tiposOcorrencia: ['Atraso na entrega','Avaria na carga','Acidente','Extravio de produto','Recusa do cliente','Outro']
   };
 }
 
 /* Estado em memória (populado por loadState) */
-let seq, ncSeq, occurrences, usuarios, ncs;
+let seq, ncSeq, occurrences, usuarios, ncs, tiposOcorrencia;
 
 async function loadState(){
   if(hasStorage){
@@ -655,6 +659,7 @@ async function loadState(){
         const data = JSON.parse(res.value);
         seq = data.seq; ncSeq = data.ncSeq;
         occurrences = data.occurrences; usuarios = data.usuarios; ncs = data.ncs;
+        tiposOcorrencia = (Array.isArray(data.tiposOcorrencia) && data.tiposOcorrencia.length) ? data.tiposOcorrencia : defaultState().tiposOcorrencia;
         return;
       }
     }catch(e){
@@ -664,13 +669,14 @@ async function loadState(){
   const d = defaultState();
   seq = d.seq; ncSeq = d.ncSeq;
   occurrences = d.occurrences; usuarios = d.usuarios; ncs = d.ncs;
+  tiposOcorrencia = d.tiposOcorrencia;
   if(hasStorage) await saveState();
 }
 
 async function saveState(){
   if(!hasStorage) return;
   try{
-    await window.storage.set(STORAGE_KEY, JSON.stringify({seq, ncSeq, occurrences, usuarios, ncs}), true);
+    await window.storage.set(STORAGE_KEY, JSON.stringify({seq, ncSeq, occurrences, usuarios, ncs, tiposOcorrencia}), true);
   }catch(e){
     console.error('Falha ao salvar dados compartilhados:', e);
   }
@@ -696,6 +702,7 @@ document.getElementById('f-prio').addEventListener('click', e=>{
 });
 
 function refreshAll(){
+  renderTipoOptions();
   renderLista();
   renderKanban();
   renderNC();
@@ -929,6 +936,12 @@ function occCardHTML(o, colKey){
     actions = `<div class="resolved-note">✓ ${o.resolucao || 'Ocorrência resolvida.'}</div>`;
   }
   const respLine = (colKey!=='Aberta' && o.responsavel) ? `<span class="resp">Tratando: ${o.responsavel}</span>` : '';
+  const obsBox = colKey!=='Resolvida' ? `
+      <div class="obs-box">
+        <label class="obs-label">Observações</label>
+        <textarea id="obs-${o.id}" placeholder="Anotação interna — pode salvar sem concluir">${o.obs || ''}</textarea>
+        <button class="btn-sm btn-ghost obs-save-btn" id="obs-btn-${o.id}" onclick="salvarObs('${o.id}')">Salvar obs</button>
+      </div>` : (o.obs ? `<div class="occ-obs-view"><b>Obs:</b> ${o.obs}</div>` : '');
   return `
     <div class="occ-card p-${o.prioridade}">
       <div class="occ-top">
@@ -946,9 +959,26 @@ function occCardHTML(o, colKey){
         ${respLine}
       </div>
       <div class="occ-desc">${o.desc}</div>
+      ${obsBox}
       ${actions}
     </div>
   `;
+}
+
+function salvarObs(id){
+  const o = occurrences.find(x=>x.id===id);
+  const ta = document.getElementById('obs-'+id);
+  if(!o || !ta) return;
+  o.obs = ta.value;
+  saveState();
+  const btn = document.getElementById('obs-btn-'+id);
+  if(btn){ btn.textContent = '✓ Salvo'; btn.disabled = true; }
+  setTimeout(function(){
+    renderKanban();
+    renderAdmin();
+    renderFloating();
+    if(document.getElementById('tv-overlay').classList.contains('open')) renderTV();
+  }, 600);
 }
 
 function avancar(id){
@@ -983,6 +1013,7 @@ function renderAdmin(){
   renderStats();
   renderAdminTable();
   renderUserList();
+  renderTipoList();
 }
 
 function renderStats(){
@@ -1099,6 +1130,58 @@ function adicionarUsuario(){
 function removerUsuario(i){
   usuarios.splice(i,1);
   renderUserList();
+  saveState();
+}
+
+/* ---- Tipos de ocorrência (dinâmico, editável no admin) ---- */
+function renderTipoOptions(){
+  const opts = tiposOcorrencia.map(t=>`<option>${t}</option>`).join('');
+  ['f-tipo','e-tipo'].forEach(id=>{
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = opts;
+    if(cur && tiposOcorrencia.indexOf(cur)!==-1) sel.value = cur;
+  });
+}
+
+function renderTipoList(){
+  const list = document.getElementById('tipo-list');
+  if(!list) return;
+  list.innerHTML = tiposOcorrencia.map((t,i)=>`
+    <div class="u-row">
+      <div class="u-name">${t}</div>
+      <button class="u-remove" onclick="removerTipoOcorrencia(${i})" title="Remover">✕</button>
+    </div>
+  `).join('');
+}
+
+function adicionarTipoOcorrencia(){
+  const input = document.getElementById('t-nome');
+  const nome = input.value.trim();
+  if(!nome){
+    alert('Informe o nome do tipo de ocorrência.');
+    return;
+  }
+  if(tiposOcorrencia.some(t=>t.toLowerCase()===nome.toLowerCase())){
+    alert('Esse tipo já existe.');
+    return;
+  }
+  const idxOutro = tiposOcorrencia.findIndex(t=>t.toLowerCase()==='outro');
+  if(idxOutro>-1) tiposOcorrencia.splice(idxOutro,0,nome);
+  else tiposOcorrencia.push(nome);
+  input.value = '';
+  renderTipoList();
+  renderTipoOptions();
+  saveState();
+}
+
+function removerTipoOcorrencia(i){
+  const nome = tiposOcorrencia[i];
+  if(!confirm('Remover o tipo "'+nome+'"? Ocorrências já registradas com esse tipo continuam como estão.')) return;
+  tiposOcorrencia.splice(i,1);
+  renderTipoList();
+  renderTipoOptions();
   saveState();
 }
 
@@ -1329,10 +1412,10 @@ firebase.auth().onAuthStateChanged(function(user){
    atualização espera ela terminar pra não apagar o que está sendo escrito. ---- */
 var __loEditandoResolucao = false;
 document.addEventListener('focusin', function(e){
-  if(e.target.matches && e.target.matches('.resolve-box textarea')) __loEditandoResolucao = true;
+  if(e.target.matches && e.target.matches('.resolve-box textarea, .obs-box textarea')) __loEditandoResolucao = true;
 });
 document.addEventListener('focusout', function(e){
-  if(e.target.matches && e.target.matches('.resolve-box textarea')){
+  if(e.target.matches && e.target.matches('.resolve-box textarea, .obs-box textarea')){
     __loEditandoResolucao = false;
     if(__loPendenteRemoto){
       const p = __loPendenteRemoto; __loPendenteRemoto = null;
@@ -1348,7 +1431,9 @@ function aplicarPayloadRemoto(raw){
     const data = JSON.parse(raw);
     seq = data.seq; ncSeq = data.ncSeq;
     occurrences = data.occurrences; usuarios = data.usuarios; ncs = data.ncs;
+    tiposOcorrencia = (Array.isArray(data.tiposOcorrencia) && data.tiposOcorrencia.length) ? data.tiposOcorrencia : defaultState().tiposOcorrencia;
   }catch(e){ return; }
+  renderTipoOptions();
   renderLista();
   renderKanban();
   renderNC();
