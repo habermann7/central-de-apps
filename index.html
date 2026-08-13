@@ -282,57 +282,25 @@
   .chip.active{ background:var(--accent-soft); border-color:rgba(217,161,90,.4); color:var(--accent); }
   .chip .chip-count{ opacity:.6; margin-left:4px; }
 
-  /* ===================== CARROSSEL CIRCULAR EM DESTAQUE ===================== */
-  .carousel-wrap{ margin-bottom:36px; }
-  .carousel-eyebrow{ font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:16px; }
-  .carousel-track{
-    position:relative; height:220px; outline:none; user-select:none;
+  /* ===================== APP DO DIA (destaque pequeno, decorativo) ===================== */
+  .app-of-day{
+    display:flex; flex-direction:column; gap:7px; text-decoration:none; color:inherit;
+    background:linear-gradient(160deg, var(--surface), var(--surface-2)); border:1px solid var(--border);
+    border-radius:12px; padding:10px 14px; min-width:220px; transition:border-color .2s ease, transform .2s ease;
   }
-  .carousel-center{
-    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    pointer-events:none; z-index:0;
+  .app-of-day:hover{ border-color:color-mix(in srgb, var(--accent) 40%, var(--border)); transform:translateY(-2px); }
+  .aod-label{
+    font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent);
   }
-  .carousel-center .num{ font-family:var(--display); font-size:38px; font-weight:800; color:var(--text); opacity:.9; line-height:1; }
-  .carousel-center .of{ font-family:var(--mono); font-size:11px; color:var(--text-faint); margin-top:5px; }
-  .carousel-card{
-    position:absolute; left:50%; top:50%; width:172px; height:112px;
-    display:none; flex-direction:column; justify-content:space-between; align-items:flex-start;
-    text-align:left; cursor:pointer; padding:13px 14px; border-radius:14px;
-    border:1px solid var(--border); background:linear-gradient(160deg, var(--surface), var(--surface-2));
-    transition:transform .6s cubic-bezier(.22,1,.36,1), opacity .6s cubic-bezier(.22,1,.36,1), box-shadow .3s ease, border-color .3s ease;
-    will-change:transform, opacity; font-family:var(--body); color:inherit;
+  .aod-body{ display:flex; align-items:center; gap:10px; }
+  .aod-icon{
+    width:32px; height:32px; border-radius:8px; flex-shrink:0; font-size:14px;
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 34%, transparent), color-mix(in srgb, var(--accent) 12%, transparent));
+    border:1px solid color-mix(in srgb, var(--accent) 48%, transparent);
   }
-  .carousel-card.is-visible{ display:flex; }
-  .carousel-card.is-active{
-    box-shadow:0 22px 46px -16px rgba(0,0,0,.6), 0 0 0 1px var(--accent-soft);
-    border-color:color-mix(in srgb, var(--accent) 45%, var(--border));
-  }
-  .carousel-card .tag{
-    font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:.06em;
-    color:var(--text-faint); background:var(--surface-hover); border-radius:20px; padding:2px 9px;
-  }
-  .carousel-card .title{ font-size:13.5px; font-weight:700; margin:9px 0 3px; color:var(--text); line-height:1.25; }
-  .carousel-card.is-active .title{ color:var(--accent); }
-  .carousel-card .desc{
-    font-size:11px; color:var(--text-dim); line-height:1.4; margin:0;
-    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
-  }
-  .carousel-controls{ display:flex; align-items:center; justify-content:center; gap:16px; margin-top:8px; }
-  .carousel-arrow{
-    width:34px; height:34px; border-radius:50%; border:1px solid var(--border); background:var(--surface-2);
-    color:var(--text-dim); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:17px;
-    line-height:1; transition:border-color .2s ease, color .2s ease;
-  }
-  .carousel-arrow:hover{ border-color:var(--accent); color:var(--accent); }
-  .carousel-dots{ display:flex; align-items:center; gap:6px; }
-  .carousel-dot{
-    width:6px; height:6px; border-radius:50%; background:var(--border); border:none; cursor:pointer;
-    padding:0; transition:width .3s ease, background .3s ease;
-  }
-  .carousel-dot.is-active{ width:22px; border-radius:4px; background:var(--accent); }
-  @media (prefers-reduced-motion: reduce){
-    .carousel-card{ transition:none !important; }
-  }
+  .aod-title{ font-size:13px; font-weight:700; color:var(--text); line-height:1.25; }
+  .aod-cat{ font-family:var(--mono); font-size:10px; color:var(--text-faint); margin-top:2px; text-transform:uppercase; letter-spacing:.04em; }
 
   .no-results{
     border:1px dashed var(--border); border-radius:var(--radius); padding:56px 32px; text-align:center; background:var(--surface-2);
@@ -693,20 +661,16 @@
             <div class="page-eyebrow">Catálogo interno · unidade operações</div>
             <h1>Sua <span class="accent">estante</span> de ferramentas</h1>
           </div>
-        </div>
-        <div class="carousel-wrap fade-in" id="featuredCarousel" style="display:none; animation-delay:.05s;">
-          <div class="carousel-eyebrow">Em destaque · gire ou use as setas</div>
-          <div class="carousel-track" id="carouselTrack" tabindex="0" role="region" aria-label="Carrossel de apps em destaque">
-            <div class="carousel-center" aria-hidden="true">
-              <span class="num" id="carouselIndex">01</span>
-              <span class="of">de <span id="carouselTotal">01</span></span>
+          <a class="app-of-day" id="appOfDay" href="#" style="display:none;">
+            <span class="aod-label">✦ App do dia</span>
+            <div class="aod-body">
+              <span class="aod-icon" id="aodIcon">🧩</span>
+              <div class="aod-info">
+                <div class="aod-title" id="aodTitle">—</div>
+                <div class="aod-cat" id="aodCat">—</div>
+              </div>
             </div>
-          </div>
-          <div class="carousel-controls">
-            <button class="carousel-arrow" id="carouselPrev" type="button" aria-label="App anterior">‹</button>
-            <div class="carousel-dots" id="carouselDots" role="tablist"></div>
-            <button class="carousel-arrow" id="carouselNext" type="button" aria-label="Próximo app">›</button>
-          </div>
+          </a>
         </div>
 
         <div class="search-row fade-in" style="animation-delay:.06s;">
@@ -1278,7 +1242,7 @@ async function loadApps(){
       countText.textContent = '0 ferramentas';
       document.getElementById('categoryChips').innerHTML = '';
       document.getElementById('noResults').style.display = 'none';
-      buildCarousel([]);
+      buildAppOfDay([]);
       return;
     }
 
@@ -1309,7 +1273,7 @@ async function loadApps(){
     countText.textContent = apps.length + ' ferramenta' + (apps.length > 1 ? 's' : '');
     categoriaAtiva = null;
     renderChips(categorias, prateleiras);
-    buildCarousel(apps);
+    buildAppOfDay(apps);
     grid.style.display = '';
     wireCardFX();
     filtrarApps();
@@ -1318,150 +1282,26 @@ async function loadApps(){
   }
 }
 
-/* ================= carrossel circular "em destaque" ================= */
-const CAROUSEL_VISIBLE = 5;
-const CAROUSEL_RADIUS_X = 168;
-const CAROUSEL_RADIUS_Y = 74;
-let carouselItems = [];
-let carouselActive = 0;
-let carouselTimer = null;
+/* ================= app do dia (destaque pequeno e decorativo, fixo por dia) ================= */
+function buildAppOfDay(apps){
+  const el = document.getElementById('appOfDay');
+  if(!el) return;
+  if(!apps.length){ el.style.display = 'none'; return; }
 
-function pararCarouselAutoplay(){
-  if(carouselTimer){ clearInterval(carouselTimer); carouselTimer = null; }
+  // escolhe sempre o mesmo app durante o dia todo (troca à meia-noite)
+  const hoje = new Date();
+  const chave = hoje.getFullYear() + '-' + (hoje.getMonth() + 1) + '-' + hoje.getDate();
+  let hash = 0;
+  for(let i = 0; i < chave.length; i++){ hash = (hash * 31 + chave.charCodeAt(i)) >>> 0; }
+  const app = apps[hash % apps.length];
+  if(!app){ el.style.display = 'none'; return; }
+
+  document.getElementById('aodIcon').textContent = app.icon || '🧩';
+  document.getElementById('aodTitle').textContent = app.title || app.file;
+  document.getElementById('aodCat').textContent = formatarCategoria(app.category) || 'Estante';
+  el.href = './' + app.file;
+  el.style.display = '';
 }
-function iniciarCarouselAutoplay(){
-  pararCarouselAutoplay();
-  if(carouselItems.length <= 1) return;
-  carouselTimer = setInterval(function(){
-    setCarouselActive((carouselActive + 1) % carouselItems.length);
-  }, 4500);
-}
-
-function getCarouselPos(index, ativo, total){
-  const offset = index - ativo;
-  const half = Math.floor(CAROUSEL_VISIBLE / 2);
-  let adjusted = offset;
-  if(offset > half) adjusted = offset - total;
-  if(offset < -half) adjusted = offset + total;
-  if(Math.abs(adjusted) > half * 2) return null;
-  const angle = (adjusted / CAROUSEL_VISIBLE) * Math.PI;
-  const x = Math.sin(angle) * CAROUSEL_RADIUS_X;
-  const y = -Math.cos(angle) * CAROUSEL_RADIUS_Y;
-  const distance = Math.abs(adjusted);
-  const maxDistance = half + 1;
-  const scale = Math.max(0, 1 - (distance / maxDistance) * 0.32);
-  const opacity = Math.max(0, 1 - (distance / maxDistance) * 0.78);
-  const zIndex = CAROUSEL_VISIBLE - distance;
-  return { x: x, y: y, scale: scale, opacity: opacity, zIndex: zIndex };
-}
-
-function renderCarouselPositions(){
-  const track = document.getElementById('carouselTrack');
-  if(!track) return;
-  const total = carouselItems.length;
-  track.querySelectorAll('.carousel-card').forEach(function(card){
-    const i = Number(card.dataset.i);
-    const pos = getCarouselPos(i, carouselActive, total);
-    if(!pos){
-      card.classList.remove('is-visible', 'is-active');
-      return;
-    }
-    card.classList.add('is-visible');
-    card.classList.toggle('is-active', i === carouselActive);
-    card.style.transform = 'translate(-50%,-50%) translate(' + pos.x + 'px,' + pos.y + 'px) scale(' + pos.scale + ')';
-    card.style.opacity = pos.opacity;
-    card.style.zIndex = pos.zIndex;
-  });
-  const idx = document.getElementById('carouselIndex');
-  if(idx) idx.textContent = String(carouselActive + 1).padStart(2, '0');
-  document.querySelectorAll('.carousel-dot').forEach(function(dot, i){
-    dot.classList.toggle('is-active', i === carouselActive);
-  });
-}
-
-function setCarouselActive(i){
-  const total = carouselItems.length;
-  if(total === 0) return;
-  carouselActive = ((i % total) + total) % total;
-  renderCarouselPositions();
-}
-
-function abrirOuCentralizarCarouselCard(i){
-  if(i === carouselActive){
-    const item = carouselItems[i];
-    if(item) window.location.href = './' + item.file;
-  } else {
-    setCarouselActive(i);
-    iniciarCarouselAutoplay();
-  }
-}
-
-function buildCarousel(apps){
-  const wrap = document.getElementById('featuredCarousel');
-  const track = document.getElementById('carouselTrack');
-  const dotsBox = document.getElementById('carouselDots');
-  if(!wrap || !track || !dotsBox) return;
-  pararCarouselAutoplay();
-
-  carouselItems = apps.slice();
-  carouselActive = 0;
-
-  if(carouselItems.length === 0){
-    wrap.style.display = 'none';
-    return;
-  }
-  wrap.style.display = '';
-
-  track.querySelectorAll('.carousel-card').forEach(function(el){ el.remove(); });
-  dotsBox.innerHTML = '';
-
-  carouselItems.forEach(function(app, i){
-    const card = document.createElement('button');
-    card.type = 'button';
-    card.className = 'carousel-card';
-    card.dataset.i = i;
-    card.innerHTML =
-      '<span class="tag">' + escapeAttr(formatarCategoria(app.category) || 'Estante') + '</span>' +
-      '<div><div class="title">' + escapeAttr(app.title || app.file) + '</div>' +
-      '<p class="desc">' + escapeAttr(app.description || 'Ferramenta interna do time.') + '</p></div>';
-    card.addEventListener('click', function(){ abrirOuCentralizarCarouselCard(i); });
-    track.appendChild(card);
-
-    const dot = document.createElement('button');
-    dot.type = 'button';
-    dot.className = 'carousel-dot';
-    dot.setAttribute('role', 'tab');
-    dot.setAttribute('aria-label', 'Ir pro app ' + (i + 1));
-    dot.addEventListener('click', function(){ setCarouselActive(i); iniciarCarouselAutoplay(); });
-    dotsBox.appendChild(dot);
-  });
-
-  const totalEl = document.getElementById('carouselTotal');
-  if(totalEl) totalEl.textContent = String(carouselItems.length).padStart(2, '0');
-  renderCarouselPositions();
-  iniciarCarouselAutoplay();
-}
-
-(function(){
-  const prevBtn = document.getElementById('carouselPrev');
-  const nextBtn = document.getElementById('carouselNext');
-  const track = document.getElementById('carouselTrack');
-  const wrap = document.getElementById('featuredCarousel');
-  if(prevBtn) prevBtn.addEventListener('click', function(){ setCarouselActive(carouselActive - 1); iniciarCarouselAutoplay(); });
-  if(nextBtn) nextBtn.addEventListener('click', function(){ setCarouselActive(carouselActive + 1); iniciarCarouselAutoplay(); });
-  if(track){
-    track.addEventListener('keydown', function(e){
-      if(e.key === 'ArrowLeft'){ e.preventDefault(); setCarouselActive(carouselActive - 1); iniciarCarouselAutoplay(); }
-      if(e.key === 'ArrowRight'){ e.preventDefault(); setCarouselActive(carouselActive + 1); iniciarCarouselAutoplay(); }
-    });
-  }
-  if(wrap){
-    wrap.addEventListener('mouseenter', pararCarouselAutoplay);
-    wrap.addEventListener('mouseleave', iniciarCarouselAutoplay);
-    wrap.addEventListener('focusin', pararCarouselAutoplay);
-    wrap.addEventListener('focusout', iniciarCarouselAutoplay);
-  }
-})();
 
 /* ================= efeito de "puxar da carteira": tilt 3D leve seguindo o mouse ================= */
 function wireCardFX(){
