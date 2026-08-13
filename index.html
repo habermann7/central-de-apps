@@ -55,53 +55,17 @@
     background-image:repeating-linear-gradient(180deg, rgba(255,255,255,.012) 0px, rgba(255,255,255,.012) 1px, transparent 1px, transparent 84px);
   }
 
-  /* ===================== FUNDO VIVO: respiração + poeira + halo do mouse ===================== */
-  .ambient{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+  /* ===================== FUNDO VIVO: malha cinética (puxa no mouse, ondula no clique) ===================== */
+  #kineticGrid{ position:fixed; inset:0; z-index:0; pointer-events:none; }
+
+  /* usado só na tela de introdução (splash), não no fundo persistente */
   .ambient-glow{ position:absolute; border-radius:50%; filter:blur(90px); animation:breathe 12s ease-in-out infinite; }
   .ambient-glow.a{ width:520px; height:520px; left:-130px; top:-150px; background:var(--accent-soft); animation-duration:13s; }
   .ambient-glow.b{ width:460px; height:460px; right:-150px; bottom:-170px; background:var(--accent-2-soft); animation-duration:16s; animation-delay:-6s; }
   @keyframes breathe{ 0%,100%{ opacity:.45; transform:scale(1); } 50%{ opacity:.85; transform:scale(1.18); } }
 
-  .mote{
-    position:absolute; width:3px; height:3px; border-radius:50%; top:100%;
-    background:var(--accent); box-shadow:0 0 6px var(--accent); opacity:0;
-    animation:motefloat linear infinite;
-  }
-  @keyframes motefloat{
-    0%{ opacity:0; transform:translateY(0) translateX(0); }
-    8%{ opacity:.55; }
-    92%{ opacity:.2; }
-    100%{ opacity:0; transform:translateY(-108vh) translateX(26px); }
-  }
-
-  .cursor-glow{
-    position:absolute; left:0; top:0; width:420px; height:420px; border-radius:50%;
-    background:radial-gradient(circle, var(--accent-soft), transparent 68%);
-    transform:translate3d(-50%,-50%,0); opacity:0; transition:opacity .5s ease;
-    will-change:transform;
-  }
-  .cursor-glow.active{ opacity:1; }
-
-  /* feixes de luz lentos, tipo persiana de biblioteca */
-  .light-beams{ position:absolute; inset:-15% -10%; pointer-events:none; }
-  .beam{
-    position:absolute; top:-25%; width:110px; height:170%;
-    background:linear-gradient(180deg, transparent, rgba(217,161,90,.045), transparent);
-    transform:rotate(16deg);
-    animation:beamDrift 26s ease-in-out infinite;
-  }
-  .beam:nth-child(1){ left:6%; animation-duration:24s; }
-  .beam:nth-child(2){ left:32%; width:80px; animation-duration:30s; animation-delay:-9s; }
-  .beam:nth-child(3){ left:58%; width:130px; animation-duration:22s; animation-delay:-15s; }
-  .beam:nth-child(4){ left:84%; width:70px; animation-duration:28s; animation-delay:-5s; }
-  @keyframes beamDrift{
-    0%,100%{ opacity:.4; transform:rotate(16deg) translateX(0); }
-    50%{ opacity:.85; transform:rotate(16deg) translateX(34px); }
-  }
-
   @media (prefers-reduced-motion: reduce){
-    .ambient-glow, .mote, .beam{ animation:none !important; }
-    .cursor-glow{ display:none !important; }
+    .ambient-glow{ animation:none !important; }
   }
 
   /* ===================== INTRO / APRESENTAÇÃO ===================== */
@@ -197,6 +161,44 @@
   .btn-primary:active:not(:disabled){ transform:scale(.98); }
   .btn-primary:disabled{ opacity:.5; cursor:default; }
   .login-box .btn-primary{ width:100%; margin-top:22px; }
+
+  .login-step.step-in{ animation:loginStepIn .42s cubic-bezier(.16,.9,.35,1) both; }
+  @keyframes loginStepIn{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+  .email-chip{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--surface-2); border:1px solid var(--border); border-radius:8px;
+    padding:9px 12px; font-size:13px; color:var(--text-dim); overflow:hidden;
+  }
+  .email-chip span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .email-chip-edit{
+    background:none; border:none; color:var(--accent); font-family:var(--mono); font-size:10.5px;
+    cursor:pointer; padding:0; text-transform:uppercase; letter-spacing:.05em; flex-shrink:0;
+  }
+  .email-chip-edit:hover{ text-decoration:underline; }
+
+  /* ===================== CAMPO COM LABEL ANIMADO (só no login) ===================== */
+  .float-field{ position:relative; margin:22px 0 4px; }
+  .float-label{
+    position:absolute; left:1px; top:50%; transform:translateY(-50%);
+    height:1.15em; overflow:hidden; pointer-events:none; display:flex;
+  }
+  .float-label span{
+    display:inline-block; white-space:pre;
+    font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--text-faint);
+    transition:transform .42s cubic-bezier(.34,1.56,.4,1), color .3s ease;
+    transition-delay:calc(var(--i, 0) * 24ms);
+  }
+  .float-field.active .float-label span{ transform:translateY(-125%); color:var(--accent); }
+  .float-field input{
+    width:100%; background:transparent; border:none; border-bottom:2px solid var(--border);
+    padding:9px 0 9px; font-size:14.5px; font-family:var(--body); color:var(--text);
+    outline:none; transition:border-color .25s ease; border-radius:0;
+  }
+  .float-field input:focus{ border-bottom-color:var(--accent); }
+  @media (prefers-reduced-motion: reduce){
+    .float-label span{ transition:none !important; }
+  }
   .login-status{ margin-top:13px; font-family:var(--mono); font-size:12px; min-height:1px; }
   .login-status.err{ color:var(--danger); }
   .login-status.ok{ color:var(--accent); }
@@ -279,6 +281,58 @@
   .chip:hover{ color:var(--text); border-color:var(--text-faint); }
   .chip.active{ background:var(--accent-soft); border-color:rgba(217,161,90,.4); color:var(--accent); }
   .chip .chip-count{ opacity:.6; margin-left:4px; }
+
+  /* ===================== CARROSSEL CIRCULAR EM DESTAQUE ===================== */
+  .carousel-wrap{ margin-bottom:36px; }
+  .carousel-eyebrow{ font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:16px; }
+  .carousel-track{
+    position:relative; height:220px; outline:none; user-select:none;
+  }
+  .carousel-center{
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    pointer-events:none; z-index:0;
+  }
+  .carousel-center .num{ font-family:var(--display); font-size:38px; font-weight:800; color:var(--text); opacity:.9; line-height:1; }
+  .carousel-center .of{ font-family:var(--mono); font-size:11px; color:var(--text-faint); margin-top:5px; }
+  .carousel-card{
+    position:absolute; left:50%; top:50%; width:172px; height:112px;
+    display:none; flex-direction:column; justify-content:space-between; align-items:flex-start;
+    text-align:left; cursor:pointer; padding:13px 14px; border-radius:14px;
+    border:1px solid var(--border); background:linear-gradient(160deg, var(--surface), var(--surface-2));
+    transition:transform .6s cubic-bezier(.22,1,.36,1), opacity .6s cubic-bezier(.22,1,.36,1), box-shadow .3s ease, border-color .3s ease;
+    will-change:transform, opacity; font-family:var(--body); color:inherit;
+  }
+  .carousel-card.is-visible{ display:flex; }
+  .carousel-card.is-active{
+    box-shadow:0 22px 46px -16px rgba(0,0,0,.6), 0 0 0 1px var(--accent-soft);
+    border-color:color-mix(in srgb, var(--accent) 45%, var(--border));
+  }
+  .carousel-card .tag{
+    font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--text-faint); background:var(--surface-hover); border-radius:20px; padding:2px 9px;
+  }
+  .carousel-card .title{ font-size:13.5px; font-weight:700; margin:9px 0 3px; color:var(--text); line-height:1.25; }
+  .carousel-card.is-active .title{ color:var(--accent); }
+  .carousel-card .desc{
+    font-size:11px; color:var(--text-dim); line-height:1.4; margin:0;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .carousel-controls{ display:flex; align-items:center; justify-content:center; gap:16px; margin-top:8px; }
+  .carousel-arrow{
+    width:34px; height:34px; border-radius:50%; border:1px solid var(--border); background:var(--surface-2);
+    color:var(--text-dim); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:17px;
+    line-height:1; transition:border-color .2s ease, color .2s ease;
+  }
+  .carousel-arrow:hover{ border-color:var(--accent); color:var(--accent); }
+  .carousel-dots{ display:flex; align-items:center; gap:6px; }
+  .carousel-dot{
+    width:6px; height:6px; border-radius:50%; background:var(--border); border:none; cursor:pointer;
+    padding:0; transition:width .3s ease, background .3s ease;
+  }
+  .carousel-dot.is-active{ width:22px; border-radius:4px; background:var(--accent); }
+  @media (prefers-reduced-motion: reduce){
+    .carousel-card{ transition:none !important; }
+  }
 
   .no-results{
     border:1px dashed var(--border); border-radius:var(--radius); padding:56px 32px; text-align:center; background:var(--surface-2);
@@ -507,6 +561,7 @@
     .fade-in, .card-wrap, .login-badge .dot, .sync-dot{ animation:none !important; opacity:1 !important; transform:none !important; }
     .card{ transition:none !important; }
     .card-wrap:hover .card{ transform:none !important; }
+    .login-step.step-in{ animation:none !important; }
   }
 </style>
 </head>
@@ -548,18 +603,7 @@
     </div>
   </div>
 
-  <div class="ambient" aria-hidden="true">
-    <div class="ambient-glow a"></div>
-    <div class="ambient-glow b"></div>
-    <div class="light-beams">
-      <div class="beam"></div>
-      <div class="beam"></div>
-      <div class="beam"></div>
-      <div class="beam"></div>
-    </div>
-    <div class="dust-field" id="dustField"></div>
-    <div class="cursor-glow" id="cursorGlow"></div>
-  </div>
+  <canvas id="kineticGrid" aria-hidden="true"></canvas>
 
   <!-- ===================== LOGIN ===================== -->
   <div class="login-screen" id="loginScreen">
@@ -576,15 +620,27 @@
       </div>
       <h1>Entrar na sua conta</h1>
       <p class="sub">Usa a conta que o David criou pra você.</p>
-      <div class="field">
-        <label>E-mail</label>
-        <input type="email" id="loginEmail" autocomplete="username">
+
+      <div class="login-step" id="stepEmail">
+        <div class="float-field" id="emailField">
+          <label class="float-label" data-label="E-mail"></label>
+          <input type="email" id="loginEmail" autocomplete="username" placeholder=" ">
+        </div>
+        <button class="btn-primary" id="continueBtn" type="button" onclick="avancarParaSenha()">Continuar</button>
       </div>
-      <div class="field">
-        <label>Senha</label>
-        <input type="password" id="loginPassword" autocomplete="current-password">
+
+      <div class="login-step" id="stepPassword" style="display:none;">
+        <div class="email-chip">
+          <span id="emailChipText"></span>
+          <button type="button" class="email-chip-edit" onclick="voltarParaEmail()">trocar</button>
+        </div>
+        <div class="float-field" id="passwordField">
+          <label class="float-label" data-label="Senha"></label>
+          <input type="password" id="loginPassword" autocomplete="current-password" placeholder=" ">
+        </div>
+        <button class="btn-primary" id="loginBtn" type="button" onclick="fazerLogin()">Entrar</button>
       </div>
-      <button class="btn-primary" id="loginBtn" onclick="fazerLogin()">Entrar</button>
+
       <div class="login-status" id="loginStatus"></div>
       <div class="login-ticker" id="loginTicker">&gt; aguardando credenciais</div>
     </div>
@@ -638,6 +694,21 @@
             <h1>Sua <span class="accent">estante</span> de ferramentas</h1>
           </div>
         </div>
+        <div class="carousel-wrap fade-in" id="featuredCarousel" style="display:none; animation-delay:.05s;">
+          <div class="carousel-eyebrow">Em destaque · gire ou use as setas</div>
+          <div class="carousel-track" id="carouselTrack" tabindex="0" role="region" aria-label="Carrossel de apps em destaque">
+            <div class="carousel-center" aria-hidden="true">
+              <span class="num" id="carouselIndex">01</span>
+              <span class="of">de <span id="carouselTotal">01</span></span>
+            </div>
+          </div>
+          <div class="carousel-controls">
+            <button class="carousel-arrow" id="carouselPrev" type="button" aria-label="App anterior">‹</button>
+            <div class="carousel-dots" id="carouselDots" role="tablist"></div>
+            <button class="carousel-arrow" id="carouselNext" type="button" aria-label="Próximo app">›</button>
+          </div>
+        </div>
+
         <div class="search-row fade-in" style="animation-delay:.06s;">
           <input type="text" id="appSearch" class="search-input" placeholder="Buscar um app... (atalho: /)" oninput="filtrarApps()">
         </div>
@@ -887,6 +958,36 @@ function carregarGrupos(){
 
 function setTicker(msg){ const t = document.getElementById('loginTicker'); if(t) t.innerHTML = '&gt; ' + msg; }
 
+function avancarParaSenha(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const status = document.getElementById('loginStatus');
+  status.className = 'login-status'; status.textContent = '';
+  if(!email || email.indexOf('@') === -1){
+    status.className = 'login-status err';
+    status.textContent = 'Digita um e-mail válido.';
+    return;
+  }
+  document.getElementById('emailChipText').textContent = email;
+  document.getElementById('stepEmail').style.display = 'none';
+  const stepPass = document.getElementById('stepPassword');
+  stepPass.style.display = '';
+  stepPass.classList.remove('step-in'); void stepPass.offsetWidth; stepPass.classList.add('step-in');
+  const pass = document.getElementById('loginPassword');
+  pass.value = '';
+  setTimeout(function(){ pass.focus(); }, 60);
+}
+
+function voltarParaEmail(){
+  document.getElementById('stepPassword').style.display = 'none';
+  const stepEmail = document.getElementById('stepEmail');
+  stepEmail.style.display = '';
+  stepEmail.classList.remove('step-in'); void stepEmail.offsetWidth; stepEmail.classList.add('step-in');
+  document.getElementById('loginStatus').className = 'login-status';
+  document.getElementById('loginStatus').textContent = '';
+  const email = document.getElementById('loginEmail');
+  setTimeout(function(){ email.focus(); }, 60);
+}
+
 function fazerLogin(){
   const email = document.getElementById('loginEmail').value.trim();
   const senha = document.getElementById('loginPassword').value;
@@ -949,6 +1050,8 @@ firebase.auth().onAuthStateChanged(function(user){
   if(!user){
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('appShell').style.display = 'none';
+    document.getElementById('stepPassword').style.display = 'none';
+    document.getElementById('stepEmail').style.display = '';
     window.esconderIntro && window.esconderIntro();
     return;
   }
@@ -1175,6 +1278,7 @@ async function loadApps(){
       countText.textContent = '0 ferramentas';
       document.getElementById('categoryChips').innerHTML = '';
       document.getElementById('noResults').style.display = 'none';
+      buildCarousel([]);
       return;
     }
 
@@ -1205,6 +1309,7 @@ async function loadApps(){
     countText.textContent = apps.length + ' ferramenta' + (apps.length > 1 ? 's' : '');
     categoriaAtiva = null;
     renderChips(categorias, prateleiras);
+    buildCarousel(apps);
     grid.style.display = '';
     wireCardFX();
     filtrarApps();
@@ -1212,6 +1317,151 @@ async function loadApps(){
     grid.innerHTML = '<div class="error">Não consegui ler o manifest.json. Confira se este arquivo está sendo aberto por um servidor (http://...), não direto pelo Windows (file://...).</div>';
   }
 }
+
+/* ================= carrossel circular "em destaque" ================= */
+const CAROUSEL_VISIBLE = 5;
+const CAROUSEL_RADIUS_X = 168;
+const CAROUSEL_RADIUS_Y = 74;
+let carouselItems = [];
+let carouselActive = 0;
+let carouselTimer = null;
+
+function pararCarouselAutoplay(){
+  if(carouselTimer){ clearInterval(carouselTimer); carouselTimer = null; }
+}
+function iniciarCarouselAutoplay(){
+  pararCarouselAutoplay();
+  if(carouselItems.length <= 1) return;
+  carouselTimer = setInterval(function(){
+    setCarouselActive((carouselActive + 1) % carouselItems.length);
+  }, 4500);
+}
+
+function getCarouselPos(index, ativo, total){
+  const offset = index - ativo;
+  const half = Math.floor(CAROUSEL_VISIBLE / 2);
+  let adjusted = offset;
+  if(offset > half) adjusted = offset - total;
+  if(offset < -half) adjusted = offset + total;
+  if(Math.abs(adjusted) > half * 2) return null;
+  const angle = (adjusted / CAROUSEL_VISIBLE) * Math.PI;
+  const x = Math.sin(angle) * CAROUSEL_RADIUS_X;
+  const y = -Math.cos(angle) * CAROUSEL_RADIUS_Y;
+  const distance = Math.abs(adjusted);
+  const maxDistance = half + 1;
+  const scale = Math.max(0, 1 - (distance / maxDistance) * 0.32);
+  const opacity = Math.max(0, 1 - (distance / maxDistance) * 0.78);
+  const zIndex = CAROUSEL_VISIBLE - distance;
+  return { x: x, y: y, scale: scale, opacity: opacity, zIndex: zIndex };
+}
+
+function renderCarouselPositions(){
+  const track = document.getElementById('carouselTrack');
+  if(!track) return;
+  const total = carouselItems.length;
+  track.querySelectorAll('.carousel-card').forEach(function(card){
+    const i = Number(card.dataset.i);
+    const pos = getCarouselPos(i, carouselActive, total);
+    if(!pos){
+      card.classList.remove('is-visible', 'is-active');
+      return;
+    }
+    card.classList.add('is-visible');
+    card.classList.toggle('is-active', i === carouselActive);
+    card.style.transform = 'translate(-50%,-50%) translate(' + pos.x + 'px,' + pos.y + 'px) scale(' + pos.scale + ')';
+    card.style.opacity = pos.opacity;
+    card.style.zIndex = pos.zIndex;
+  });
+  const idx = document.getElementById('carouselIndex');
+  if(idx) idx.textContent = String(carouselActive + 1).padStart(2, '0');
+  document.querySelectorAll('.carousel-dot').forEach(function(dot, i){
+    dot.classList.toggle('is-active', i === carouselActive);
+  });
+}
+
+function setCarouselActive(i){
+  const total = carouselItems.length;
+  if(total === 0) return;
+  carouselActive = ((i % total) + total) % total;
+  renderCarouselPositions();
+}
+
+function abrirOuCentralizarCarouselCard(i){
+  if(i === carouselActive){
+    const item = carouselItems[i];
+    if(item) window.location.href = './' + item.file;
+  } else {
+    setCarouselActive(i);
+    iniciarCarouselAutoplay();
+  }
+}
+
+function buildCarousel(apps){
+  const wrap = document.getElementById('featuredCarousel');
+  const track = document.getElementById('carouselTrack');
+  const dotsBox = document.getElementById('carouselDots');
+  if(!wrap || !track || !dotsBox) return;
+  pararCarouselAutoplay();
+
+  carouselItems = apps.slice();
+  carouselActive = 0;
+
+  if(carouselItems.length === 0){
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = '';
+
+  track.querySelectorAll('.carousel-card').forEach(function(el){ el.remove(); });
+  dotsBox.innerHTML = '';
+
+  carouselItems.forEach(function(app, i){
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'carousel-card';
+    card.dataset.i = i;
+    card.innerHTML =
+      '<span class="tag">' + escapeAttr(formatarCategoria(app.category) || 'Estante') + '</span>' +
+      '<div><div class="title">' + escapeAttr(app.title || app.file) + '</div>' +
+      '<p class="desc">' + escapeAttr(app.description || 'Ferramenta interna do time.') + '</p></div>';
+    card.addEventListener('click', function(){ abrirOuCentralizarCarouselCard(i); });
+    track.appendChild(card);
+
+    const dot = document.createElement('button');
+    dot.type = 'button';
+    dot.className = 'carousel-dot';
+    dot.setAttribute('role', 'tab');
+    dot.setAttribute('aria-label', 'Ir pro app ' + (i + 1));
+    dot.addEventListener('click', function(){ setCarouselActive(i); iniciarCarouselAutoplay(); });
+    dotsBox.appendChild(dot);
+  });
+
+  const totalEl = document.getElementById('carouselTotal');
+  if(totalEl) totalEl.textContent = String(carouselItems.length).padStart(2, '0');
+  renderCarouselPositions();
+  iniciarCarouselAutoplay();
+}
+
+(function(){
+  const prevBtn = document.getElementById('carouselPrev');
+  const nextBtn = document.getElementById('carouselNext');
+  const track = document.getElementById('carouselTrack');
+  const wrap = document.getElementById('featuredCarousel');
+  if(prevBtn) prevBtn.addEventListener('click', function(){ setCarouselActive(carouselActive - 1); iniciarCarouselAutoplay(); });
+  if(nextBtn) nextBtn.addEventListener('click', function(){ setCarouselActive(carouselActive + 1); iniciarCarouselAutoplay(); });
+  if(track){
+    track.addEventListener('keydown', function(e){
+      if(e.key === 'ArrowLeft'){ e.preventDefault(); setCarouselActive(carouselActive - 1); iniciarCarouselAutoplay(); }
+      if(e.key === 'ArrowRight'){ e.preventDefault(); setCarouselActive(carouselActive + 1); iniciarCarouselAutoplay(); }
+    });
+  }
+  if(wrap){
+    wrap.addEventListener('mouseenter', pararCarouselAutoplay);
+    wrap.addEventListener('mouseleave', iniciarCarouselAutoplay);
+    wrap.addEventListener('focusin', pararCarouselAutoplay);
+    wrap.addEventListener('focusout', iniciarCarouselAutoplay);
+  }
+})();
 
 /* ================= efeito de "puxar da carteira": tilt 3D leve seguindo o mouse ================= */
 function wireCardFX(){
@@ -1487,23 +1737,36 @@ async function removerGrupo(nome){
 }
 </script>
 <script>
-/* ================= fundo vivo: poeira flutuante + halo seguindo o mouse ================= */
+/* ================= campo de login com label animado (letra por letra) ================= */
+(function(){
+  document.querySelectorAll('.float-field').forEach(function(wrap){
+    const label = wrap.querySelector('.float-label');
+    const input = wrap.querySelector('input');
+    if(!label || !input) return;
+    const texto = label.dataset.label || '';
+    label.innerHTML = texto.split('').map(function(ch, i){
+      return '<span style="--i:' + i + '">' + (ch === ' ' ? '&nbsp;' : ch) + '</span>';
+    }).join('');
+    function atualizar(){
+      wrap.classList.toggle('active', document.activeElement === input || input.value.length > 0);
+    }
+    input.addEventListener('focus', atualizar);
+    input.addEventListener('blur', atualizar);
+    input.addEventListener('input', atualizar);
+    input.addEventListener('keydown', function(e){
+      if(e.key !== 'Enter') return;
+      if(input.id === 'loginEmail'){ avancarParaSenha(); }
+      else if(input.id === 'loginPassword'){ const btn = document.getElementById('loginBtn'); if(btn) btn.click(); }
+    });
+    atualizar();
+  });
+})();
+</script>
+<script>
+/* ================= poeira da tela de introdução (splash) ================= */
 (function(){
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(reduceMotion) return;
-
-  const field = document.getElementById('dustField');
-  if(field){
-    const total = 22;
-    for(let i = 0; i < total; i++){
-      const m = document.createElement('span');
-      m.className = 'mote';
-      m.style.left = (Math.random() * 100) + '%';
-      m.style.animationDuration = (15 + Math.random() * 12) + 's';
-      m.style.animationDelay = (-Math.random() * 22) + 's';
-      field.appendChild(m);
-    }
-  }
 
   const introDust = document.getElementById('introDust');
   if(introDust){
@@ -1516,20 +1779,198 @@ async function removerGrupo(nome){
       introDust.appendChild(m);
     }
   }
+})();
+</script>
+<script>
+/* ================= malha cinética: puxa na direção do mouse, ondula no clique ================= */
+(function(){
+  const canvas = document.getElementById('kineticGrid');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const glow = document.getElementById('cursorGlow');
-  if(glow){
-    let raf = null, pendingX = 0, pendingY = 0;
-    document.addEventListener('mousemove', function(e){
-      pendingX = e.clientX; pendingY = e.clientY;
-      glow.classList.add('active');
-      if(raf) return;
-      raf = requestAnimationFrame(function(){
-        glow.style.transform = 'translate3d(' + pendingX + 'px,' + pendingY + 'px,0) translate(-50%,-50%)';
-        raf = null;
-      });
-    });
-    document.addEventListener('mouseleave', function(){ glow.classList.remove('active'); });
+  const style = getComputedStyle(document.documentElement);
+  const corAmbar = (style.getPropertyValue('--accent') || '#D9A15A').trim();
+  const corVerde = (style.getPropertyValue('--accent-2') || '#4E8368').trim();
+
+  function hexToRgb(hex){
+    const h = hex.replace('#', '');
+    const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+  }
+  const rgbAmbar = hexToRgb(corAmbar);
+  const rgbVerde = hexToRgb(corVerde);
+
+  const SPACING = 46;
+  const WARP_RADIUS = 190;
+  const WARP_PULL = 20;
+  const RIPPLE_SPEED = 480;   // px/s
+  const RIPPLE_WIDTH = 46;
+  const RIPPLE_LIFE = 1.05;   // s
+  const RIPPLE_PUSH = 26;
+  const EASE = 0.16;
+
+  let dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let cssW = 0, cssH = 0, grid = [], ripples = [];
+  let mouseX = -9999, mouseY = -9999, mouseActive = 0; // 0..1, decai quando o mouse para
+  let rafId = null;
+
+  function resize(){
+    cssW = window.innerWidth;
+    cssH = window.innerHeight;
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    canvas.style.width = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    buildGrid();
+  }
+
+  function buildGrid(){
+    const cols = Math.ceil(cssW / SPACING) + 2;
+    const rows = Math.ceil(cssH / SPACING) + 2;
+    const offX = (cssW - (cols - 1) * SPACING) / 2;
+    const offY = (cssH - (rows - 1) * SPACING) / 2;
+    grid = [];
+    for(let r = 0; r < rows; r++){
+      const linha = [];
+      for(let c = 0; c < cols; c++){
+        linha.push({ bx: offX + c * SPACING, by: offY + r * SPACING, ox: 0, oy: 0, glow: 0 });
+      }
+      grid.push(linha);
+    }
+  }
+
+  function onMove(x, y){
+    mouseX = x; mouseY = y; mouseActive = 1;
+  }
+  window.addEventListener('mousemove', function(e){ onMove(e.clientX, e.clientY); }, { passive: true });
+  window.addEventListener('touchmove', function(e){
+    if(e.touches && e.touches[0]) onMove(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  window.addEventListener('mouseleave', function(){ mouseActive = 0; });
+
+  function onClique(x, y){
+    ripples.push({ x: x, y: y, t: 0 });
+    if(ripples.length > 6) ripples.shift();
+  }
+  window.addEventListener('pointerdown', function(e){ onClique(e.clientX, e.clientY); }, { passive: true });
+
+  let resizeTimer = null;
+  window.addEventListener('resize', function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(resize, 120);
+  });
+
+  let last = performance.now();
+  function frame(now){
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+
+    mouseActive += (0 - mouseActive) * 0.02; // decaimento lento se o mouse ficar parado
+    ripples.forEach(function(rp){ rp.t += dt; });
+    ripples = ripples.filter(function(rp){ return rp.t < RIPPLE_LIFE; });
+
+    ctx.clearRect(0, 0, cssW, cssH);
+
+    for(let r = 0; r < grid.length; r++){
+      for(let c = 0; c < grid[r].length; c++){
+        const p = grid[r][c];
+        let tx = 0, ty = 0, glow = 0;
+
+        const dxm = mouseX - p.bx, dym = mouseY - p.by;
+        const distM = Math.sqrt(dxm * dxm + dym * dym);
+        if(distM < WARP_RADIUS && mouseActive > 0.01){
+          const f = (1 - distM / WARP_RADIUS) * mouseActive;
+          tx += (dxm / (distM || 1)) * WARP_PULL * f;
+          ty += (dym / (distM || 1)) * WARP_PULL * f;
+          glow = Math.max(glow, f);
+        }
+
+        for(let i = 0; i < ripples.length; i++){
+          const rp = ripples[i];
+          const dxr = p.bx - rp.x, dyr = p.by - rp.y;
+          const distR = Math.sqrt(dxr * dxr + dyr * dyr) || 0.001;
+          const raio = rp.t * RIPPLE_SPEED;
+          const banda = Math.abs(distR - raio);
+          if(banda < RIPPLE_WIDTH){
+            const decai = Math.max(0, 1 - rp.t / RIPPLE_LIFE);
+            const força = Math.cos((banda / RIPPLE_WIDTH) * Math.PI * 0.5) * RIPPLE_PUSH * decai;
+            tx += (dxr / distR) * força;
+            ty += (dyr / distR) * força;
+            glow = Math.max(glow, decai * (1 - banda / RIPPLE_WIDTH) * 0.9);
+          }
+        }
+
+        p.ox += (tx - p.ox) * EASE;
+        p.oy += (ty - p.oy) * EASE;
+        p.glow += (glow - p.glow) * 0.18;
+      }
+    }
+
+    ctx.lineWidth = 1;
+    for(let r = 0; r < grid.length; r++){
+      for(let c = 0; c < grid[r].length; c++){
+        const p = grid[r][c];
+        const x = p.bx + p.ox, y = p.by + p.oy;
+
+        if(c < grid[r].length - 1){
+          const q = grid[r][c + 1];
+          const qx = q.bx + q.ox, qy = q.by + q.oy;
+          const g = Math.max(p.glow, q.glow);
+          const alpha = 0.05 + g * 0.4;
+          const cor = g > 0.5 ? rgbVerde : rgbAmbar;
+          ctx.strokeStyle = 'rgba(' + cor.r + ',' + cor.g + ',' + cor.b + ',' + alpha + ')';
+          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(qx, qy); ctx.stroke();
+        }
+        if(r < grid.length - 1){
+          const q = grid[r + 1][c];
+          const qx = q.bx + q.ox, qy = q.by + q.oy;
+          const g = Math.max(p.glow, q.glow);
+          const alpha = 0.05 + g * 0.4;
+          const cor = g > 0.5 ? rgbVerde : rgbAmbar;
+          ctx.strokeStyle = 'rgba(' + cor.r + ',' + cor.g + ',' + cor.b + ',' + alpha + ')';
+          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(qx, qy); ctx.stroke();
+        }
+
+        if(p.glow > 0.02){
+          const cor = p.glow > 0.5 ? rgbVerde : rgbAmbar;
+          const raioPonto = 1 + p.glow * 1.8;
+          ctx.beginPath();
+          ctx.fillStyle = 'rgba(' + cor.r + ',' + cor.g + ',' + cor.b + ',' + (0.25 + p.glow * 0.65) + ')';
+          ctx.arc(x, y, raioPonto, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    rafId = requestAnimationFrame(frame);
+  }
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden){
+      if(rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+    } else if(!rafId && !reduceMotion){
+      last = performance.now();
+      rafId = requestAnimationFrame(frame);
+    }
+  });
+
+  resize();
+  if(reduceMotion){
+    // desenha a malha parada uma única vez, sem animação nem eventos de movimento
+    ctx.clearRect(0, 0, cssW, cssH);
+    ctx.strokeStyle = 'rgba(' + rgbAmbar.r + ',' + rgbAmbar.g + ',' + rgbAmbar.b + ',.06)';
+    for(let r = 0; r < grid.length; r++){
+      for(let c = 0; c < grid[r].length; c++){
+        const p = grid[r][c];
+        if(c < grid[r].length - 1){ const q = grid[r][c+1]; ctx.beginPath(); ctx.moveTo(p.bx,p.by); ctx.lineTo(q.bx,q.by); ctx.stroke(); }
+        if(r < grid.length - 1){ const q = grid[r+1][c]; ctx.beginPath(); ctx.moveTo(p.bx,p.by); ctx.lineTo(q.bx,q.by); ctx.stroke(); }
+      }
+    }
+  } else {
+    rafId = requestAnimationFrame(frame);
   }
 })();
 </script>
