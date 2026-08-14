@@ -261,7 +261,12 @@
   /* ===================== PAGE HEADER ===================== */
   .page-header{ display:flex; justify-content:space-between; align-items:flex-end; gap:24px; margin-bottom:30px; flex-wrap:wrap; }
   .page-eyebrow{ font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:10px; }
-  .page-header h1{ font-size:29px; margin-bottom:8px; }
+  .page-header h1{ font-size:38px; margin-bottom:0; line-height:1.06; letter-spacing:-.012em; }
+  .page-header h1 .accent{ font-style:italic; }
+  .hero-rule{ display:flex; align-items:center; gap:9px; margin:12px 0 8px; }
+  .hero-rule-line{ height:1px; width:30px; flex-shrink:0; background:linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 20%, transparent)); }
+  .hero-rule-line.grow{ width:auto; flex:1; max-width:130px; background:linear-gradient(90deg, var(--border-soft), transparent); }
+  .hero-rule-dot{ width:5px; height:5px; flex-shrink:0; background:var(--accent); transform:rotate(45deg); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent); }
   .page-sub{ color:var(--text-dim); font-size:14px; line-height:1.6; max-width:520px; margin:0; }
 
   .search-row{ display:flex; gap:10px; margin-bottom:14px; }
@@ -331,7 +336,7 @@
     background:linear-gradient(90deg, transparent, var(--wood), transparent);
     opacity:.4; pointer-events:none;
   }
-  .wallet-stack .card-wrap:not(:first-child){ margin-top:-86px; }
+  .wallet-stack .card-wrap:not(:first-child){ margin-top:-104px; }
   .wallet-stack .card-wrap{ position:relative; }
   .wallet-stack .card-wrap:hover, .wallet-stack .card-wrap:focus-within{ z-index:50; }
   #grid .add-card{ width:100%; display:inline-block; break-inside:avoid; margin-bottom:30px; min-height:120px; }
@@ -521,7 +526,7 @@
     .page-header{ align-items:flex-start; }
   }
   @media (max-width: 560px){
-    .page-header h1{ font-size:24px; }
+    .page-header h1{ font-size:27px; }
     .user-table thead{ display:none; }
     .user-table, .user-table tbody, .user-table tr, .user-table td{ display:block; width:100%; }
     .user-table td{ padding:6px 16px; border-bottom:none; }
@@ -662,6 +667,11 @@
           <div>
             <div class="page-eyebrow">Catálogo interno · unidade operações</div>
             <h1>Sua <span class="accent">estante</span> de ferramentas</h1>
+            <div class="hero-rule">
+              <span class="hero-rule-line"></span>
+              <span class="hero-rule-dot"></span>
+              <span class="hero-rule-line grow"></span>
+            </div>
           </div>
           <a class="app-of-day" id="appOfDay" href="#" style="display:none;">
             <span class="aod-label">✦ App do dia</span>
