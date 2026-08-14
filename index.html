@@ -435,7 +435,7 @@
   }
   .recent-pill:hover{ color:var(--text); border-color:var(--text-faint); }
   .kebab-menu{
-    position:absolute; top:44px; right:16px; z-index:6; min-width:132px;
+    position:absolute; top:44px; right:46px; z-index:6; min-width:132px;
     background:var(--surface-2); border:1px solid var(--border); border-radius:9px;
     box-shadow:0 14px 30px -10px rgba(0,0,0,.7); overflow:hidden;
     display:none; flex-direction:column;
@@ -1425,7 +1425,7 @@ async function loadApps(){
         <div class="shelf" data-categoria="${escapeAttr(cat.toLowerCase())}">
           <div class="shelf-label">${escapeAttr(cat)} <span class="shelf-count">${appsDaCategoria.length}</span></div>
           <div class="wallet-stack">
-            ${visiveis.map(cardHtml).join('')}
+            ${visiveis.map(function(app, i){ return cardHtml(app, i); }).join('')}
             ${extras.map(function(app, i){ return cardHtml(app, i, 'stack-hidden'); }).join('')}
             ${precisaCap ? `<button type="button" class="card-wrap stack-more-toggle" onclick="expandirPrateleira(this)"><span class="plus-n">+${extras.length}</span> mostrar mais</button>` : ''}
           </div>
