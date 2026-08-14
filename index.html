@@ -278,6 +278,12 @@
   .search-input::placeholder{ color:var(--text-faint); }
 
   .chip-row{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:26px; }
+  #categoryChips{
+    flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden; padding-bottom:6px; scrollbar-width:thin;
+  }
+  #categoryChips::-webkit-scrollbar{ height:5px; }
+  #categoryChips::-webkit-scrollbar-thumb{ background:var(--border); border-radius:3px; }
+  #categoryChips .chip{ flex-shrink:0; }
   .chip{
     background:var(--surface-2); border:1px solid var(--border); color:var(--text-dim);
     font-family:var(--mono); font-size:11.5px; letter-spacing:.02em; padding:6px 13px; border-radius:20px;
@@ -337,6 +343,16 @@
     opacity:.4; pointer-events:none;
   }
   .wallet-stack .card-wrap:not(:first-child){ margin-top:-104px; }
+  .wallet-stack .card-wrap.stack-hidden{ display:none; }
+  .stack-more-toggle{
+    display:flex; align-items:center; justify-content:center; gap:7px; width:100%;
+    padding:19px; border-radius:17px; cursor:pointer; text-align:center;
+    background:var(--surface-2); border:1px dashed var(--border); color:var(--text-dim);
+    font-family:var(--mono); font-size:11.5px; letter-spacing:.03em; text-transform:uppercase;
+    transition:border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .stack-more-toggle:hover{ color:var(--accent); border-color:color-mix(in srgb, var(--accent) 55%, var(--border)); background:var(--accent-soft); }
+  .stack-more-toggle .plus-n{ font-family:var(--display); font-weight:700; font-size:14px; color:var(--accent); }
   .wallet-stack .card-wrap{ position:relative; }
   .wallet-stack .card-wrap:hover, .wallet-stack .card-wrap:focus-within{ z-index:50; }
   #grid .add-card{ width:100%; display:inline-block; break-inside:avoid; margin-bottom:30px; min-height:120px; }
@@ -391,7 +407,7 @@
   .card-wrap:hover .card-open .arrow{ transform:translateX(3px); }
 
   .kebab-btn{
-    position:absolute; top:16px; right:16px; z-index:5;
+    position:absolute; top:16px; right:46px; z-index:5;
     width:24px; height:24px; border-radius:6px; background:rgba(10,13,17,.75);
     border:1px solid var(--border); color:var(--text-faint); font-size:15px; cursor:pointer;
     display:flex; align-items:center; justify-content:center; line-height:1;
@@ -399,6 +415,25 @@
   }
   .card-wrap:hover .kebab-btn, .kebab-btn.open{ opacity:1; }
   .kebab-btn:hover, .kebab-btn.open{ color:var(--text); border-color:var(--text-faint); }
+  .fav-btn{
+    position:absolute; top:16px; right:16px; z-index:5;
+    width:24px; height:24px; border-radius:6px; background:rgba(10,13,17,.75);
+    border:1px solid var(--border); color:var(--text-faint); font-size:13px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; line-height:1;
+    opacity:0; transition:opacity .15s ease, color .15s ease, border-color .15s ease, transform .15s ease;
+  }
+  .card-wrap:hover .fav-btn, .fav-btn.active{ opacity:1; }
+  .fav-btn:hover{ color:var(--accent); border-color:var(--accent); transform:scale(1.08); }
+  .fav-btn.active{ color:var(--accent); border-color:color-mix(in srgb, var(--accent) 55%, var(--border)); }
+  .chip-pinned{ border-color:color-mix(in srgb, var(--accent) 45%, var(--border)); }
+  .recent-row{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:-10px 0 22px; }
+  .recent-row-label{ font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--text-faint); margin-right:2px; }
+  .recent-pill{
+    display:inline-flex; align-items:center; gap:6px; background:var(--surface-2); border:1px solid var(--border);
+    color:var(--text-dim); font-size:11.5px; padding:5px 11px 5px 8px; border-radius:20px; text-decoration:none;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .recent-pill:hover{ color:var(--text); border-color:var(--text-faint); }
   .kebab-menu{
     position:absolute; top:44px; right:16px; z-index:6; min-width:132px;
     background:var(--surface-2); border:1px solid var(--border); border-radius:9px;
@@ -688,6 +723,7 @@
         <div class="search-row fade-in" style="animation-delay:.06s;">
           <input type="text" id="appSearch" class="search-input" placeholder="Buscar um app... (atalho: /)" oninput="filtrarApps()">
         </div>
+        <div class="recent-row" id="recentRow" style="display:none;"></div>
         <div class="chip-row fade-in" id="categoryChips" style="animation-delay:.08s;"></div>
         <div id="grid"></div>
         <div class="no-results" id="noResults" style="display:none;">
@@ -711,6 +747,10 @@
             <p class="page-sub">Cria contas, edita permissões e controla quem acessa cada ferramenta.</p>
           </div>
           <button class="btn-primary" onclick="abrirCriarUsuario()">+ Novo usuário</button>
+        </div>
+
+        <div class="search-row fade-in" style="animation-delay:.05s;">
+          <input type="text" id="userSearch" class="search-input" placeholder="Buscar por nome, e-mail ou grupo..." oninput="filtrarUsuarios()">
         </div>
 
         <div class="table-wrap fade-in" style="animation-delay:.06s;">
@@ -1127,24 +1167,122 @@ function tenhoAcesso(app){
   return grupos.some(g => MEUS_GRUPOS.indexOf(g) !== -1);
 }
 
+function expandirPrateleira(btn){
+  const stack = btn.closest('.wallet-stack');
+  if(!stack) return;
+  stack.querySelectorAll('.card-wrap.stack-hidden').forEach(function(el){ el.classList.remove('stack-hidden'); });
+  btn.remove();
+}
+
 let categoriaAtiva = null; // null = "Todos"
+let favoritosAtivo = false;
+
+/* ================= Favoritos e usados recentemente (pessoal, guardado no navegador) ================= */
+const FAV_KEY = 'estante:favoritos';
+const RECENTES_KEY = 'estante:recentes';
+
+function lerFavoritos(){
+  try{ return JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); }catch(e){ return []; }
+}
+function ehFavorito(file){ return lerFavoritos().indexOf(file) !== -1; }
+
+function toggleFavorito(btn, e){
+  if(e){ e.preventDefault(); e.stopPropagation(); }
+  const file = btn.dataset.file;
+  const favs = lerFavoritos();
+  const idx = favs.indexOf(file);
+  if(idx === -1) favs.push(file); else favs.splice(idx, 1);
+  try{ localStorage.setItem(FAV_KEY, JSON.stringify(favs)); }catch(err){}
+  const agoraFav = idx === -1;
+  btn.classList.toggle('active', agoraFav);
+  btn.textContent = agoraFav ? '★' : '☆';
+  btn.title = agoraFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos';
+  atualizarFavChip();
+  if(favoritosAtivo) filtrarApps();
+}
+
+function atualizarFavChip(){
+  const count = document.querySelectorAll('#grid .fav-btn.active').length;
+  const row = document.getElementById('categoryChips');
+  let favChip = document.getElementById('favChip');
+  if(count > 0){
+    if(!favChip && row){
+      favChip = document.createElement('button');
+      favChip.type = 'button';
+      favChip.id = 'favChip';
+      favChip.className = 'chip chip-pinned';
+      favChip.onclick = selecionarFavoritos;
+      row.insertBefore(favChip, row.firstChild);
+    }
+    if(favChip){
+      favChip.innerHTML = '★ Favoritos <span class="chip-count">' + count + '</span>';
+      favChip.classList.toggle('active', favoritosAtivo);
+    }
+  } else if(favChip){
+    favChip.remove();
+    if(favoritosAtivo){ favoritosAtivo = false; selecionarCategoria(null); }
+  }
+}
+
+function selecionarFavoritos(){
+  favoritosAtivo = true;
+  categoriaAtiva = null;
+  atualizarChipsAtivos();
+  filtrarApps();
+}
+
+function registrarUso(file){
+  let lista;
+  try{ lista = JSON.parse(localStorage.getItem(RECENTES_KEY) || '[]'); }catch(e){ lista = []; }
+  lista = lista.filter(function(r){ return r.file !== file; });
+  lista.unshift({ file: file, ts: Date.now() });
+  lista = lista.slice(0, 6);
+  try{ localStorage.setItem(RECENTES_KEY, JSON.stringify(lista)); }catch(err){}
+}
+
+function renderRecentRow(apps){
+  const wrap = document.getElementById('recentRow');
+  if(!wrap) return;
+  let lista;
+  try{ lista = JSON.parse(localStorage.getItem(RECENTES_KEY) || '[]'); }catch(e){ lista = []; }
+  const porArquivo = {};
+  apps.forEach(function(a){ porArquivo[a.file] = a; });
+  const validos = lista.map(function(r){ return porArquivo[r.file]; }).filter(Boolean).slice(0, 5);
+  if(!validos.length){ wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+  wrap.style.display = '';
+  wrap.innerHTML = '<span class="recent-row-label">Usados recentemente</span>' +
+    validos.map(function(app){
+      return '<a class="recent-pill" href="./' + app.file + '" onclick="registrarUso(\'' + escapeAttr(app.file) + '\')">' +
+        (app.icon || '🧩') + ' ' + escapeAttr(app.title) +
+      '</a>';
+    }).join('');
+}
 
 function filtrarApps(){
   const q = document.getElementById('appSearch').value.trim().toLowerCase();
   let algumaPrateleiraVisivel = false;
   document.querySelectorAll('#grid .shelf').forEach(function(shelf){
     const categoriaTexto = shelf.dataset.categoria || '';
-    if(categoriaAtiva && categoriaTexto !== categoriaAtiva){
+    if(!favoritosAtivo && categoriaAtiva && categoriaTexto !== categoriaAtiva){
       shelf.style.display = 'none';
       return;
     }
     let algumVisivel = false;
+    let revelouExtra = false;
     shelf.querySelectorAll('.card-wrap').forEach(function(el){
+      if(el.classList.contains('stack-more-toggle')) return;
+      if(favoritosAtivo){
+        const favBtn = el.querySelector('.fav-btn');
+        if(!favBtn || !favBtn.classList.contains('active')){ el.style.display = 'none'; return; }
+      }
       const texto = el.textContent.toLowerCase();
       const bate = !q || texto.indexOf(q) !== -1 || categoriaTexto.indexOf(q) !== -1;
+      if(bate && el.classList.contains('stack-hidden')){ el.classList.remove('stack-hidden'); revelouExtra = true; }
       el.style.display = bate ? '' : 'none';
       if(bate) algumVisivel = true;
     });
+    const toggle = shelf.querySelector('.stack-more-toggle');
+    if(toggle){ revelouExtra ? toggle.remove() : (toggle.style.display = (q || favoritosAtivo) ? 'none' : ''); }
     shelf.style.display = algumVisivel ? '' : 'none';
     if(algumVisivel) algumaPrateleiraVisivel = true;
   });
@@ -1152,9 +1290,11 @@ function filtrarApps(){
   const noResults = document.getElementById('noResults');
   const grid = document.getElementById('grid');
   if(!algumaPrateleiraVisivel && grid.querySelector('.shelf')){
-    document.getElementById('noResultsSub').textContent = q
-      ? `Nada bateu com "${q}"${categoriaAtiva ? ' na categoria selecionada' : ''}.`
-      : 'Nenhum app nessa categoria.';
+    document.getElementById('noResultsSub').textContent = favoritosAtivo
+      ? 'Você ainda não marcou nenhum favorito — clique na estrela de um card pra favoritar.'
+      : (q
+        ? `Nada bateu com "${q}"${categoriaAtiva ? ' na categoria selecionada' : ''}.`
+        : 'Nenhum app nessa categoria.');
     noResults.style.display = '';
     grid.style.display = 'none';
   } else {
@@ -1166,20 +1306,24 @@ function filtrarApps(){
 function limparFiltros(){
   document.getElementById('appSearch').value = '';
   categoriaAtiva = null;
+  favoritosAtivo = false;
   atualizarChipsAtivos();
   filtrarApps();
 }
 
 function selecionarCategoria(catLower){
   categoriaAtiva = catLower;
+  favoritosAtivo = false;
   atualizarChipsAtivos();
   filtrarApps();
 }
 
 function atualizarChipsAtivos(){
-  document.querySelectorAll('#categoryChips .chip').forEach(function(chip){
-    chip.classList.toggle('active', chip.dataset.cat === (categoriaAtiva || ''));
+  document.querySelectorAll('#categoryChips .chip[data-cat]').forEach(function(chip){
+    chip.classList.toggle('active', !favoritosAtivo && chip.dataset.cat === (categoriaAtiva || ''));
   });
+  const favChip = document.getElementById('favChip');
+  if(favChip) favChip.classList.toggle('active', favoritosAtivo);
 }
 
 function renderChips(categorias, prateleiras){
@@ -1211,11 +1355,12 @@ function formatarCategoria(cat){
   return limpo.toLowerCase().replace(/(^|\s)\S/g, function(c){ return c.toUpperCase(); });
 }
 
-function cardHtml(app, i){
+function cardHtml(app, i, extraClass){
   const acessoNormal = tenhoAcesso(app);
+  const isFav = ehFavorito(app.file);
   return `
-    <div class="card-wrap" style="animation-delay:${i * 55}ms">
-      <a class="card" href="./${app.file}" style="--accent-card:${app.color || '#D9A15A'}">
+    <div class="card-wrap${extraClass ? ' ' + extraClass : ''}" style="animation-delay:${i * 55}ms">
+      <a class="card" href="./${app.file}" style="--accent-card:${app.color || '#D9A15A'}" onclick="registrarUso('${escapeAttr(app.file)}')">
         <div class="card-body">
           <div class="card-top">
             <div class="card-icon">${app.icon || '🧩'}</div>
@@ -1229,6 +1374,7 @@ function cardHtml(app, i){
           <div class="card-open">Abrir app <span class="arrow">→</span></div>
         </div>
       </a>
+      <button class="fav-btn${isFav ? ' active' : ''}" title="${isFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}" data-file="${escapeAttr(app.file)}" onclick="toggleFavorito(this, event)">${isFav ? '★' : '☆'}</button>
       ${SOU_ADMIN ? `
       <button class="kebab-btn" title="Mais opções" onclick="toggleKebabMenu(this, event)">⋯</button>
       <div class="kebab-menu">
@@ -1254,6 +1400,8 @@ async function loadApps(){
       countText.textContent = '0 ferramentas';
       document.getElementById('categoryChips').innerHTML = '';
       document.getElementById('noResults').style.display = 'none';
+      const recentRowVazio = document.getElementById('recentRow');
+      if(recentRowVazio){ recentRowVazio.style.display = 'none'; }
       buildAppOfDay([]);
       return;
     }
@@ -1269,10 +1417,18 @@ async function loadApps(){
 
     grid.innerHTML = categorias.map(function(cat){
       const appsDaCategoria = prateleiras[cat];
+      const STACK_CAP = 6; // acima disso, a prateleira vira uma coluna gigante e desbalanceia o mosaico
+      const precisaCap = appsDaCategoria.length > STACK_CAP;
+      const visiveis = precisaCap ? appsDaCategoria.slice(0, STACK_CAP - 1) : appsDaCategoria;
+      const extras = precisaCap ? appsDaCategoria.slice(STACK_CAP - 1) : [];
       return `
         <div class="shelf" data-categoria="${escapeAttr(cat.toLowerCase())}">
           <div class="shelf-label">${escapeAttr(cat)} <span class="shelf-count">${appsDaCategoria.length}</span></div>
-          <div class="wallet-stack">${appsDaCategoria.map(cardHtml).join('')}</div>
+          <div class="wallet-stack">
+            ${visiveis.map(cardHtml).join('')}
+            ${extras.map(function(app, i){ return cardHtml(app, i, 'stack-hidden'); }).join('')}
+            ${precisaCap ? `<button type="button" class="card-wrap stack-more-toggle" onclick="expandirPrateleira(this)"><span class="plus-n">+${extras.length}</span> mostrar mais</button>` : ''}
+          </div>
         </div>
       `;
     }).join('') + `
@@ -1284,7 +1440,10 @@ async function loadApps(){
 
     countText.textContent = apps.length + ' ferramenta' + (apps.length > 1 ? 's' : '');
     categoriaAtiva = null;
+    favoritosAtivo = false;
     renderChips(categorias, prateleiras);
+    atualizarFavChip();
+    renderRecentRow(apps);
     buildAppOfDay(apps);
     grid.style.display = '';
     wireCardFX();
@@ -1407,6 +1566,17 @@ async function carregarListaUsuarios(){
   }catch(err){
     tbody.innerHTML = '<tr><td colspan="5" class="table-hint err">Erro ao carregar: ' + err.message + '</td></tr>';
   }
+  filtrarUsuarios();
+}
+
+function filtrarUsuarios(){
+  const campo = document.getElementById('userSearch');
+  const q = campo ? campo.value.trim().toLowerCase() : '';
+  document.querySelectorAll('#adm-lista tr').forEach(function(tr){
+    if(!q){ tr.style.display = ''; return; }
+    const texto = tr.textContent.toLowerCase();
+    tr.style.display = texto.indexOf(q) !== -1 ? '' : 'none';
+  });
 }
 
 let editingUid = null;
