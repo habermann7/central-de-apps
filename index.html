@@ -310,7 +310,7 @@
     background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 34%, transparent), color-mix(in srgb, var(--accent) 12%, transparent));
     border:1px solid color-mix(in srgb, var(--accent) 48%, transparent);
   }
-  .aod-title{ font-size:13px; font-weight:700; color:var(--text); line-height:1.25; }
+  .aod-title{ font-size:13px; font-weight:700; color:var(--text); line-height:1.25; text-transform:uppercase; letter-spacing:.02em; }
   .aod-cat{ font-family:var(--mono); font-size:10px; color:var(--text-faint); margin-top:2px; text-transform:uppercase; letter-spacing:.04em; }
 
   .no-results{
@@ -400,7 +400,7 @@
   .card-status{ font-size:10px; color:var(--accent); display:flex; align-items:center; gap:5px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.04em; padding-top:3px; }
   .card-status .dot{ width:5px; height:5px; border-radius:50%; background:var(--accent); }
   .card-tag{ font-family:var(--mono); font-size:10px; letter-spacing:.08em; color:var(--accent-card, var(--accent)); font-weight:500; text-transform:uppercase; margin-bottom:7px; }
-  .card-title{ font-family:var(--display); font-size:16.5px; font-weight:700; margin-bottom:8px; letter-spacing:0; }
+  .card-title{ font-family:var(--display); font-size:16px; font-weight:700; margin-bottom:8px; letter-spacing:.015em; text-transform:uppercase; line-height:1.18; }
   .card-desc{ font-size:13px; color:var(--text-dim); line-height:1.55; flex:1; margin-bottom:16px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
   .card-open{ font-family:var(--mono); font-size:11.5px; font-weight:500; color:var(--accent-card, var(--accent)); display:flex; align-items:center; gap:5px; }
   .card-open .arrow{ transition:transform .15s ease; }
@@ -430,7 +430,8 @@
   .recent-row-label{ font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--text-faint); margin-right:2px; }
   .recent-pill{
     display:inline-flex; align-items:center; gap:6px; background:var(--surface-2); border:1px solid var(--border);
-    color:var(--text-dim); font-size:11.5px; padding:5px 11px 5px 8px; border-radius:20px; text-decoration:none;
+    color:var(--text-dim); font-size:11px; padding:5px 11px 5px 8px; border-radius:20px; text-decoration:none;
+    text-transform:uppercase; letter-spacing:.03em; font-family:var(--mono);
     transition:border-color .15s ease, color .15s ease;
   }
   .recent-pill:hover{ color:var(--text); border-color:var(--text-faint); }
@@ -520,6 +521,7 @@
   .modal-bg.show{ display:flex; }
   .modal{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:28px; max-width:400px; width:100%; max-height:88vh; overflow-y:auto; }
   .modal h3{ margin:0 0 10px; font-size:16.5px; font-family:var(--display); font-weight:700; }
+  #modalAppName{ text-transform:uppercase; letter-spacing:.015em; }
   .modal-text{ color:var(--text-dim); font-size:13px; line-height:1.6; margin:0 0 18px; }
   .modal .field label, .modal > label{ display:block; font-family:var(--mono); font-size:10.5px; color:var(--text-faint); margin:14px 0 7px; text-transform:uppercase; letter-spacing:.06em; }
   .modal .field:first-of-type label, .modal > label:first-of-type{ margin-top:0; }
