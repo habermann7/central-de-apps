@@ -313,9 +313,12 @@
   }
   .btn-clear:hover{ border-color:var(--accent); color:var(--accent); }
 
-  /* ===================== ESTANTE (prateleiras por categoria) ===================== */
-  #grid{ display:flex; flex-wrap:wrap; align-items:flex-start; gap:30px 24px; }
-  .shelf{ width:264px; flex-shrink:0; }
+  /* ===================== ESTANTE (prateleiras por categoria) =====================
+     Layout tipo "mosaico" (CSS columns): cada prateleira flui pra próxima vaga livre
+     em vez de ficar presa numa linha — assim uma prateleira mais alta (mais apps
+     empilhados) não deixa buraco vazio do lado das prateleiras menores. */
+  #grid{ columns:264px; column-gap:24px; }
+  .shelf{ width:100%; display:inline-block; break-inside:avoid; margin-bottom:30px; }
   .shelf-label{
     font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
     color:var(--text-faint); margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border-soft);
@@ -331,7 +334,7 @@
   .wallet-stack .card-wrap:not(:first-child){ margin-top:-86px; }
   .wallet-stack .card-wrap{ position:relative; }
   .wallet-stack .card-wrap:hover, .wallet-stack .card-wrap:focus-within{ z-index:50; }
-  #grid .add-card{ width:264px; flex-shrink:0; align-self:stretch; min-height:120px; }
+  #grid .add-card{ width:100%; display:inline-block; break-inside:avoid; margin-bottom:30px; min-height:120px; }
   .card-wrap{
     position:relative; opacity:0; transform:translateY(10px); animation:fadeUp .5s cubic-bezier(.16,.9,.35,1) forwards;
     perspective:900px;
