@@ -75,5 +75,16 @@
     "grupos": [
       "PCP"
     ]
+  },
+  {
+    "title": "PEDIDOS DE COMPRA EM ABERTO",
+    "category": "SUPRIMENTOS",
+    "description": "PEDIDOS DE COMPRA EM ABERTO",
+    "file": "pesquisa pedidos fornecedor _3_.html",
+    "icon": "🧩",
+    "color": "#ff8a3d",
+    "grupos": [
+      "PCP"
+    ]
   }
 ]
