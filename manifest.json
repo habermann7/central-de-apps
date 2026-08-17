@@ -86,5 +86,16 @@
     "grupos": [
       "FINANCEIRO"
     ]
+  },
+  {
+    "title": "Painel de Entregas ATIVA",
+    "category": "PCP",
+    "description": "Desempenho de entregas da transportadora ATIVA",
+    "file": "painel_ativa_v2.html",
+    "icon": "🧩",
+    "color": "#1B2B44",
+    "grupos": [
+      "PCP"
+    ]
   }
 ]
