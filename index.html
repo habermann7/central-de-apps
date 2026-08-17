@@ -293,25 +293,31 @@
   .chip.active{ background:var(--accent-soft); border-color:rgba(217,161,90,.4); color:var(--accent); }
   .chip .chip-count{ opacity:.6; margin-left:4px; }
 
-  /* ===================== APP DO DIA (destaque pequeno, decorativo) ===================== */
+  /* ===================== MAIS ACESSADOS (destaque pequeno, ranking do time) ===================== */
   .app-of-day{
-    display:flex; flex-direction:column; gap:7px; text-decoration:none; color:inherit;
+    display:flex; flex-direction:column; gap:8px;
     background:linear-gradient(160deg, var(--surface), var(--surface-2)); border:1px solid var(--border);
-    border-radius:12px; padding:10px 14px; min-width:220px; transition:border-color .2s ease, transform .2s ease;
+    border-radius:12px; padding:12px 14px; min-width:236px;
   }
-  .app-of-day:hover{ border-color:color-mix(in srgb, var(--accent) 40%, var(--border)); transform:translateY(-2px); }
   .aod-label{
     font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent);
   }
-  .aod-body{ display:flex; align-items:center; gap:10px; }
-  .aod-icon{
-    width:32px; height:32px; border-radius:8px; flex-shrink:0; font-size:14px;
+  .aod-list{ display:flex; flex-direction:column; gap:2px; }
+  .aod-row{
+    display:flex; align-items:center; gap:9px; text-decoration:none; color:inherit;
+    padding:5px 4px; border-radius:8px; transition:background .15s ease;
+  }
+  .aod-row:hover{ background:var(--surface-hover); }
+  .aod-rank{ font-family:var(--mono); font-size:10px; font-weight:700; color:var(--text-faint); width:14px; text-align:center; flex-shrink:0; }
+  .aod-icon-sm{
+    width:24px; height:24px; border-radius:6px; flex-shrink:0; font-size:11px;
     display:flex; align-items:center; justify-content:center;
     background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 34%, transparent), color-mix(in srgb, var(--accent) 12%, transparent));
     border:1px solid color-mix(in srgb, var(--accent) 48%, transparent);
   }
-  .aod-title{ font-size:13px; font-weight:700; color:var(--text); line-height:1.25; text-transform:uppercase; letter-spacing:.02em; }
-  .aod-cat{ font-family:var(--mono); font-size:10px; color:var(--text-faint); margin-top:2px; text-transform:uppercase; letter-spacing:.04em; }
+  .aod-row-info{ min-width:0; }
+  .aod-row-title{ font-size:11.5px; font-weight:700; color:var(--text); line-height:1.2; text-transform:uppercase; letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:150px; }
+  .aod-row-count{ font-family:var(--mono); font-size:9.5px; color:var(--text-faint); margin-top:1px; }
 
   .no-results{
     border:1px dashed var(--border); border-radius:var(--radius); padding:56px 32px; text-align:center; background:var(--surface-2);
@@ -710,16 +716,10 @@
               <span class="hero-rule-line grow"></span>
             </div>
           </div>
-          <a class="app-of-day" id="appOfDay" href="#" style="display:none;">
-            <span class="aod-label">✦ App do dia</span>
-            <div class="aod-body">
-              <span class="aod-icon" id="aodIcon">🧩</span>
-              <div class="aod-info">
-                <div class="aod-title" id="aodTitle">—</div>
-                <div class="aod-cat" id="aodCat">—</div>
-              </div>
-            </div>
-          </a>
+          <div class="app-of-day" id="topAcessados" style="display:none;">
+            <span class="aod-label">🔥 Mais acessados</span>
+            <div class="aod-list" id="aodList"></div>
+          </div>
         </div>
 
         <div class="search-row fade-in" style="animation-delay:.06s;">
@@ -1254,7 +1254,7 @@ function renderRecentRow(apps){
   wrap.style.display = '';
   wrap.innerHTML = '<span class="recent-row-label">Usados recentemente</span>' +
     validos.map(function(app){
-      return '<a class="recent-pill" href="./' + app.file + '" onclick="registrarUso(\'' + escapeAttr(app.file) + '\')">' +
+      return '<a class="recent-pill" href="./' + app.file + '" onclick="abrirApp(this, event, \'' + escapeAttr(app.file) + '\')">' +
         (app.icon || '🧩') + ' ' + escapeAttr(app.title) +
       '</a>';
     }).join('');
@@ -1362,7 +1362,7 @@ function cardHtml(app, i, extraClass){
   const isFav = ehFavorito(app.file);
   return `
     <div class="card-wrap${extraClass ? ' ' + extraClass : ''}" style="animation-delay:${i * 55}ms">
-      <a class="card" href="./${app.file}" style="--accent-card:${app.color || '#D9A15A'}" onclick="registrarUso('${escapeAttr(app.file)}')">
+      <a class="card" href="./${app.file}" style="--accent-card:${app.color || '#D9A15A'}" onclick="abrirApp(this, event, '${escapeAttr(app.file)}')">
         <div class="card-body">
           <div class="card-top">
             <div class="card-icon">${app.icon || '🧩'}</div>
@@ -1457,23 +1457,46 @@ async function loadApps(){
 
 /* ================= app do dia (destaque pequeno e decorativo, fixo por dia) ================= */
 function buildAppOfDay(apps){
-  const el = document.getElementById('appOfDay');
-  if(!el) return;
-  if(!apps.length){ el.style.display = 'none'; return; }
+  const el = document.getElementById('topAcessados');
+  const list = document.getElementById('aodList');
+  if(!el || !list) return Promise.resolve();
+  if(!apps.length){ el.style.display = 'none'; return Promise.resolve(); }
+  return firebase.database().ref('centralApps/acessos').once('value').then(function(snap){
+    const contagem = snap.val() || {};
+    const ranking = apps
+      .map(function(app){ return { app: app, n: contagem[chaveAcesso(app.file)] || 0 }; })
+      .filter(function(r){ return r.n > 0; })
+      .sort(function(a, b){ return b.n - a.n; })
+      .slice(0, 3);
+    if(!ranking.length){ el.style.display = 'none'; return; }
+    list.innerHTML = ranking.map(function(r, i){
+      return '<a class="aod-row" href="./' + r.app.file + '" onclick="abrirApp(this, event, \'' + escapeAttr(r.app.file) + '\')">' +
+        '<span class="aod-rank">' + (i + 1) + '</span>' +
+        '<span class="aod-icon-sm">' + (r.app.icon || '🧩') + '</span>' +
+        '<div class="aod-row-info">' +
+          '<div class="aod-row-title">' + escapeAttr(r.app.title) + '</div>' +
+          '<div class="aod-row-count">' + r.n + (r.n === 1 ? ' acesso' : ' acessos') + '</div>' +
+        '</div>' +
+      '</a>';
+    }).join('');
+    el.style.display = '';
+  }).catch(function(){ el.style.display = 'none'; });
+}
 
-  // escolhe sempre o mesmo app durante o dia todo (troca à meia-noite)
-  const hoje = new Date();
-  const chave = hoje.getFullYear() + '-' + (hoje.getMonth() + 1) + '-' + hoje.getDate();
-  let hash = 0;
-  for(let i = 0; i < chave.length; i++){ hash = (hash * 31 + chave.charCodeAt(i)) >>> 0; }
-  const app = apps[hash % apps.length];
-  if(!app){ el.style.display = 'none'; return; }
+function chaveAcesso(file){ return String(file).replace(/[.#$\/\[\]\s]/g, '_'); }
 
-  document.getElementById('aodIcon').textContent = app.icon || '🧩';
-  document.getElementById('aodTitle').textContent = app.title || app.file;
-  document.getElementById('aodCat').textContent = formatarCategoria(app.category) || 'Estante';
-  el.href = './' + app.file;
-  el.style.display = '';
+function registrarAcessoRemoto(file){
+  try{
+    firebase.database().ref('centralApps/acessos/' + chaveAcesso(file)).set(firebase.database.ServerValue.increment(1));
+  }catch(e){ /* silencioso — não pode travar a navegação por causa disso */ }
+}
+
+function abrirApp(el, e, file){
+  if(e) e.preventDefault();
+  registrarUso(file);
+  registrarAcessoRemoto(file);
+  const href = el.getAttribute('href');
+  setTimeout(function(){ window.location.href = href; }, 120);
 }
 
 /* ================= efeito de "puxar da carteira": tilt 3D leve seguindo o mouse ================= */
