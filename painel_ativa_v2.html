@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Entregas — Transportadora ATIVA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --navy:#1B2B44;
+    --navy-2:#2C4166;
+    --red:#B3261E;
+    --red-bg:#FBEAE9;
+    --amber:#B7791F;
+    --amber-bg:#FBF2E3;
+    --green:#2F7D4F;
+    --green-bg:#E9F5EE;
+    --blue:#2E5C8A;
+    --blue-bg:#EAF1F8;
+    --gray:#6B7280;
+    --gray-2:#9CA3AF;
+    --line:#E3E5E8;
+    --bg:#F5F6F8;
+    --card:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    font-family:'Inter',Arial,sans-serif;
+    color:var(--navy);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1360px;margin:0 auto;padding:28px 32px 60px;}
+
+  header.top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    gap:20px;
+    margin-bottom:24px;
+  }
+  .source-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    font-size:11.5px;
+    font-weight:600;
+    color:var(--navy-2);
+    background:var(--blue-bg);
+    border:1px solid #CFE0EE;
+    padding:5px 12px;
+    border-radius:20px;
+    white-space:nowrap;
+  }
+  .source-pill.custom{background:var(--green-bg);color:var(--green);border-color:#BFE2CC;}
+  .upload-btn{
+    font-family:'Inter',Arial,sans-serif;
+    font-size:12.5px;
+    font-weight:700;
+    border:none;
+    background:var(--navy);
+    color:#fff;
+    padding:8px 15px;
+    border-radius:8px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    transition:.15s;
+  }
+  .upload-btn:hover{background:var(--navy-2);}
+  #restoreBtn{display:none;}
+  .upload-status{
+    font-size:11.5px;
+    color:var(--gray);
+    max-width:260px;
+  }
+  .upload-status.err{color:var(--red);font-weight:600;}
+  .eyebrow{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.14em;
+    color:var(--red);
+    text-transform:uppercase;
+    margin:0 0 6px;
+  }
+  h1{
+    font-size:26px;
+    font-weight:800;
+    margin:0 0 4px;
+    letter-spacing:-0.01em;
+  }
+  .subtitle{
+    font-size:13.5px;
+    color:var(--gray);
+    margin:0;
+  }
+
+  .filterbar{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px 18px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    flex-wrap:wrap;
+    box-shadow:0 1px 2px rgba(16,24,40,.04);
+  }
+  .filterbar .flabel{
+    font-size:11px;
+    font-weight:700;
+    color:var(--gray);
+    text-transform:uppercase;
+    letter-spacing:.06em;
+  }
+  .filterbar input[type=date]{
+    font-family:'Inter',Arial,sans-serif;
+    font-size:13px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:7px 10px;
+    color:var(--navy);
+    background:#fff;
+  }
+  .filterbar .sep{color:var(--gray-2);font-size:13px;}
+  .chip-btn{
+    font-family:'Inter',Arial,sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--navy-2);
+    padding:7px 13px;
+    border-radius:20px;
+    cursor:pointer;
+    transition:.15s;
+  }
+  .chip-btn:hover{background:#F0F2F5;}
+  .chip-btn.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+  #resetBtn{margin-left:auto;color:var(--red);border-color:#F0C9C6;}
+  #resetBtn:hover{background:var(--red-bg);}
+  .countLabel{font-size:12.5px;color:var(--gray);white-space:nowrap;}
+  .countLabel b{color:var(--navy);}
+
+  .kpi-row{
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:14px;
+    margin:22px 0;
+  }
+  .kpi{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 16px 14px;
+    box-shadow:0 1px 2px rgba(16,24,40,.04);
+  }
+  .kpi .klabel{
+    font-size:11px;
+    font-weight:700;
+    color:var(--gray);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    margin-bottom:8px;
+  }
+  .kpi .kvalue{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:26px;
+    font-weight:600;
+    line-height:1;
+    color:var(--navy);
+  }
+  .kpi .ksub{
+    font-size:11.5px;
+    color:var(--gray);
+    margin-top:6px;
+  }
+  .kpi.danger .kvalue{color:var(--red);}
+  .kpi.warn .kvalue{color:var(--amber);}
+  .kpi.good .kvalue{color:var(--green);}
+
+  .grid2{
+    display:grid;
+    grid-template-columns:1.3fr 1fr;
+    gap:16px;
+    margin-bottom:16px;
+  }
+  .grid2b{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    margin-bottom:16px;
+  }
+  .panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:20px 22px 16px;
+    box-shadow:0 1px 2px rgba(16,24,40,.04);
+  }
+  .panel h3{
+    font-size:14.5px;
+    font-weight:700;
+    margin:0 0 2px;
+    color:var(--navy);
+  }
+  .panel .phint{
+    font-size:11.5px;
+    color:var(--gray);
+    margin:0 0 14px;
+  }
+  .chart-box{position:relative;}
+
+  table.datatable{
+    width:100%;
+    border-collapse:collapse;
+    font-size:12.5px;
+  }
+  table.datatable th{
+    text-align:left;
+    font-size:10.5px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:var(--gray);
+    padding:7px 8px;
+    border-bottom:1px solid var(--line);
+  }
+  table.datatable td{
+    padding:7px 8px;
+    border-bottom:1px solid #F0F1F3;
+    color:var(--navy-2);
+  }
+  table.datatable tr:last-child td{border-bottom:none;}
+  .tag{
+    display:inline-block;
+    font-size:10.5px;
+    font-weight:700;
+    padding:2px 8px;
+    border-radius:20px;
+  }
+  .tag.red{background:var(--red-bg);color:var(--red);}
+  .tag.amber{background:var(--amber-bg);color:var(--amber);}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  .badge-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+  .legend-pill{
+    display:flex;align-items:center;gap:6px;
+    font-size:11.5px;color:var(--gray);
+  }
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+
+  .callout{
+    display:flex;
+    gap:14px;
+    background:var(--red-bg);
+    border:1px dashed #E3A7A2;
+    border-radius:10px;
+    padding:14px 16px;
+    margin-top:14px;
+    align-items:flex-start;
+  }
+  .callout .cnum{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:20px;
+    font-weight:700;
+    color:var(--red);
+    white-space:nowrap;
+  }
+  .callout p{margin:0;font-size:12.5px;color:#7A3330;line-height:1.5;}
+  .callout b{color:var(--red);}
+
+  footer{
+    margin-top:28px;
+    font-size:11px;
+    color:var(--gray-2);
+    text-align:center;
+  }
+
+  @media (max-width:1100px){
+    .kpi-row{grid-template-columns:repeat(3,1fr);}
+    .grid2, .grid2b{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <p class="eyebrow">Torre de Controle · Logística</p>
+      <h1>Painel de Entregas — Transportadora ATIVA</h1>
+      <p class="subtitle">STIN Pharma · painel interativo de desempenho de entregas</p>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none;">
+        <button class="upload-btn" id="uploadBtn">⟲ Atualizar planilha</button>
+        <button class="chip-btn" id="restoreBtn" style="display:inline-block;">🔄 Recarregar do banco</button>
+      </div>
+      <span class="source-pill" id="sourcePill">Carregando do banco...</span>
+      <span class="upload-status" id="uploadStatus"></span>
+    </div>
+  </header>
+
+  <div class="filterbar">
+    <span class="flabel">Data prevista de entrega</span>
+    <input type="date" id="dateFrom">
+    <span class="sep">até</span>
+    <input type="date" id="dateTo">
+    <button class="chip-btn" data-range="7">Últimos 7 dias</button>
+    <button class="chip-btn" data-range="14">Últimos 14 dias</button>
+    <button class="chip-btn active" data-range="all">Todo o período</button>
+    <span class="countLabel">Mostrando <b id="countShown">–</b> de <b id="countTotal">–</b> remessas</span>
+    <button class="chip-btn" id="resetBtn">Limpar filtro</button>
+  </div>
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="panel" style="margin-bottom:16px;">
+    <h3>% Dentro do prazo por dia</h3>
+    <p class="phint">Evolução diária do percentual de remessas dentro do prazo, por data prevista de entrega</p>
+    <div class="chart-box" style="height:260px;"><canvas id="prazoDiarioChart"></canvas></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h3>Status das remessas</h3>
+      <p class="phint">Distribuição de todas as remessas no período filtrado, por situação de prazo</p>
+      <div class="chart-box" style="height:260px;"><canvas id="statusChart"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>Prazo de entrega dos pedidos entregues</h3>
+      <p class="phint">Dias em relação à previsão (negativo = antes do prazo)</p>
+      <div class="chart-box" style="height:260px;"><canvas id="prazoChart"></canvas></div>
+    </div>
+  </div>
+
+
+  <div class="grid2b">
+    <div class="panel">
+      <h3>Maior dificuldade — % de problema por praça</h3>
+      <p class="phint">Praças com maior taxa de atraso/não entrega (mín. 8 remessas no período)</p>
+      <div class="chart-box" style="height:280px;"><canvas id="dificuldadeChart"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>Maior oportunidade — volume de problema por praça</h3>
+      <p class="phint">Praças que concentram o maior número absoluto de remessas com problema</p>
+      <div class="chart-box" style="height:280px;"><canvas id="oportunidadeChart"></canvas></div>
+      <div class="callout" id="opportunityCallout"></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h3>Gargalo das não entregues</h3>
+      <p class="phint">Última ocorrência registrada nas remessas ainda não entregues</p>
+      <div class="chart-box" style="height:300px;"><canvas id="gargaloChart"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>Maiores atrasos</h3>
+      <p class="phint">Top remessas por dias de atraso — entregues e em aberto</p>
+      <table class="datatable" id="topDelaysTable">
+        <thead><tr><th>CTRC</th><th>Praça</th><th>Status</th><th>Dias</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>Painel gerado a partir da base de remessas ATIVA · atraso calculado em relação à data de previsão de entrega · referência de "hoje": 10/08/2026 para remessas em aberto</footer>
+</div>
+
+<script>
+var DB_ROOT = 'painelAtiva';
+function fbRef(path){ return firebase.database().ref(DB_ROOT + (path ? '/' + path : '')); }
+
+let DEFAULT_DATA = [];
+let ALL = [];
+let dadosCarregados = false;
+
+function mostrarCarregando(msg){
+  document.getElementById('kpiRow').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6B7280;font-size:13.5px;">${msg}</div>`;
+}
+
+function loadDataFromFirebase(){
+  mostrarCarregando('⏳ Carregando dados do banco...');
+  document.getElementById('sourcePill').textContent = 'Carregando do banco...';
+  fbRef('registros').once('value').then((snap)=>{
+    const val = snap.val();
+    DEFAULT_DATA = val || [];
+    ALL = DEFAULT_DATA;
+    dadosCarregados = true;
+    if(!ALL.length){
+      mostrarCarregando('Nenhum dado encontrado em painelAtiva/registros. Suba uma planilha pelo botão "Atualizar planilha", ou rode o seed uma vez.');
+      document.getElementById('sourcePill').textContent = 'Sem dados no banco ainda';
+      return;
+    }
+    refreshDateBounds();
+    setActiveChip(document.querySelector('.chip-btn[data-range="all"]'));
+    applyFilters();
+    document.getElementById('sourcePill').textContent = `Dados do banco (${ALL.length} registros)`;
+    document.getElementById('sourcePill').classList.remove('custom');
+  }).catch((err)=>{
+    mostrarCarregando('❌ Não consegui carregar os dados do banco (' + err.message + '). Confere as Regras do Firebase pro nó "painelAtiva".');
+    document.getElementById('sourcePill').textContent = 'Erro ao carregar';
+  });
+}
+
+const COLORS = {
+  'Antes do prazo':'#2F7D4F',
+  'No prazo':'#2E5C8A',
+  'Atrasado':'#B3261E',
+  'Dentro do prazo (em aberto)':'#9CA3AF',
+  'Atrasado (em aberto)':'#7A1E18'
+};
+const STATUS_ORDER = ['Antes do prazo','No prazo','Atrasado','Dentro do prazo (em aberto)','Atrasado (em aberto)'];
+const PROBLEM_STATUSES = ['Atrasado','Atrasado (em aberto)'];
+
+let charts = {};
+
+function fmtPct(n){ return n.toFixed(1).replace('.',',') + '%'; }
+function fmtNum(n){ return n.toLocaleString('pt-BR'); }
+
+function computeAndRender(rows){
+  document.getElementById('countShown').textContent = fmtNum(rows.length);
+  document.getElementById('countTotal').textContent = fmtNum(ALL.length);
+
+  const total = rows.length;
+  const entregues = rows.filter(r=>r.ent);
+  const naoEntregues = rows.filter(r=>!r.ent);
+  const problemas = rows.filter(r=>PROBLEM_STATUSES.includes(r.status));
+  const noPrazo = rows.filter(r=>['Antes do prazo','No prazo','Dentro do prazo (em aberto)'].includes(r.status));
+  const atrasadosEntregues = entregues.filter(r=>r.status==='Atrasado');
+  const atrasoMedio = atrasadosEntregues.length
+    ? (atrasadosEntregues.reduce((s,r)=>s+r.dias,0)/atrasadosEntregues.length)
+    : 0;
+
+  renderKPIs({total, entregues, naoEntregues, problemas, noPrazo, atrasoMedio});
+  renderPrazoDiarioChart(rows);
+  renderStatusChart(rows);
+  renderPrazoChart(entregues);
+  renderPracaCharts(rows);
+  renderGargaloChart(naoEntregues);
+  renderTopDelays(rows);
+}
+
+function renderKPIs({total, entregues, naoEntregues, problemas, noPrazo, atrasoMedio}){
+  const kpis = [
+    {label:'Total de remessas', value: fmtNum(total), sub:'no período filtrado', cls:''},
+    {label:'Entregues', value: fmtNum(entregues.length), sub: total? fmtPct(entregues.length/total*100)+' do total':'—', cls:'good'},
+    {label:'Não entregues', value: fmtNum(naoEntregues.length), sub: total? fmtPct(naoEntregues.length/total*100)+' do total':'—', cls:'danger'},
+    {label:'Com atraso', value: fmtNum(problemas.length), sub: total? fmtPct(problemas.length/total*100)+' do total (entreg. + aberto)':'—', cls:'danger'},
+    {label:'Dentro do prazo', value: total? fmtPct(noPrazo.length/total*100):'–', sub: fmtNum(noPrazo.length)+' remessas', cls:'good'},
+    {label:'Atraso médio', value: atrasoMedio? atrasoMedio.toFixed(1).replace('.',',')+' d': '0 d', sub:'entregues com atraso', cls:'warn'},
+  ];
+  document.getElementById('kpiRow').innerHTML = kpis.map(k=>`
+    <div class="kpi ${k.cls}">
+      <div class="klabel">${k.label}</div>
+      <div class="kvalue">${k.value}</div>
+      <div class="ksub">${k.sub}</div>
+    </div>`).join('');
+}
+
+function upsertChart(id, config){
+  if(charts[id]){ charts[id].destroy(); }
+  const ctx = document.getElementById(id).getContext('2d');
+  charts[id] = new Chart(ctx, config);
+}
+
+function renderStatusChart(rows){
+  const counts = STATUS_ORDER.map(s=>rows.filter(r=>r.status===s).length);
+  upsertChart('statusChart', {
+    type:'bar',
+    data:{
+      labels: STATUS_ORDER,
+      datasets:[{
+        data: counts,
+        backgroundColor: STATUS_ORDER.map(s=>COLORS[s]),
+        borderRadius:6,
+        maxBarThickness:46,
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` ${fmtNum(c.parsed.x)} remessas`}}},
+      scales:{
+        x:{beginAtZero:true, grid:{color:'#F0F1F3'}, ticks:{font:{size:11}}},
+        y:{grid:{display:false}, ticks:{font:{size:11.5}, color:'#374151'}}
+      }
+    }
+  });
+}
+
+function renderPrazoChart(entregues){
+  const buckets = {};
+  entregues.forEach(r=>{
+    let k = r.dias;
+    if(k <= -3) k = '≤ -3';
+    else if(k >= 3) k = '≥ 3';
+    else k = String(k);
+    buckets[k] = (buckets[k]||0)+1;
+  });
+  const order = ['≤ -3','-2','-1','0','1','2','≥ 3'];
+  const data = order.map(k=>buckets[k]||0);
+  const colors = order.map(k=>{
+    if(k==='0') return '#2E5C8A';
+    if(k.includes('-')||k==='≤ -3') return '#2F7D4F';
+    return '#B3261E';
+  });
+  upsertChart('prazoChart', {
+    type:'bar',
+    data:{ labels: order.map(o=>o==='0'?'no dia':o+' d'), datasets:[{data, backgroundColor:colors, borderRadius:6, maxBarThickness:38}] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` ${fmtNum(c.parsed.y)} remessas`}}},
+      scales:{
+        y:{beginAtZero:true, grid:{color:'#F0F1F3'}, ticks:{font:{size:11}, precision:0}},
+        x:{grid:{display:false}, ticks:{font:{size:11}}}
+      }
+    }
+  });
+}
+
+function renderPrazoDiarioChart(rows){
+  const ON_TIME = ['Antes do prazo','No prazo','Dentro do prazo (em aberto)'];
+  const byDay = {};
+  rows.forEach(r=>{
+    if(!r.prev) return;
+    if(!byDay[r.prev]) byDay[r.prev] = {total:0, ontime:0};
+    byDay[r.prev].total++;
+    if(ON_TIME.includes(r.status)) byDay[r.prev].ontime++;
+  });
+  const days = Object.keys(byDay).sort();
+  const pct = days.map(d=> byDay[d].total ? byDay[d].ontime/byDay[d].total*100 : 0);
+  const labels = days.map(d=>{
+    const [y,m,dd] = d.split('-');
+    return `${dd}/${m}`;
+  });
+  const colors = pct.map(p=> p>=90 ? '#2F7D4F' : (p>=70 ? '#B7791F' : '#B3261E'));
+  const dataLabelPlugin = {
+    id: 'dataLabelPlugin_prazoDiario',
+    afterDatasetsDraw(chart){
+      const {ctx, data, scales:{x,y}} = chart;
+      ctx.save();
+      ctx.font = '600 11px -apple-system, Segoe UI, Arial, sans-serif';
+      ctx.fillStyle = '#374151';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      data.datasets[0].data.forEach((v,i)=>{
+        const xPos = x.getPixelForValue(i);
+        const yPos = y.getPixelForValue(v);
+        ctx.fillText(fmtPct(v), xPos, yPos - 4);
+      });
+      ctx.restore();
+    }
+  };
+  upsertChart('prazoDiarioChart', {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{
+        data: pct,
+        backgroundColor: colors,
+        borderRadius:6,
+        maxBarThickness:38,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      layout:{padding:{top:18}},
+      plugins:{legend:{display:false}, tooltip:{callbacks:{
+        label:c=>{ const d=days[c.dataIndex]; const v=byDay[d]; return ` ${fmtPct(c.parsed.y)} dentro do prazo (${v.ontime} de ${v.total} remessas)`; }
+      }}},
+      scales:{
+        y:{beginAtZero:true, max:100, grid:{color:'#F0F1F3'}, ticks:{callback:v=>v+'%', font:{size:11}}},
+        x:{grid:{display:false}, ticks:{font:{size:11}}}
+      }
+    },
+    plugins:[dataLabelPlugin]
+  });
+}
+
+function renderPracaCharts(rows){
+  const byPraca = {};
+  rows.forEach(r=>{
+    const p = r.praca || '—';
+    if(!byPraca[p]) byPraca[p] = {total:0, problemas:0};
+    byPraca[p].total++;
+    if(PROBLEM_STATUSES.includes(r.status)) byPraca[p].problemas++;
+  });
+  let arr = Object.entries(byPraca).map(([praca,v])=>({
+    praca, total:v.total, problemas:v.problemas, pct: v.total? v.problemas/v.total*100 : 0
+  }));
+
+  // Dificuldade: min volume 8, top 8 by pct
+  const dificuldade = arr.filter(a=>a.total>=8).sort((a,b)=>b.pct-a.pct).slice(0,8);
+  upsertChart('dificuldadeChart', {
+    type:'bar',
+    data:{
+      labels: dificuldade.map(a=>a.praca),
+      datasets:[{
+        data: dificuldade.map(a=>a.pct),
+        backgroundColor:'#B3261E',
+        borderRadius:6, maxBarThickness:30,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{
+        label:c=>{ const d=dificuldade[c.dataIndex]; return ` ${fmtPct(d.pct)} (${d.problemas} de ${d.total} remessas)`; }
+      }}},
+      scales:{
+        y:{beginAtZero:true, max:100, grid:{color:'#F0F1F3'}, ticks:{callback:v=>v+'%', font:{size:11}}},
+        x:{grid:{display:false}, ticks:{font:{size:12,weight:'600'}, color:'#374151'}}
+      }
+    }
+  });
+
+  // Oportunidade: top 8 by absolute problem count
+  const oportunidade = arr.filter(a=>a.problemas>0).sort((a,b)=>b.problemas-a.problemas).slice(0,8);
+  upsertChart('oportunidadeChart', {
+    type:'bar',
+    data:{
+      labels: oportunidade.map(a=>a.praca),
+      datasets:[{
+        data: oportunidade.map(a=>a.problemas),
+        backgroundColor:'#2C4166',
+        borderRadius:6, maxBarThickness:30,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{
+        label:c=>{ const d=oportunidade[c.dataIndex]; return ` ${fmtNum(d.problemas)} remessas com problema (${fmtPct(d.pct)} do total da praça)`; }
+      }}},
+      scales:{
+        y:{beginAtZero:true, grid:{color:'#F0F1F3'}, ticks:{font:{size:11}, precision:0}},
+        x:{grid:{display:false}, ticks:{font:{size:12,weight:'600'}, color:'#374151'}}
+      }
+    }
+  });
+
+  const top = oportunidade[0];
+  const shareTotal = arr.reduce((s,a)=>s+a.problemas,0);
+  if(top && shareTotal>0){
+    const share = top.problemas/shareTotal*100;
+    document.getElementById('opportunityCallout').innerHTML = `
+      <div class="cnum">${fmtPct(share)}</div>
+      <p>de todas as remessas com problema no período filtrado estão concentradas em <b>${top.praca}</b>
+      (${fmtNum(top.problemas)} de ${fmtNum(shareTotal)}) — maior alavancagem de melhoria isolada.</p>`;
+  } else {
+    document.getElementById('opportunityCallout').innerHTML = '';
+  }
+}
+
+function renderGargaloChart(naoEntregues){
+  const counts = {};
+  naoEntregues.forEach(r=>{
+    const o = r.ocor || '(sem ocorrência)';
+    counts[o] = (counts[o]||0)+1;
+  });
+  const arr = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  upsertChart('gargaloChart', {
+    type:'bar',
+    data:{
+      labels: arr.map(a=>a[0]),
+      datasets:[{ data: arr.map(a=>a[1]), backgroundColor:'#B7791F', borderRadius:6, maxBarThickness:26 }]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` ${fmtNum(c.parsed.x)} remessas`}}},
+      scales:{
+        x:{beginAtZero:true, grid:{color:'#F0F1F3'}, ticks:{font:{size:11}, precision:0}},
+        y:{grid:{display:false}, ticks:{font:{size:10.8}, color:'#374151'}}
+      }
+    }
+  });
+}
+
+function renderTopDelays(rows){
+  const delayed = rows.filter(r=>PROBLEM_STATUSES.includes(r.status)).sort((a,b)=>b.dias-a.dias).slice(0,12);
+  const tbody = document.querySelector('#topDelaysTable tbody');
+  tbody.innerHTML = delayed.map(r=>`
+    <tr>
+      <td class="mono">${r.ctrc}</td>
+      <td>${r.praca}</td>
+      <td><span class="tag ${r.status==='Atrasado'?'red':'amber'}">${r.status==='Atrasado'?'Entregue c/ atraso':'Em aberto, atrasado'}</span></td>
+      <td class="mono">${r.dias} d</td>
+    </tr>`).join('');
+}
+
+// ---------------- Filtering ----------------
+function parseDate(s){ return s ? new Date(s+'T00:00:00') : null; }
+
+function applyFilters(){
+  const from = document.getElementById('dateFrom').value;
+  const to = document.getElementById('dateTo').value;
+  const fromD = parseDate(from), toD = parseDate(to);
+  const filtered = ALL.filter(r=>{
+    const d = parseDate(r.prev);
+    if(fromD && d < fromD) return false;
+    if(toD && d > toD) return false;
+    return true;
+  });
+  computeAndRender(filtered);
+}
+
+function setActiveChip(el){
+  document.querySelectorAll('.chip-btn[data-range]').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+}
+
+let minDate, maxDate;
+
+function refreshDateBounds(){
+  const allDates = ALL.map(r=>r.prev).sort();
+  minDate = allDates[0]; maxDate = allDates[allDates.length-1];
+  document.getElementById('dateFrom').min = minDate;
+  document.getElementById('dateFrom').max = maxDate;
+  document.getElementById('dateTo').min = minDate;
+  document.getElementById('dateTo').max = maxDate;
+  document.getElementById('dateFrom').value = '';
+  document.getElementById('dateTo').value = '';
+}
+
+document.getElementById('dateFrom').addEventListener('change', ()=>{ setActiveChip(null); applyFilters(); });
+document.getElementById('dateTo').addEventListener('change', ()=>{ setActiveChip(null); applyFilters(); });
+
+document.querySelectorAll('.chip-btn[data-range]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    setActiveChip(btn);
+    const range = btn.dataset.range;
+    if(range==='all'){
+      document.getElementById('dateFrom').value = '';
+      document.getElementById('dateTo').value = '';
+    } else {
+      const days = parseInt(range,10);
+      const max = new Date(maxDate+'T00:00:00');
+      const from = new Date(max); from.setDate(from.getDate()-days+1);
+      document.getElementById('dateFrom').value = from.toISOString().slice(0,10);
+      document.getElementById('dateTo').value = maxDate;
+    }
+    applyFilters();
+  });
+});
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  document.getElementById('dateFrom').value = '';
+  document.getElementById('dateTo').value = '';
+  setActiveChip(document.querySelector('.chip-btn[data-range="all"]'));
+  applyFilters();
+});
+
+// ---------------- Upload de nova planilha ----------------
+const REQUIRED_COLS = ['CTRC/SUBCON','TIPO','NOME DESTINATARIO','PRACA','NFISCAL','ULTIMA OCORRENC','DATA PREV ENTREGA','DATA DA ENTREGA'];
+const OCOR_FIXES = {'AGUARDANDO EMABRQUE':'AGUARDANDO EMBARQUE','RETIDADO NA CIA':'RETIRADO NA CIA','AGUARDANDO RETIRAR NO AEROPORTO':'AGUARDANDO RETIRADA NO AEROPORTO'};
+
+function excelSerialToDate(n){
+  // Excel serial date (1900 system) -> JS Date at local midnight
+  const utcDays = Math.round(n) - 25569;
+  const utcMs = utcDays * 86400 * 1000;
+  const d = new Date(utcMs);
+  return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+}
+
+function toDateOrNull(v){
+  if(v === null || v === undefined || v === '') return null;
+  if(v instanceof Date && !isNaN(v)) return new Date(v.getFullYear(), v.getMonth(), v.getDate());
+  if(typeof v === 'number') return excelSerialToDate(v);
+  if(typeof v === 'string'){
+    const s = v.trim();
+    let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+    if(m){
+      let [,d,mo,y] = m;
+      if(y.length===2) y = '20'+y;
+      return new Date(parseInt(y), parseInt(mo)-1, parseInt(d));
+    }
+    m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(m) return new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+    const d2 = new Date(s);
+    if(!isNaN(d2)) return d2;
+  }
+  return null;
+}
+
+function isoDate(d){
+  if(!d) return null;
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+function diffDays(a,b){ return Math.round((a - b) / 86400000); }
+
+function classifyRow(prevD, entD, today){
+  if(entD){
+    const d = diffDays(entD, prevD);
+    if(d < 0) return ['Antes do prazo', d];
+    if(d === 0) return ['No prazo', d];
+    return ['Atrasado', d];
+  } else {
+    const d = diffDays(today, prevD);
+    if(d > 0) return ['Atrasado (em aberto)', d];
+    return ['Dentro do prazo (em aberto)', d];
+  }
+}
+
+function normOcor(x){
+  if(!x) return '';
+  const u = String(x).trim().toUpperCase();
+  return OCOR_FIXES[u] || u;
+}
+
+function parseWorkbookToRecords(wb){
+  const sheetName = wb.SheetNames[0];
+  const ws = wb.Sheets[sheetName];
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
+  if(!rows.length) throw new Error('Planilha vazia.');
+
+  const header = rows[0].map(h => String(h||'').trim().toUpperCase());
+  const idx = {};
+  header.forEach((h,i)=>{ idx[h] = i; });
+
+  const missing = REQUIRED_COLS.filter(c => !(c in idx));
+  if(missing.length){
+    throw new Error('Colunas não encontradas na planilha: ' + missing.join(', '));
+  }
+
+  const today = (()=>{ const t = new Date(); return new Date(t.getFullYear(), t.getMonth(), t.getDate()); })();
+
+  const records = [];
+  for(let i=1; i<rows.length; i++){
+    const r = rows[i];
+    if(!r || r.every(c => c===null || c==='')) continue;
+    const prevD = toDateOrNull(r[idx['DATA PREV ENTREGA']]);
+    if(!prevD) continue; // sem data prevista não dá para classificar
+    const entD = toDateOrNull(r[idx['DATA DA ENTREGA']]);
+    const [status, dias] = classifyRow(prevD, entD, today);
+    records.push({
+      ctrc: r[idx['CTRC/SUBCON']],
+      nf: idx['NFISCAL']!==undefined ? r[idx['NFISCAL']] : null,
+      tipo: r[idx['TIPO']],
+      dest: r[idx['NOME DESTINATARIO']],
+      uf: idx['UF DESTINO']!==undefined ? r[idx['UF DESTINO']] : null,
+      praca: r[idx['PRACA']],
+      prev: isoDate(prevD),
+      ent: entD ? isoDate(entD) : null,
+      status, dias,
+      ocor: normOcor(r[idx['ULTIMA OCORRENC']]),
+    });
+  }
+  if(!records.length) throw new Error('Nenhuma linha válida encontrada (verifique a coluna DATA PREV ENTREGA).');
+  return records;
+}
+
+function showUploadStatus(msg, isErr){
+  const el = document.getElementById('uploadStatus');
+  el.textContent = msg;
+  el.classList.toggle('err', !!isErr);
+}
+
+document.getElementById('uploadBtn').addEventListener('click', ()=> document.getElementById('fileInput').click());
+
+document.getElementById('fileInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  showUploadStatus('Lendo ' + file.name + '…', false);
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    try{
+      const data = new Uint8Array(ev.target.result);
+      const wb = XLSX.read(data, {type:'array', cellDates:true});
+      const records = parseWorkbookToRecords(wb);
+      if(!confirm('Isso vai SUBSTITUIR os dados do painel pra todo mundo que usa esse app (' + records.length + ' registros). Confirma?')){
+        e.target.value = '';
+        showUploadStatus('', false);
+        return;
+      }
+      showUploadStatus('Salvando no banco...', false);
+      fbRef('registros').set(records).then(()=>{
+        ALL = records;
+        DEFAULT_DATA = records;
+        refreshDateBounds();
+        setActiveChip(document.querySelector('.chip-btn[data-range="all"]'));
+        applyFilters();
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
+        document.getElementById('sourcePill').textContent = `${file.name} · atualizado às ${hh}:${mm} (${records.length} registros)`;
+        document.getElementById('sourcePill').classList.add('custom');
+        showUploadStatus('Planilha carregada e salva no banco — todo mundo que abrir o painel já vê os dados novos.', false);
+      }).catch((err)=>{
+        showUploadStatus('Não consegui salvar no banco (' + err.message + '). Os dados NÃO foram atualizados.', true);
+      });
+    }catch(err){
+      showUploadStatus('Erro ao ler a planilha: ' + err.message, true);
+    }
+  };
+  reader.onerror = ()=> showUploadStatus('Não foi possível ler o arquivo.', true);
+  reader.readAsArrayBuffer(file);
+  e.target.value = '';
+});
+
+document.getElementById('restoreBtn').addEventListener('click', ()=>{
+  showUploadStatus('', false);
+  loadDataFromFirebase();
+});
+</script>
+
+<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
+  <div style="max-width:320px;width:100%;">
+    <div id="__gateMsg" style="font-size:14px;color:#8a93a3;line-height:1.6;">Verificando acesso...</div>
+  </div>
+</div>
+<style id="__gateStyle">body > *:not(#__gateOverlay){ display:none !important; }</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
+<script>
+(function(){
+  var GRUPOS_PERMITIDOS = ["LOGISTICA"]; // <-- AJUSTA AQUI pro(s) grupo(s) certo(s) antes de publicar
+  var firebaseConfig = {
+    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+    authDomain: "stinpharma-qualidade.firebaseapp.com",
+    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+    projectId: "stinpharma-qualidade",
+    storageBucket: "stinpharma-qualidade.firebasestorage.app",
+    messagingSenderId: "422803826984",
+    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+    measurementId: "G-6C0TLHH2VP"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  function liberar(){
+    var st = document.getElementById('__gateStyle');
+    var ov = document.getElementById('__gateOverlay');
+    if(st) st.remove();
+    if(ov) ov.remove();
+  }
+  function negar(msg){
+    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Central de Apps</a>';
+  }
+  var jaResolveu = false;
+  setTimeout(function(){
+    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
+  }, 10000);
+  firebase.auth().onAuthStateChanged(function(user){
+    jaResolveu = true;
+    if(!user){ negar('Você precisa entrar pela Central de Apps.'); return; }
+    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
+      var dados = snap.val();
+      var meusGrupos = (dados && dados.grupos) || [];
+      var permitido = GRUPOS_PERMITIDOS.some(function(g){ return meusGrupos.indexOf(g) !== -1; });
+      if(permitido){ liberar(); loadDataFromFirebase(); } else { negar('Você não tem permissão pra acessar este app.'); }
+    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
+  });
+})();
+</script>
+</body>
+</html>
