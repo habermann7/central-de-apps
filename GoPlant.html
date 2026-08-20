@@ -178,49 +178,51 @@
     transition:background-color .14s var(--ease), border-color .14s var(--ease);}
   #projectName:hover,#projectName:focus{border-color:var(--line); background:var(--paper-2); outline:none;}
   #topbar .spacer{flex:1;}
+  .hist-group{display:flex; align-items:center; gap:1px; margin-left:2px; flex:none;}
+  .hist-group button{width:30px; height:30px; border:none; background:transparent; border-radius:var(--radius-sm);
+    display:flex; align-items:center; justify-content:center; color:var(--ink-soft);
+    transition:background-color .14s var(--ease), color .14s var(--ease);}
+  .hist-group button:hover{background:var(--paper-2); color:var(--ink);}
+  .hist-group button svg{width:16px; height:16px;}
   #saveStatus{font-family:var(--mono); font-size:10px; color:var(--ink-soft); white-space:nowrap; padding-right:2px;}
   #saveStatus.pf-save-flash{animation:pf-save-flash .7s var(--ease);}
 
-  /* left vertical tool rail */
-  /* ---- barra horizontal centralizada em baixo ---- */
+  @keyframes pf-rail-in{ from{opacity:0; transform:translateY(-50%) translateX(-14px);} to{opacity:1; transform:translateY(-50%) translateX(0);} }
+  /* left vertical tool rail — estilo Miro: fica centralizado na lateral esquerda */
   #toolGroup{
-    left:50%; bottom:16px; top:auto; transform:translateX(-50%);
-    display:flex; flex-direction:row; align-items:center; gap:2px; padding:5px 8px;
-    animation:pf-slide-up .38s var(--ease) backwards; animation-delay:.05s;
-    border-radius:24px; box-shadow:0 6px 24px rgba(28,20,12,.18), 0 1px 4px rgba(28,20,12,.1);
+    left:16px; top:50%; bottom:auto; transform:translateY(-50%);
+    display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 5px;
+    animation:pf-rail-in .38s var(--ease) backwards; animation-delay:.05s;
+    border-radius:20px; box-shadow:0 6px 24px rgba(28,20,12,.18), 0 1px 4px rgba(28,20,12,.1);
   }
   #toolGroup button{
-    width:42px; height:42px; border:none; background:transparent; border-radius:16px;
+    width:42px; height:42px; border:none; background:transparent; border-radius:14px;
     display:flex; align-items:center; justify-content:center; flex-direction:column;
     color:var(--ink-soft); position:relative; gap:2px;
     transition:background-color .14s var(--ease), color .14s var(--ease), transform .15s var(--ease);
   }
-  #toolGroup button:hover{background:var(--paper-2); color:var(--ink); transform:translateY(-2px);}
-  #toolGroup button:active{transform:translateY(0);}
+  #toolGroup button:hover{background:var(--paper-2); color:var(--ink); transform:translateX(2px);}
+  #toolGroup button:active{transform:translateX(0);}
   #toolGroup button.active{background:var(--ink); color:#fff; box-shadow:0 2px 8px rgba(28,20,12,.25);}
   #toolGroup button svg{width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;}
-  #toolGroup button .key-badge{font-family:var(--mono); font-size:8px; font-weight:700; color:inherit; opacity:.5; line-height:1; letter-spacing:.02em;}
-  #toolGroup .rail-sep{width:1px; height:28px; background:var(--line); margin:0 4px; flex-shrink:0;}
+  #toolGroup button .key-badge{display:none;}
+  #toolGroup .rail-sep{height:1px; width:26px; background:var(--line); margin:4px 0; flex-shrink:0;}
   #toolGroup button .tip{
-    position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%) translateY(4px);
+    position:absolute; left:calc(100% + 10px); top:50%; transform:translateY(-50%) translateX(-4px);
     background:var(--ink); color:#fff; font-size:11px; font-weight:600; padding:5px 9px; border-radius:8px;
     white-space:nowrap; opacity:0; pointer-events:none;
     transition:opacity .15s var(--ease), transform .15s var(--ease); z-index:20;
   }
-  #toolGroup button .tip::after{content:""; position:absolute; top:100%; left:50%; transform:translateX(-50%);
-    border:5px solid transparent; border-top-color:var(--ink);}
-  #toolGroup button:hover .tip{opacity:1; transform:translateX(-50%) translateY(0);}
-  #snapBtn{font-size:9px; font-family:var(--mono); font-weight:700; width:34px !important;}
-  #snapBtn .key-badge{display:none;}
-  /* texto dentro de snapBtn lido via JS, fica no textNode */
+  #toolGroup button .tip::after{content:""; position:absolute; right:100%; top:50%; transform:translateY(-50%);
+    border:5px solid transparent; border-right-color:var(--ink);}
+  #toolGroup button:hover .tip{opacity:1; transform:translateY(-50%) translateX(0);}
   @media (max-width:900px){
-    #toolGroup{bottom:10px; gap:1px; padding:4px 6px;}
+    #toolGroup{left:8px; gap:1px; padding:6px 4px;}
     #toolGroup button{width:38px; height:38px;}
-    #toolGroup .rail-sep{height:22px; margin:0 2px;}
   }
 
   /* types panel (left, next to rail) */
-  #typesPanel{left:14px; top:66px; width:218px; max-height:calc(100vh - 180px); overflow-y:auto; padding:13px;
+  #typesPanel{left:82px; top:66px; width:218px; max-height:calc(100vh - 180px); overflow-y:auto; padding:13px;
     animation:pf-slide-left .38s var(--ease) backwards; animation-delay:.1s;
     opacity:1; visibility:visible; transform:translateX(0);
     transition:opacity .2s var(--ease), transform .2s var(--ease), visibility 0s linear 0s;}
@@ -301,7 +303,7 @@
   .chk-row input{width:auto !important; margin-top:0 !important;}
 
   /* area chip (bottom-left) */
-  #areaChip{left:14px; bottom:80px; display:flex; align-items:center; gap:12px; padding:8px 13px; font-size:12px;
+  #areaChip{left:14px; bottom:16px; display:flex; align-items:center; gap:12px; padding:8px 13px; font-size:12px;
     animation:pf-slide-up .38s var(--ease) backwards; animation-delay:.14s;}
   #areaChip b{font-size:14px;}
   #areaChip .tgt{display:flex; align-items:center; gap:6px; color:var(--ink-soft);}
@@ -311,7 +313,7 @@
   .mini{font-size:11px; color:var(--ink-soft);}
 
   /* outline editing bar (bottom, appears in outline mode) */
-  #outlineBar{display:none; left:50%; bottom:70px; transform:translateX(-50%); align-items:center; gap:11px;
+  #outlineBar{display:none; left:50%; bottom:16px; transform:translateX(-50%); align-items:center; gap:11px;
     padding:9px 14px; font-size:12px; flex-wrap:wrap; max-width:min(760px, calc(100vw - 40px));}
   #outlineBar.visible{display:flex; animation:pf-slide-up .26s var(--ease);}
   #outlineBar .tgt{display:flex; align-items:center; gap:6px; color:var(--ink-soft); flex-wrap:wrap;}
@@ -322,12 +324,19 @@
   label.chk{display:flex; align-items:center; gap:5px; color:var(--ink-soft); font-size:11.5px;}
 
   /* bottom-right: view toggle + zoom */
-  #viewDock{right:12px; bottom:80px; z-index:13; display:flex; align-items:center; gap:8px; padding:6px 8px;
+  #viewDock{right:12px; bottom:16px; z-index:13; display:flex; align-items:center; gap:8px; padding:6px 8px;
     animation:pf-slide-up .38s var(--ease) backwards; animation-delay:.14s;}
   #viewDock .zoom{display:flex; align-items:center; gap:1px;}
   #viewDock .zoom button{border:none; background:transparent; width:27px; height:27px; font-size:14px;
     border-radius:var(--radius-sm); color:var(--ink-soft); transition:background-color .14s var(--ease), color .14s var(--ease);}
   #viewDock .zoom button:hover{background:var(--paper-2); color:var(--ink);}
+  #viewDock .view-toggles{display:flex; align-items:center; gap:1px; border-left:1px solid var(--line); padding-left:7px; margin-left:1px;}
+  #viewDock .view-toggles button{width:27px; height:27px; border:none; background:transparent; border-radius:var(--radius-sm);
+    display:flex; align-items:center; justify-content:center; color:var(--ink-soft);
+    transition:background-color .14s var(--ease), color .14s var(--ease);}
+  #viewDock .view-toggles button svg{width:15px; height:15px;}
+  #viewDock .view-toggles button:hover{background:var(--paper-2); color:var(--ink);}
+  #viewDock .view-toggles button.active{background:var(--ink); color:#fff;}
   #zoomLabel{font-family:var(--mono); font-size:11px; width:40px; text-align:center; color:var(--ink-soft);}
   .fit-btn{width:auto !important; padding:0 9px !important; font-size:11px; font-family:var(--mono);}
 
@@ -367,9 +376,9 @@
     .dash-head,.dash-hero,.dash-bar{padding-left:18px; padding-right:18px;}
     .proj-grid{padding:16px 18px 46px; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:14px;}
     .dash-hero h1{font-size:23px;}
-    #typesPanel{width:172px; left:12px; top:58px;}
+    #typesPanel{width:172px; left:56px; top:58px;}
     #propsPanel{width:206px;}
-    #areaChip{left:10px; bottom:76px; gap:9px; padding:7px 10px; font-size:11px;}
+    #areaChip{left:10px; bottom:12px; gap:9px; padding:7px 10px; font-size:11px;}
     #topbar{gap:6px; padding:6px 8px;}
     #topbar .hide-sm{display:none;}
     .brand-wordmark small{display:none;}
@@ -518,7 +527,7 @@
      BIBLIOTECA DE OBJETOS (painel lateral)
   ══════════════════════════════════════ */
   #objLibraryPanel{
-    position:absolute; left:14px; top:58px; bottom:70px; width:224px;
+    position:absolute; left:82px; top:58px; bottom:70px; width:224px;
     background:rgba(255,255,255,.97); -webkit-backdrop-filter:blur(12px);
     backdrop-filter:blur(12px); border:1px solid var(--line); border-radius:var(--radius-lg);
     box-shadow:var(--shadow-float); z-index:12;
@@ -702,6 +711,18 @@
         <span class="hide-sm">Projetos</span>
       </button>
       <input id="projectName" type="text" value="Novo Projeto" spellcheck="false">
+      <div class="hist-group">
+        <button id="undoBtn" title="Desfazer (Ctrl+Z)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9h13a5 5 0 010 10H9"/><path d="M7 5L3 9l4 4"/>
+          </svg>
+        </button>
+        <button id="redoBtn" title="Refazer (Ctrl+Shift+Z)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 9H8a5 5 0 000 10h7"/><path d="M17 5l4 4-4 4"/>
+          </svg>
+        </button>
+      </div>
       <span id="saveStatus">—</span>
       <div class="spacer"></div>
       <button class="btn ghost hide-sm" id="newProjectBtn" style="display:none">Novo projeto</button>
@@ -798,76 +819,6 @@
         <span class="key-badge">E</span><span class="tip">Editar contorno &nbsp;<kbd>E</kbd></span>
       </button>
 
-      <div class="rail-sep"></div>
-
-      <!-- ── GRUPO 3: histórico ──────────────────────── -->
-      <!-- Desfazer: seta curva anti-horária (universal) -->
-      <button id="undoBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 9h13a5 5 0 010 10H9"/>
-          <path d="M7 5L3 9l4 4"/>
-        </svg>
-        <span class="key-badge">Z</span><span class="tip">Desfazer &nbsp;<kbd>Ctrl+Z</kbd></span>
-      </button>
-
-      <!-- Refazer: seta curva horária (espelho exato do undo) -->
-      <button id="redoBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 9H8a5 5 0 000 10h7"/>
-          <path d="M17 5l4 4-4 4"/>
-        </svg>
-        <span class="key-badge">⇧Z</span><span class="tip">Refazer &nbsp;<kbd>Ctrl+⇧Z</kbd></span>
-      </button>
-
-      <div class="rail-sep"></div>
-
-      <!-- ── GRUPO 4: visualização ───────────────────── -->
-      <!-- Snap: ímã (metáfora universal de snap/encaixe — draw.io, Figma) -->
-      <button id="snapBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M6 4v6a6 6 0 0012 0V4"/>
-          <path d="M4 20h16"/>
-          <line x1="12" y1="16" x2="12" y2="20"/>
-        </svg>
-        <span class="key-badge">S</span><span class="tip">Encaixe na grade &nbsp;(alterna)</span>
-      </button>
-
-      <!-- Foco: maximizar / expandir (Miro usa 4 cantos com setas) -->
-      <button id="focusModeBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M8 3H5a2 2 0 00-2 2v3"/>
-          <path d="M21 8V5a2 2 0 00-2-2h-3"/>
-          <path d="M3 16v3a2 2 0 002 2h3"/>
-          <path d="M16 21h3a2 2 0 002-2v-3"/>
-        </svg>
-        <span class="key-badge">F</span><span class="tip">Tela cheia &nbsp;<kbd>F</kbd></span>
-      </button>
-
-      <div class="rail-sep"></div>
-
-      <!-- ── GRUPO 5: utilitários ────────────────────── -->
-      <!-- Minimapa: mapa pequeno com ponto de localização (Figma map pin style) -->
-      <button id="minimapBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="3 7 9 4 15 7 21 4 21 17 15 20 9 17 3 20"/>
-          <polyline points="9 4 9 17"/>
-          <polyline points="15 7 15 20"/>
-        </svg>
-        <span class="key-badge">M</span><span class="tip">Minimapa &nbsp;<kbd>M</kbd></span>
-      </button>
-
-      <!-- Régua: símbolo de régua com marcações (draw.io/SmartDraw) -->
-      <button id="rulerBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="8" width="20" height="8" rx="2"/>
-          <line x1="6"  y1="8" x2="6"  y2="13"/>
-          <line x1="10" y1="8" x2="10" y2="11"/>
-          <line x1="14" y1="8" x2="14" y2="13"/>
-          <line x1="18" y1="8" x2="18" y2="11"/>
-        </svg>
-        <span class="key-badge">R</span><span class="tip">Régua &nbsp;<kbd>R</kbd></span>
-      </button>
-
     </nav>
 
     <aside id="typesPanel" class="float hideable">
@@ -910,6 +861,28 @@
         <span id="zoomLabel">100%</span>
         <button id="zoomIn" title="Aumentar zoom">+</button>
         <button class="fit-btn" id="zoomReset">Ajustar</button>
+      </div>
+      <div class="view-toggles">
+        <button id="snapBtn" class="active" title="Encaixe na grade: 0,1m (clique para alternar) — S">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 4v6a6 6 0 0012 0V4"/><path d="M4 20h16"/><line x1="12" y1="16" x2="12" y2="20"/>
+          </svg>
+        </button>
+        <button id="focusModeBtn" title="Tela cheia — F">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3H5a2 2 0 00-2 2v3"/><path d="M21 8V5a2 2 0 00-2-2h-3"/><path d="M3 16v3a2 2 0 002 2h3"/><path d="M16 21h3a2 2 0 002-2v-3"/>
+          </svg>
+        </button>
+        <button id="minimapBtn" title="Minimapa — M">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="3 7 9 4 15 7 21 4 21 17 15 20 9 17 3 20"/><polyline points="9 4 9 17"/><polyline points="15 7 15 20"/>
+          </svg>
+        </button>
+        <button id="rulerBtn" title="Régua — R">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="8" width="20" height="8" rx="2"/><line x1="6" y1="8" x2="6" y2="13"/><line x1="10" y1="8" x2="10" y2="11"/><line x1="14" y1="8" x2="14" y2="13"/><line x1="18" y1="8" x2="18" y2="11"/>
+          </svg>
+        </button>
       </div>
     </div>
   </section>
@@ -1070,25 +1043,6 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
-<script>
-  // Mesma sessão da Central de Apps (a pessoa já logou lá antes de chegar aqui).
-  var __gpFirebaseConfig = {
-    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
-    authDomain: "stinpharma-qualidade.firebaseapp.com",
-    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
-    projectId: "stinpharma-qualidade",
-    storageBucket: "stinpharma-qualidade.firebasestorage.app",
-    messagingSenderId: "422803826984",
-    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
-    measurementId: "G-6C0TLHH2VP"
-  };
-  if(!firebase.apps.length) firebase.initializeApp(__gpFirebaseConfig);
-  var gpFbdb = firebase.database();
-</script>
-
 <script>
 (function(){
   "use strict";
@@ -1097,7 +1051,6 @@
   const MIN_DIM = 0.6;
   const STORE_KEY = "goplant_workspace_v1";
   const LEGACY_KEY = "goplant_project_v1";
-  const FB_PATH = "goplant/workspace";
   const PX_PER_METER = 50;
 
   /* ================= state ================= */
@@ -1306,30 +1259,18 @@
     if(!p.updatedAt) p.updatedAt=p.createdAt;
     return p;
   }
-  async function loadWorkspace(){
+  function loadWorkspace(){
     let loaded=false;
-    // 1) tenta puxar do Firebase primeiro — é o dado mais atual, compartilhado com o time
     try{
-      const snap = await gpFbdb.ref(FB_PATH).once("value");
-      const w = snap.val();
-      if(w && Array.isArray(w.projects)){
-        workspace = {v:1, projects:w.projects.map(normalizeProject).filter(Boolean), lastOpenedId:w.lastOpenedId||null};
-        loaded = workspace.projects.length>0;
-      }
-    }catch(e){ setSaveStatus("Sem conexão — abrindo cópia local"); }
-    // 2) se não veio nada do Firebase (offline, ou primeira vez), usa o que tiver salvo neste navegador
-    if(!loaded){
-      try{
-        const raw = localStorage.getItem(STORE_KEY);
-        if(raw){
-          const w = JSON.parse(raw);
-          if(w && Array.isArray(w.projects)){
-            workspace = {v:1, projects:w.projects.map(normalizeProject).filter(Boolean), lastOpenedId:w.lastOpenedId||null};
-            loaded = workspace.projects.length>0;
-          }
+      const raw = localStorage.getItem(STORE_KEY);
+      if(raw){
+        const w = JSON.parse(raw);
+        if(w && Array.isArray(w.projects)){
+          workspace = {v:1, projects:w.projects.map(normalizeProject).filter(Boolean), lastOpenedId:w.lastOpenedId||null};
+          loaded = workspace.projects.length>0;
         }
-      }catch(e){}
-    }
+      }
+    }catch(e){}
     if(!loaded){
       try{
         const legacy = localStorage.getItem(LEGACY_KEY);
@@ -1342,14 +1283,7 @@
     return loaded;
   }
   function saveWorkspace(){
-    try{
-      localStorage.setItem(STORE_KEY, JSON.stringify(workspace));
-      // sincroniza com o time em segundo plano — não trava a interface esperando a nuvem responder
-      gpFbdb.ref(FB_PATH).set(workspace).catch(function(){
-        setSaveStatus("Salvo neste computador — sem conexão com o time agora");
-      });
-      return true;
-    }
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(workspace)); return true; }
     catch(e){ return false; }
   }
   function setSaveStatus(text, flash){
@@ -1746,7 +1680,9 @@
     const classes = [];
     if(b.id===justPlacedId) classes.push("pf-pop-in");
     if(isSelected) classes.push("pf-selected-glow");
-    const g = svgEl("g", {"data-block-id": b.id, style:"cursor:move;", "class":classes.join(" ")});
+    const attrs = {"data-block-id": b.id, style:"cursor:move;", "class":classes.join(" ")};
+    if(b.rotation) attrs.transform = "rotate("+b.rotation+" "+(b.x+b.w/2)+" "+(b.y+b.h/2)+")";
+    const g = svgEl("g", attrs);
 
     /* usar forma customizada se disponível, senão retângulo padrão */
     renderObjShape(g, b, t, isSelected);
@@ -1765,11 +1701,20 @@
   }
   function handlesGroup(b){
     const g = svgEl("g",{}); const hs=0.28;
+    const cx=b.x+b.w/2, cy=b.y+b.h/2;
+    if(b.rotation) g.setAttribute("transform","rotate("+b.rotation+" "+cx+" "+cy+")");
     [{h:"nw",x:b.x,y:b.y},{h:"n",x:b.x+b.w/2,y:b.y},{h:"ne",x:b.x+b.w,y:b.y},{h:"e",x:b.x+b.w,y:b.y+b.h/2},
      {h:"se",x:b.x+b.w,y:b.y+b.h},{h:"s",x:b.x+b.w/2,y:b.y+b.h},{h:"sw",x:b.x,y:b.y+b.h},{h:"w",x:b.x,y:b.y+b.h/2}]
     .forEach(function(p){
       g.appendChild(svgEl("rect",{x:p.x-hs/2,y:p.y-hs/2,width:hs,height:hs, fill:"#E8912B", stroke:"#fff","stroke-width":0.02,"data-handle":p.h}));
     });
+    /* alça de rotação livre: puxa de qualquer ângulo, não só de 90 em 90.
+       tem uma área de clique invisível bem maior por baixo — o alvo visual pequeno
+       era fácil de errar, e errar significava agarrar a forma e "arrastar" ela sem querer. */
+    const ry = b.y - Math.max(0.9, Math.min(b.w,b.h)*0.45);
+    g.appendChild(svgEl("line",{x1:cx,y1:b.y,x2:cx,y2:ry+0.2, stroke:"#E8912B","stroke-width":0.025,"stroke-dasharray":"0.08,0.06"}));
+    g.appendChild(svgEl("circle",{cx:cx,cy:ry,r:0.42, fill:"transparent","data-handle":"rotate",style:"cursor:grab;"}));
+    g.appendChild(svgEl("circle",{cx:cx,cy:ry,r:0.23, fill:"#fff", stroke:"#E8912B","stroke-width":0.06,"data-handle":"rotate",style:"cursor:grab; pointer-events:none;"}));
     return g;
   }
   function lineGroup(ln, isSelected){
@@ -1934,11 +1879,27 @@
     /* remove pontos praticamente repetidos */
     return pts.filter(function(p,i,arr){ return i===0 || Math.hypot(p.x-arr[i-1].x,p.y-arr[i-1].y)>0.01; });
   }
+  function nearestAnchorPt(node, towardPt){
+    let best=null, bd=Infinity;
+    ["n","s","e","w"].forEach(function(a){
+      const p=anchorPt(node,a), d=Math.hypot(p.x-towardPt.x, p.y-towardPt.y);
+      if(d<bd){ bd=d; best=p; }
+    });
+    return best;
+  }
   function edgePoints(ed){
     const a=getNode(ed.from), b=getNode(ed.to);
     if(!a||!b) return null;
-    const pair=bestAnchors(a,b);
-    return ed.style==="straight" ? [{x:pair.a.x,y:pair.a.y},{x:pair.b.x,y:pair.b.y}] : elbowPoints(pair.a, pair.b);
+    let pa, pb;
+    if(!ed.fromAnchor && !ed.toAnchor){
+      const pair=bestAnchors(a,b); pa=pair.a; pb=pair.b;
+    } else {
+      pb = ed.toAnchor ? anchorPt(b, ed.toAnchor) : null;
+      pa = ed.fromAnchor ? anchorPt(a, ed.fromAnchor) : null;
+      if(!pa) pa = nearestAnchorPt(a, pb || anchorPt(b,"n"));
+      if(!pb) pb = nearestAnchorPt(b, pa);
+    }
+    return ed.style==="straight" ? [pa,pb] : elbowPoints(pa,pb);
   }
   function pathMidpoint(pts){
     let total=0; const segs=[];
@@ -1961,7 +1922,9 @@
       const classes=[];
       if(n.id===justPlacedId) classes.push("pf-pop-in");
       if(isSel) classes.push("pf-selected-glow");
-      const g = svgEl("g",{"data-node-id":n.id, style:"cursor:move;", "class":classes.join(" ")});
+      const attrs={"data-node-id":n.id, style:"cursor:move;", "class":classes.join(" ")};
+      if(n.rotation) attrs.transform="rotate("+n.rotation+" "+(n.x+n.w/2)+" "+(n.y+n.h/2)+")";
+      const g = svgEl("g",attrs);
       if(n.img){
         g.appendChild(svgEl("image",{x:n.x,y:n.y,width:n.w,height:n.h,href:n.img,preserveAspectRatio:"none"}));
       } else {
@@ -1976,11 +1939,13 @@
     const classes = [];
     if(n.id===justPlacedId) classes.push("pf-pop-in");
     if(isSel) classes.push("pf-selected-glow");
-    const g = svgEl("g",{"data-node-id":n.id, style:"cursor:move;", "class":classes.join(" ")});
-    const stroke  = isSel ? "#E8912B" : shade(col,-30);
-    const sw      = isSel ? 0.07 : 0.035;
     const x=n.x, y=n.y, w=n.w, hh=n.h;
     const cx=x+w/2, cy=y+hh/2;
+    const gAttrs={"data-node-id":n.id, style:"cursor:move;", "class":classes.join(" ")};
+    if(n.rotation) gAttrs.transform="rotate("+n.rotation+" "+cx+" "+cy+")";
+    const g = svgEl("g",gAttrs);
+    const stroke  = isSel ? "#E8912B" : shade(col,-30);
+    const sw      = isSel ? 0.07 : 0.035;
 
     function fillStroke(el){
       el.setAttribute("fill", col); el.setAttribute("fill-opacity","0.9");
@@ -2217,15 +2182,22 @@
   /* alças APENAS nos 4 cantos — meios das arestas ficam livres para as âncoras */
   function cornerHandles(n){
     const g=svgEl("g",{}); const hs=0.26;
+    const cx=n.x+n.w/2, cy=n.y+n.h/2;
+    if(n.rotation) g.setAttribute("transform","rotate("+n.rotation+" "+cx+" "+cy+")");
     [{h:"nw",x:n.x,y:n.y},{h:"ne",x:n.x+n.w,y:n.y},{h:"se",x:n.x+n.w,y:n.y+n.h},{h:"sw",x:n.x,y:n.y+n.h}]
     .forEach(function(p){
       g.appendChild(svgEl("rect",{x:p.x-hs/2,y:p.y-hs/2,width:hs,height:hs,fill:"#E8912B",
         stroke:"#fff","stroke-width":0.02,"data-handle":p.h}));
     });
+    const ry = n.y - Math.max(0.55, Math.min(n.w,n.h)*0.3);
+    g.appendChild(svgEl("line",{x1:cx,y1:n.y,x2:cx,y2:ry+0.2, stroke:"#E8912B","stroke-width":0.025,"stroke-dasharray":"0.08,0.06"}));
+    g.appendChild(svgEl("circle",{cx:cx,cy:ry,r:0.42, fill:"transparent","data-handle":"rotate",style:"cursor:grab;"}));
+    g.appendChild(svgEl("circle",{cx:cx,cy:ry,r:0.23, fill:"#fff", stroke:"#E8912B","stroke-width":0.06,"data-handle":"rotate",style:"cursor:grab; pointer-events:none;"}));
     return g;
   }
   function nodeAnchorDots(n){
     const g=svgEl("g",{"class":"anchor-dots"});
+    if(n.rotation) g.setAttribute("transform","rotate("+n.rotation+" "+(n.x+n.w/2)+" "+(n.y+n.h/2)+")");
     ["n","s","e","w"].forEach(function(a){
       const p=anchorPt(n,a);
       g.appendChild(svgEl("circle",{cx:p.x,cy:p.y,r:0.17,fill:"#fff",stroke:"#E8912B","stroke-width":0.05,
@@ -2263,6 +2235,16 @@
     }
     return g;
   }
+  function edgeHandles(ed){
+    const pts=edgePoints(ed); if(!pts) return null;
+    const g=svgEl("g",{});
+    const p1=pts[0], p2=pts[pts.length-1];
+    g.appendChild(svgEl("circle",{cx:p1.x,cy:p1.y,r:0.18,fill:"#fff",stroke:"#E8912B","stroke-width":0.05,
+      "data-edge-endpoint":"from","data-edge-id":ed.id, style:"cursor:crosshair;"}));
+    g.appendChild(svgEl("circle",{cx:p2.x,cy:p2.y,r:0.18,fill:"#fff",stroke:"#E8912B","stroke-width":0.05,
+      "data-edge-endpoint":"to","data-edge-id":ed.id, style:"cursor:crosshair;"}));
+    return g;
+  }
 
   function renderFlow(){
     /* grade de fundo do quadro */
@@ -2278,13 +2260,33 @@
       if(el) canvas2d.appendChild(el);
     });
     state.nodes.forEach(function(n){
-      canvas2d.appendChild(shapeNode(n, selection && selection.kind==="node" && selection.id===n.id));
+      canvas2d.appendChild(shapeNode(n, isSelected("node", n.id)));
     });
     /* ancoras aparecem na forma selecionada ou sob o cursor */
     const showFor = (selection && selection.kind==="node") ? getNode(selection.id) : (hoverNodeId?getNode(hoverNodeId):null);
     if(showFor) canvas2d.appendChild(nodeAnchorDots(showFor));
     if(selection && selection.kind==="node"){
       const n=getNode(selection.id); if(n) canvas2d.appendChild(cornerHandles(n));
+    }
+    if(selection && selection.kind==="edge"){
+      const ed=getEdge(selection.id);
+      if(ed){ const eh=edgeHandles(ed); if(eh) canvas2d.appendChild(eh); }
+    }
+    /* arrastando a ponta de um conector: mostra âncora de TODA forma, pra poder soltar em qualquer lado */
+    if(dragCtx && dragCtx.type==="edge-endpoint"){
+      state.nodes.forEach(function(n){ canvas2d.appendChild(nodeAnchorDots(n)); });
+      const ed=getEdge(dragCtx.edgeId);
+      if(ed && lastMouseSvgPt){
+        const otherNode = getNode(dragCtx.end==="from" ? ed.to : ed.from);
+        if(otherNode){
+          const fixedPt = dragCtx.end==="from"
+            ? (ed.toAnchor?anchorPt(otherNode,ed.toAnchor):nearestAnchorPt(otherNode,lastMouseSvgPt))
+            : (ed.fromAnchor?anchorPt(otherNode,ed.fromAnchor):nearestAnchorPt(otherNode,lastMouseSvgPt));
+          canvas2d.appendChild(svgEl("line",{x1:fixedPt.x,y1:fixedPt.y,x2:lastMouseSvgPt.x,y2:lastMouseSvgPt.y,
+            stroke:"#E8912B","stroke-width":0.06,"stroke-dasharray":"0.2,0.14","stroke-linecap":"round"}));
+        }
+        canvas2d.appendChild(svgEl("circle",{cx:lastMouseSvgPt.x,cy:lastMouseSvgPt.y,r:0.15,fill:"#E8912B"}));
+      }
     }
     /* previa do conector sendo criado */
     if(dragCtx && dragCtx.type==="connect" && lastMouseSvgPt){
@@ -2305,6 +2307,19 @@
     return null;
   }
 
+  /* preview tracejado enquanto arrasta pra desenhar uma forma/bloco do tamanho que quiser */
+  function drawDrawPreview(){
+    if(!dragCtx || (dragCtx.type!=="draw-node" && dragCtx.type!=="draw-block")) return;
+    const r = rectFromPts(dragCtx.startPt, dragCtx.curPt);
+    canvas2d.appendChild(svgEl("rect",{x:r.x,y:r.y,width:r.w,height:r.h,rx:0.06,
+      fill:"rgba(232,145,43,.1)", stroke:"#E8912B","stroke-width":0.045,"stroke-dasharray":"0.14,0.09"}));
+    if(r.w>0.15 || r.h>0.15){
+      const label=svgEl("text",{x:r.x+r.w/2,y:r.y+r.h+0.32,"text-anchor":"middle","font-size":0.3,
+        "font-family":"var(--mono)",fill:"#7A4A0E","font-weight":"600"});
+      label.textContent = r.w.toFixed(2).replace(".",",")+" × "+r.h.toFixed(2).replace(".",",")+" m";
+      canvas2d.appendChild(label);
+    }
+  }
   function render2D(){
     if(!state) return;
     canvas2d.setAttribute("viewBox", view2d.x+" "+view2d.y+" "+view2d.w+" "+view2d.h);
@@ -2330,6 +2345,7 @@
         }
         canvas2d.appendChild(g);
       });
+      drawDrawPreview();
       return;
     }
 
@@ -2340,7 +2356,7 @@
     canvas2d.appendChild(polygonEl(outlinePointsForSvg(), {fill:"none", stroke:"#3A3227","stroke-width":0.05}));
 
     state.blocks.forEach(function(b){
-      canvas2d.appendChild(blockGroup(b, selection && selection.kind==="block" && selection.id===b.id));
+      canvas2d.appendChild(blockGroup(b, isSelected("block", b.id)));
     });
     state.lines.forEach(function(ln){
       canvas2d.appendChild(lineGroup(ln, selection && selection.kind==="line" && selection.id===ln.id));
@@ -2362,6 +2378,7 @@
       const lw=Math.abs(lassoCtx.x1-lassoCtx.x0), lh2=Math.abs(lassoCtx.y1-lassoCtx.y0);
       canvas2d.appendChild(svgEl("rect",{x:lx,y:ly,width:lw,height:lh2,"class":"lasso-rect"}));
     }
+    drawDrawPreview();
     if(outlineMode) canvas2d.appendChild(outlineOverlay());
     drawAlignGuides();
     drawRuler();
@@ -2396,6 +2413,17 @@
     canvas3d.innerHTML="";
     const ISO=Math.PI/6, cos30=Math.cos(ISO), sin30=Math.sin(ISO);
     function proj(x,y,z){ return {x:(x-y)*cos30, y:(x+y)*sin30 - z}; }
+    /* cantos do bloco já girados em torno do próprio centro, ANTES de projetar em isométrico —
+       sem isso a 3D sempre mostrava o bloco reto, mesmo depois de girado na 2D */
+    function rotatedCorners(b){
+      const corners=[{x:b.x,y:b.y},{x:b.x+b.w,y:b.y},{x:b.x+b.w,y:b.y+b.h},{x:b.x,y:b.y+b.h}];
+      if(!b.rotation) return corners;
+      const cx=b.x+b.w/2, cy=b.y+b.h/2, r=b.rotation*Math.PI/180, c=Math.cos(r), s=Math.sin(r);
+      return corners.map(function(p){
+        const dx=p.x-cx, dy=p.y-cy;
+        return {x:cx+dx*c-dy*s, y:cy+dx*s+dy*c};
+      });
+    }
     let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
     function consider(p){ if(p.x<minX)minX=p.x; if(p.x>maxX)maxX=p.x; if(p.y<minY)minY=p.y; if(p.y>maxY)maxY=p.y; }
 
@@ -2408,13 +2436,14 @@
       const t=getType(b.typeId);
       const flatShapes=["swimlane","group_box","bpmn_pool","bpmn_lane","uml_fork"];
       if(t.flat || flatShapes.includes(b.shape)){
-        const pts=[proj(b.x,b.y,0.02),proj(b.x+b.w,b.y,0.02),proj(b.x+b.w,b.y+b.h,0.02),proj(b.x,b.y+b.h,0.02)];
+        const rc=rotatedCorners(b);
+        const pts=rc.map(function(p){ return proj(p.x,p.y,0.02); });
         pts.forEach(consider);
         items.push({depth:b.x+b.y+0.005, node: polygonEl(pts,{fill:shade(t.color||b.color||"#9AA5B1",10),"fill-opacity":0.55, stroke:shade(t.color||b.color||"#9AA5B1",-20),"stroke-width":0.02})});
         return;
       }
       const height=t.height3d || (b.shape ? 1.2 : 1.5);
-      const corners=[{x:b.x,y:b.y},{x:b.x+b.w,y:b.y},{x:b.x+b.w,y:b.y+b.h},{x:b.x,y:b.y+b.h}];
+      const corners=rotatedCorners(b);
       const base=corners.map(function(p){return proj(p.x,p.y,0);}), top=corners.map(function(p){return proj(p.x,p.y,height);});
       base.forEach(consider); top.forEach(consider);
       const depth=b.x+b.y;
@@ -2478,10 +2507,12 @@
     btn.addEventListener("click", function(){ setTool(btn.dataset.tool); });
   });
 
-  function placeBlockAt(pt){
-    const type = getType(armedTypeId);
-    const nb = {id:uid("b"), typeId:type.id, x:snapVal(pt.x-type.w/2), y:snapVal(pt.y-type.h/2),
-                w:type.w, h:type.h, rotation:0, label:""};
+  function placeBlockAt(pt, rect, typeIdArg){
+    const type = getType(typeIdArg || armedTypeId);
+    let x,y,w,h;
+    if(rect && rect.w>=0.3 && rect.h>=0.3){ x=rect.x; y=rect.y; w=rect.w; h=rect.h; }
+    else { w=type.w; h=type.h; x=pt.x-w/2; y=pt.y-h/2; }
+    const nb = {id:uid("b"), typeId:type.id, x:snapVal(x), y:snapVal(y), w:snapVal(w), h:snapVal(h), rotation:0, label:""};
     state.blocks.push(nb);
     armedTypeId=null; selection={kind:"block", id:nb.id}; justPlacedId=nb.id;
     setTool("select"); renderCurrent(); renderProps(); scheduleSave();
@@ -2533,14 +2564,55 @@
       ev.stopPropagation();
     });
   }
-  function placeNodeAt(pt){
-    const def=shapeDef(armedShape);
-    const n={id:uid("n"), shape:armedShape, x:snapVal(pt.x-def.w/2), y:snapVal(pt.y-def.h/2),
-             w:def.w, h:def.h, text:"", color:def.color};
+  function placeNodeAt(pt, rect, shapeKey){
+    const shape = shapeKey || armedShape;
+    const def=shapeDef(shape);
+    let x,y,w,h;
+    if(rect && rect.w>=0.4 && rect.h>=0.3){ x=rect.x; y=rect.y; w=rect.w; h=rect.h; }
+    else { w=def.w; h=def.h; x=pt.x-w/2; y=pt.y-h/2; }
+    const n={id:uid("n"), shape:shape, x:snapVal(x), y:snapVal(y), w:snapVal(w), h:snapVal(h), text:"", color:def.color, rotation:0};
     state.nodes.push(n);
     armedShape=null; selection={kind:"node", id:n.id}; justPlacedId=n.id;
     renderFlowPalette(); render2D(); renderProps(); scheduleSave();
     setTimeout(function(){ justPlacedId=null; }, 450);
+  }
+  function rectFromPts(a,b){ return {x:Math.min(a.x,b.x), y:Math.min(a.y,b.y), w:Math.abs(b.x-a.x), h:Math.abs(b.y-a.y)}; }
+  /* re-orienta um delta de mouse (mundo) pro referencial local da forma girada,
+     assim redimensionar continua fazendo sentido mesmo com rotação livre aplicada */
+  function rotDeltaToLocal(dx, dy, deg){
+    if(!deg) return {dx:dx, dy:dy};
+    const r = -deg*Math.PI/180, c=Math.cos(r), s=Math.sin(r);
+    return { dx: dx*c - dy*s, dy: dx*s + dy*c };
+  }
+  /* redimensiona mantendo o canto/lado OPOSTO ao que está sendo arrastado fixo no mundo real —
+     sem isso, girar uma forma e depois puxar uma alça faz ela "andar" pro lado, porque o
+     x/y (canto local) muda mas o centro girado se desloca junto. */
+  function resizeKeepingAnchor(o, handle, dx, dy, minW, minH){
+    let w=Math.max(minW,o.w), h=Math.max(minH,o.h);
+    if(handle.indexOf("e")>=0) w=Math.max(minW,o.w+dx);
+    if(handle.indexOf("s")>=0) h=Math.max(minH,o.h+dy);
+    if(handle.indexOf("w")>=0) w=Math.max(minW,o.w-dx);
+    if(handle.indexOf("n")>=0) h=Math.max(minH,o.h-dy);
+    const rot = o.rotation||0;
+    if(!rot){
+      let x=o.x, y=o.y;
+      if(handle.indexOf("w")>=0) x=o.x+(o.w-w);
+      if(handle.indexOf("n")>=0) y=o.y+(o.h-h);
+      return {x:x, y:y, w:w, h:h};
+    }
+    /* ponto-âncora (lado/canto oposto à alça) expresso como offset do CENTRO antigo, em local */
+    let ax=0, ay=0;
+    if(handle.indexOf("e")>=0) ax=-o.w/2; else if(handle.indexOf("w")>=0) ax=o.w/2;
+    if(handle.indexOf("s")>=0) ay=-o.h/2; else if(handle.indexOf("n")>=0) ay=o.h/2;
+    const r=rot*Math.PI/180, c=Math.cos(r), s=Math.sin(r);
+    const oldCx=o.x+o.w/2, oldCy=o.y+o.h/2;
+    const anchorWX = oldCx + (ax*c - ay*s), anchorWY = oldCy + (ax*s + ay*c);
+    /* mesmo offset relativo, agora com o w/h NOVO — dá o novo centro que mantém a âncora no lugar */
+    let nax=0, nay=0;
+    if(handle.indexOf("e")>=0) nax=-w/2; else if(handle.indexOf("w")>=0) nax=w/2;
+    if(handle.indexOf("s")>=0) nay=-h/2; else if(handle.indexOf("n")>=0) nay=h/2;
+    const newCx = anchorWX - (nax*c - nay*s), newCy = anchorWY - (nax*s + nay*c);
+    return {x:newCx-w/2, y:newCy-h/2, w:w, h:h};
   }
 
   /* ---- edicao de texto no proprio desenho (duplo clique) ---- */
@@ -2652,7 +2724,10 @@
         canvas2d.setPointerCapture(e.pointerId); return;
       }
       if(textTool){ placeTextAt(pt); return; }
-      if(armedShape){ placeNodeAt(pt); return; }
+      if(armedShape){
+        dragCtx={type:"draw-node", startPt:pt, curPt:pt, shape:armedShape};
+        canvas2d.setPointerCapture(e.pointerId); return;
+      }
       /* duplo clique detectado na mão: o re-render entre os cliques impede o evento nativo */
       const nowT = Date.now();
       const overNode = nodeAt(pt);
@@ -2671,16 +2746,39 @@
       }
       const hEl = e.target.closest("[data-handle]");
       if(hEl && selection && selection.kind==="node"){
-        dragCtx={type:"node-resize", handle:hEl.dataset.handle, nodeId:selection.id, startPt:pt, orig:Object.assign({},getNode(selection.id))};
+        const n0=getNode(selection.id);
+        if(!n0) return;
+        if(hEl.dataset.handle==="rotate"){
+          const cx0=n0.x+n0.w/2, cy0=n0.y+n0.h/2;
+          dragCtx={type:"rotate", nodeId:selection.id, kind:"node", cx:cx0, cy:cy0,
+            startRotation:n0.rotation||0, startAngle:Math.atan2(pt.y-cy0, pt.x-cx0)};
+          canvas2d.setPointerCapture(e.pointerId); return;
+        }
+        dragCtx={type:"node-resize", handle:hEl.dataset.handle, nodeId:selection.id, startPt:pt, orig:Object.assign({},n0)};
         canvas2d.setPointerCapture(e.pointerId); return;
       }
       const nEl = e.target.closest("[data-node-id]");
       if(nEl){
         const id=nEl.dataset.nodeId;
+        if(e.shiftKey){
+          toggleMultiSel("node", id);
+          render2D(); renderProps(); return;
+        }
+        if(selection && selection.kind==="multi" && selection.ids.indexOf(id)>=0){
+          dragCtx={type:"multi-move", startPt:pt, kind:"node", ids:selection.ids.slice(),
+            orig:selection.ids.map(function(i){ const n=getNode(i); return {id:i,x:n.x,y:n.y}; }), moved:false};
+          canvas2d.setPointerCapture(e.pointerId); return;
+        }
         selection={kind:"node", id:id};
         dragCtx={type:"node-move", nodeId:id, startPt:pt, orig:Object.assign({},getNode(id)), moved:false};
         canvas2d.setPointerCapture(e.pointerId);
         render2D(); renderProps(); return;
+      }
+      const epEdge = e.target.closest("[data-edge-endpoint]");
+      if(epEdge && selection && selection.kind==="edge" && selection.id===epEdge.dataset.edgeId){
+        dragCtx={type:"edge-endpoint", edgeId:epEdge.dataset.edgeId, end:epEdge.dataset.edgeEndpoint};
+        lastMouseSvgPt=pt;
+        canvas2d.setPointerCapture(e.pointerId); return;
       }
       const eEl = e.target.closest("[data-edge-id]");
       if(eEl){ selection={kind:"edge", id:eEl.dataset.edgeId}; render2D(); renderProps(); return; }
@@ -2693,7 +2791,7 @@
         canvas2d.setPointerCapture(e.pointerId);
         render2D(); renderProps(); return;
       }
-      selection=null; render2D(); renderProps(); return;
+      selection=null; clearMultiSel(); render2D(); renderProps(); return;
     }
 
     if(outlineMode){
@@ -2731,14 +2829,25 @@
       render2D(); return;
     }
     if(textTool){ placeTextAt(pt); return; }
-    if(armedTypeId){ placeBlockAt(pt); return; }
+    if(armedTypeId){
+      dragCtx={type:"draw-block", startPt:pt, curPt:pt, typeId:armedTypeId};
+      canvas2d.setPointerCapture(e.pointerId); return;
+    }
     if(currentTool==="pan"){
       dragCtx={type:"pan", startClientX:e.clientX, startClientY:e.clientY, startView:{x:view2d.x,y:view2d.y}};
       canvas2d.setPointerCapture(e.pointerId); return;
     }
     const handleEl = e.target.closest("[data-handle]");
     if(handleEl && selection && selection.kind==="block"){
-      dragCtx={type:"resize", handle:handleEl.dataset.handle, blockId:selection.id, startPt:pt, orig:Object.assign({},getBlock(selection.id))};
+      const b0=getBlock(selection.id);
+      if(!b0) return;
+      if(handleEl.dataset.handle==="rotate"){
+        const cx0=b0.x+b0.w/2, cy0=b0.y+b0.h/2;
+        dragCtx={type:"rotate", blockId:selection.id, kind:"block", cx:cx0, cy:cy0,
+          startRotation:b0.rotation||0, startAngle:Math.atan2(pt.y-cy0, pt.x-cx0)};
+        canvas2d.setPointerCapture(e.pointerId); return;
+      }
+      dragCtx={type:"resize", handle:handleEl.dataset.handle, blockId:selection.id, startPt:pt, orig:Object.assign({},b0)};
       canvas2d.setPointerCapture(e.pointerId); return;
     }
     const epEl = e.target.closest("[data-line-endpoint]");
@@ -2749,6 +2858,15 @@
     const blockEl = e.target.closest("[data-block-id]");
     if(blockEl){
       const id=blockEl.dataset.blockId;
+      if(e.shiftKey){
+        toggleMultiSel("block", id);
+        render2D(); renderProps(); return;
+      }
+      if(selection && selection.kind==="multi" && selection.ids.indexOf(id)>=0){
+        dragCtx={type:"multi-move", startPt:pt, kind:"block", ids:selection.ids.slice(),
+          orig:selection.ids.map(function(i){ const b=getBlock(i); return {id:i,x:b.x,y:b.y}; }), moved:false};
+        canvas2d.setPointerCapture(e.pointerId); return;
+      }
       selection={kind:"block", id:id};
       dragCtx={type:"move", blockId:id, startPt:pt, orig:Object.assign({},getBlock(id)), moved:false};
       canvas2d.setPointerCapture(e.pointerId);
@@ -2767,7 +2885,7 @@
       lassoCtx={x0:pt.x, y0:pt.y, x1:pt.x, y1:pt.y};
       canvas2d.setPointerCapture(e.pointerId);
     }
-    selection=null; render2D(); renderProps();
+    selection=null; clearMultiSel(); render2D(); renderProps();
   });
 
   canvas2d.addEventListener("mousemove", function(e){
@@ -2792,6 +2910,16 @@
       scheduleRender2D(); return;
     }
     if(dragCtx.type==="connect"){ lastMouseSvgPt=pt; scheduleRender2D(); return; }
+    if(dragCtx.type==="edge-endpoint"){ lastMouseSvgPt=pt; scheduleRender2D(); return; }
+    if(dragCtx.type==="draw-node" || dragCtx.type==="draw-block"){ dragCtx.curPt=pt; scheduleRender2D(); return; }
+    if(dragCtx.type==="multi-move"){
+      const dx=pt.x-dragCtx.startPt.x, dy=pt.y-dragCtx.startPt.y;
+      dragCtx.orig.forEach(function(o){
+        const item = dragCtx.kind==="node" ? getNode(o.id) : getBlock(o.id);
+        if(item){ item.x=snapVal(o.x+dx); item.y=snapVal(o.y+dy); }
+      });
+      dragCtx.moved=true; scheduleRender2D(); return;
+    }
     if(lassoCtx && !dragCtx){
       lassoCtx.x1=pt.x; lassoCtx.y1=pt.y; scheduleRender2D(); return;
     }
@@ -2817,15 +2945,22 @@
       n.x=nx; n.y=ny; computeAlignGuides(n.id,nx,ny,n.w,n.h);
       dragCtx.moved=true; scheduleRender2D(); return;
     }
+    if(dragCtx.type==="rotate"){
+      const item = dragCtx.kind==="node" ? getNode(dragCtx.nodeId) : getBlock(dragCtx.blockId);
+      if(!item) return;
+      const ang = Math.atan2(pt.y-dragCtx.cy, pt.x-dragCtx.cx);
+      let deg = dragCtx.startRotation + (ang-dragCtx.startAngle)*180/Math.PI;
+      if(e.shiftKey) deg = Math.round(deg/15)*15;
+      deg = ((deg%360)+360)%360;
+      item.rotation = Math.round(deg*10)/10;
+      dragCtx.moved=true; scheduleRender2D(); return;
+    }
     if(dragCtx.type==="node-resize"){
       const n=getNode(dragCtx.nodeId); if(!n) return;
-      const o=dragCtx.orig; let x=o.x,y=o.y,w=o.w,hh=o.h;
-      const dx=pt.x-dragCtx.startPt.x, dy=pt.y-dragCtx.startPt.y, hd=dragCtx.handle;
-      if(hd.indexOf("e")>=0) w=Math.max(1,o.w+dx);
-      if(hd.indexOf("s")>=0) hh=Math.max(0.8,o.h+dy);
-      if(hd.indexOf("w")>=0){ w=Math.max(1,o.w-dx); x=o.x+(o.w-w); }
-      if(hd.indexOf("n")>=0){ hh=Math.max(0.8,o.h-dy); y=o.y+(o.h-hh); }
-      n.x=snapVal(x); n.y=snapVal(y); n.w=snapVal(w); n.h=snapVal(hh);
+      let dx=pt.x-dragCtx.startPt.x, dy=pt.y-dragCtx.startPt.y;
+      if(dragCtx.orig.rotation){ const rp=rotDeltaToLocal(dx,dy,dragCtx.orig.rotation); dx=rp.dx; dy=rp.dy; }
+      const r=resizeKeepingAnchor(dragCtx.orig, dragCtx.handle, dx, dy, 1, 0.8);
+      n.x=snapVal(r.x); n.y=snapVal(r.y); n.w=snapVal(r.w); n.h=snapVal(r.h);
       scheduleRender2D(); return;
     }
     if(dragCtx.type==="vertex"){ state.outline[dragCtx.index]=[snapVal(pt.x), snapVal(pt.y)]; scheduleRender2D(); return; }
@@ -2847,13 +2982,10 @@
     }
     if(dragCtx.type==="resize"){
       const b=getBlock(dragCtx.blockId); if(!b) return;
-      const o=dragCtx.orig; let x=o.x,y=o.y,w=o.w,h=o.h;
-      const dx=pt.x-dragCtx.startPt.x, dy=pt.y-dragCtx.startPt.y, hd=dragCtx.handle;
-      if(hd.indexOf("e")>=0) w=Math.max(0.2,o.w+dx);
-      if(hd.indexOf("s")>=0) h=Math.max(0.2,o.h+dy);
-      if(hd.indexOf("w")>=0){ w=Math.max(0.2,o.w-dx); x=o.x+(o.w-w); }
-      if(hd.indexOf("n")>=0){ h=Math.max(0.2,o.h-dy); y=o.y+(o.h-h); }
-      b.x=snapVal(x); b.y=snapVal(y); b.w=snapVal(w); b.h=snapVal(h);
+      let dx=pt.x-dragCtx.startPt.x, dy=pt.y-dragCtx.startPt.y;
+      if(dragCtx.orig.rotation){ const rp=rotDeltaToLocal(dx,dy,dragCtx.orig.rotation); dx=rp.dx; dy=rp.dy; }
+      const r=resizeKeepingAnchor(dragCtx.orig, dragCtx.handle, dx, dy, 0.2, 0.2);
+      b.x=snapVal(r.x); b.y=snapVal(r.y); b.w=snapVal(r.w); b.h=snapVal(r.h);
       scheduleRender2D(); syncBlockFieldsLive(b); return;
     }
     if(dragCtx.type==="move-line"){
@@ -2881,7 +3013,11 @@
   window.addEventListener("pointerup", function(){
     if(lassoCtx){
       const w=Math.abs(lassoCtx.x1-lassoCtx.x0), h2=Math.abs(lassoCtx.y1-lassoCtx.y0);
-      if(w>0.3 && h2>0.3){ multiSelectInLasso(lassoCtx); if(multiSel.length>0) selection={kind:"multi",ids:multiSel.map(function(x){return x.id;})}; }
+      if(w>0.3 && h2>0.3){
+        multiSelectInLasso(lassoCtx);
+        if(multiSel.length===1) selection={kind:multiSel[0].kind, id:multiSel[0].id};
+        else if(multiSel.length>1) selection={kind:"multi",ids:multiSel.map(function(x){return x.id;})};
+      }
       lassoCtx=null; render2D(); renderProps(); return;
     }
     if(!dragCtx) return;
@@ -2901,7 +3037,42 @@
       }
       dragCtx=null; render2D(); renderProps(); return;
     }
+    if(dragCtx.type==="edge-endpoint"){
+      const ed=getEdge(dragCtx.edgeId);
+      if(ed && lastMouseSvgPt){
+        let targetNode=null, targetAnchor=null;
+        const HIT_R=0.28;
+        state.nodes.forEach(function(n){
+          ["n","s","e","w"].forEach(function(a){
+            const p=anchorPt(n,a);
+            if(Math.hypot(p.x-lastMouseSvgPt.x, p.y-lastMouseSvgPt.y) < HIT_R){ targetNode=n; targetAnchor=a; }
+          });
+        });
+        if(!targetNode) targetNode = nodeAt(lastMouseSvgPt);
+        if(targetNode){
+          const otherId = dragCtx.end==="from" ? ed.to : ed.from;
+          if(targetNode.id!==otherId){
+            const snap=snapNow(); if(snap&&lastSnap&&snap!==lastSnap){histPast.push(lastSnap); histFuture.length=0;} lastSnap=snap;
+            if(dragCtx.end==="from"){ ed.from=targetNode.id; ed.fromAnchor=targetAnchor||null; }
+            else { ed.to=targetNode.id; ed.toAnchor=targetAnchor||null; }
+            scheduleSave();
+          }
+        }
+        /* soltou no vazio: nao muda nada, mantem a ligacao original */
+      }
+      dragCtx=null; render2D(); renderProps(); return;
+    }
+    if(dragCtx.type==="draw-node"){
+      const r=rectFromPts(dragCtx.startPt,dragCtx.curPt), sp=dragCtx.startPt, sh=dragCtx.shape; dragCtx=null;
+      placeNodeAt(sp, r, sh); return;
+    }
+    if(dragCtx.type==="draw-block"){
+      const r=rectFromPts(dragCtx.startPt,dragCtx.curPt), sp=dragCtx.startPt, tid=dragCtx.typeId; dragCtx=null;
+      placeBlockAt(sp, r, tid); return;
+    }
+    if(dragCtx.type==="multi-move"){ if(dragCtx.moved) scheduleSave(); dragCtx=null; render2D(); renderProps(); return; }
     if(dragCtx.type==="node-move"){ activeGuides=[]; if(dragCtx.moved) scheduleSave(); dragCtx=null; render2D(); renderProps(); return; }
+    if(dragCtx.type==="rotate"){ if(dragCtx.moved) scheduleSave(); dragCtx=null; render2D(); renderProps(); return; }
     if(dragCtx.type==="node-resize"){ scheduleSave(); dragCtx=null; render2D(); renderProps(); return; }
     if(dragCtx.type==="move" && dragCtx.moved) scheduleSave();
     if(dragCtx.type==="resize") scheduleSave();
@@ -2966,10 +3137,22 @@
   })();
 
   canvas2d.addEventListener("wheel", function(e){
-    /* zoom so se o alvo for o canvas, nao o painel flutuante */
+    /* zoom/pan so se o alvo for o canvas, nao o painel flutuante */
     if(e.target.closest("#typesPanel,#propsPanel,#areaChip,#outlineBar,#topbar,#viewDock")) return;
     e.preventDefault();
-    zoomAt(clientToSvgPoint(e,canvas2d), e.deltaY<0 ? 0.9 : 1.1111);
+    if(e.ctrlKey || e.metaKey){
+      /* Ctrl/Cmd + scroll = zoom. O gesto de pinça do trackpad tambem cai aqui,
+         pois o navegador manda ele como wheel com ctrlKey=true automaticamente. */
+      zoomAt(clientToSvgPoint(e,canvas2d), e.deltaY<0 ? 0.9 : 1.1111);
+      return;
+    }
+    /* scroll simples = navegar pela tela (pan), sem precisar apertar H nem Espaço —
+       igual Miro/Figma: rolar move, Ctrl+rolar dá zoom */
+    const rect = canvas2d.getBoundingClientRect();
+    const k = view2d.w/rect.width;
+    view2d.x += e.deltaX*k;
+    view2d.y += e.deltaY*k;
+    scheduleRender2D();
   }, {passive:false});
 
   let prePanTool = "select";
@@ -2983,6 +3166,7 @@
         setTimeout(function(){ animateViewTo(computeFitTarget(), 240); }, 60);
       }
       linePending=null; armedTypeId=null;
+      if(dragCtx && (dragCtx.type==="draw-node"||dragCtx.type==="draw-block")) dragCtx=null;
       if(armedShape){ armedShape=null; renderFlowPalette ? renderFlowPalette() : renderTypeList(); }
       if(armedObjId){ armedObjId=null; renderObjGrid && renderObjGrid(); }
       if(textTool){ textTool=false; document.getElementById("textToolBtn").classList.remove("active"); }
@@ -2993,15 +3177,18 @@
     if(inInput) return;
     if(e.key==="Delete"||e.key==="Backspace"){ deleteSelection(); e.preventDefault(); }
     if((e.ctrlKey||e.metaKey) && (e.key==="d"||e.key==="D")){ e.preventDefault(); duplicateSelection(); }
+    if((e.ctrlKey||e.metaKey) && (e.key==="c"||e.key==="C")){ e.preventDefault(); copySelection(); }
+    if((e.ctrlKey||e.metaKey) && (e.key==="v"||e.key==="V")){ e.preventDefault(); pasteClipboard(); }
     if((e.ctrlKey||e.metaKey) && (e.key==="z"||e.key==="Z")){ e.preventDefault(); if(e.shiftKey) redo(); else undo(); }
     if((e.ctrlKey||e.metaKey) && (e.key==="a"||e.key==="A")){
       e.preventDefault();
       multiSel=(isFlow()?state.nodes:state.blocks).map(function(b){return{kind:isFlow()?"node":"block",id:b.id};});
-      if(multiSel.length) selection={kind:"multi",ids:multiSel.map(function(x){return x.id;})};
+      if(multiSel.length===1) selection={kind:multiSel[0].kind, id:multiSel[0].id};
+      else if(multiSel.length>1) selection={kind:"multi",ids:multiSel.map(function(x){return x.id;})};
       render2D(); renderProps();
     }
     if((e.ctrlKey||e.metaKey) && (e.key==="y"||e.key==="Y")){ e.preventDefault(); redo(); }
-    if(!outlineMode){
+    if(!outlineMode && !e.ctrlKey && !e.metaKey){
       if(e.key==="v"||e.key==="V") setTool("select");
       if(e.key==="l"||e.key==="L") setTool("line");
       if(e.key==="h"||e.key==="H") setTool("pan");
@@ -3014,7 +3201,7 @@
       if(e.key==="o"||e.key==="O"){ if(!isFlow()) setObjLibOpen(!objLibOpen); }
       if(e.key==="i"||e.key==="I"){ if(isFlow()) document.getElementById("flowImageBtn").click(); }
     }
-    if(e.key==="e"||e.key==="E" && !inInput){ outlineToggleBtn.click(); }
+    if((e.key==="e"||e.key==="E") && !e.ctrlKey && !e.metaKey){ outlineToggleBtn.click(); }
   });
 
   function deleteSelection(){
@@ -3029,6 +3216,13 @@
       state.edges=state.edges.filter(function(ed){ return ed.from!==selection.id && ed.to!==selection.id; });
     }
     if(selection.kind==="edge") state.edges=state.edges.filter(function(ed){return ed.id!==selection.id;});
+    if(selection.kind==="multi"){
+      const ids=selection.ids||[];
+      state.blocks=state.blocks.filter(function(b){return ids.indexOf(b.id)<0;});
+      state.nodes=state.nodes.filter(function(n){return ids.indexOf(n.id)<0;});
+      state.edges=state.edges.filter(function(ed){return ids.indexOf(ed.from)<0 && ids.indexOf(ed.to)<0;});
+      clearMultiSel();
+    }
     selection=null; renderCurrent(); renderProps(); scheduleSave();
   }
   function duplicateSelection(){
@@ -3048,7 +3242,74 @@
       const c=JSON.parse(JSON.stringify(l)); c.id=uid("ln");
       c.x1+=0.5; c.x2+=0.5; c.y1+=0.5; c.y2+=0.5;
       state.lines.push(c); selection={kind:"line",id:c.id};
+    } else if(selection.kind==="multi"){
+      const ids=selection.ids||[], newIds=[];
+      if(isFlow()){
+        ids.forEach(function(id){
+          const n=getNode(id); if(!n) return;
+          const c=JSON.parse(JSON.stringify(n)); c.id=uid("n"); c.x=snapVal(n.x+1); c.y=snapVal(n.y+1);
+          state.nodes.push(c); newIds.push(c.id);
+        });
+      } else {
+        ids.forEach(function(id){
+          const b=getBlock(id); if(!b) return;
+          const c=JSON.parse(JSON.stringify(b)); c.id=uid("b"); c.x=snapVal(b.x+0.5); c.y=snapVal(b.y+0.5);
+          state.blocks.push(c); newIds.push(c.id);
+        });
+      }
+      if(!newIds.length) return;
+      multiSel = newIds.map(function(i){ return {kind:isFlow()?"node":"block", id:i}; });
+      selection = {kind:"multi", ids:newIds};
     } else return;
+    renderCurrent(); renderProps(); scheduleSave();
+  }
+
+  /* ---------- copiar / colar (Ctrl+C / Ctrl+V) ---------- */
+  let clipboard = null; /* {kind:"node"|"block", items:[...], edges:[...]} — só dura enquanto a aba fica aberta */
+  function copySelection(){
+    if(!selection) return;
+    const kind = isFlow() ? "node" : "block";
+    let ids;
+    if(selection.kind==="multi") ids = selection.ids.slice();
+    else if(selection.kind===kind) ids = [selection.id];
+    else return; /* selecao de linha/texto/conector nao tem copia por enquanto */
+    const items = ids.map(function(id){ return kind==="node" ? getNode(id) : getBlock(id); }).filter(Boolean);
+    if(!items.length) return;
+    let edges = [];
+    if(kind==="node"){
+      edges = (state.edges||[]).filter(function(ed){ return ids.indexOf(ed.from)>=0 && ids.indexOf(ed.to)>=0; });
+    }
+    clipboard = {kind:kind, items:JSON.parse(JSON.stringify(items)), edges:JSON.parse(JSON.stringify(edges))};
+    showToast(items.length===1 ? "Copiado." : items.length+" formas copiadas.", "ok");
+  }
+  function pasteClipboard(){
+    if(!clipboard || !clipboard.items.length) return;
+    if((clipboard.kind==="node") !== isFlow()){
+      showToast("Isso foi copiado do outro modo (planta/fluxo) — não dá pra colar aqui.", "danger");
+      return;
+    }
+    const offset = 0.6, idMap = {}, newIds = [];
+    clipboard.items.forEach(function(it){
+      const c = JSON.parse(JSON.stringify(it));
+      idMap[c.id] = uid(clipboard.kind==="node" ? "n" : "b");
+      c.id = idMap[it.id];
+      c.x = snapVal(it.x+offset); c.y = snapVal(it.y+offset);
+      if(clipboard.kind==="node") state.nodes.push(c); else state.blocks.push(c);
+      newIds.push(c.id);
+    });
+    if(clipboard.kind==="node" && clipboard.edges){
+      clipboard.edges.forEach(function(ed){
+        if(idMap[ed.from] && idMap[ed.to]){
+          const c=JSON.parse(JSON.stringify(ed)); c.id=uid("e"); c.from=idMap[ed.from]; c.to=idMap[ed.to];
+          state.edges.push(c);
+        }
+      });
+    }
+    /* acumula o deslocamento no clipboard: colar de novo forma uma "escada", como Figma/Miro */
+    clipboard.items.forEach(function(it){ it.x+=offset; it.y+=offset; });
+    if(newIds.length===1){ selection={kind:clipboard.kind, id:newIds[0]}; justPlacedId=newIds[0]; setTimeout(function(){justPlacedId=null;},450); }
+    else { multiSel=newIds.map(function(i){return{kind:clipboard.kind,id:i};}); selection={kind:"multi", ids:newIds}; }
+    if(clipboard.kind==="node") renderFlowPalette();
     renderCurrent(); renderProps(); scheduleSave();
   }
 
@@ -3317,6 +3578,7 @@
             '<div class="grid2"><label>Largura<input id="propImgW" type="number" min="0.3" step="0.1" value="'+n.w.toFixed(1)+'"></label>' +
             '<label>Altura<input id="propImgH" type="number" min="0.3" step="0.1" value="'+n.h.toFixed(1)+'"></label></div>' +
             '<label class="chk-row"><input id="propImgLock" type="checkbox" '+(n._ar?"checked":"")+'> Manter proporção</label>' +
+            '<label>Rotação (°)<input id="propImgRot" type="number" min="0" max="359" step="1" value="'+Math.round(n.rotation||0)+'"></label>' +
             '<button id="dupNodeBtn" class="secondary" type="button">Duplicar (Ctrl+D)</button>' +
             '<button id="delNodeBtn" class="danger" type="button">Excluir imagem</button>';
           document.getElementById("replaceImgBtn").addEventListener("click", function(){ pendingImageNodeId=n.id; document.getElementById("flowImageInput").click(); });
@@ -3334,6 +3596,10 @@
             n._ar = e.target.checked ? (n.w/n.h) : null;
             scheduleSave();
           });
+          document.getElementById("propImgRot").addEventListener("change", function(e){
+            let v=parseFloat(e.target.value); if(isNaN(v)) v=0;
+            n.rotation=((v%360)+360)%360; render2D(); scheduleSave();
+          });
           document.getElementById("dupNodeBtn").addEventListener("click", duplicateSelection);
           document.getElementById("delNodeBtn").addEventListener("click", deleteSelection);
           return;
@@ -3350,6 +3616,9 @@
           '<label>Cor<input id="propNodeColor" type="color" value="'+(n.color||shapeDef(n.shape).color)+'"></label>' +
           '<div class="grid2"><label>Largura<input id="propNodeW" type="number" min="1" step="0.1" value="'+n.w.toFixed(1)+'"></label>' +
           '<label>Altura<input id="propNodeH" type="number" min="0.8" step="0.1" value="'+n.h.toFixed(1)+'"></label></div>' +
+          '<div class="grid2"><label>Posição X<input id="propNodeX" type="number" step="0.1" value="'+n.x.toFixed(2)+'"></label>' +
+          '<label>Posição Y<input id="propNodeY" type="number" step="0.1" value="'+n.y.toFixed(2)+'"></label></div>' +
+          '<label>Rotação (°)<input id="propNodeRot" type="number" min="0" max="359" step="1" value="'+Math.round(n.rotation||0)+'"></label>' +
           '<button id="dupNodeBtn" class="secondary" type="button">Duplicar (Ctrl+D)</button>' +
           '<button id="delNodeBtn" class="danger" type="button">Excluir forma</button>';
         document.getElementById("propNodeText").addEventListener("input", function(e){ n.text=e.target.value; render2D(); scheduleSave(); });
@@ -3359,6 +3628,12 @@
         document.getElementById("propNodeColor").addEventListener("input", function(e){ n.color=e.target.value; render2D(); scheduleSave(); });
         document.getElementById("propNodeW").addEventListener("change", function(e){ n.w=Math.max(1,parseFloat(e.target.value)||n.w); render2D(); scheduleSave(); });
         document.getElementById("propNodeH").addEventListener("change", function(e){ n.h=Math.max(0.8,parseFloat(e.target.value)||n.h); render2D(); scheduleSave(); });
+        document.getElementById("propNodeX").addEventListener("change", function(e){ n.x=parseFloat(e.target.value)||0; render2D(); scheduleSave(); });
+        document.getElementById("propNodeY").addEventListener("change", function(e){ n.y=parseFloat(e.target.value)||0; render2D(); scheduleSave(); });
+        document.getElementById("propNodeRot").addEventListener("change", function(e){
+          let v=parseFloat(e.target.value); if(isNaN(v)) v=0;
+          n.rotation=((v%360)+360)%360; render2D(); renderProps(); scheduleSave();
+        });
         document.getElementById("dupNodeBtn").addEventListener("click", duplicateSelection);
         document.getElementById("delNodeBtn").addEventListener("click", deleteSelection);
         return;
@@ -3368,6 +3643,7 @@
         if(!ed){ selection=null; return renderProps(); }
         propsPanel.innerHTML =
           "<h3>Conector</h3>" +
+          '<p class="type-empty-hint">Arraste as bolinhas nas pontas pra reconectar em outro lado ou outra forma.</p>' +
           '<label>Rótulo<input id="propEdgeLabel" type="text" value="'+escapeHtml(ed.label||"")+'" placeholder="Ex: Sim / Não"></label>' +
           '<label>Traçado<select id="propEdgeStyle">' +
             '<option value="elbow"'+(ed.style!=="straight"?" selected":"")+'>Cotovelo (90°)</option>' +
@@ -3376,12 +3652,15 @@
           '<label>Cor<input id="propEdgeColor" type="color" value="'+(ed.color||"#5B6472")+'"></label>' +
           '<label class="chk-row"><input id="propEdgeArrow" type="checkbox" '+(ed.arrow!==false?"checked":"")+'> Seta na ponta</label>' +
           '<label class="chk-row"><input id="propEdgeDash" type="checkbox" '+(ed.dashed?"checked":"")+'> Linha tracejada</label>' +
+          (ed.fromAnchor||ed.toAnchor ? '<button id="autoEdgeBtn" class="secondary" type="button">Reconectar automático</button>' : "") +
           '<button id="delEdgeBtn" class="danger" type="button">Excluir conector</button>';
         document.getElementById("propEdgeLabel").addEventListener("input", function(e){ ed.label=e.target.value; render2D(); scheduleSave(); });
         document.getElementById("propEdgeStyle").addEventListener("change", function(e){ ed.style=e.target.value; render2D(); scheduleSave(); });
         document.getElementById("propEdgeColor").addEventListener("input", function(e){ ed.color=e.target.value; render2D(); scheduleSave(); });
         document.getElementById("propEdgeArrow").addEventListener("change", function(e){ ed.arrow=e.target.checked; render2D(); scheduleSave(); });
         document.getElementById("propEdgeDash").addEventListener("change", function(e){ ed.dashed=e.target.checked; render2D(); scheduleSave(); });
+        const autoEdgeBtn=document.getElementById("autoEdgeBtn");
+        if(autoEdgeBtn) autoEdgeBtn.addEventListener("click", function(){ ed.fromAnchor=null; ed.toAnchor=null; render2D(); renderProps(); scheduleSave(); });
         document.getElementById("delEdgeBtn").addEventListener("click", deleteSelection);
         return;
       }
@@ -3394,6 +3673,17 @@
     return;
     }
     propsPanel.classList.add("visible");
+    if(selection.kind==="multi"){
+      const n=(selection.ids||[]).length;
+      propsPanel.innerHTML =
+        "<h3>"+(n===1?"1 forma selecionada":n+" formas selecionadas")+"</h3>" +
+        '<p class="type-empty-hint">Shift+clique soma ou tira uma forma da seleção.</p>' +
+        '<button id="dupMultiBtn" class="secondary" type="button">Duplicar tudo (Ctrl+D)</button>' +
+        '<button id="delMultiBtn" class="danger" type="button">Excluir tudo</button>';
+      document.getElementById("dupMultiBtn").addEventListener("click", duplicateSelection);
+      document.getElementById("delMultiBtn").addEventListener("click", deleteSelection);
+      return;
+    }
     if(selection.kind==="block"){
       const b=getBlock(selection.id);
       if(!b){ selection=null; return renderProps(); }
@@ -3407,6 +3697,7 @@
         '<label>Comprim. (m)<input id="propH" type="number" min="0.2" step="0.1" value="'+b.h.toFixed(2)+'"></label></div>' +
         '<div class="grid2"><label>Posição X<input id="propX" type="number" step="0.1" value="'+b.x.toFixed(2)+'"></label>' +
         '<label>Posição Y<input id="propY" type="number" step="0.1" value="'+b.y.toFixed(2)+'"></label></div>' +
+        '<label>Rotação (°)<input id="propRot" type="number" min="0" max="359" step="1" value="'+Math.round(b.rotation||0)+'"></label>' +
         '<button id="rotateBtn" class="secondary" type="button">Girar 90°</button>' +
         '<button id="deleteBtn" class="danger" type="button">Excluir bloco</button>';
       document.getElementById("propType").addEventListener("change", function(e){ b.typeId=e.target.value; renderCurrent(); scheduleSave(); });
@@ -3415,7 +3706,13 @@
       document.getElementById("propH").addEventListener("change", function(e){ b.h=Math.max(0.2,parseFloat(e.target.value)||b.h); renderCurrent(); scheduleSave(); });
       document.getElementById("propX").addEventListener("change", function(e){ b.x=parseFloat(e.target.value)||0; renderCurrent(); scheduleSave(); });
       document.getElementById("propY").addEventListener("change", function(e){ b.y=parseFloat(e.target.value)||0; renderCurrent(); scheduleSave(); });
-      document.getElementById("rotateBtn").addEventListener("click", function(){ const w=b.w; b.w=b.h; b.h=w; renderCurrent(); renderProps(); scheduleSave(); });
+      document.getElementById("propRot").addEventListener("change", function(e){
+        let v=parseFloat(e.target.value); if(isNaN(v)) v=0;
+        b.rotation=((v%360)+360)%360; renderCurrent(); scheduleSave();
+      });
+      document.getElementById("rotateBtn").addEventListener("click", function(){
+        b.rotation=(((b.rotation||0)+90)%360+360)%360; renderCurrent(); renderProps(); scheduleSave();
+      });
       document.getElementById("deleteBtn").addEventListener("click", function(){
         state.blocks=state.blocks.filter(function(x){return x.id!==b.id;});
         selection=null; renderCurrent(); renderProps(); scheduleSave();
@@ -3465,7 +3762,8 @@
   document.getElementById("zoomReset").addEventListener("click", function(){ animateViewTo(computeFitTarget(),220); });
   document.getElementById("snapBtn").addEventListener("click", function(e){
     GRID_SNAP = GRID_SNAP===0.1 ? 0.5 : 0.1;
-    e.currentTarget.childNodes[0].nodeValue = String(GRID_SNAP).replace(".",",");
+    e.currentTarget.classList.toggle("active", GRID_SNAP===0.1);
+    e.currentTarget.title = "Encaixe na grade: "+String(GRID_SNAP).replace(".",",")+"m (clique para alternar) — S";
   });
   const textToolBtn = document.getElementById("textToolBtn");
   textToolBtn.addEventListener("click", function(){
@@ -4258,6 +4556,22 @@
     (isFlow()?state.nodes:state.blocks).forEach(function(b){
       if(inLasso(b,l)) multiSel.push({kind:isFlow()?"node":"block",id:b.id});
     });
+  }
+  /* true se o item faz parte da seleção atual — seja ela única ou múltipla (shift+clique / laço) */
+  function isSelected(kind, id){
+    if(!selection) return false;
+    if(selection.kind===kind && selection.id===id) return true;
+    if(selection.kind==="multi" && selection.ids && selection.ids.indexOf(id)>=0) return true;
+    return false;
+  }
+  /* shift+clique: soma ou tira um item da seleção, igual Miro/Figma */
+  function toggleMultiSel(kind, id){
+    let ids = (selection && selection.kind==="multi") ? selection.ids.slice()
+            : (selection && selection.kind===kind && selection.id ? [selection.id] : []);
+    const idx = ids.indexOf(id);
+    if(idx>=0) ids.splice(idx,1); else ids.push(id);
+    multiSel = ids.map(function(i){ return {kind:kind, id:i}; });
+    selection = !ids.length ? null : (ids.length===1 ? {kind:kind, id:ids[0]} : {kind:"multi", ids:ids});
   }
 
   /* --- Guias de alinhamento (SmartDraw/Lucidchart) --- */
@@ -6230,8 +6544,8 @@
   }
 
   /* ================= boot ================= */
-  async function boot(){
-    const had = await loadWorkspace();
+  function boot(){
+    const had = loadWorkspace();
     if(!had && workspace.projects.length===0){
       workspace.projects.push(blankProject("Meu primeiro projeto"));
     }
@@ -6240,13 +6554,7 @@
     if(last){ openProject(workspace.lastOpenedId); }
     else { renderDashboard(); showScreen("dashboardScreen"); }
   }
-  var __gpBooted = false;
-  firebase.auth().onAuthStateChanged(function(user){
-    if(user && !__gpBooted){
-      __gpBooted = true;
-      boot();
-    }
-  });
+  boot();
 })();
 </script>
 
@@ -6398,55 +6706,6 @@
     if(document.hidden) stop(); else if(dash.classList.contains("active")) start();
   });
   if(dash.classList.contains("active")) start();
-})();
-</script>
-
-<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
-  <div style="max-width:320px;width:100%;">
-    <div id="__gateMsg" style="font-size:14px;color:#8a93a3;line-height:1.6;">Verificando acesso...</div>
-  </div>
-</div>
-<style id="__gateStyle">body > *:not(#__gateOverlay){ display:none !important; }</style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
-<script>
-(function(){
-  var GRUPOS_PERMITIDOS = ["Outros"];
-  var firebaseConfig = {
-    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
-    authDomain: "stinpharma-qualidade.firebaseapp.com",
-    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
-    projectId: "stinpharma-qualidade",
-    storageBucket: "stinpharma-qualidade.firebasestorage.app",
-    messagingSenderId: "422803826984",
-    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
-    measurementId: "G-6C0TLHH2VP"
-  };
-  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  function liberar(){
-    var st = document.getElementById('__gateStyle');
-    var ov = document.getElementById('__gateOverlay');
-    if(st) st.remove();
-    if(ov) ov.remove();
-  }
-  function negar(msg){
-    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Central de Apps</a>';
-  }
-  var jaResolveu = false;
-  setTimeout(function(){
-    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
-  }, 10000);
-  firebase.auth().onAuthStateChanged(function(user){
-    jaResolveu = true;
-    if(!user){ negar('Você precisa entrar pela Central de Apps.'); return; }
-    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
-      var dados = snap.val();
-      var meusGrupos = (dados && dados.grupos) || [];
-      var permitido = GRUPOS_PERMITIDOS.some(function(g){ return meusGrupos.indexOf(g) !== -1; });
-      if(permitido){ liberar(); } else { negar('Você não tem permissão pra acessar este app.'); }
-    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
-  });
 })();
 </script>
 </body>
