@@ -1681,7 +1681,6 @@
     if(b.id===justPlacedId) classes.push("pf-pop-in");
     if(isSelected) classes.push("pf-selected-glow");
     const attrs = {"data-block-id": b.id, style:"cursor:move;", "class":classes.join(" ")};
-    if(b.rotation) attrs.transform = "rotate("+b.rotation+" "+(b.x+b.w/2)+" "+(b.y+b.h/2)+")";
     const g = svgEl("g", attrs);
 
     /* usar forma customizada se disponível, senão retângulo padrão */
@@ -1701,20 +1700,11 @@
   }
   function handlesGroup(b){
     const g = svgEl("g",{}); const hs=0.28;
-    const cx=b.x+b.w/2, cy=b.y+b.h/2;
-    if(b.rotation) g.setAttribute("transform","rotate("+b.rotation+" "+cx+" "+cy+")");
     [{h:"nw",x:b.x,y:b.y},{h:"n",x:b.x+b.w/2,y:b.y},{h:"ne",x:b.x+b.w,y:b.y},{h:"e",x:b.x+b.w,y:b.y+b.h/2},
      {h:"se",x:b.x+b.w,y:b.y+b.h},{h:"s",x:b.x+b.w/2,y:b.y+b.h},{h:"sw",x:b.x,y:b.y+b.h},{h:"w",x:b.x,y:b.y+b.h/2}]
     .forEach(function(p){
       g.appendChild(svgEl("rect",{x:p.x-hs/2,y:p.y-hs/2,width:hs,height:hs, fill:"#E8912B", stroke:"#fff","stroke-width":0.02,"data-handle":p.h}));
     });
-    /* alça de rotação livre: puxa de qualquer ângulo, não só de 90 em 90.
-       tem uma área de clique invisível bem maior por baixo — o alvo visual pequeno
-       era fácil de errar, e errar significava agarrar a forma e "arrastar" ela sem querer. */
-    const ry = b.y - Math.max(0.9, Math.min(b.w,b.h)*0.45);
-    g.appendChild(svgEl("line",{x1:cx,y1:b.y,x2:cx,y2:ry+0.2, stroke:"#E8912B","stroke-width":0.025,"stroke-dasharray":"0.08,0.06"}));
-    g.appendChild(svgEl("circle",{cx:cx,cy:ry,r:0.42, fill:"transparent","data-handle":"rotate",style:"cursor:grab;"}));
-    g.appendChild(svgEl("circle",{cx:cx,cy:ry,r:0.23, fill:"#fff", stroke:"#E8912B","stroke-width":0.06,"data-handle":"rotate",style:"cursor:grab; pointer-events:none;"}));
     return g;
   }
   function lineGroup(ln, isSelected){
@@ -1923,7 +1913,6 @@
       if(n.id===justPlacedId) classes.push("pf-pop-in");
       if(isSel) classes.push("pf-selected-glow");
       const attrs={"data-node-id":n.id, style:"cursor:move;", "class":classes.join(" ")};
-      if(n.rotation) attrs.transform="rotate("+n.rotation+" "+(n.x+n.w/2)+" "+(n.y+n.h/2)+")";
       const g = svgEl("g",attrs);
       if(n.img){
         g.appendChild(svgEl("image",{x:n.x,y:n.y,width:n.w,height:n.h,href:n.img,preserveAspectRatio:"none"}));
@@ -1942,7 +1931,6 @@
     const x=n.x, y=n.y, w=n.w, hh=n.h;
     const cx=x+w/2, cy=y+hh/2;
     const gAttrs={"data-node-id":n.id, style:"cursor:move;", "class":classes.join(" ")};
-    if(n.rotation) gAttrs.transform="rotate("+n.rotation+" "+cx+" "+cy+")";
     const g = svgEl("g",gAttrs);
     const stroke  = isSel ? "#E8912B" : shade(col,-30);
     const sw      = isSel ? 0.07 : 0.035;
@@ -2182,22 +2170,15 @@
   /* alças APENAS nos 4 cantos — meios das arestas ficam livres para as âncoras */
   function cornerHandles(n){
     const g=svgEl("g",{}); const hs=0.26;
-    const cx=n.x+n.w/2, cy=n.y+n.h/2;
-    if(n.rotation) g.setAttribute("transform","rotate("+n.rotation+" "+cx+" "+cy+")");
     [{h:"nw",x:n.x,y:n.y},{h:"ne",x:n.x+n.w,y:n.y},{h:"se",x:n.x+n.w,y:n.y+n.h},{h:"sw",x:n.x,y:n.y+n.h}]
     .forEach(function(p){
       g.appendChild(svgEl("rect",{x:p.x-hs/2,y:p.y-hs/2,width:hs,height:hs,fill:"#E8912B",
         stroke:"#fff","stroke-width":0.02,"data-handle":p.h}));
     });
-    const ry = n.y - Math.max(0.55, Math.min(n.w,n.h)*0.3);
-    g.appendChild(svgEl("line",{x1:cx,y1:n.y,x2:cx,y2:ry+0.2, stroke:"#E8912B","stroke-width":0.025,"stroke-dasharray":"0.08,0.06"}));
-    g.appendChild(svgEl("circle",{cx:cx,cy:ry,r:0.42, fill:"transparent","data-handle":"rotate",style:"cursor:grab;"}));
-    g.appendChild(svgEl("circle",{cx:cx,cy:ry,r:0.23, fill:"#fff", stroke:"#E8912B","stroke-width":0.06,"data-handle":"rotate",style:"cursor:grab; pointer-events:none;"}));
     return g;
   }
   function nodeAnchorDots(n){
     const g=svgEl("g",{"class":"anchor-dots"});
-    if(n.rotation) g.setAttribute("transform","rotate("+n.rotation+" "+(n.x+n.w/2)+" "+(n.y+n.h/2)+")");
     ["n","s","e","w"].forEach(function(a){
       const p=anchorPt(n,a);
       g.appendChild(svgEl("circle",{cx:p.x,cy:p.y,r:0.17,fill:"#fff",stroke:"#E8912B","stroke-width":0.05,
@@ -2413,17 +2394,6 @@
     canvas3d.innerHTML="";
     const ISO=Math.PI/6, cos30=Math.cos(ISO), sin30=Math.sin(ISO);
     function proj(x,y,z){ return {x:(x-y)*cos30, y:(x+y)*sin30 - z}; }
-    /* cantos do bloco já girados em torno do próprio centro, ANTES de projetar em isométrico —
-       sem isso a 3D sempre mostrava o bloco reto, mesmo depois de girado na 2D */
-    function rotatedCorners(b){
-      const corners=[{x:b.x,y:b.y},{x:b.x+b.w,y:b.y},{x:b.x+b.w,y:b.y+b.h},{x:b.x,y:b.y+b.h}];
-      if(!b.rotation) return corners;
-      const cx=b.x+b.w/2, cy=b.y+b.h/2, r=b.rotation*Math.PI/180, c=Math.cos(r), s=Math.sin(r);
-      return corners.map(function(p){
-        const dx=p.x-cx, dy=p.y-cy;
-        return {x:cx+dx*c-dy*s, y:cy+dx*s+dy*c};
-      });
-    }
     let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
     function consider(p){ if(p.x<minX)minX=p.x; if(p.x>maxX)maxX=p.x; if(p.y<minY)minY=p.y; if(p.y>maxY)maxY=p.y; }
 
@@ -2436,14 +2406,13 @@
       const t=getType(b.typeId);
       const flatShapes=["swimlane","group_box","bpmn_pool","bpmn_lane","uml_fork"];
       if(t.flat || flatShapes.includes(b.shape)){
-        const rc=rotatedCorners(b);
-        const pts=rc.map(function(p){ return proj(p.x,p.y,0.02); });
+        const pts=[proj(b.x,b.y,0.02),proj(b.x+b.w,b.y,0.02),proj(b.x+b.w,b.y+b.h,0.02),proj(b.x,b.y+b.h,0.02)];
         pts.forEach(consider);
         items.push({depth:b.x+b.y+0.005, node: polygonEl(pts,{fill:shade(t.color||b.color||"#9AA5B1",10),"fill-opacity":0.55, stroke:shade(t.color||b.color||"#9AA5B1",-20),"stroke-width":0.02})});
         return;
       }
       const height=t.height3d || (b.shape ? 1.2 : 1.5);
-      const corners=rotatedCorners(b);
+      const corners=[{x:b.x,y:b.y},{x:b.x+b.w,y:b.y},{x:b.x+b.w,y:b.y+b.h},{x:b.x,y:b.y+b.h}];
       const base=corners.map(function(p){return proj(p.x,p.y,0);}), top=corners.map(function(p){return proj(p.x,p.y,height);});
       base.forEach(consider); top.forEach(consider);
       const depth=b.x+b.y;
@@ -2748,12 +2717,6 @@
       if(hEl && selection && selection.kind==="node"){
         const n0=getNode(selection.id);
         if(!n0) return;
-        if(hEl.dataset.handle==="rotate"){
-          const cx0=n0.x+n0.w/2, cy0=n0.y+n0.h/2;
-          dragCtx={type:"rotate", nodeId:selection.id, kind:"node", cx:cx0, cy:cy0,
-            startRotation:n0.rotation||0, startAngle:Math.atan2(pt.y-cy0, pt.x-cx0)};
-          canvas2d.setPointerCapture(e.pointerId); return;
-        }
         dragCtx={type:"node-resize", handle:hEl.dataset.handle, nodeId:selection.id, startPt:pt, orig:Object.assign({},n0)};
         canvas2d.setPointerCapture(e.pointerId); return;
       }
@@ -2841,12 +2804,6 @@
     if(handleEl && selection && selection.kind==="block"){
       const b0=getBlock(selection.id);
       if(!b0) return;
-      if(handleEl.dataset.handle==="rotate"){
-        const cx0=b0.x+b0.w/2, cy0=b0.y+b0.h/2;
-        dragCtx={type:"rotate", blockId:selection.id, kind:"block", cx:cx0, cy:cy0,
-          startRotation:b0.rotation||0, startAngle:Math.atan2(pt.y-cy0, pt.x-cx0)};
-        canvas2d.setPointerCapture(e.pointerId); return;
-      }
       dragCtx={type:"resize", handle:handleEl.dataset.handle, blockId:selection.id, startPt:pt, orig:Object.assign({},b0)};
       canvas2d.setPointerCapture(e.pointerId); return;
     }
@@ -2943,16 +2900,6 @@
         if(Math.abs(ny-o.y)<TOL) ny=o.y;
       });
       n.x=nx; n.y=ny; computeAlignGuides(n.id,nx,ny,n.w,n.h);
-      dragCtx.moved=true; scheduleRender2D(); return;
-    }
-    if(dragCtx.type==="rotate"){
-      const item = dragCtx.kind==="node" ? getNode(dragCtx.nodeId) : getBlock(dragCtx.blockId);
-      if(!item) return;
-      const ang = Math.atan2(pt.y-dragCtx.cy, pt.x-dragCtx.cx);
-      let deg = dragCtx.startRotation + (ang-dragCtx.startAngle)*180/Math.PI;
-      if(e.shiftKey) deg = Math.round(deg/15)*15;
-      deg = ((deg%360)+360)%360;
-      item.rotation = Math.round(deg*10)/10;
       dragCtx.moved=true; scheduleRender2D(); return;
     }
     if(dragCtx.type==="node-resize"){
@@ -3072,7 +3019,6 @@
     }
     if(dragCtx.type==="multi-move"){ if(dragCtx.moved) scheduleSave(); dragCtx=null; render2D(); renderProps(); return; }
     if(dragCtx.type==="node-move"){ activeGuides=[]; if(dragCtx.moved) scheduleSave(); dragCtx=null; render2D(); renderProps(); return; }
-    if(dragCtx.type==="rotate"){ if(dragCtx.moved) scheduleSave(); dragCtx=null; render2D(); renderProps(); return; }
     if(dragCtx.type==="node-resize"){ scheduleSave(); dragCtx=null; render2D(); renderProps(); return; }
     if(dragCtx.type==="move" && dragCtx.moved) scheduleSave();
     if(dragCtx.type==="resize") scheduleSave();
@@ -3578,7 +3524,6 @@
             '<div class="grid2"><label>Largura<input id="propImgW" type="number" min="0.3" step="0.1" value="'+n.w.toFixed(1)+'"></label>' +
             '<label>Altura<input id="propImgH" type="number" min="0.3" step="0.1" value="'+n.h.toFixed(1)+'"></label></div>' +
             '<label class="chk-row"><input id="propImgLock" type="checkbox" '+(n._ar?"checked":"")+'> Manter proporção</label>' +
-            '<label>Rotação (°)<input id="propImgRot" type="number" min="0" max="359" step="1" value="'+Math.round(n.rotation||0)+'"></label>' +
             '<button id="dupNodeBtn" class="secondary" type="button">Duplicar (Ctrl+D)</button>' +
             '<button id="delNodeBtn" class="danger" type="button">Excluir imagem</button>';
           document.getElementById("replaceImgBtn").addEventListener("click", function(){ pendingImageNodeId=n.id; document.getElementById("flowImageInput").click(); });
@@ -3595,10 +3540,6 @@
           document.getElementById("propImgLock").addEventListener("change", function(e){
             n._ar = e.target.checked ? (n.w/n.h) : null;
             scheduleSave();
-          });
-          document.getElementById("propImgRot").addEventListener("change", function(e){
-            let v=parseFloat(e.target.value); if(isNaN(v)) v=0;
-            n.rotation=((v%360)+360)%360; render2D(); scheduleSave();
           });
           document.getElementById("dupNodeBtn").addEventListener("click", duplicateSelection);
           document.getElementById("delNodeBtn").addEventListener("click", deleteSelection);
@@ -3618,7 +3559,6 @@
           '<label>Altura<input id="propNodeH" type="number" min="0.8" step="0.1" value="'+n.h.toFixed(1)+'"></label></div>' +
           '<div class="grid2"><label>Posição X<input id="propNodeX" type="number" step="0.1" value="'+n.x.toFixed(2)+'"></label>' +
           '<label>Posição Y<input id="propNodeY" type="number" step="0.1" value="'+n.y.toFixed(2)+'"></label></div>' +
-          '<label>Rotação (°)<input id="propNodeRot" type="number" min="0" max="359" step="1" value="'+Math.round(n.rotation||0)+'"></label>' +
           '<button id="dupNodeBtn" class="secondary" type="button">Duplicar (Ctrl+D)</button>' +
           '<button id="delNodeBtn" class="danger" type="button">Excluir forma</button>';
         document.getElementById("propNodeText").addEventListener("input", function(e){ n.text=e.target.value; render2D(); scheduleSave(); });
@@ -3630,10 +3570,6 @@
         document.getElementById("propNodeH").addEventListener("change", function(e){ n.h=Math.max(0.8,parseFloat(e.target.value)||n.h); render2D(); scheduleSave(); });
         document.getElementById("propNodeX").addEventListener("change", function(e){ n.x=parseFloat(e.target.value)||0; render2D(); scheduleSave(); });
         document.getElementById("propNodeY").addEventListener("change", function(e){ n.y=parseFloat(e.target.value)||0; render2D(); scheduleSave(); });
-        document.getElementById("propNodeRot").addEventListener("change", function(e){
-          let v=parseFloat(e.target.value); if(isNaN(v)) v=0;
-          n.rotation=((v%360)+360)%360; render2D(); renderProps(); scheduleSave();
-        });
         document.getElementById("dupNodeBtn").addEventListener("click", duplicateSelection);
         document.getElementById("delNodeBtn").addEventListener("click", deleteSelection);
         return;
@@ -3697,7 +3633,6 @@
         '<label>Comprim. (m)<input id="propH" type="number" min="0.2" step="0.1" value="'+b.h.toFixed(2)+'"></label></div>' +
         '<div class="grid2"><label>Posição X<input id="propX" type="number" step="0.1" value="'+b.x.toFixed(2)+'"></label>' +
         '<label>Posição Y<input id="propY" type="number" step="0.1" value="'+b.y.toFixed(2)+'"></label></div>' +
-        '<label>Rotação (°)<input id="propRot" type="number" min="0" max="359" step="1" value="'+Math.round(b.rotation||0)+'"></label>' +
         '<button id="rotateBtn" class="secondary" type="button">Girar 90°</button>' +
         '<button id="deleteBtn" class="danger" type="button">Excluir bloco</button>';
       document.getElementById("propType").addEventListener("change", function(e){ b.typeId=e.target.value; renderCurrent(); scheduleSave(); });
@@ -3706,13 +3641,7 @@
       document.getElementById("propH").addEventListener("change", function(e){ b.h=Math.max(0.2,parseFloat(e.target.value)||b.h); renderCurrent(); scheduleSave(); });
       document.getElementById("propX").addEventListener("change", function(e){ b.x=parseFloat(e.target.value)||0; renderCurrent(); scheduleSave(); });
       document.getElementById("propY").addEventListener("change", function(e){ b.y=parseFloat(e.target.value)||0; renderCurrent(); scheduleSave(); });
-      document.getElementById("propRot").addEventListener("change", function(e){
-        let v=parseFloat(e.target.value); if(isNaN(v)) v=0;
-        b.rotation=((v%360)+360)%360; renderCurrent(); scheduleSave();
-      });
-      document.getElementById("rotateBtn").addEventListener("click", function(){
-        b.rotation=(((b.rotation||0)+90)%360+360)%360; renderCurrent(); renderProps(); scheduleSave();
-      });
+      document.getElementById("rotateBtn").addEventListener("click", function(){ const w=b.w; b.w=b.h; b.h=w; renderCurrent(); renderProps(); scheduleSave(); });
       document.getElementById("deleteBtn").addEventListener("click", function(){
         state.blocks=state.blocks.filter(function(x){return x.id!==b.id;});
         selection=null; renderCurrent(); renderProps(); scheduleSave();
