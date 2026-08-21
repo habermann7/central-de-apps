@@ -1850,20 +1850,29 @@
   function isHoriz(d){ return d==="e"||d==="w"; }
 
   /* roteamento ortogonal (cotovelo), o padrão de fluxogramas */
-  function elbowPoints(p1,p2){
+  function elbowPoints(p1,p2,bendOffset,bendDX,bendDY){
     const off=0.75;
     const v1=dirVec(p1.dir), v2=dirVec(p2.dir);
     const s={x:p1.x+v1.x*off, y:p1.y+v1.y*off};
     const e={x:p2.x+v2.x*off, y:p2.y+v2.y*off};
     const pts=[{x:p1.x,y:p1.y}, s];
     if(isHoriz(p1.dir) && isHoriz(p2.dir)){
-      const mx=(s.x+e.x)/2; pts.push({x:mx,y:s.y},{x:mx,y:e.y});
+      let mx=(s.x+e.x)/2; if(bendOffset) mx+=bendOffset;
+      pts.push({x:mx,y:s.y},{x:mx,y:e.y});
     } else if(!isHoriz(p1.dir) && !isHoriz(p2.dir)){
-      const my=(s.y+e.y)/2; pts.push({x:s.x,y:my},{x:e.x,y:my});
+      let my=(s.y+e.y)/2; if(bendOffset) my+=bendOffset;
+      pts.push({x:s.x,y:my},{x:e.x,y:my});
     } else if(isHoriz(p1.dir)){
-      pts.push({x:e.x,y:s.y});
+      /* forma em L: sai na horizontal, entra na vertical. Cotovelo livre nos dois eixos —
+         se foi arrastado, vira um "S" com 2 curvas mantendo tudo ortogonal e as pontas presas. */
+      const dx=bendDX||0, dy=bendDY||0;
+      if(dx||dy){ pts.push({x:s.x,y:s.y+dy}, {x:e.x+dx,y:s.y+dy}, {x:e.x+dx,y:e.y}); }
+      else { pts.push({x:e.x,y:s.y}); }
     } else {
-      pts.push({x:s.x,y:e.y});
+      /* forma em L: sai na vertical, entra na horizontal — mesmo raciocínio espelhado */
+      const dx=bendDX||0, dy=bendDY||0;
+      if(dx||dy){ pts.push({x:s.x+dx,y:s.y}, {x:s.x+dx,y:e.y+dy}, {x:e.x,y:e.y+dy}); }
+      else { pts.push({x:s.x,y:e.y}); }
     }
     pts.push(e,{x:p2.x,y:p2.y});
     /* remove pontos praticamente repetidos */
@@ -1889,7 +1898,42 @@
       if(!pa) pa = nearestAnchorPt(a, pb || anchorPt(b,"n"));
       if(!pb) pb = nearestAnchorPt(b, pa);
     }
-    return ed.style==="straight" ? [pa,pb] : elbowPoints(pa,pb);
+    return ed.style==="straight" ? [pa,pb] : elbowPoints(pa,pb,ed.bendOffset,ed.bendDX,ed.bendDY);
+  }
+  /* onde fica a alça de "empurrar a dobra" de um conector em cotovelo.
+     kind:"1d" = os dois lados saem na mesma orientação, só dá pra empurrar num eixo.
+     kind:"2d" = forma em L, a alça é livre nos dois eixos. */
+  function edgeBendInfo(ed){
+    if(ed.style==="straight") return null;
+    const a=getNode(ed.from), b=getNode(ed.to);
+    if(!a||!b) return null;
+    let pa, pb;
+    if(!ed.fromAnchor && !ed.toAnchor){
+      const pair=bestAnchors(a,b); pa=pair.a; pb=pair.b;
+    } else {
+      pb = ed.toAnchor ? anchorPt(b, ed.toAnchor) : null;
+      pa = ed.fromAnchor ? anchorPt(a, ed.fromAnchor) : null;
+      if(!pa) pa = nearestAnchorPt(a, pb || anchorPt(b,"n"));
+      if(!pb) pb = nearestAnchorPt(b, pa);
+    }
+    const bothH = isHoriz(pa.dir) && isHoriz(pb.dir);
+    const bothV = !isHoriz(pa.dir) && !isHoriz(pb.dir);
+    const off=0.75;
+    const v1=dirVec(pa.dir), v2=dirVec(pb.dir);
+    const s={x:pa.x+v1.x*off, y:pa.y+v1.y*off};
+    const e={x:pb.x+v2.x*off, y:pb.y+v2.y*off};
+    if(bothH || bothV){
+      const axis = bothH ? "x" : "y";
+      const base = bothH ? (s.x+e.x)/2 : (s.y+e.y)/2;
+      const cur = base + (ed.bendOffset||0);
+      const midPt = bothH ? {x:cur, y:(s.y+e.y)/2} : {x:(s.x+e.x)/2, y:cur};
+      return {kind:"1d", axis:axis, midPt:midPt};
+    }
+    const dx=ed.bendDX||0, dy=ed.bendDY||0;
+    let cornerX, cornerY;
+    if(isHoriz(pa.dir)){ cornerX = e.x+dx; cornerY = s.y+dy; }
+    else { cornerX = s.x+dx; cornerY = e.y+dy; }
+    return {kind:"2d", midPt:{x:cornerX,y:cornerY}};
   }
   function pathMidpoint(pts){
     let total=0; const segs=[];
@@ -2224,6 +2268,15 @@
       "data-edge-endpoint":"from","data-edge-id":ed.id, style:"cursor:crosshair;"}));
     g.appendChild(svgEl("circle",{cx:p2.x,cy:p2.y,r:0.18,fill:"#fff",stroke:"#E8912B","stroke-width":0.05,
       "data-edge-endpoint":"to","data-edge-id":ed.id, style:"cursor:crosshair;"}));
+    const bend=edgeBendInfo(ed);
+    if(bend && bend.kind==="1d"){
+      const cursor = bend.axis==="x" ? "ew-resize" : "ns-resize";
+      g.appendChild(svgEl("rect",{x:bend.midPt.x-0.24,y:bend.midPt.y-0.15,width:0.48,height:0.3,rx:0.08,
+        fill:"#fff",stroke:"#E8912B","stroke-width":0.05,"data-edge-bend":ed.id,style:"cursor:"+cursor+";"}));
+    } else if(bend && bend.kind==="2d"){
+      g.appendChild(svgEl("circle",{cx:bend.midPt.x,cy:bend.midPt.y,r:0.2,
+        fill:"#fff",stroke:"#E8912B","stroke-width":0.06,"data-edge-bend":ed.id,"data-edge-bend-kind":"2d",style:"cursor:move;"}));
+    }
     return g;
   }
 
@@ -2623,6 +2676,12 @@
     });
   }
   canvas2d.addEventListener("dblclick", function(e){
+    const bendEl2 = e.target.closest("[data-edge-bend]");
+    if(bendEl2){
+      const ed2=getEdge(bendEl2.dataset.edgeBend);
+      if(ed2){ ed2.bendOffset=0; ed2.bendDX=0; ed2.bendDY=0; render2D(); renderProps(); scheduleSave(); }
+      return;
+    }
     const txEl2 = e.target.closest("[data-text-id]");
     if(txEl2){ editFreeText(getTextObj(txEl2.dataset.textId)); return; }
     if(!isFlow()) return;
@@ -2741,6 +2800,17 @@
       if(epEdge && selection && selection.kind==="edge" && selection.id===epEdge.dataset.edgeId){
         dragCtx={type:"edge-endpoint", edgeId:epEdge.dataset.edgeId, end:epEdge.dataset.edgeEndpoint};
         lastMouseSvgPt=pt;
+        canvas2d.setPointerCapture(e.pointerId); return;
+      }
+      const bendEl = e.target.closest("[data-edge-bend]");
+      if(bendEl && selection && selection.kind==="edge" && selection.id===bendEl.dataset.edgeBend){
+        const ed0=getEdge(selection.id); if(!ed0) return;
+        const info=edgeBendInfo(ed0); if(!info) return;
+        if(info.kind==="2d"){
+          dragCtx={type:"edge-bend-2d", edgeId:selection.id, startPt:pt, origDX:ed0.bendDX||0, origDY:ed0.bendDY||0, moved:false};
+        } else {
+          dragCtx={type:"edge-bend", edgeId:selection.id, axis:info.axis, startPt:pt, origOffset:ed0.bendOffset||0, moved:false};
+        }
         canvas2d.setPointerCapture(e.pointerId); return;
       }
       const eEl = e.target.closest("[data-edge-id]");
@@ -2868,6 +2938,18 @@
     }
     if(dragCtx.type==="connect"){ lastMouseSvgPt=pt; scheduleRender2D(); return; }
     if(dragCtx.type==="edge-endpoint"){ lastMouseSvgPt=pt; scheduleRender2D(); return; }
+    if(dragCtx.type==="edge-bend"){
+      const ed=getEdge(dragCtx.edgeId); if(!ed) return;
+      const delta = dragCtx.axis==="x" ? (pt.x-dragCtx.startPt.x) : (pt.y-dragCtx.startPt.y);
+      ed.bendOffset = snapVal(dragCtx.origOffset + delta);
+      dragCtx.moved=true; scheduleRender2D(); return;
+    }
+    if(dragCtx.type==="edge-bend-2d"){
+      const ed=getEdge(dragCtx.edgeId); if(!ed) return;
+      ed.bendDX = snapVal(dragCtx.origDX + (pt.x-dragCtx.startPt.x));
+      ed.bendDY = snapVal(dragCtx.origDY + (pt.y-dragCtx.startPt.y));
+      dragCtx.moved=true; scheduleRender2D(); return;
+    }
     if(dragCtx.type==="draw-node" || dragCtx.type==="draw-block"){ dragCtx.curPt=pt; scheduleRender2D(); return; }
     if(dragCtx.type==="multi-move"){
       const dx=pt.x-dragCtx.startPt.x, dy=pt.y-dragCtx.startPt.y;
@@ -3002,11 +3084,20 @@
             const snap=snapNow(); if(snap&&lastSnap&&snap!==lastSnap){histPast.push(lastSnap); histFuture.length=0;} lastSnap=snap;
             if(dragCtx.end==="from"){ ed.from=targetNode.id; ed.fromAnchor=targetAnchor||null; }
             else { ed.to=targetNode.id; ed.toAnchor=targetAnchor||null; }
+            ed.bendOffset=0; ed.bendDX=0; ed.bendDY=0;
             scheduleSave();
           }
         }
         /* soltou no vazio: nao muda nada, mantem a ligacao original */
       }
+      dragCtx=null; render2D(); renderProps(); return;
+    }
+    if(dragCtx.type==="edge-bend"){
+      if(dragCtx.moved) scheduleSave();
+      dragCtx=null; render2D(); renderProps(); return;
+    }
+    if(dragCtx.type==="edge-bend-2d"){
+      if(dragCtx.moved) scheduleSave();
       dragCtx=null; render2D(); renderProps(); return;
     }
     if(dragCtx.type==="draw-node"){
@@ -3579,7 +3670,7 @@
         if(!ed){ selection=null; return renderProps(); }
         propsPanel.innerHTML =
           "<h3>Conector</h3>" +
-          '<p class="type-empty-hint">Arraste as bolinhas nas pontas pra reconectar em outro lado ou outra forma.</p>' +
+          '<p class="type-empty-hint">Arraste as bolinhas nas pontas pra reconectar. Arraste o quadradinho no meio da linha pra ajustar a curva.</p>' +
           '<label>Rótulo<input id="propEdgeLabel" type="text" value="'+escapeHtml(ed.label||"")+'" placeholder="Ex: Sim / Não"></label>' +
           '<label>Traçado<select id="propEdgeStyle">' +
             '<option value="elbow"'+(ed.style!=="straight"?" selected":"")+'>Cotovelo (90°)</option>' +
@@ -3589,6 +3680,7 @@
           '<label class="chk-row"><input id="propEdgeArrow" type="checkbox" '+(ed.arrow!==false?"checked":"")+'> Seta na ponta</label>' +
           '<label class="chk-row"><input id="propEdgeDash" type="checkbox" '+(ed.dashed?"checked":"")+'> Linha tracejada</label>' +
           (ed.fromAnchor||ed.toAnchor ? '<button id="autoEdgeBtn" class="secondary" type="button">Reconectar automático</button>' : "") +
+          (ed.bendOffset||ed.bendDX||ed.bendDY ? '<button id="straightenEdgeBtn" class="secondary" type="button">Endireitar curva</button>' : "") +
           '<button id="delEdgeBtn" class="danger" type="button">Excluir conector</button>';
         document.getElementById("propEdgeLabel").addEventListener("input", function(e){ ed.label=e.target.value; render2D(); scheduleSave(); });
         document.getElementById("propEdgeStyle").addEventListener("change", function(e){ ed.style=e.target.value; render2D(); scheduleSave(); });
@@ -3596,7 +3688,9 @@
         document.getElementById("propEdgeArrow").addEventListener("change", function(e){ ed.arrow=e.target.checked; render2D(); scheduleSave(); });
         document.getElementById("propEdgeDash").addEventListener("change", function(e){ ed.dashed=e.target.checked; render2D(); scheduleSave(); });
         const autoEdgeBtn=document.getElementById("autoEdgeBtn");
-        if(autoEdgeBtn) autoEdgeBtn.addEventListener("click", function(){ ed.fromAnchor=null; ed.toAnchor=null; render2D(); renderProps(); scheduleSave(); });
+        if(autoEdgeBtn) autoEdgeBtn.addEventListener("click", function(){ ed.fromAnchor=null; ed.toAnchor=null; ed.bendOffset=0; ed.bendDX=0; ed.bendDY=0; render2D(); renderProps(); scheduleSave(); });
+        const straightenEdgeBtn=document.getElementById("straightenEdgeBtn");
+        if(straightenEdgeBtn) straightenEdgeBtn.addEventListener("click", function(){ ed.bendOffset=0; ed.bendDX=0; ed.bendDY=0; render2D(); renderProps(); scheduleSave(); });
         document.getElementById("delEdgeBtn").addEventListener("click", deleteSelection);
         return;
       }
