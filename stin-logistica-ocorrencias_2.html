@@ -118,6 +118,28 @@
     .occ-row-side{width:100%;}
   }
   .occ-actions{display:flex;gap:8px;margin-top:2px;}
+
+  /* ===== Tela "Tratar ocorrências" com visual do Modo TV (escuro) ===== */
+  #view-tratar{background:#0B1220;color:#EAF0FE;border-radius:18px;padding:26px 30px 40px;}
+  #view-tratar .page-head h1{color:#EAF0FE;}
+  #view-tratar .page-head p{color:#8B9BC2;}
+  #view-tratar input[type=text],#view-tratar textarea{background:#0E1626;border:1px solid rgba(255,255,255,.14);color:#EAF0FE;}
+  #view-tratar input[type=text]::placeholder,#view-tratar textarea::placeholder{color:#5C6B8A;}
+  #view-tratar input[type=text]:focus,#view-tratar textarea:focus{border-color:var(--primary);}
+  #view-tratar .col-head{border-bottom-color:rgba(255,255,255,.08);}
+  #view-tratar .col-head h3{color:#EAF0FE;}
+  #view-tratar .col-empty{background:#131C30;color:#8B9BC2;border:1px solid rgba(255,255,255,.08);}
+  #view-tratar .occ-row{background:#131C30;border:1px solid rgba(255,255,255,.08);}
+  #view-tratar .occ-row-id{color:#8FA8F5;font-family:'IBM Plex Mono',monospace;}
+  #view-tratar .occ-row-tipo{color:#EAF0FE;}
+  #view-tratar .occ-row-meta{color:#8B9BC2;}
+  #view-tratar .occ-row-meta .resp{color:#EAF0FE;background:rgba(255,255,255,.06);padding:2px 8px;border-radius:6px;}
+  #view-tratar .occ-row-desc{background:rgba(255,255,255,.04);color:#C7D2EA;}
+  #view-tratar .obs-label{color:#8B9BC2;}
+  #view-tratar .occ-obs-view{background:rgba(255,255,255,.04);color:#8B9BC2;}
+  #view-tratar .btn-ghost{background:rgba(255,255,255,.06);color:#C7D2EA;border-color:rgba(255,255,255,.16);}
+  #view-tratar .btn-ghost:hover{background:rgba(255,255,255,.12);}
+  #view-tratar .resolved-note{background:rgba(24,169,104,.16);}
   .btn-sm{flex:1;border:none;border-radius:8px;padding:8px 0;font-family:'Inter';font-weight:700;font-size:12px;cursor:pointer;}
   .btn-primary{background:var(--primary);color:#fff;}
   .btn-primary:hover{background:var(--primary-dark);}
