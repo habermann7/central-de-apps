@@ -91,23 +91,33 @@
   .prio-Alta{background:var(--red-tint);color:var(--red);}
 
   /* ---- Tratar view (kanban) ---- */
-  .kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
-  @media(max-width:900px){.kanban{grid-template-columns:1fr;}}
-  .col{background:#F5F7FB;border:1px solid var(--line);border-radius:14px;padding:14px;min-height:120px;}
-  .col-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:0 2px;}
+  .tratar-search{margin-bottom:18px;}
+  .tratar-search input{width:100%;max-width:420px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;font-size:13px;font-family:'Inter';background:var(--card);}
+  .tratar-search input:focus{outline:none;border-color:var(--primary);}
+
+  .kanban{display:flex;flex-direction:column;gap:26px;}
+  .col{}
+  .col-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line);}
   .col-head h3{font-size:13.5px;margin:0;}
-  .occ-card{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:11px;padding:13px 14px;margin-bottom:11px;}
-  .occ-card.p-Alta{border-left-color:var(--red);}
-  .occ-card.p-Média{border-left-color:var(--amber);}
-  .occ-card.p-Baixa{border-left-color:var(--green);}
-  .occ-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
-  .occ-id{font-size:12px;font-weight:700;color:var(--primary-dark);}
-  .occ-time{font-size:10.5px;color:var(--muted);margin-top:2px;}
-  .occ-tipo{font-size:13.5px;font-weight:600;margin:8px 0 2px;}
-  .occ-meta{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:2px;margin-top:4px;}
-  .occ-meta .resp{color:var(--primary-dark);font-weight:600;}
-  .occ-desc{font-size:12px;color:var(--ink);background:#FAFBFD;border-radius:8px;padding:8px 9px;margin-top:9px;line-height:1.4;}
-  .occ-actions{display:flex;gap:8px;margin-top:11px;}
+  .col-empty{text-align:center;color:var(--muted);font-size:12px;padding:16px 6px;background:#F5F7FB;border-radius:10px;}
+
+  .occ-row{display:flex;align-items:flex-start;gap:16px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:11px;padding:13px 15px;margin-bottom:10px;}
+  .occ-row.p-Alta{border-left-color:var(--red);}
+  .occ-row.p-Média{border-left-color:var(--amber);}
+  .occ-row.p-Baixa{border-left-color:var(--green);}
+  .occ-row-main{flex:1;min-width:0;}
+  .occ-row-top{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+  .occ-row-id{font-size:12px;font-weight:700;color:var(--primary-dark);}
+  .occ-row-tipo{font-size:13.5px;font-weight:600;}
+  .occ-row-meta{font-size:12px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;margin-top:5px;}
+  .occ-row-meta .resp{color:var(--primary-dark);font-weight:600;}
+  .occ-row-desc{font-size:12px;color:var(--ink);background:#FAFBFD;border-radius:8px;padding:8px 9px;margin-top:9px;line-height:1.4;}
+  .occ-row-side{width:270px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;}
+  @media(max-width:760px){
+    .occ-row{flex-direction:column;}
+    .occ-row-side{width:100%;}
+  }
+  .occ-actions{display:flex;gap:8px;margin-top:2px;}
   .btn-sm{flex:1;border:none;border-radius:8px;padding:8px 0;font-family:'Inter';font-weight:700;font-size:12px;cursor:pointer;}
   .btn-primary{background:var(--primary);color:#fff;}
   .btn-primary:hover{background:var(--primary-dark);}
@@ -369,8 +379,11 @@
     <div class="page-head">
       <div>
         <h1>Tratar ocorrências</h1>
-        <p>Perfil da logística — move a ocorrência pelas etapas até a resolução.</p>
+        <p>Perfil da logística — acompanha e resolve as ocorrências, em formato de lista.</p>
       </div>
+    </div>
+    <div class="tratar-search">
+      <input type="text" id="tratar-busca" placeholder="Buscar por pedido ou NF..." oninput="renderKanban()">
     </div>
     <div class="kanban" id="kanban"></div>
   </section>
@@ -908,21 +921,31 @@ function renderKanban(){
     {key:'Em Tratamento', label:'Em tratamento'},
     {key:'Resolvida', label:'Resolvida'},
   ];
+  const buscaEl = document.getElementById('tratar-busca');
+  const q = buscaEl ? buscaEl.value.trim().toLowerCase() : '';
   const kb = document.getElementById('kanban');
-  kb.innerHTML = cols.map(c=>{
-    const items = occurrences.filter(o=>o.status===c.key);
+  const blocos = cols.map(c=>{
+    let items = occurrences.filter(o=>o.status===c.key);
+    if(q){
+      items = items.filter(o =>
+        String(o.pedido || '').toLowerCase().indexOf(q) !== -1 ||
+        String(o.nf || '').toLowerCase().indexOf(q) !== -1
+      );
+      if(items.length === 0) return '';
+    }
     return `
     <div class="col">
       <div class="col-head"><h3>${c.label}</h3><span class="badge-count">${items.length}</span></div>
       ${items.length===0 ? '<div class="col-empty">Sem ocorrências aqui</div>' : items.map(o=>occCardHTML(o,c.key)).join('')}
     </div>`;
-  }).join('');
+  }).filter(Boolean).join('');
+  kb.innerHTML = blocos || `<div class="col-empty">Nenhuma ocorrência com pedido ou NF "${q}".</div>`;
 }
 
 function occCardHTML(o, colKey){
   let actions = '';
   if(colKey==='Aberta'){
-    actions = `<div class="occ-actions"><button class="btn-sm btn-primary" onclick="avancar('${o.id}')">Assumir tratamento</button></div>`;
+    actions = `<button class="btn-sm btn-primary" onclick="avancar('${o.id}')">Assumir tratamento</button>`;
   } else if(colKey==='Em Tratamento'){
     actions = `
       <div class="resolve-box">
@@ -943,24 +966,26 @@ function occCardHTML(o, colKey){
         <button class="btn-sm btn-ghost obs-save-btn" id="obs-btn-${o.id}" onclick="salvarObs('${o.id}')">Salvar obs</button>
       </div>` : (o.obs ? `<div class="occ-obs-view"><b>Obs:</b> ${o.obs}</div>` : '');
   return `
-    <div class="occ-card p-${o.prioridade}">
-      <div class="occ-top">
-        <div>
-          <div class="occ-id mono">${o.id}</div>
-          <div class="occ-time">Há ${o.tempo}</div>
+    <div class="occ-row p-${o.prioridade}">
+      <div class="occ-row-main">
+        <div class="occ-row-top">
+          <span class="occ-row-id mono">${o.id}</span>
+          <span class="prio-tag prio-${o.prioridade}">${o.prioridade}</span>
+          <span class="occ-row-tipo">${o.tipo}</span>
         </div>
-        <span class="prio-tag prio-${o.prioridade}">${o.prioridade}</span>
+        <div class="occ-row-meta">
+          <span>${o.vendedor}</span>
+          <span>Pedido ${o.pedido}</span>
+          ${o.nf ? `<span>NF ${o.nf}</span>` : ''}
+          <span>Há ${o.tempo}</span>
+          ${respLine}
+        </div>
+        <div class="occ-row-desc">${o.desc}</div>
       </div>
-      <div class="occ-tipo">${o.tipo}</div>
-      <div class="occ-meta">
-        <span>${o.vendedor}</span>
-        <span>Pedido ${o.pedido}</span>
-        ${o.nf ? `<span>NF ${o.nf}</span>` : ''}
-        ${respLine}
+      <div class="occ-row-side">
+        ${obsBox}
+        ${actions}
       </div>
-      <div class="occ-desc">${o.desc}</div>
-      ${obsBox}
-      ${actions}
     </div>
   `;
 }
