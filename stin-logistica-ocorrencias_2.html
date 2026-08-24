@@ -91,15 +91,30 @@
   .prio-Alta{background:var(--red-tint);color:var(--red);}
 
   /* ---- Tratar view (kanban) ---- */
-  .tratar-search{margin-bottom:18px;}
-  .tratar-search input{width:100%;max-width:420px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;font-size:13px;font-family:'Inter';background:var(--card);}
+  .tratar-toolbar{
+    position:sticky; top:64px; z-index:5; background:var(--bg);
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+    padding:12px 0 14px; margin-bottom:8px; border-bottom:1px solid var(--line);
+  }
+  .tratar-search{position:relative;display:flex;align-items:center;flex-shrink:0;}
+  .tratar-search-icon{position:absolute;left:12px;font-size:12px;color:var(--muted);pointer-events:none;}
+  .tratar-search input{width:280px;max-width:100%;padding:10px 14px 10px 33px;border:1px solid var(--line);border-radius:10px;font-size:13px;font-family:'Inter';background:var(--card);}
   .tratar-search input:focus{outline:none;border-color:var(--primary);}
+  .tratar-search-count{margin-left:10px;font-size:11.5px;color:var(--muted);white-space:nowrap;}
+  .prio-chips{display:flex;gap:7px;flex-wrap:wrap;}
+  .prio-chip{border:1px solid var(--line);background:#fff;color:var(--muted);font-family:'Inter';font-weight:600;font-size:12px;padding:6px 14px;border-radius:20px;cursor:pointer;transition:.15s;}
+  .prio-chip:hover{border-color:var(--primary);color:var(--primary-dark);}
+  .prio-chip.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+  .prio-chip.chip-Alta.active{background:var(--red);border-color:var(--red);}
+  .prio-chip.chip-Média.active{background:var(--amber);border-color:var(--amber);color:#5A3B00;}
+  .prio-chip.chip-Baixa.active{background:var(--green);border-color:var(--green);}
+  @media(max-width:640px){.tratar-search{width:100%;}.tratar-search input{width:100%;}.tratar-toolbar{position:static;}}
 
   .kanban{display:flex;flex-direction:column;gap:26px;}
   .col{}
   .col-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line);}
   .col-head h3{font-size:13.5px;margin:0;}
-  .col-empty{text-align:center;color:var(--muted);font-size:12px;padding:16px 6px;background:#F5F7FB;border-radius:10px;}
+  .col-empty{text-align:center;color:var(--muted);font-size:12px;padding:10px 6px;background:#F5F7FB;border-radius:10px;}
   .col-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;align-items:start;}
 
   .occ-card{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:11px;padding:13px 14px;}
@@ -378,8 +393,18 @@
         <p>Perfil da logística — acompanha e resolve as ocorrências, em formato de lista.</p>
       </div>
     </div>
-    <div class="tratar-search">
-      <input type="text" id="tratar-busca" placeholder="Buscar por pedido ou NF..." oninput="renderKanban()">
+    <div class="tratar-toolbar">
+      <div class="tratar-search">
+        <span class="tratar-search-icon">🔎</span>
+        <input type="text" id="tratar-busca" placeholder="Buscar por pedido ou NF..." oninput="renderKanban()">
+        <span class="tratar-search-count" id="tratar-busca-count"></span>
+      </div>
+      <div class="prio-chips" id="prioChips">
+        <button type="button" class="prio-chip active" onclick="selecionarPrioridade(this,'')">Todas</button>
+        <button type="button" class="prio-chip chip-Alta" onclick="selecionarPrioridade(this,'Alta')">Alta</button>
+        <button type="button" class="prio-chip chip-Média" onclick="selecionarPrioridade(this,'Média')">Média</button>
+        <button type="button" class="prio-chip chip-Baixa" onclick="selecionarPrioridade(this,'Baixa')">Baixa</button>
+      </div>
     </div>
     <div class="kanban" id="kanban"></div>
   </section>
@@ -659,6 +684,14 @@ function defaultState(){
 
 /* Estado em memória (populado por loadState) */
 let seq, ncSeq, occurrences, usuarios, ncs, tiposOcorrencia;
+let prioridadeAtiva = '';
+
+function selecionarPrioridade(btn, prio){
+  prioridadeAtiva = prio;
+  document.querySelectorAll('#prioChips .prio-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderKanban();
+}
 
 async function loadState(){
   if(hasStorage){
@@ -919,14 +952,22 @@ function renderKanban(){
   ];
   const buscaEl = document.getElementById('tratar-busca');
   const q = buscaEl ? buscaEl.value.trim().toLowerCase() : '';
+  const filtroAtivo = !!q || !!prioridadeAtiva;
   const kb = document.getElementById('kanban');
+  let totalEncontrado = 0;
   const blocos = cols.map(c=>{
     let items = occurrences.filter(o=>o.status===c.key);
+    if(prioridadeAtiva){
+      items = items.filter(o => o.prioridade === prioridadeAtiva);
+    }
     if(q){
       items = items.filter(o =>
         String(o.pedido || '').toLowerCase().indexOf(q) !== -1 ||
         String(o.nf || '').toLowerCase().indexOf(q) !== -1
       );
+    }
+    if(filtroAtivo){
+      totalEncontrado += items.length;
       if(items.length === 0) return '';
     }
     return `
@@ -935,7 +976,14 @@ function renderKanban(){
       ${items.length===0 ? '<div class="col-empty">Sem ocorrências aqui</div>' : `<div class="col-cards">${items.map(o=>occCardHTML(o,c.key)).join('')}</div>`}
     </div>`;
   }).filter(Boolean).join('');
-  kb.innerHTML = blocos || `<div class="col-empty">Nenhuma ocorrência com pedido ou NF "${q}".</div>`;
+  const semResultadoMsg = ['Nenhuma ocorrência encontrada'
+    + (q ? ` para pedido/NF "${q}"` : '')
+    + (prioridadeAtiva ? ` com prioridade ${prioridadeAtiva}` : '') + '.'][0];
+  kb.innerHTML = blocos || `<div class="col-empty">${semResultadoMsg}</div>`;
+  const countEl = document.getElementById('tratar-busca-count');
+  if(countEl){
+    countEl.textContent = filtroAtivo ? (totalEncontrado + (totalEncontrado===1 ? ' resultado' : ' resultados')) : '';
+  }
 }
 
 function occCardHTML(o, colKey){
