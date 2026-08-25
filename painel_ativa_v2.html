@@ -287,6 +287,44 @@
     .kpi-row{grid-template-columns:repeat(3,1fr);}
     .grid2, .grid2b{grid-template-columns:1fr;}
   }
+
+  /* Gargalo de não entregues — tabela matriz */
+  table.gargalo-table{font-size:12px;min-width:640px;}
+  table.gargalo-table th, table.gargalo-table td{white-space:nowrap;text-align:right;}
+  table.gargalo-table th:first-child, table.gargalo-table td:first-child{
+    text-align:left;position:sticky;left:0;background:var(--card);z-index:1;
+    max-width:220px;overflow:hidden;text-overflow:ellipsis;
+  }
+  table.gargalo-table thead th:first-child{background:var(--card);}
+  table.gargalo-table td.cell-count{cursor:pointer;border-radius:4px;transition:.1s;}
+  table.gargalo-table td.cell-count:hover{box-shadow:inset 0 0 0 2px var(--navy);}
+  table.gargalo-table tfoot td.cell-count:hover{box-shadow:inset 0 0 0 2px #fff;}
+  table.gargalo-table tfoot td.cell-count{cursor:pointer;}
+  table.gargalo-table td.cell-count.zero{color:var(--gray-2);cursor:default;}
+  table.gargalo-table td.cell-count.zero:hover{background:transparent;}
+  table.gargalo-table td.selected{outline:2px solid var(--navy);outline-offset:-2px;}
+  table.gargalo-table tfoot td.selected{outline:2px solid #fff;outline-offset:-2px;}
+  table.gargalo-table th.total-col, table.gargalo-table td.total-col{font-weight:700;}
+  table.gargalo-table tfoot td{
+    background:var(--navy);color:#fff;font-weight:700;border-bottom:none;position:sticky;bottom:0;
+  }
+  table.gargalo-table tfoot td:first-child{background:var(--navy);}
+  .gargalo-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin-top:6px;}
+  .export-btn{
+    font-family:'Inter',Arial,sans-serif;font-size:12.5px;font-weight:600;
+    border:1px solid var(--line);background:#fff;color:var(--navy-2);
+    padding:7px 13px;border-radius:8px;cursor:pointer;transition:.15s;
+    display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+  }
+  .export-btn:hover{background:#F0F2F5;}
+  #gargaloDrilldown{display:none;margin-top:16px;border-top:1px solid var(--line);padding-top:14px;}
+
+  .sla-select{
+    font-family:'Inter',Arial,sans-serif;
+    font-size:12.5px;font-weight:600;
+    border:1px solid var(--line);background:#fff;color:var(--navy-2);
+    padding:7px 10px;border-radius:8px;cursor:pointer;max-width:200px;
+  }
 </style>
 </head>
 <body>
@@ -343,18 +381,16 @@
   </div>
 
 
-  <div class="grid2b">
-    <div class="panel">
-      <h3>Maior dificuldade — % de problema por praça</h3>
-      <p class="phint">Praças com maior taxa de atraso/não entrega (mín. 8 remessas no período)</p>
-      <div class="chart-box" style="height:280px;"><canvas id="dificuldadeChart"></canvas></div>
-    </div>
-    <div class="panel">
-      <h3>Maior oportunidade — volume de problema por praça</h3>
-      <p class="phint">Praças que concentram o maior número absoluto de remessas com problema</p>
-      <div class="chart-box" style="height:280px;"><canvas id="oportunidadeChart"></canvas></div>
-      <div class="callout" id="opportunityCallout"></div>
-    </div>
+  <div class="panel" style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
+        <div>
+          <h3>SLA por praça</h3>
+          <p class="phint">% de remessas dentro do prazo por praça (mín. 8 remessas no período)</p>
+        </div>
+        <select id="slaPracaSelect" class="sla-select"></select>
+      </div>
+      <div class="chart-box" style="height:280px;"><canvas id="slaChart"></canvas></div>
+      <div class="callout" id="slaCallout"></div>
   </div>
 
   <div class="grid2">
@@ -363,13 +399,53 @@
       <p class="phint">Última ocorrência registrada nas remessas ainda não entregues</p>
       <div class="chart-box" style="height:300px;"><canvas id="gargaloChart"></canvas></div>
     </div>
-    <div class="panel">
-      <h3>Maiores atrasos</h3>
-      <p class="phint">Top remessas por dias de atraso — entregues e em aberto</p>
-      <table class="datatable" id="topDelaysTable">
-        <thead><tr><th>CTRC</th><th>Praça</th><th>Status</th><th>Dias</th></tr></thead>
+    <div class="panel" style="max-width:420px;">
+      <h3>Maiores atrasos — em aberto</h3>
+      <p class="phint">Top remessas em aberto e atrasadas, por dias de atraso</p>
+      <table class="datatable" id="topDelaysTable" style="font-size:11.5px;">
+        <thead><tr><th>Nota Fiscal</th><th>Praça</th><th>Status atual</th><th>Dias</th></tr></thead>
         <tbody></tbody>
       </table>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+      <div>
+        <h3>Gargalo de não entregues</h3>
+        <p class="phint" id="gargaloTableHint">Contagem de remessas não entregues por última ocorrência e dias em atraso</p>
+      </div>
+      <button class="export-btn" id="exportGargaloBtn">⭱ Exportar CSV</button>
+    </div>
+    <div class="gargalo-scroll">
+      <table class="datatable gargalo-table" id="gargaloTable">
+        <thead><tr id="gargaloTheadRow"></tr></thead>
+        <tbody id="gargaloTbody"></tbody>
+        <tfoot><tr id="gargaloTfootRow"></tr></tfoot>
+      </table>
+    </div>
+    <p class="phint" style="margin-top:10px;margin-bottom:0;">Clique em qualquer número da tabela para ver as remessas daquela célula.</p>
+
+    <div id="gargaloDrilldown">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+        <div>
+          <h3 style="margin-bottom:2px;">Remessas — <span id="drillCount">0</span></h3>
+          <p class="phint" id="drillSubtitle"></p>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="export-btn" id="exportDrillBtn">⭱ Exportar CSV por NF</button>
+          <button class="export-btn" id="closeDrillBtn" style="color:var(--red);border-color:#F0C9C6;">Fechar ✕</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;margin-top:10px;">
+        <table class="datatable" id="drillTable">
+          <thead><tr>
+            <th>Nota Fiscal</th><th>Destinatário</th><th>Praça</th>
+            <th>Modal</th><th>Última ocorrência</th><th>Dias em atraso</th>
+          </tr></thead>
+          <tbody id="drillTbody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -382,6 +458,8 @@ function fbRef(path){ return firebase.database().ref(DB_ROOT + (path ? '/' + pat
 
 let DEFAULT_DATA = [];
 let ALL = [];
+let SLA_DATA = []; // {praca, total, onTime, slaPct} — todas as praças com volume mín. (ordenado por SLA asc)
+let TOP_DELAYS_ALL = [];
 let dadosCarregados = false;
 
 function mostrarCarregando(msg){
@@ -447,6 +525,7 @@ function computeAndRender(rows){
   renderPrazoChart(entregues);
   renderPracaCharts(rows);
   renderGargaloChart(naoEntregues);
+  renderGargaloTable(naoEntregues);
   renderTopDelays(rows);
 }
 
@@ -599,66 +678,107 @@ function renderPracaCharts(rows){
     praca, total:v.total, problemas:v.problemas, pct: v.total? v.problemas/v.total*100 : 0
   }));
 
-  // Dificuldade: min volume 8, top 8 by pct
-  const dificuldade = arr.filter(a=>a.total>=8).sort((a,b)=>b.pct-a.pct).slice(0,8);
-  upsertChart('dificuldadeChart', {
+  // Dificuldade: min volume 8, top 8 by pct (usado só como base para o cálculo de SLA)
+
+  // SLA por praça: % dentro do prazo, mín. volume 8 — dados completos (sem cortar top 8)
+  SLA_DATA = arr.filter(a=>a.total>=8).map(a=>({
+    praca: a.praca,
+    total: a.total,
+    onTime: a.total - a.problemas,
+    slaPct: a.total ? (a.total - a.problemas) / a.total * 100 : 0
+  })).sort((a,b)=>a.slaPct-b.slaPct);
+
+  populateSlaPracaSelect();
+  renderSlaView();
+}
+
+function populateSlaPracaSelect(){
+  const sel = document.getElementById('slaPracaSelect');
+  const prevVal = sel.value || '__worst8';
+  const pracasSorted = SLA_DATA.slice().sort((a,b)=>a.praca.localeCompare(b.praca));
+  sel.innerHTML =
+    `<option value="__worst8">Piores 8 (padrão)</option>` +
+    `<option value="__all">Todas as praças (${SLA_DATA.length})</option>` +
+    pracasSorted.map(a=>`<option value="${escapeAttr(a.praca)}">${a.praca}</option>`).join('');
+  const stillValid = Array.from(sel.options).some(o=>o.value===prevVal);
+  sel.value = stillValid ? prevVal : '__worst8';
+}
+
+function renderSlaView(){
+  const sel = document.getElementById('slaPracaSelect');
+  const val = sel.value;
+  let view;
+  if(val === '__worst8') view = SLA_DATA.slice(0,8);
+  else if(val === '__all') view = SLA_DATA;
+  else view = SLA_DATA.filter(a=>a.praca===val);
+  drawSlaChart(view, val);
+}
+
+function drawSlaChart(view, selection){
+  const dataLabelPlugin_sla = {
+    id: 'dataLabelPlugin_sla',
+    afterDatasetsDraw(chart){
+      const {ctx, data, scales:{x,y}} = chart;
+      ctx.save();
+      ctx.font = '600 11px -apple-system, Segoe UI, Arial, sans-serif';
+      ctx.fillStyle = '#374151';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      data.datasets[0].data.forEach((v,i)=>{
+        const xPos = x.getPixelForValue(i);
+        const yPos = y.getPixelForValue(v);
+        ctx.fillText(fmtPct(v), xPos, yPos - 4);
+      });
+      ctx.restore();
+    }
+  };
+  upsertChart('slaChart', {
     type:'bar',
     data:{
-      labels: dificuldade.map(a=>a.praca),
+      labels: view.map(a=>a.praca),
       datasets:[{
-        data: dificuldade.map(a=>a.pct),
-        backgroundColor:'#B3261E',
+        data: view.map(a=>a.slaPct),
+        backgroundColor: view.map(a=> a.slaPct>=90 ? '#2F7D4F' : (a.slaPct>=70 ? '#B7791F' : '#B3261E')),
         borderRadius:6, maxBarThickness:30,
       }]
     },
     options:{
       responsive:true, maintainAspectRatio:false,
+      layout:{padding:{top:18}},
       plugins:{legend:{display:false}, tooltip:{callbacks:{
-        label:c=>{ const d=dificuldade[c.dataIndex]; return ` ${fmtPct(d.pct)} (${d.problemas} de ${d.total} remessas)`; }
+        label:c=>{ const d=view[c.dataIndex]; return ` ${fmtPct(d.slaPct)} dentro do prazo (${fmtNum(d.onTime)} de ${fmtNum(d.total)} remessas)`; }
       }}},
       scales:{
         y:{beginAtZero:true, max:100, grid:{color:'#F0F1F3'}, ticks:{callback:v=>v+'%', font:{size:11}}},
         x:{grid:{display:false}, ticks:{font:{size:12,weight:'600'}, color:'#374151'}}
       }
-    }
-  });
-
-  // Oportunidade: top 8 by absolute problem count
-  const oportunidade = arr.filter(a=>a.problemas>0).sort((a,b)=>b.problemas-a.problemas).slice(0,8);
-  upsertChart('oportunidadeChart', {
-    type:'bar',
-    data:{
-      labels: oportunidade.map(a=>a.praca),
-      datasets:[{
-        data: oportunidade.map(a=>a.problemas),
-        backgroundColor:'#2C4166',
-        borderRadius:6, maxBarThickness:30,
-      }]
     },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}, tooltip:{callbacks:{
-        label:c=>{ const d=oportunidade[c.dataIndex]; return ` ${fmtNum(d.problemas)} remessas com problema (${fmtPct(d.pct)} do total da praça)`; }
-      }}},
-      scales:{
-        y:{beginAtZero:true, grid:{color:'#F0F1F3'}, ticks:{font:{size:11}, precision:0}},
-        x:{grid:{display:false}, ticks:{font:{size:12,weight:'600'}, color:'#374151'}}
-      }
-    }
+    plugins:[dataLabelPlugin_sla]
   });
 
-  const top = oportunidade[0];
-  const shareTotal = arr.reduce((s,a)=>s+a.problemas,0);
-  if(top && shareTotal>0){
-    const share = top.problemas/shareTotal*100;
-    document.getElementById('opportunityCallout').innerHTML = `
-      <div class="cnum">${fmtPct(share)}</div>
-      <p>de todas as remessas com problema no período filtrado estão concentradas em <b>${top.praca}</b>
-      (${fmtNum(top.problemas)} de ${fmtNum(shareTotal)}) — maior alavancagem de melhoria isolada.</p>`;
+  if(!view.length){
+    document.getElementById('slaCallout').innerHTML =
+      '<p>Nenhuma praça com volume suficiente (mín. 8 remessas) no período filtrado.</p>';
+    return;
+  }
+
+  const specific = selection !== '__worst8' && selection !== '__all';
+  if(specific){
+    const d = view[0];
+    document.getElementById('slaCallout').innerHTML = `
+      <div class="cnum">${fmtPct(d.slaPct)}</div>
+      <p><b>${d.praca}</b> está com ${fmtPct(d.slaPct)} dentro do prazo no período filtrado
+      (${fmtNum(d.onTime)} de ${fmtNum(d.total)} remessas).</p>`;
   } else {
-    document.getElementById('opportunityCallout').innerHTML = '';
+    const worst = view.slice().sort((a,b)=>a.slaPct-b.slaPct)[0];
+    document.getElementById('slaCallout').innerHTML = `
+      <div class="cnum">${fmtPct(worst.slaPct)}</div>
+      <p>é o menor SLA entre as praças com volume relevante no período — <b>${worst.praca}</b>
+      tem apenas ${fmtNum(worst.onTime)} de ${fmtNum(worst.total)} remessas dentro do prazo.</p>`;
   }
 }
+
+document.getElementById('slaPracaSelect').addEventListener('change', renderSlaView);
 
 function renderGargaloChart(naoEntregues){
   const counts = {};
@@ -685,14 +805,182 @@ function renderGargaloChart(naoEntregues){
   });
 }
 
+// ---------------- Gargalo de não entregues (tabela matriz) ----------------
+let gargaloCellsData = {};   // "ocor|dias" -> registros
+let gargaloStatusAll = {};   // "ocor" -> todos os registros daquela ocorrência
+let gargaloAllRecords = [];  // todos os registros não entregues
+
+function diasLabel(diasStr){
+  const n = Number(diasStr);
+  if(n === 0) return 'No prazo';
+  return n > 0 ? `+${n} d` : `${n} d`;
+}
+
+function heatStyle(n, max){
+  if(!n || !max) return '';
+  const t = Math.min(1, n / max);
+  const alpha = (0.10 + t * 0.60).toFixed(2);
+  const color = t > 0.45 ? '#ffffff' : 'var(--navy)';
+  return ` style="background:rgba(179,38,30,${alpha});color:${color};font-weight:600;"`;
+}
+
+function escapeAttr(s){ return String(s).replace(/"/g,'&quot;'); }
+
+function csvEscape(v){
+  if(v===null||v===undefined) return '';
+  const s = String(v);
+  if(/[",;\n]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
+  return s;
+}
+
+function downloadCSV(filename, rows){
+  const csv = rows.map(r=>r.map(csvEscape).join(';')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function renderGargaloTable(naoEntregues){
+  gargaloCellsData = {};
+  gargaloStatusAll = {};
+  gargaloAllRecords = naoEntregues.slice();
+  const statusTotals = {};
+  const diasSet = new Set();
+
+  naoEntregues.forEach(r=>{
+    const ocor = r.ocor || '(sem ocorrência)';
+    const diasKey = String(r.dias);
+    diasSet.add(diasKey);
+    const key = ocor + '|' + diasKey;
+    if(!gargaloCellsData[key]) gargaloCellsData[key] = [];
+    gargaloCellsData[key].push(r);
+    if(!gargaloStatusAll[ocor]) gargaloStatusAll[ocor] = [];
+    gargaloStatusAll[ocor].push(r);
+    statusTotals[ocor] = (statusTotals[ocor]||0) + 1;
+  });
+
+  const diasList = Array.from(diasSet).sort((a,b)=>Number(a)-Number(b));
+  const statuses = Object.entries(statusTotals).sort((a,b)=>b[1]-a[1]).map(([o])=>o);
+  const grandTotal = naoEntregues.length;
+  const maxCell = Math.max(0, ...Object.values(gargaloCellsData).map(arr=>arr.length));
+  const maxRowTotal = Math.max(0, ...statuses.map(o=>statusTotals[o]));
+
+  document.getElementById('gargaloTableHint').textContent =
+    `Todas as ocorrências · ${statuses.length} status · ${diasList.length} faixas de dias em atraso · contagem de remessas não entregues por célula`;
+
+  const theadRow = document.getElementById('gargaloTheadRow');
+  theadRow.innerHTML = '<th>Última ocorrência</th>' +
+    diasList.map(d=>`<th class="date-col">${diasLabel(d)}</th>`).join('') +
+    '<th class="total-col">Total</th>';
+
+  const tbody = document.getElementById('gargaloTbody');
+  tbody.innerHTML = statuses.map(ocor=>{
+    const cells = diasList.map(d=>{
+      const key = ocor+'|'+d;
+      const n = (gargaloCellsData[key]||[]).length;
+      const cls = n ? 'cell-count' : 'cell-count zero';
+      return `<td class="${cls}"${heatStyle(n, maxCell)} data-scope="cell" data-ocor="${escapeAttr(ocor)}" data-dias="${d}">${n||0}</td>`;
+    }).join('');
+    const total = statusTotals[ocor];
+    return `<tr><td title="${escapeAttr(ocor)}">${ocor}</td>${cells}<td class="total-col cell-count"${heatStyle(total, maxRowTotal)} data-scope="status" data-ocor="${escapeAttr(ocor)}">${total}</td></tr>`;
+  }).join('');
+
+  const diasTotals = diasList.map(d => naoEntregues.filter(r=>String(r.dias)===d).length);
+  const tfootRow = document.getElementById('gargaloTfootRow');
+  tfootRow.innerHTML = '<td>Total Geral</td>' +
+    diasList.map((d,i)=>`<td class="cell-count" data-scope="diasCol" data-dias="${d}">${diasTotals[i]}</td>`).join('') +
+    `<td class="total-col cell-count" data-scope="all">${grandTotal}</td>`;
+
+  document.querySelectorAll('#gargaloTable td.cell-count:not(.zero)').forEach(td=>{
+    td.addEventListener('click', ()=> showGargaloDrilldown(td, td.dataset));
+  });
+
+  document.getElementById('exportGargaloBtn').onclick = ()=>{
+    const header = ['Última ocorrência', ...diasList.map(diasLabel), 'Total'];
+    const body = statuses.map(ocor=>[
+      ocor,
+      ...diasList.map(d=>(gargaloCellsData[ocor+'|'+d]||[]).length),
+      statusTotals[ocor]
+    ]);
+    const footer = ['Total Geral', ...diasTotals, grandTotal];
+    downloadCSV('gargalo_nao_entregues.csv', [header, ...body, footer]);
+  };
+
+  document.getElementById('gargaloDrilldown').style.display = 'none';
+}
+
+function showGargaloDrilldown(tdEl, dataset){
+  document.querySelectorAll('#gargaloTable td.selected').forEach(td=>td.classList.remove('selected'));
+  if(tdEl) tdEl.classList.add('selected');
+
+  const { scope, ocor, dias } = dataset;
+  let records, subtitle, fileTag;
+
+  if(scope === 'all'){
+    records = gargaloAllRecords;
+    subtitle = 'Todas as ocorrências · todas as faixas de dias em atraso';
+    fileTag = 'todas_ocorrencias';
+  } else if(scope === 'status'){
+    records = gargaloStatusAll[ocor] || [];
+    subtitle = `Última ocorrência: ${ocor} · todas as faixas de dias em atraso`;
+    fileTag = ocor.replace(/[^a-z0-9]+/gi,'_').toLowerCase();
+  } else if(scope === 'diasCol'){
+    records = gargaloAllRecords.filter(r=>String(r.dias)===dias);
+    subtitle = `Todas as ocorrências · Dias em atraso: ${diasLabel(dias)}`;
+    fileTag = 'dias_' + dias.replace('-','menos');
+  } else {
+    records = gargaloCellsData[ocor+'|'+dias] || [];
+    subtitle = `Última ocorrência: ${ocor} · Dias em atraso: ${diasLabel(dias)}`;
+    fileTag = ocor.replace(/[^a-z0-9]+/gi,'_').toLowerCase() + '_' + dias.replace('-','menos');
+  }
+
+  records = records.slice().sort((a,b)=>b.dias-a.dias);
+
+  document.getElementById('drillCount').textContent = records.length;
+  document.getElementById('drillSubtitle').textContent = subtitle;
+
+  const tbody = document.getElementById('drillTbody');
+  tbody.innerHTML = records.map(r=>`
+    <tr>
+      <td class="mono">${r.nf!=null?r.nf:'—'}</td>
+      <td>${r.dest||'—'}</td>
+      <td>${r.praca||'—'}</td>
+      <td>${r.tipo||'—'}</td>
+      <td>${r.ocor||'—'}</td>
+      <td class="mono"><span class="tag ${r.dias>0?'red':'amber'}">${r.dias>0? r.dias+' d':'no prazo'}</span></td>
+    </tr>`).join('');
+
+  document.getElementById('exportDrillBtn').onclick = ()=>{
+    const header = ['Nota Fiscal','Destinatário','Praça','Modal','Última ocorrência','Dias em atraso'];
+    const body = records.map(r=>[r.nf, r.dest, r.praca, r.tipo, r.ocor, r.dias]);
+    downloadCSV(`pedidos_por_nf_${fileTag}.csv`, [header, ...body]);
+  };
+
+  document.getElementById('gargaloDrilldown').style.display = 'block';
+  document.getElementById('gargaloDrilldown').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+document.getElementById('closeDrillBtn').addEventListener('click', ()=>{
+  document.getElementById('gargaloDrilldown').style.display = 'none';
+  document.querySelectorAll('#gargaloTable td.selected').forEach(td=>td.classList.remove('selected'));
+});
+
 function renderTopDelays(rows){
-  const delayed = rows.filter(r=>PROBLEM_STATUSES.includes(r.status)).sort((a,b)=>b.dias-a.dias).slice(0,12);
+  TOP_DELAYS_ALL = rows.filter(r=>r.status==='Atrasado (em aberto)').sort((a,b)=>b.dias-a.dias);
+  drawTopDelays();
+}
+
+function drawTopDelays(){
+  const delayed = TOP_DELAYS_ALL.slice(0,6);
   const tbody = document.querySelector('#topDelaysTable tbody');
   tbody.innerHTML = delayed.map(r=>`
     <tr>
-      <td class="mono">${r.ctrc}</td>
+      <td class="mono">${r.nf!=null?r.nf:'—'}</td>
       <td>${r.praca}</td>
-      <td><span class="tag ${r.status==='Atrasado'?'red':'amber'}">${r.status==='Atrasado'?'Entregue c/ atraso':'Em aberto, atrasado'}</span></td>
+      <td>${r.ocor||'—'}</td>
       <td class="mono">${r.dias} d</td>
     </tr>`).join('');
 }
