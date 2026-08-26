@@ -275,7 +275,13 @@ function showErrorBanner(msg){
   showErrorBanner._t = setTimeout(function(){ b.classList.remove('show'); }, 9000);
 }
 var storageWarned = false;
-function isStorageMsg(msg){ return /storage/i.test(msg || ''); }
+function isStorageMsg(msg){
+  msg = msg || '';
+  // Só filtra erros do localStorage do navegador (ex: modo anônimo bloqueando).
+  // NÃO filtra erros do Firebase Storage (upload de fotos) — esses precisam aparecer.
+  if(/firebase storage|storage\//i.test(msg)) return false;
+  return /localstorage/i.test(msg);
+}
 window.addEventListener('error', function(e){
   var msg = e.message || 'falha desconhecida';
   if(isStorageMsg(msg)){ if(!storageWarned){ storageWarned = true; toast('Armazenamento local indisponível — continuando apenas nesta sessão.'); } return; }
@@ -316,13 +322,12 @@ function dataURLtoBlob(dataurl){
   while(n--){ u8arr[n] = bstr.charCodeAt(n); }
   return new Blob([u8arr], {type:mime});
 }
+/* Plano Spark (grátis) não libera o Firebase Storage sem cadastrar cartão.
+   Enquanto isso, a foto (já redimensionada/comprimida em JPEG) fica guardada
+   direto no Realtime Database como base64 — sem custo, sem serviço extra.
+   Se um dia ativarem o plano Blaze, dá pra voltar a usar o Storage. */
 async function uploadFoto(id, dataUrl){
-  var blob = dataURLtoBlob(dataUrl);
-  var path = 'qualidade/' + id + '/' + Date.now() + '-' + Math.random().toString(36).slice(2,7) + '.jpg';
-  var ref = fbStorage.ref(path);
-  await ref.put(blob, {contentType:'image/jpeg'});
-  var url = await ref.getDownloadURL();
-  return {url:url, path:path};
+  return {url: dataUrl};
 }
 function urlToDataURL(url){
   return fetch(url).then(function(r){ return r.blob(); }).then(function(blob){
@@ -754,7 +759,7 @@ async function abrirDetalhe(id){
     var falhou = 0;
     for(var i=0;i<files.length;i++){
       try{
-        var dataUrl = await resizeImage(files[i], 900, 0.72);
+        var dataUrl = await resizeImage(files[i], 720, 0.62); // menor/mais comprimida: agora vai direto pro Realtime Database
         fotos.push(await uploadFoto(id, dataUrl));
       }catch(err){ console.error('foto falhou', err); falhou++; }
     }
