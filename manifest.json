@@ -97,5 +97,16 @@
     "grupos": [
       "PCP"
     ]
+  },
+  {
+    "title": "COMPARATIVO DE FRETES",
+    "category": "PCP",
+    "description": "",
+    "file": "calculadora frete comparativa.html",
+    "icon": "🧩",
+    "color": "#3ecf8e",
+    "grupos": [
+      "PCP"
+    ]
   }
 ]
