@@ -141,7 +141,6 @@ input:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 
   <button data-tab="pdf">Relatório</button>
   <button data-tab="cadastros">Cadastros</button>
   <button data-tab="backup">Backup</button>
-  <button data-tab="powerbi">Power BI</button>
 </nav>
 
 <main>
@@ -250,26 +249,6 @@ input:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 
       <label style="margin-top:16px;">Restaurar backup</label>
       <input type="file" id="backup-input" accept="application/json">
       <div class="hint">Substitui os registros e cadastros de todo mundo no banco compartilhado. Pede confirmação por escrito antes de aplicar.</div>
-    </div>
-  </section>
-
-  <section id="tab-powerbi" class="tabpanel" style="display:none;">
-    <div class="card">
-      <h2>📊 Painel Power BI</h2>
-      <div class="desc">Cole aqui o link de compartilhamento do relatório do Power BI. Ele fica salvo pra todo mundo que acessa este app — só muda quem editar de novo.</div>
-      <label>Link do relatório (Power BI)</label>
-      <input type="text" id="pbi-link-input" placeholder="https://app.powerbi.com/groups/me/reports/...">
-      <button class="btn btn-primary btn-block" style="margin-top:10px;" onclick="salvarLinkPowerBI()">Salvar link</button>
-      <div class="hint" style="margin-top:8px;">O relatório só aparece pra quem já estiver logado no Power BI/Microsoft neste mesmo navegador (login separado — este app não faz esse login por você). Se a janela não carregar, use o botão "Abrir em nova aba" abaixo.</div>
-    </div>
-    <div class="card" id="pbi-view-card" style="display:none;">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
-        <h2 style="margin:0;">Relatório</h2>
-        <a class="btn btn-outline" id="pbi-open-link" href="#" target="_blank" rel="noopener">Abrir em nova aba ↗</a>
-      </div>
-      <div id="pbi-frame-wrap" style="position:relative;width:100%;padding-top:65%;border-radius:10px;overflow:hidden;background:#f3f4f6;">
-        <iframe id="pbi-iframe" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen></iframe>
-      </div>
     </div>
   </section>
 
@@ -503,47 +482,6 @@ function openTab(name){
   document.getElementById('tab-'+name).style.display = 'block';
   if(name==='dash') safeRun(renderDash, 'indicadores');
   if(name==='lista') safeRun(renderLista, 'registros');
-  if(name==='powerbi') safeRun(carregarLinkPowerBI, 'power bi');
-}
-
-/* ================= Power BI (link configurável, salvo no Realtime Database) ================= */
-function aplicarLinkPowerBI(link){
-  var card = document.getElementById('pbi-view-card');
-  var iframe = document.getElementById('pbi-iframe');
-  var openLink = document.getElementById('pbi-open-link');
-  var input = document.getElementById('pbi-link-input');
-  if(link){
-    input.value = link;
-    iframe.src = link;
-    openLink.href = link;
-    card.style.display = 'block';
-  } else {
-    card.style.display = 'none';
-  }
-}
-async function carregarLinkPowerBI(){
-  try{
-    var snap = await fbRef('powerbiLink').once('value');
-    aplicarLinkPowerBI(snap.val() || '');
-  }catch(err){
-    console.error('carregar link power bi falhou', err);
-    toast('Não consegui carregar o link salvo do Power BI.');
-  }
-}
-async function salvarLinkPowerBI(){
-  var link = document.getElementById('pbi-link-input').value.trim();
-  if(!link){ toast('Cole o link do relatório antes de salvar.'); return; }
-  if(!/^https:\/\/app\.powerbi\.com\//i.test(link)){
-    if(!confirm('Esse link não parece ser do app.powerbi.com. Salvar assim mesmo?')) return;
-  }
-  try{
-    await fbRef('powerbiLink').set(link);
-    aplicarLinkPowerBI(link);
-    toast('Link do Power BI salvo — já vale pra todo mundo que abrir esta aba.');
-  }catch(err){
-    console.error('salvar link power bi falhou', err);
-    toast('Não foi possível salvar o link. Tente de novo.');
-  }
 }
 
 function boot(){
