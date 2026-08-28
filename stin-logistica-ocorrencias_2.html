@@ -337,6 +337,7 @@
       <button class="role-btn" data-role="tratar" onclick="setRole('tratar')">Tratar ocorrência</button>
       <button class="role-btn" data-role="nc" onclick="setRole('nc')">NC</button>
       <button class="role-btn" data-role="admin" onclick="setRole('admin')">Admin</button>
+      <button class="role-btn" data-role="powerbi" onclick="setRole('powerbi')">Power BI</button>
     </div>
     <button class="tv-trigger" onclick="openTV()" title="Abrir modo monitor em tela cheia">🖥️ Modo TV</button>
   </div>
@@ -501,6 +502,32 @@
             <button class="add-user-btn" onclick="adicionarTipoOcorrencia()">Adicionar tipo</button>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-powerbi" style="display:none;">
+    <div class="page-head">
+      <div>
+        <h1>Painel Power BI</h1>
+        <p>Cole aqui o link de compartilhamento do relatório do Power BI. Fica salvo pra todo mundo que acessa este app.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Link do relatório (Power BI)</h2>
+      <input type="text" id="pbi-link-input" placeholder="https://app.powerbi.com/groups/me/reports/...">
+      <button class="btn-primary" style="border:none;border-radius:9px;padding:10px 16px;font-family:'Inter';font-weight:700;font-size:13px;cursor:pointer;margin-top:10px;" onclick="salvarLinkPowerBI()">Salvar link</button>
+      <p style="font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5;">O relatório só aparece pra quem já estiver logado no Power BI/Microsoft neste mesmo navegador (login separado — este app não faz esse login por você). Se a janela não carregar, use o botão "Abrir em nova aba" abaixo.</p>
+    </div>
+
+    <div class="card" id="pbi-view-card" style="display:none;margin-top:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+        <h2 style="margin:0;">Relatório</h2>
+        <a id="pbi-open-link" href="#" target="_blank" rel="noopener" style="border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 14px;border-radius:9px;font-family:'Inter';font-weight:600;font-size:12.5px;cursor:pointer;text-decoration:none;">Abrir em nova aba ↗</a>
+      </div>
+      <div style="position:relative;width:100%;padding-top:65%;border-radius:10px;overflow:hidden;background:var(--bg);">
+        <iframe id="pbi-iframe" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen></iframe>
       </div>
     </div>
   </section>
@@ -729,11 +756,53 @@ function setRole(role){
   document.getElementById('view-tratar').style.display = role==='tratar' ? 'block' : 'none';
   document.getElementById('view-nc').style.display = role==='nc' ? 'block' : 'none';
   document.getElementById('view-admin').style.display = role==='admin' ? 'block' : 'none';
+  document.getElementById('view-powerbi').style.display = role==='powerbi' ? 'block' : 'none';
   document.querySelectorAll('.role-btn').forEach(b=>b.classList.toggle('active', b.dataset.role===role));
   if(role==='tratar') renderKanban();
   if(role==='registrar') renderLista();
   if(role==='nc') renderNC();
   if(role==='admin') renderAdmin();
+  if(role==='powerbi') carregarLinkPowerBI();
+}
+
+/* ================= Power BI (link configurável, salvo no Firebase via window.storage) ================= */
+function aplicarLinkPowerBI(link){
+  var card = document.getElementById('pbi-view-card');
+  var iframe = document.getElementById('pbi-iframe');
+  var openLink = document.getElementById('pbi-open-link');
+  var input = document.getElementById('pbi-link-input');
+  if(link){
+    input.value = link;
+    iframe.src = link;
+    openLink.href = link;
+    card.style.display = 'block';
+  } else {
+    card.style.display = 'none';
+  }
+}
+async function carregarLinkPowerBI(){
+  try{
+    var res = await window.storage.get('powerbi-link', true);
+    aplicarLinkPowerBI(res.value || '');
+  }catch(err){
+    // chave ainda não existe (ninguém salvou link ainda) — tela fica vazia normalmente
+    aplicarLinkPowerBI('');
+  }
+}
+async function salvarLinkPowerBI(){
+  var link = document.getElementById('pbi-link-input').value.trim();
+  if(!link){ alert('Cole o link do relatório antes de salvar.'); return; }
+  if(!/^https:\/\/app\.powerbi\.com\//i.test(link)){
+    if(!confirm('Esse link não parece ser do app.powerbi.com. Salvar assim mesmo?')) return;
+  }
+  try{
+    await window.storage.set('powerbi-link', link, true);
+    aplicarLinkPowerBI(link);
+    alert('Link do Power BI salvo — já vale pra todo mundo que abrir esta aba.');
+  }catch(err){
+    console.error('salvar link power bi falhou', err);
+    alert('Não foi possível salvar o link. Tente de novo.');
+  }
 }
 
 document.getElementById('f-prio').addEventListener('click', e=>{
