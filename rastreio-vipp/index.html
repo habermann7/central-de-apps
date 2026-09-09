@@ -96,12 +96,13 @@
   }
   .priority-list { display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; }
   .priority-item {
-    display: grid; grid-template-columns: 140px 1fr auto; gap: 16px;
+    display: grid; grid-template-columns: 140px 1fr 110px auto; gap: 16px;
     font-size: 13px; padding: 8px 10px; border-radius: 4px;
   }
   .priority-item:hover { background: #f7f0e8; }
   .priority-item .codigo { font-weight: 500; color: var(--ink); }
   .priority-item .dest { color: var(--muted); }
+  .priority-item .nf { color: var(--faint); }
   .priority-item .loc { color: var(--faint); text-align: right; }
 
   .board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
@@ -394,7 +395,7 @@ function render() {
   if (retirada.length > 0) {
     priorityBox.style.display = "block";
     priorityList.innerHTML = retirada.map(function (row) {
-      return '<div class="priority-item"><span class="codigo mono">' + escapeHtml(row.codigo) + '</span><span class="dest">' + escapeHtml(row.destinatario) + '</span><span class="loc">' + escapeHtml(row.cidade) + '/' + escapeHtml(row.uf) + '</span></div>';
+      return '<div class="priority-item"><span class="codigo mono">' + escapeHtml(row.codigo) + '</span><span class="dest">' + escapeHtml(row.destinatario) + '</span><span class="nf mono">' + (row.nf ? "NF " + escapeHtml(row.nf) : "—") + '</span><span class="loc">' + escapeHtml(row.cidade) + '/' + escapeHtml(row.uf) + '</span></div>';
     }).join("");
   } else {
     priorityBox.style.display = "none";
