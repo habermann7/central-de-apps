@@ -42,7 +42,27 @@ function partesDe50(lista) {
 export default async function handler(req, res) {
   const segredoEsperado = process.env.ROBO_SEGREDO;
   const segredoRecebido = req.headers['x-robo-segredo'] || req.query.segredo;
-  if (segredoEsperado && segredoRecebido !== segredoEsperado) {
+  const autorizacaoHeader = req.headers['authorization'] || '';
+
+  let autorizado = false;
+
+  // caminho 1: chamada automática do cron, com a senha do robô
+  if (segredoEsperado && segredoRecebido === segredoEsperado) {
+    autorizado = true;
+  }
+
+  // caminho 2: clique manual de um usuário logado (botão "Atualizar agora")
+  if (!autorizado && autorizacaoHeader.startsWith('Bearer ')) {
+    const idToken = autorizacaoHeader.replace('Bearer ', '');
+    try {
+      await admin.auth().verifyIdToken(idToken);
+      autorizado = true;
+    } catch (err) {
+      // token inválido, segue como não autorizado
+    }
+  }
+
+  if (!autorizado) {
     return res.status(401).json({ error: 'Não autorizado' });
   }
 
