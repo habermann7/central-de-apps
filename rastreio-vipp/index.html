@@ -3,75 +3,173 @@
 <head>
 <meta charset="UTF-8" />
 <title>Rastreio VIPP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <style>
+  :root {
+    --paper: #eef1f0;
+    --surface: #ffffff;
+    --ink: #14191b;
+    --muted: #5c6b6a;
+    --faint: #93a09e;
+    --line: #d9e0dd;
+    --accent: #b5651d;
+    --accent-ink: #6a3a10;
+  }
   * { box-sizing: border-box; }
-  body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; background: #f7f6f2; color: #1f1f1d; margin: 0; padding: 24px; }
-  h1 { font-size: 18px; font-weight: 500; margin: 0 0 16px; }
+  body {
+    font-family: 'Inter', -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    margin: 0;
+    padding: 32px clamp(16px, 4vw, 48px);
+  }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
   .hidden { display: none !important; }
-  #loginScreen { max-width: 320px; margin: 80px auto; text-align: center; }
-  #loginScreen input { width: 100%; padding: 10px 12px; margin-bottom: 10px; border: 1px solid #d3d1c7; border-radius: 8px; font-size: 14px; }
-  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 20px; }
-  .btn { background: #1f1f1d; color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; }
-  .btn:hover { background: #3a3a37; }
+
+  #loginScreen { max-width: 340px; margin: 12vh auto; text-align: left; }
+  #loginScreen .brand { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+  #loginScreen .brand-sub { font-size: 13px; color: var(--muted); margin: 0 0 28px; }
+  #loginScreen label { display: block; font-size: 12px; color: var(--muted); margin: 0 0 6px; }
+  #loginScreen input {
+    width: 100%; padding: 11px 12px; margin-bottom: 14px;
+    border: 1px solid var(--line); border-radius: 6px; background: var(--surface);
+    font-size: 14px; font-family: inherit; color: var(--ink);
+  }
+  #loginScreen input:focus { outline: none; border-color: var(--accent); }
+
+  .app-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+  .brand-block { display: flex; align-items: baseline; gap: 12px; }
+  .brand { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  .brand-sub { font-size: 13px; color: var(--muted); }
+  .rule { height: 1px; background: var(--line); margin: 14px 0 22px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--ink); color: #fff; padding: 10px 16px;
+    border-radius: 6px; font-size: 13px; font-weight: 500;
+    cursor: pointer; border: none; font-family: 'Inter', sans-serif;
+    transition: background 120ms ease;
+  }
+  .btn:hover { background: #2b3436; }
+  .btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+  .btn.ghost:hover { border-color: var(--faint); color: var(--ink); background: transparent; }
+  .btn.accent { background: var(--accent); }
+  .btn.accent:hover { background: #99551a; }
+  .btn:disabled { opacity: 0.55; cursor: default; }
   #fileInput { display: none; }
-  .info { font-size: 13px; color: #5f5e5a; }
-  .error { font-size: 13px; color: #a32d2d; }
-  #search { margin-left: auto; padding: 8px 12px; border: 1px solid #d3d1c7; border-radius: 8px; font-size: 13px; min-width: 240px; }
 
-  .priority-box { background: #fff; border: 1px solid #f0997b; border-left: 4px solid #d85a30; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; }
-  .priority-title { font-weight: 500; font-size: 14px; color: #712b13; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-  .priority-list { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
-  .priority-item { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; padding: 6px 8px; background: #faece7; border-radius: 6px; }
-  .priority-item .codigo { font-family: ui-monospace, monospace; font-weight: 500; }
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .info { font-size: 12.5px; color: var(--muted); }
+  .error { font-size: 12.5px; color: #8c3226; }
+  #search {
+    margin-left: auto; padding: 9px 12px; border: 1px solid var(--line);
+    border-radius: 6px; font-size: 13px; min-width: 230px;
+    font-family: inherit; background: var(--surface); color: var(--ink);
+  }
+  #search:focus { outline: none; border-color: var(--accent); }
 
-  .board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-  .col-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .col-title { font-weight: 500; font-size: 14px; }
-  .col-count { font-size: 13px; color: #888780; margin-left: auto; }
-  .col-list { display: flex; flex-direction: column; gap: 8px; max-height: 480px; overflow-y: auto; padding-right: 2px; }
-  .card { background: #fff; border: 1px solid #ece9e2; border-radius: 8px; padding: 10px 12px; font-size: 13px; }
-  .card .codigo { font-family: ui-monospace, monospace; font-size: 12px; font-weight: 500; margin-bottom: 4px; }
-  .card .dest { color: #2c2c2a; margin-bottom: 2px; }
-  .card .meta { color: #888780; font-size: 12px; margin-bottom: 4px; }
-  .card .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; }
-  .col-empty { font-size: 12px; color: #b4b2a9; padding: 8px 0; }
-  @media (max-width: 900px) { .board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  #staleWarning {
+    display: none; margin-bottom: 18px; padding: 12px 16px;
+    background: #f6e6e3; border-left: 3px solid #8c3226; border-radius: 4px;
+    font-size: 13px; color: #6b201a;
+  }
+
+  .priority-box {
+    background: var(--surface); border: 1px solid var(--line);
+    border-left: 3px solid var(--accent); border-radius: 8px;
+    padding: 16px 18px; margin-bottom: 24px;
+  }
+  .priority-title {
+    font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 14px;
+    color: var(--accent-ink); margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .priority-title .count {
+    font-family: 'JetBrains Mono', monospace; background: var(--accent);
+    color: #fff; border-radius: 4px; padding: 1px 7px; font-size: 12px;
+  }
+  .priority-list { display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; }
+  .priority-item {
+    display: grid; grid-template-columns: 140px 1fr auto; gap: 16px;
+    font-size: 13px; padding: 8px 10px; border-radius: 4px;
+  }
+  .priority-item:hover { background: #f7f0e8; }
+  .priority-item .codigo { font-weight: 500; color: var(--ink); }
+  .priority-item .dest { color: var(--muted); }
+  .priority-item .loc { color: var(--faint); text-align: right; }
+
+  .board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .col-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .col-title { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 13.5px; }
+  .col-count { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--faint); margin-left: auto; }
+  .col-list { display: flex; flex-direction: column; gap: 8px; max-height: 540px; overflow-y: auto; padding-right: 2px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 8px; padding: 11px 13px; font-size: 13px;
+    transition: border-color 120ms ease;
+  }
+  .card:hover { border-color: var(--faint); }
+  .card .codigo {
+    font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 500;
+    letter-spacing: 0.02em; color: var(--muted); margin-bottom: 5px;
+  }
+  .card .dest { color: var(--ink); font-weight: 500; margin-bottom: 2px; }
+  .card .meta { color: var(--faint); font-size: 12px; margin-bottom: 8px; }
+  .card .pill { display: inline-block; font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 4px; }
+  .col-empty { font-size: 12px; color: var(--faint); padding: 8px 2px; }
+
+  @media (max-width: 900px) {
+    .board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .priority-item { grid-template-columns: 1fr; gap: 2px; }
+    .priority-item .loc { text-align: left; }
+  }
 </style>
 </head>
 <body>
 
 <div id="loginScreen">
-  <h1>Rastreio VIPP</h1>
-  <input type="email" id="loginEmail" placeholder="E-mail" />
-  <input type="password" id="loginSenha" placeholder="Senha" />
-  <button class="btn" id="loginBtn" style="width:100%">Entrar</button>
-  <p class="error" id="loginError"></p>
+  <p class="brand">Rastreio VIPP</p>
+  <p class="brand-sub">Radar de pedidos — Expedição</p>
+  <label for="loginEmail">E-mail</label>
+  <input type="email" id="loginEmail" placeholder="seu.email@stinpharma.com" />
+  <label for="loginSenha">Senha</label>
+  <input type="password" id="loginSenha" placeholder="••••••••" />
+  <button class="btn" id="loginBtn" style="width:100%; justify-content:center;">Entrar</button>
+  <p class="error" id="loginError" style="margin-top:12px;"></p>
 </div>
 
 <div id="appScreen" class="hidden">
-  <div style="display:flex; align-items:center; justify-content:space-between;">
-    <h1>Rastreio VIPP</h1>
-    <button class="btn" id="logoutBtn" style="background:#fff; color:#5f5e5a; border:1px solid #d3d1c7;">Sair</button>
+  <div class="app-header">
+    <div class="brand-block">
+      <span class="brand">Rastreio VIPP</span>
+      <span class="brand-sub">Radar de pedidos — Expedição</span>
+    </div>
+    <button class="btn ghost" id="logoutBtn">Sair</button>
   </div>
+  <div class="rule"></div>
+
   <div class="toolbar">
     <label class="btn" for="fileInput">Importar Excel do VIPP</label>
     <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
-    <button class="btn" id="atualizarAgoraBtn" style="background:#378ADD;">Atualizar agora</button>
-    <span class="info" id="fileInfo"></span>
+    <button class="btn accent" id="atualizarAgoraBtn">Atualizar agora</button>
+    <span class="info mono" id="fileInfo"></span>
     <span class="error" id="errorMsg"></span>
     <span class="info" id="lastUpdate"></span>
     <input type="text" id="search" placeholder="Buscar por código, cliente, cidade..." />
   </div>
 
-  <div id="staleWarning" class="error" style="display:none; margin-bottom:16px; padding:10px 14px; background:#FCEBEB; border-radius:8px;"></div>
+  <div id="staleWarning"></div>
 
   <div class="priority-box" id="priorityBox" style="display:none">
-    <div class="priority-title">Aguardando retirada — ligar pro cliente (<span id="priorityCount">0</span>)</div>
+    <div class="priority-title">Aguardando retirada — ligar pro cliente <span class="count" id="priorityCount">0</span></div>
     <div class="priority-list" id="priorityList"></div>
   </div>
 
@@ -79,8 +177,6 @@
 </div>
 
 <script>
-// mesmos valores que os outros apps da Estante já usam
-// (Firebase Console > Configurações do projeto > Seus apps > SDK setup)
 var firebaseConfig = {
   apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
   authDomain: "stinpharma-qualidade.firebaseapp.com",
@@ -96,8 +192,6 @@ firebase.initializeApp(firebaseConfig);
 var auth = firebase.auth();
 var db = firebase.database();
 
-// nome do grupo que dá acesso a este app — precisa existir na lista "grupos" do usuário
-// (o mesmo array usado em centralApps/usuarios/{uid}/grupos)
 var GRUPO_PERMITIDO = "EXPEDIÇÃO";
 var CAMINHO_PEDIDOS = "rastreioVipp/pedidos";
 
@@ -121,21 +215,19 @@ var STATUS_MAP = {
 };
 
 var COLUMNS = [
-  { key: "problema", title: "Problema", color: "#E24B4A", bg: "#FCEBEB", text: "#791F1F" },
-  { key: "aguardando", title: "Aguardando ação", color: "#EF9F27", bg: "#FAEEDA", text: "#633806" },
-  { key: "transito", title: "Em trânsito", color: "#378ADD", bg: "#E6F1FB", text: "#0C447C" },
-  { key: "entregue", title: "Entregue", color: "#639922", bg: "#EAF3DE", text: "#27500A" }
+  { key: "problema", title: "Problema", color: "#a5332c", bg: "#f6e6e3", text: "#6b201a" },
+  { key: "aguardando", title: "Aguardando ação", color: "#b5651d", bg: "#f7ecd9", text: "#7a4210" },
+  { key: "transito", title: "Em trânsito", color: "#2b6079", bg: "#e2eef1", text: "#163842" },
+  { key: "entregue", title: "Entregue", color: "#3d6b40", bg: "#e6efe1", text: "#24401f" }
 ];
 
 function bucketFor(status) { return STATUS_MAP[status] || "aguardando"; }
 function escapeHtml(str) { return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
-// chave do Realtime Database não pode ter . # $ [ ] / — remove qualquer coisa fora de letras/números
 function chaveSegura(codigo) {
   return String(codigo).replace(/[.#$\[\]\/]/g, "");
 }
 
-// --- LOGIN ---
 document.getElementById("loginBtn").addEventListener("click", function () {
   var email = document.getElementById("loginEmail").value.trim();
   var senha = document.getElementById("loginSenha").value;
@@ -168,12 +260,10 @@ auth.onAuthStateChanged(function (user) {
   });
 });
 
-// --- LOGOUT ---
 document.getElementById("logoutBtn").addEventListener("click", function () {
   auth.signOut();
 });
 
-// --- ATUALIZAR AGORA (chama o robô sob demanda) ---
 document.getElementById("atualizarAgoraBtn").addEventListener("click", async function () {
   var btn = document.getElementById("atualizarAgoraBtn");
   btn.disabled = true;
@@ -199,7 +289,6 @@ document.getElementById("atualizarAgoraBtn").addEventListener("click", async fun
   }
 });
 
-// checa se o robô automático parou de rodar (ex: token da API expirou)
 function checarDesatualizado(maisRecente) {
   var aviso = document.getElementById("staleWarning");
   if (!maisRecente) { aviso.style.display = "none"; return; }
@@ -228,7 +317,6 @@ function escutarPedidos() {
   });
 }
 
-// --- IMPORTAÇÃO DO EXCEL ---
 document.getElementById("fileInput").addEventListener("change", function (e) {
   var file = e.target.files[0];
   if (!file) return;
@@ -253,7 +341,6 @@ document.getElementById("fileInput").addEventListener("change", function (e) {
   reader.readAsArrayBuffer(file);
 });
 
-// grava em lotes de 500 usando update() com múltiplos caminhos de uma vez
 function salvarNoRealtimeDb(linhas, nomeArquivo) {
   document.getElementById("fileInfo").textContent = "Salvando " + linhas.length + " pedidos...";
   var i = 0;
@@ -288,7 +375,6 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
   proximoLote();
 }
 
-// --- RENDERIZAÇÃO ---
 function render() {
   var term = document.getElementById("search").value.trim().toLowerCase();
   var grouped = { problema: [], aguardando: [], transito: [], entregue: [], retirada: [] };
@@ -308,7 +394,7 @@ function render() {
   if (retirada.length > 0) {
     priorityBox.style.display = "block";
     priorityList.innerHTML = retirada.map(function (row) {
-      return '<div class="priority-item"><span class="codigo">' + escapeHtml(row.codigo) + '</span><span>' + escapeHtml(row.destinatario) + '</span><span>' + escapeHtml(row.cidade) + '/' + escapeHtml(row.uf) + '</span></div>';
+      return '<div class="priority-item"><span class="codigo mono">' + escapeHtml(row.codigo) + '</span><span class="dest">' + escapeHtml(row.destinatario) + '</span><span class="loc">' + escapeHtml(row.cidade) + '/' + escapeHtml(row.uf) + '</span></div>';
     }).join("");
   } else {
     priorityBox.style.display = "none";
