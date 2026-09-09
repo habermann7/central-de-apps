@@ -181,7 +181,7 @@ document.getElementById("atualizarAgoraBtn").addEventListener("click", async fun
   document.getElementById("errorMsg").textContent = "";
   try {
     var idToken = await auth.currentUser.getIdToken();
-    var resposta = await fetch("/api/atualizar-rastreio", {
+    var resposta = await fetch("https://central-de-apps.vercel.app/api/atualizar-rastreio", {
       headers: { Authorization: "Bearer " + idToken }
     });
     var dados = await resposta.json();
@@ -357,4 +357,3 @@ document.getElementById("search").addEventListener("input", render);
 </script>
 </body>
 </html>
-
