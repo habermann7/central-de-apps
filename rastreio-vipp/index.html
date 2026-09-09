@@ -54,15 +54,21 @@
 </div>
 
 <div id="appScreen" class="hidden">
-  <h1>Rastreio VIPP</h1>
+  <div style="display:flex; align-items:center; justify-content:space-between;">
+    <h1>Rastreio VIPP</h1>
+    <button class="btn" id="logoutBtn" style="background:#fff; color:#5f5e5a; border:1px solid #d3d1c7;">Sair</button>
+  </div>
   <div class="toolbar">
     <label class="btn" for="fileInput">Importar Excel do VIPP</label>
     <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
+    <button class="btn" id="atualizarAgoraBtn" style="background:#378ADD;">Atualizar agora</button>
     <span class="info" id="fileInfo"></span>
     <span class="error" id="errorMsg"></span>
     <span class="info" id="lastUpdate"></span>
     <input type="text" id="search" placeholder="Buscar por código, cliente, cidade..." />
   </div>
+
+  <div id="staleWarning" class="error" style="display:none; margin-bottom:16px; padding:10px 14px; background:#FCEBEB; border-radius:8px;"></div>
 
   <div class="priority-box" id="priorityBox" style="display:none">
     <div class="priority-title">Aguardando retirada — ligar pro cliente (<span id="priorityCount">0</span>)</div>
@@ -162,7 +168,49 @@ auth.onAuthStateChanged(function (user) {
   });
 });
 
-// --- LEITURA EM TEMPO REAL DO REALTIME DATABASE ---
+// --- LOGOUT ---
+document.getElementById("logoutBtn").addEventListener("click", function () {
+  auth.signOut();
+});
+
+// --- ATUALIZAR AGORA (chama o robô sob demanda) ---
+document.getElementById("atualizarAgoraBtn").addEventListener("click", async function () {
+  var btn = document.getElementById("atualizarAgoraBtn");
+  btn.disabled = true;
+  btn.textContent = "Atualizando...";
+  document.getElementById("errorMsg").textContent = "";
+  try {
+    var idToken = await auth.currentUser.getIdToken();
+    var resposta = await fetch("/api/atualizar-rastreio", {
+      headers: { Authorization: "Bearer " + idToken }
+    });
+    var dados = await resposta.json();
+    if (!resposta.ok) {
+      document.getElementById("errorMsg").textContent = "Erro ao atualizar: " + (dados.error || resposta.status);
+    } else {
+      document.getElementById("errorMsg").textContent = "";
+      document.getElementById("fileInfo").textContent = dados.atualizados + " pedidos atualizados agora";
+    }
+  } catch (err) {
+    document.getElementById("errorMsg").textContent = "Erro ao atualizar: " + err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Atualizar agora";
+  }
+});
+
+// checa se o robô automático parou de rodar (ex: token da API expirou)
+function checarDesatualizado(maisRecente) {
+  var aviso = document.getElementById("staleWarning");
+  if (!maisRecente) { aviso.style.display = "none"; return; }
+  var horasSemAtualizar = (Date.now() - maisRecente) / 1000 / 60 / 60;
+  if (horasSemAtualizar > 26) {
+    aviso.style.display = "block";
+    aviso.textContent = "Nenhum pedido foi atualizado nas últimas " + Math.floor(horasSemAtualizar) + " horas. O robô automático pode ter parado (verifica se a chave da API dos Correios não expirou).";
+  } else {
+    aviso.style.display = "none";
+  }
+}
 function escutarPedidos() {
   refPedidos = db.ref(CAMINHO_PEDIDOS);
   refPedidos.on("value", function (snapshot) {
@@ -175,6 +223,7 @@ function escutarPedidos() {
     if (maisRecente) {
       document.getElementById("lastUpdate").textContent = "Última atualização: " + new Date(maisRecente).toLocaleString("pt-BR");
     }
+    checarDesatualizado(maisRecente);
     render();
   });
 }
