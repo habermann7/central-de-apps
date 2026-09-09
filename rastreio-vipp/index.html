@@ -6,13 +6,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <style>
   * { box-sizing: border-box; }
   body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; background: #f7f6f2; color: #1f1f1d; margin: 0; padding: 24px; }
   h1 { font-size: 18px; font-weight: 500; margin: 0 0 16px; }
   .hidden { display: none !important; }
-  #loginScreen { text-align: center; padding: 80px 24px; }
+  #loginScreen { max-width: 320px; margin: 80px auto; text-align: center; }
+  #loginScreen input { width: 100%; padding: 10px 12px; margin-bottom: 10px; border: 1px solid #d3d1c7; border-radius: 8px; font-size: 14px; }
   .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 20px; }
   .btn { background: #1f1f1d; color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; }
   .btn:hover { background: #3a3a37; }
@@ -46,8 +47,9 @@
 
 <div id="loginScreen">
   <h1>Rastreio VIPP</h1>
-  <p class="info">Faça login com sua conta da empresa para acessar.</p>
-  <button class="btn" id="loginBtn">Entrar com Google</button>
+  <input type="email" id="loginEmail" placeholder="E-mail" />
+  <input type="password" id="loginSenha" placeholder="Senha" />
+  <button class="btn" id="loginBtn" style="width:100%">Entrar</button>
   <p class="error" id="loginError"></p>
 </div>
 
@@ -71,11 +73,12 @@
 </div>
 
 <script>
-// ATENÇÃO: troca esses valores pelos mesmos que os outros apps da Central de Apps já usam
+// mesmos valores que os outros apps da Estante já usam
 // (Firebase Console > Configurações do projeto > Seus apps > SDK setup)
 var firebaseConfig = {
   apiKey: "COLE_AQUI",
   authDomain: "COLE_AQUI",
+  databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
   projectId: "COLE_AQUI",
   storageBucket: "COLE_AQUI",
   messagingSenderId: "COLE_AQUI",
@@ -84,11 +87,12 @@ var firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 var auth = firebase.auth();
-var db = firebase.firestore();
+var db = firebase.database();
 
-// mesmo padrão de "grupo autorizado" dos outros apps —
-// troca "rastreio-vipp" pelo nome do grupo/permissão que você usa
+// nome do grupo que dá acesso a este app — precisa existir na lista "grupos" do usuário
+// (o mesmo array usado em centralApps/usuarios/{uid}/grupos)
 var GRUPO_PERMITIDO = "rastreio-vipp";
+var CAMINHO_PEDIDOS = "centralApps/rastreioVipp/pedidos";
 
 var STATUS_MAP = {
   "Objeto entregue ao destinatário": "entregue",
@@ -119,16 +123,23 @@ var COLUMNS = [
 function bucketFor(status) { return STATUS_MAP[status] || "aguardando"; }
 function escapeHtml(str) { return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
+// chave do Realtime Database não pode ter . # $ [ ] / — remove qualquer coisa fora de letras/números
+function chaveSegura(codigo) {
+  return String(codigo).replace(/[.#$\[\]\/]/g, "");
+}
+
 // --- LOGIN ---
 document.getElementById("loginBtn").addEventListener("click", function () {
-  var provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).catch(function (err) {
-    document.getElementById("loginError").textContent = "Erro ao entrar: " + err.message;
+  var email = document.getElementById("loginEmail").value.trim();
+  var senha = document.getElementById("loginSenha").value;
+  document.getElementById("loginError").textContent = "";
+  auth.signInWithEmailAndPassword(email, senha).catch(function (err) {
+    document.getElementById("loginError").textContent = "E-mail ou senha incorretos.";
   });
 });
 
 var allRows = [];
-var unsubscribe = null;
+var refPedidos = null;
 
 auth.onAuthStateChanged(function (user) {
   if (!user) {
@@ -136,9 +147,10 @@ auth.onAuthStateChanged(function (user) {
     document.getElementById("appScreen").classList.add("hidden");
     return;
   }
-  // checagem de grupo — ajusta pra igual o resto dos apps checa (custom claims ou coleção "usuarios")
-  db.collection("grupos").doc(GRUPO_PERMITIDO).collection("membros").doc(user.uid).get().then(function (doc) {
-    if (!doc.exists) {
+  db.ref("centralApps/usuarios/" + user.uid).once("value").then(function (snap) {
+    var perfil = snap.val();
+    var temAcesso = perfil && (perfil.admin === true || (Array.isArray(perfil.grupos) && perfil.grupos.indexOf(GRUPO_PERMITIDO) !== -1));
+    if (!temAcesso) {
       document.getElementById("loginError").textContent = "Sua conta não tem acesso a este app.";
       auth.signOut();
       return;
@@ -149,14 +161,15 @@ auth.onAuthStateChanged(function (user) {
   });
 });
 
-// --- LEITURA EM TEMPO REAL DO FIRESTORE ---
+// --- LEITURA EM TEMPO REAL DO REALTIME DATABASE ---
 function escutarPedidos() {
-  if (unsubscribe) unsubscribe();
-  unsubscribe = db.collection("rastreio_pedidos").onSnapshot(function (snapshot) {
-    allRows = snapshot.docs.map(function (doc) { return doc.data(); });
+  refPedidos = db.ref(CAMINHO_PEDIDOS);
+  refPedidos.on("value", function (snapshot) {
+    var dados = snapshot.val() || {};
+    allRows = Object.keys(dados).map(function (chave) { return dados[chave]; });
     document.getElementById("fileInfo").textContent = allRows.length + " pedidos no total";
     var maisRecente = allRows.reduce(function (max, r) {
-      return (r.atualizadoEm && r.atualizadoEm.toMillis && r.atualizadoEm.toMillis() > max) ? r.atualizadoEm.toMillis() : max;
+      return (r.atualizadoEm && r.atualizadoEm > max) ? r.atualizadoEm : max;
     }, 0);
     if (maisRecente) {
       document.getElementById("lastUpdate").textContent = "Última atualização: " + new Date(maisRecente).toLocaleString("pt-BR");
@@ -181,7 +194,7 @@ document.getElementById("fileInput").addEventListener("change", function (e) {
       var json = XLSX.utils.sheet_to_json(sheet, { defval: "", range: 1 });
 
       var linhas = json.filter(function (r) { return r.Registro; });
-      salvarNoFirestore(linhas, file.name);
+      salvarNoRealtimeDb(linhas, file.name);
     } catch (err) {
       document.getElementById("errorMsg").textContent = "Não consegui ler esse arquivo. Confirma se é o Excel exportado do VIPP.";
       document.getElementById("fileInfo").textContent = "";
@@ -190,17 +203,17 @@ document.getElementById("fileInput").addEventListener("change", function (e) {
   reader.readAsArrayBuffer(file);
 });
 
-// grava em lotes de 400 (limite do Firestore é 500 por lote)
-function salvarNoFirestore(linhas, nomeArquivo) {
+// grava em lotes de 500 usando update() com múltiplos caminhos de uma vez
+function salvarNoRealtimeDb(linhas, nomeArquivo) {
   document.getElementById("fileInfo").textContent = "Salvando " + linhas.length + " pedidos...";
   var i = 0;
   function proximoLote() {
-    var lote = db.batch();
-    var fim = Math.min(i + 400, linhas.length);
+    var updates = {};
+    var fim = Math.min(i + 500, linhas.length);
     for (; i < fim; i++) {
       var r = linhas[i];
-      var ref = db.collection("rastreio_pedidos").doc(r.Registro);
-      lote.set(ref, {
+      var chave = chaveSegura(r.Registro);
+      updates[CAMINHO_PEDIDOS + "/" + chave] = {
         codigo: r.Registro,
         destinatario: r.Destinatario || "",
         cidade: r.CidadeDestinatario || "",
@@ -209,10 +222,10 @@ function salvarNoFirestore(linhas, nomeArquivo) {
         servico: r.Servico || "",
         dataPostagem: r.DataPostagem ? String(r.DataPostagem) : "",
         nf: r.NumeroNotaFiscal || "",
-        atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
+        atualizadoEm: Date.now()
+      };
     }
-    lote.commit().then(function () {
+    db.ref().update(updates).then(function () {
       if (i < linhas.length) {
         proximoLote();
       } else {
@@ -238,7 +251,6 @@ function render() {
     grouped[bucketFor(row.status)].push(row);
   });
 
-  // caixa de prioridade: aguardando retirada
   var priorityBox = document.getElementById("priorityBox");
   var priorityList = document.getElementById("priorityList");
   var retirada = grouped.retirada;
@@ -252,7 +264,6 @@ function render() {
     priorityBox.style.display = "none";
   }
 
-  // aguardando "normal" recebe também o que sobrar de retirada se busca filtrar
   var aguardandoTotal = grouped.aguardando;
 
   var board = document.getElementById("board");
