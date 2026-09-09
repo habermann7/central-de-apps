@@ -40,6 +40,14 @@ function partesDe50(lista) {
 }
 
 export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-robo-segredo');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   const segredoEsperado = process.env.ROBO_SEGREDO;
   const segredoRecebido = req.headers['x-robo-segredo'] || req.query.segredo;
   const autorizacaoHeader = req.headers['authorization'] || '';
