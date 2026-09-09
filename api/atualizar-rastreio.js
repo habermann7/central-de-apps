@@ -23,7 +23,7 @@ if (!admin.apps.length) {
   });
 }
 
-const CAMINHO_PEDIDOS = 'centralApps/rastreioVipp/pedidos';
+const CAMINHO_PEDIDOS = 'rastreioVipp/pedidos';
 
 const STATUS_ENTREGUE = [
   'Objeto entregue ao destinatário',
