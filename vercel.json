@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/atualizar-rastreio?segredo=SEU_SEGREDO_AQUI",
-      "schedule": "0 8,12,16 * * *"
+      "schedule": "0 8 * * *"
     }
   ]
 }
