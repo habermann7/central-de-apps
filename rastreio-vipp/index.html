@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Rastreio VIPP</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; background: #f7f6f2; color: #1f1f1d; margin: 0; padding: 24px; }
+  h1 { font-size: 18px; font-weight: 500; margin: 0 0 16px; }
+  .hidden { display: none !important; }
+  #loginScreen { text-align: center; padding: 80px 24px; }
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .btn { background: #1f1f1d; color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; }
+  .btn:hover { background: #3a3a37; }
+  #fileInput { display: none; }
+  .info { font-size: 13px; color: #5f5e5a; }
+  .error { font-size: 13px; color: #a32d2d; }
+  #search { margin-left: auto; padding: 8px 12px; border: 1px solid #d3d1c7; border-radius: 8px; font-size: 13px; min-width: 240px; }
+
+  .priority-box { background: #fff; border: 1px solid #f0997b; border-left: 4px solid #d85a30; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; }
+  .priority-title { font-weight: 500; font-size: 14px; color: #712b13; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .priority-list { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
+  .priority-item { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; padding: 6px 8px; background: #faece7; border-radius: 6px; }
+  .priority-item .codigo { font-family: ui-monospace, monospace; font-weight: 500; }
+
+  .board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .col-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .col-title { font-weight: 500; font-size: 14px; }
+  .col-count { font-size: 13px; color: #888780; margin-left: auto; }
+  .col-list { display: flex; flex-direction: column; gap: 8px; max-height: 480px; overflow-y: auto; padding-right: 2px; }
+  .card { background: #fff; border: 1px solid #ece9e2; border-radius: 8px; padding: 10px 12px; font-size: 13px; }
+  .card .codigo { font-family: ui-monospace, monospace; font-size: 12px; font-weight: 500; margin-bottom: 4px; }
+  .card .dest { color: #2c2c2a; margin-bottom: 2px; }
+  .card .meta { color: #888780; font-size: 12px; margin-bottom: 4px; }
+  .card .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; }
+  .col-empty { font-size: 12px; color: #b4b2a9; padding: 8px 0; }
+  @media (max-width: 900px) { .board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <h1>Rastreio VIPP</h1>
+  <p class="info">Faça login com sua conta da empresa para acessar.</p>
+  <button class="btn" id="loginBtn">Entrar com Google</button>
+  <p class="error" id="loginError"></p>
+</div>
+
+<div id="appScreen" class="hidden">
+  <h1>Rastreio VIPP</h1>
+  <div class="toolbar">
+    <label class="btn" for="fileInput">Importar Excel do VIPP</label>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
+    <span class="info" id="fileInfo"></span>
+    <span class="error" id="errorMsg"></span>
+    <span class="info" id="lastUpdate"></span>
+    <input type="text" id="search" placeholder="Buscar por código, cliente, cidade..." />
+  </div>
+
+  <div class="priority-box" id="priorityBox" style="display:none">
+    <div class="priority-title">Aguardando retirada — ligar pro cliente (<span id="priorityCount">0</span>)</div>
+    <div class="priority-list" id="priorityList"></div>
+  </div>
+
+  <div class="board" id="board"></div>
+</div>
+
+<script>
+// ATENÇÃO: troca esses valores pelos mesmos que os outros apps da Central de Apps já usam
+// (Firebase Console > Configurações do projeto > Seus apps > SDK setup)
+var firebaseConfig = {
+  apiKey: "COLE_AQUI",
+  authDomain: "COLE_AQUI",
+  projectId: "COLE_AQUI",
+  storageBucket: "COLE_AQUI",
+  messagingSenderId: "COLE_AQUI",
+  appId: "COLE_AQUI"
+};
+
+firebase.initializeApp(firebaseConfig);
+var auth = firebase.auth();
+var db = firebase.firestore();
+
+// mesmo padrão de "grupo autorizado" dos outros apps —
+// troca "rastreio-vipp" pelo nome do grupo/permissão que você usa
+var GRUPO_PERMITIDO = "rastreio-vipp";
+
+var STATUS_MAP = {
+  "Objeto entregue ao destinatário": "entregue",
+  "Objeto entregue ao remetente": "entregue",
+  "Objeto entregue na Caixa de Correios Inteligente": "entregue",
+  "Objeto em transferência": "transito",
+  "Objeto saiu para entrega ao destinatário": "transito",
+  "Objeto postado": "transito",
+  "Objeto ainda não chegou à Un.": "transito",
+  "Objeto aguardando retirada no endereço indicado": "retirada",
+  "Objeto(s) Liberado(s) Para Download na Unidade Postadora": "aguardando",
+  "Objeto(s) Gerado(s) Logistica Reversa": "aguardando",
+  "Objeto(s) Não Etiquetado(s) Ou Range Esgotado": "aguardando",
+  "Etiqueta Expirada": "problema",
+  "Erro Geraçâo PPN": "problema",
+  "Objeto não entregue - Endereço insuficiente": "problema",
+  "Objeto não entregue - cliente mudou-se": "problema",
+  "Objeto não entregue - Endereço inexistente": "problema"
+};
+
+var COLUMNS = [
+  { key: "problema", title: "Problema", color: "#E24B4A", bg: "#FCEBEB", text: "#791F1F" },
+  { key: "aguardando", title: "Aguardando ação", color: "#EF9F27", bg: "#FAEEDA", text: "#633806" },
+  { key: "transito", title: "Em trânsito", color: "#378ADD", bg: "#E6F1FB", text: "#0C447C" },
+  { key: "entregue", title: "Entregue", color: "#639922", bg: "#EAF3DE", text: "#27500A" }
+];
+
+function bucketFor(status) { return STATUS_MAP[status] || "aguardando"; }
+function escapeHtml(str) { return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+// --- LOGIN ---
+document.getElementById("loginBtn").addEventListener("click", function () {
+  var provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(function (err) {
+    document.getElementById("loginError").textContent = "Erro ao entrar: " + err.message;
+  });
+});
+
+var allRows = [];
+var unsubscribe = null;
+
+auth.onAuthStateChanged(function (user) {
+  if (!user) {
+    document.getElementById("loginScreen").classList.remove("hidden");
+    document.getElementById("appScreen").classList.add("hidden");
+    return;
+  }
+  // checagem de grupo — ajusta pra igual o resto dos apps checa (custom claims ou coleção "usuarios")
+  db.collection("grupos").doc(GRUPO_PERMITIDO).collection("membros").doc(user.uid).get().then(function (doc) {
+    if (!doc.exists) {
+      document.getElementById("loginError").textContent = "Sua conta não tem acesso a este app.";
+      auth.signOut();
+      return;
+    }
+    document.getElementById("loginScreen").classList.add("hidden");
+    document.getElementById("appScreen").classList.remove("hidden");
+    escutarPedidos();
+  });
+});
+
+// --- LEITURA EM TEMPO REAL DO FIRESTORE ---
+function escutarPedidos() {
+  if (unsubscribe) unsubscribe();
+  unsubscribe = db.collection("rastreio_pedidos").onSnapshot(function (snapshot) {
+    allRows = snapshot.docs.map(function (doc) { return doc.data(); });
+    document.getElementById("fileInfo").textContent = allRows.length + " pedidos no total";
+    var maisRecente = allRows.reduce(function (max, r) {
+      return (r.atualizadoEm && r.atualizadoEm.toMillis && r.atualizadoEm.toMillis() > max) ? r.atualizadoEm.toMillis() : max;
+    }, 0);
+    if (maisRecente) {
+      document.getElementById("lastUpdate").textContent = "Última atualização: " + new Date(maisRecente).toLocaleString("pt-BR");
+    }
+    render();
+  });
+}
+
+// --- IMPORTAÇÃO DO EXCEL ---
+document.getElementById("fileInput").addEventListener("change", function (e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  document.getElementById("errorMsg").textContent = "";
+  document.getElementById("fileInfo").textContent = "Lendo arquivo...";
+
+  var reader = new FileReader();
+  reader.onload = function (evt) {
+    try {
+      var data = new Uint8Array(evt.target.result);
+      var workbook = XLSX.read(data, { type: "array", cellDates: true });
+      var sheet = workbook.Sheets[workbook.SheetNames[0]];
+      var json = XLSX.utils.sheet_to_json(sheet, { defval: "", range: 1 });
+
+      var linhas = json.filter(function (r) { return r.Registro; });
+      salvarNoFirestore(linhas, file.name);
+    } catch (err) {
+      document.getElementById("errorMsg").textContent = "Não consegui ler esse arquivo. Confirma se é o Excel exportado do VIPP.";
+      document.getElementById("fileInfo").textContent = "";
+    }
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+// grava em lotes de 400 (limite do Firestore é 500 por lote)
+function salvarNoFirestore(linhas, nomeArquivo) {
+  document.getElementById("fileInfo").textContent = "Salvando " + linhas.length + " pedidos...";
+  var i = 0;
+  function proximoLote() {
+    var lote = db.batch();
+    var fim = Math.min(i + 400, linhas.length);
+    for (; i < fim; i++) {
+      var r = linhas[i];
+      var ref = db.collection("rastreio_pedidos").doc(r.Registro);
+      lote.set(ref, {
+        codigo: r.Registro,
+        destinatario: r.Destinatario || "",
+        cidade: r.CidadeDestinatario || "",
+        uf: r.UFDestinatario || "",
+        status: r.Status || "",
+        servico: r.Servico || "",
+        dataPostagem: r.DataPostagem ? String(r.DataPostagem) : "",
+        nf: r.NumeroNotaFiscal || "",
+        atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    }
+    lote.commit().then(function () {
+      if (i < linhas.length) {
+        proximoLote();
+      } else {
+        document.getElementById("fileInfo").textContent = nomeArquivo + " importado — " + linhas.length + " pedidos";
+      }
+    }).catch(function (err) {
+      document.getElementById("errorMsg").textContent = "Erro ao salvar: " + err.message;
+    });
+  }
+  proximoLote();
+}
+
+// --- RENDERIZAÇÃO ---
+function render() {
+  var term = document.getElementById("search").value.trim().toLowerCase();
+  var grouped = { problema: [], aguardando: [], transito: [], entregue: [], retirada: [] };
+
+  allRows.forEach(function (row) {
+    if (term) {
+      var haystack = (row.codigo + " " + row.destinatario + " " + row.cidade + " " + row.status + " " + row.nf).toLowerCase();
+      if (haystack.indexOf(term) === -1) return;
+    }
+    grouped[bucketFor(row.status)].push(row);
+  });
+
+  // caixa de prioridade: aguardando retirada
+  var priorityBox = document.getElementById("priorityBox");
+  var priorityList = document.getElementById("priorityList");
+  var retirada = grouped.retirada;
+  document.getElementById("priorityCount").textContent = retirada.length;
+  if (retirada.length > 0) {
+    priorityBox.style.display = "block";
+    priorityList.innerHTML = retirada.map(function (row) {
+      return '<div class="priority-item"><span class="codigo">' + escapeHtml(row.codigo) + '</span><span>' + escapeHtml(row.destinatario) + '</span><span>' + escapeHtml(row.cidade) + '/' + escapeHtml(row.uf) + '</span></div>';
+    }).join("");
+  } else {
+    priorityBox.style.display = "none";
+  }
+
+  // aguardando "normal" recebe também o que sobrar de retirada se busca filtrar
+  var aguardandoTotal = grouped.aguardando;
+
+  var board = document.getElementById("board");
+  board.innerHTML = "";
+
+  COLUMNS.forEach(function (col) {
+    var items = col.key === "aguardando" ? aguardandoTotal : grouped[col.key];
+    var colDiv = document.createElement("div");
+
+    var header = document.createElement("div");
+    header.className = "col-header";
+    header.innerHTML = '<span class="dot" style="background:' + col.color + '"></span><span class="col-title">' + col.title + '</span><span class="col-count">' + items.length + '</span>';
+    colDiv.appendChild(header);
+
+    var list = document.createElement("div");
+    list.className = "col-list";
+
+    if (items.length === 0) {
+      var emptyEl = document.createElement("div");
+      emptyEl.className = "col-empty";
+      emptyEl.textContent = "Nenhum pedido aqui";
+      list.appendChild(emptyEl);
+    } else {
+      items.forEach(function (row) {
+        var card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML =
+          '<div class="codigo">' + escapeHtml(row.codigo) + '</div>' +
+          '<div class="dest">' + escapeHtml(row.destinatario) + '</div>' +
+          '<div class="meta">' + escapeHtml(row.cidade) + (row.cidade && row.uf ? " / " : "") + escapeHtml(row.uf) + '</div>' +
+          '<span class="pill" style="background:' + col.bg + ';color:' + col.text + '">' + escapeHtml(row.status || "Sem status") + '</span>';
+        list.appendChild(card);
+      });
+    }
+    colDiv.appendChild(list);
+    board.appendChild(colDiv);
+  });
+}
+
+document.getElementById("search").addEventListener("input", render);
+</script>
+</body>
+</html>
