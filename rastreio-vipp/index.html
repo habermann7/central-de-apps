@@ -131,19 +131,18 @@
     font-family:'IBM Plex Mono',monospace;background:var(--retirada);color:#fff;
     padding:1px 8px;font-size:11.5px;
   }
-  .priority-list{display:flex;flex-direction:column;gap:2px;max-height:220px;overflow-y:auto;}
-  .priority-item{
-    display:grid;grid-template-columns:150px 1fr 110px 90px auto;gap:14px;font-size:12.5px;
-    padding:6px 8px;font-family:'IBM Plex Mono',monospace;align-items:center;
-  }
-  .priority-item:hover{background:#F3DDD3;}
-  .priority-item .dest{font-family:'Inter',sans-serif;color:var(--ink);}
-  .priority-item .nf{color:var(--ink-soft);}
-  .priority-item .loc{color:var(--ink-soft);text-align:right;}
-  .priority-item .dias{text-align:right;font-weight:600;}
-  .priority-item .dias.ok{color:var(--ink-soft);font-weight:400;}
-  .priority-item .dias.atencao{color:#9a6b0a;}
-  .priority-item .dias.urgente{color:#fff;background:var(--retirada);padding:1px 6px;border-radius:2px;}
+  .priority-list{max-height:220px;overflow-y:auto;}
+  .priority-list table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:'IBM Plex Mono',monospace;}
+  .priority-list td{padding:6px 8px;vertical-align:middle;}
+  .priority-list tr:hover td{background:#F3DDD3;}
+  .priority-list td.dest{font-family:'Inter',sans-serif;color:var(--ink);width:32%;}
+  .priority-list td.nf{color:var(--ink-soft);white-space:nowrap;}
+  .priority-list td.loc{color:var(--ink-soft);text-align:right;white-space:nowrap;}
+  .priority-list td.dias{text-align:right;font-weight:600;white-space:nowrap;}
+  .priority-list td.dias .selo{display:inline-block;min-width:44px;text-align:center;}
+  .priority-list td.dias.ok .selo{color:var(--ink-soft);font-weight:400;}
+  .priority-list td.dias.atencao .selo{color:#9a6b0a;}
+  .priority-list td.dias.urgente .selo{color:#fff;background:var(--retirada);padding:1px 6px;border-radius:2px;}
 
   /* ---------- Filter bar ---------- */
   .filterbar{
@@ -810,6 +809,11 @@ function checarDesatualizado(maisRecente) {
 }
 
 // -------- Escuta o Firebase em tempo real --------
+function dataValidaOuNula(valor){
+  if (!valor) return null;
+  var d = new Date(valor);
+  return isNaN(d.getTime()) ? null : d; // data corrompida vira "sem data" em vez de quebrar o painel
+}
 function escutarPedidos() {
   db.ref(CAMINHO_PEDIDOS).on("value", function (snapshot) {
     var dados = snapshot.val() || {};
@@ -826,8 +830,8 @@ function escutarPedidos() {
         remetente: r.remetente || "",
         cep: r.cep || "",
         valorPostagem: Number(r.valorPostagem) || 0,
-        dataPostagem: r.dataPostagem ? new Date(r.dataPostagem) : null,
-        dataEvento: r.dataEvento ? new Date(r.dataEvento) : null,
+        dataPostagem: dataValidaOuNula(r.dataPostagem),
+        dataEvento: dataValidaOuNula(r.dataEvento),
         atualizadoEm: r.atualizadoEm || null,
         _bucket: bucketFor(r.status)
       };
@@ -1034,6 +1038,7 @@ var chartUfValor = new Chart(document.getElementById('chart-uf-valor'), {
 });
 
 function render(){
+ try {
   var filtered = applyFilters();
   var total = filtered.length;
 
@@ -1085,13 +1090,13 @@ function render(){
   document.getElementById('priorityCount').textContent = retiradaGeral.length;
   if (retiradaGeral.length > 0){
     priorityBox.style.display = 'block';
-    priorityList.innerHTML = retiradaGeral.map(function(o){
+    priorityList.innerHTML = '<table><tbody>' + retiradaGeral.map(function(o){
       var diasTxt = o._diasEsperando==null ? '—' : o._diasEsperando + 'd';
       var diasClass = 'ok';
       if (o._diasEsperando!=null && o._diasEsperando >= PRAZO_URGENTE_DIAS) diasClass = 'urgente';
       else if (o._diasEsperando!=null && o._diasEsperando >= PRAZO_ATENCAO_DIAS) diasClass = 'atencao';
-      return '<div class="priority-item"><span class="mono">'+escapeHtml(o.codigo)+'</span><span class="dest">'+escapeHtml(o.destinatario)+'</span><span class="nf">'+(o.nf?'NF '+escapeHtml(o.nf):'—')+'</span><span class="dias '+diasClass+'">'+diasTxt+'</span><span class="loc">'+escapeHtml(o.cidade)+'/'+escapeHtml(o.uf)+'</span></div>';
-    }).join('');
+      return '<tr><td class="mono">'+escapeHtml(o.codigo)+'</td><td class="dest">'+escapeHtml(o.destinatario)+'</td><td class="nf">'+(o.nf?'NF '+escapeHtml(o.nf):'—')+'</td><td class="dias '+diasClass+'"><span class="selo">'+diasTxt+'</span></td><td class="loc">'+escapeHtml(o.cidade)+'/'+escapeHtml(o.uf)+'</td></tr>';
+    }).join('') + '</tbody></table>';
   } else {
     priorityBox.style.display = 'none';
   }
@@ -1190,6 +1195,14 @@ function render(){
     textoContagem += ' de ' + allRows.length + ' na base';
   }
   document.getElementById('detail-count').textContent = textoContagem;
+ } catch (erroRender) {
+  // Blindagem: se algum dado vier quebrado (ex: data corrompida), não deixa o
+  // painel inteiro travar — mostra um aviso claro em vez de ficar tudo em branco.
+  console.error('Erro ao renderizar o painel:', erroRender);
+  var avisoErro = document.getElementById('avisoErroAtualizacao');
+  avisoErro.textContent = 'O painel encontrou um dado inesperado e não conseguiu montar tudo. Detalhe técnico: ' + erroRender.message;
+  avisoErro.classList.remove('hidden');
+ }
 }
 
 function exportarCSV(){
