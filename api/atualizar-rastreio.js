@@ -113,16 +113,20 @@ export default async function handler(req, res) {
 
     for (const lote of lotes) {
       const codigos = lote.map((chave) => codigoPorChave[chave]);
+      // Os códigos vão no caminho da URL (path), não como parâmetro de query —
+      // essa é a convenção documentada da API dos Correios.
       const url =
-        'https://api.correios.com.br/srorastro/v1/objetos?codigosObjetos=' +
-        codigos.join(',');
+        'https://api.correios.com.br/srorastro/v1/objetos/' +
+        codigos.join(',') +
+        '?resultado=U';
 
       const resposta = await fetch(url, {
         headers: { Authorization: 'Bearer ' + process.env.CORREIOS_CHAVE_ACESSO },
       });
 
       if (!resposta.ok) {
-        erros.push('Lote falhou: HTTP ' + resposta.status);
+        const textoErro = await resposta.text().catch(() => '');
+        erros.push('Lote falhou: HTTP ' + resposta.status + (textoErro ? ' — ' + textoErro.slice(0, 300) : ''));
         continue;
       }
 
