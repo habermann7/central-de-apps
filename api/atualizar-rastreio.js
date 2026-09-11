@@ -121,7 +121,10 @@ export default async function handler(req, res) {
         '?resultado=U&idioma=pt-BR';
 
       const resposta = await fetch(url, {
-        headers: { Authorization: 'Bearer ' + process.env.CORREIOS_CHAVE_ACESSO },
+        headers: {
+          Authorization: 'Bearer ' + process.env.CORREIOS_CHAVE_ACESSO,
+          'Accept-Language': 'pt-BR',
+        },
       });
 
       if (!resposta.ok) {
