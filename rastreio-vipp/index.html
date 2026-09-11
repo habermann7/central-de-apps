@@ -902,6 +902,7 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
         updates[CAMINHO_PEDIDOS + "/" + chave + "/remetente"] = r.Remetente || "";
         updates[CAMINHO_PEDIDOS + "/" + chave + "/cep"] = r.CEPDestinatario || "";
         updates[CAMINHO_PEDIDOS + "/" + chave + "/valorPostagem"] = r.ValorPostagem !== "" && r.ValorPostagem != null ? Number(r.ValorPostagem) : 0;
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/dataPostagem"] = r.DataPostagem ? String(r.DataPostagem) : "";
       } else {
         // pedido novo: grava tudo, inclusive o status inicial que veio do VIPP
         updates[CAMINHO_PEDIDOS + "/" + chave] = {
