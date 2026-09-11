@@ -4,5 +4,10 @@
       "path": "/api/atualizar-rastreio?segredo=SEU_SEGREDO_AQUI",
       "schedule": "0 8 * * *"
     }
-  ]
+  ],
+  "functions": {
+    "api/atualizar-rastreio.js": {
+      "maxDuration": 60
+    }
+  }
 }
