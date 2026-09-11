@@ -110,6 +110,7 @@ export default async function handler(req, res) {
     let atualizados = 0;
     const erros = [];
     let amostraUltimoEvento = null; // só pra conferência manual, ver comentário abaixo
+    let amostraRespostaCrua = null; // guarda a resposta inteira da 1ª chamada, pra ver o formato real
 
     for (const lote of lotes) {
       const codigos = lote.map((chave) => codigoPorChave[chave]);
@@ -134,19 +135,24 @@ export default async function handler(req, res) {
       }
 
       const dados = await resposta.json();
-      const objetos = dados.objetos || [];
+      if (!amostraRespostaCrua) amostraRespostaCrua = dados; // guarda a 1ª resposta crua inteira, sem filtrar nada
+
+      // Aceita alguns formatos possíveis de resposta (plural/singular), pra não
+      // depender de eu ter acertado o nome exato de primeira.
+      const objetos = dados.objetos || dados.objeto || [];
 
       const updates = {};
       for (const objeto of objetos) {
-        const eventos = objeto.eventos || [];
+        const eventos = objeto.eventos || objeto.evento || [];
         if (eventos.length === 0) continue;
+        const codigoRetornado = objeto.codObjeto || objeto.numero || objeto.codigo || objeto.objeto;
         const chave = Object.keys(codigoPorChave).find(
-          (k) => codigoPorChave[k] === objeto.codObjeto
+          (k) => codigoPorChave[k] === codigoRetornado
         );
         if (!chave) continue;
         const ultimoEvento = eventos[0];
         if (!amostraUltimoEvento) amostraUltimoEvento = ultimoEvento; // guarda o primeiro que aparecer, cru
-        updates[CAMINHO_PEDIDOS + '/' + chave + '/status'] = ultimoEvento.descricao;
+        updates[CAMINHO_PEDIDOS + '/' + chave + '/status'] = ultimoEvento.descricao || ultimoEvento.msg || '';
         const dataEvento = extrairDataEvento(ultimoEvento);
         if (dataEvento) {
           updates[CAMINHO_PEDIDOS + '/' + chave + '/dataEvento'] = dataEvento;
@@ -169,6 +175,9 @@ export default async function handler(req, res) {
       // devolveu, pra confirmar se "dataEvento" pegou o campo certo. Pode remover
       // esse campo do retorno depois de conferir uma vez, se quiser deixar mais limpo.
       amostraUltimoEvento,
+      // Idem: resposta crua da 1ª chamada, sem filtro nenhum. Se "atualizados"
+      // continuar 0, olha aqui pra ver o formato real que os Correios devolveram.
+      amostraRespostaCrua,
     });
   } catch (err) {
     return res.status(500).json({ error: err.message });
