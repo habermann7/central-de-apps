@@ -425,6 +425,10 @@
       </select>
     </div>
     <div class="field">
+      <label>Status detalhado</label>
+      <select id="f-status-detalhado"><option value="">Todos os textos</option></select>
+    </div>
+    <div class="field">
       <label>UF destino</label>
       <select id="f-uf"><option value="">Todas</option></select>
     </div>
@@ -874,6 +878,28 @@ document.getElementById("fileInput").addEventListener("change", function (e) {
   reader.readAsArrayBuffer(file);
 });
 
+function parseDataVipp(valor){
+  if (!valor && valor !== 0) return "";
+  if (valor instanceof Date) {
+    return isNaN(valor.getTime()) ? "" : valor.toISOString();
+  }
+  var texto = String(valor).trim();
+  // Formato brasileiro DD/MM/AAAA (com ou sem hora) — o jeito que o VIPP escreve
+  // quando a coluna vem como texto, não como data de verdade da planilha. O
+  // JavaScript sozinho leria isso como MM/DD (formato americano) e trocaria
+  // dia com mês, bagunçando tudo — por isso interpretamos na mão aqui.
+  var m = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+  if (m) {
+    var dia = parseInt(m[1],10), mes = parseInt(m[2],10), ano = parseInt(m[3],10);
+    var hora = m[4]?parseInt(m[4],10):0, min = m[5]?parseInt(m[5],10):0, seg = m[6]?parseInt(m[6],10):0;
+    var d = new Date(ano, mes-1, dia, hora, min, seg);
+    if (!isNaN(d.getTime())) return d.toISOString();
+  }
+  // último recurso: deixa o JS tentar sozinho
+  var d2 = new Date(texto);
+  return isNaN(d2.getTime()) ? "" : d2.toISOString();
+}
+
 function salvarNoRealtimeDb(linhas, nomeArquivo) {
   document.getElementById("fileInfo").textContent = "Salvando " + linhas.length + " pedidos...";
   // pedidos que já existem na base não têm o status sobrescrito pela reimportação —
@@ -891,7 +917,8 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
       // Servico) e o de "eventos" (DescricaoEvento, CodigoServicoCorreios, DataDoEvento).
       var statusTexto = r.DescricaoEvento || r.Status || "";
       var servicoTexto = r.Servico || (r.CodigoServicoCorreios != null ? String(r.CodigoServicoCorreios) : "");
-      var dataEventoTexto = r.DataDoEvento ? String(r.DataDoEvento) : "";
+      var dataEventoTexto = r.DataDoEvento ? parseDataVipp(r.DataDoEvento) : "";
+      var dataPostagemTexto = r.DataPostagem ? parseDataVipp(r.DataPostagem) : "";
       if (existentes.has(chave)) {
         // já existe: atualiza só dado cadastral, preserva status/data do evento que o robô já tenha
         updates[CAMINHO_PEDIDOS + "/" + chave + "/destinatario"] = r.Destinatario || "";
@@ -902,7 +929,7 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
         updates[CAMINHO_PEDIDOS + "/" + chave + "/remetente"] = r.Remetente || "";
         updates[CAMINHO_PEDIDOS + "/" + chave + "/cep"] = r.CEPDestinatario || "";
         updates[CAMINHO_PEDIDOS + "/" + chave + "/valorPostagem"] = r.ValorPostagem !== "" && r.ValorPostagem != null ? Number(r.ValorPostagem) : 0;
-        updates[CAMINHO_PEDIDOS + "/" + chave + "/dataPostagem"] = r.DataPostagem ? String(r.DataPostagem) : "";
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/dataPostagem"] = dataPostagemTexto;
       } else {
         // pedido novo: grava tudo, inclusive o status inicial que veio do VIPP
         updates[CAMINHO_PEDIDOS + "/" + chave] = {
@@ -912,7 +939,7 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
           uf: r.UFDestinatario || "",
           status: statusTexto,
           servico: servicoTexto,
-          dataPostagem: r.DataPostagem ? String(r.DataPostagem) : "",
+          dataPostagem: dataPostagemTexto,
           dataEvento: dataEventoTexto,
           nf: r.NumeroNotaFiscal || "",
           remetente: r.Remetente || "",
@@ -936,9 +963,10 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
 }
 
 // -------- Estado dos filtros --------
-var state = { dateStart: null, dateEnd: null, status: "", uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
+var state = { dateStart: null, dateEnd: null, status: "", statusDetalhado: "", uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
 
 document.getElementById('f-status').addEventListener('change', function(e){ state.status = e.target.value; render(); });
+document.getElementById('f-status-detalhado').addEventListener('change', function(e){ state.statusDetalhado = e.target.value; render(); });
 document.getElementById('f-uf').addEventListener('change', function(e){ state.uf = e.target.value; state.cidade=''; document.getElementById('f-cidade').value=''; refreshCidadeOptions(); render(); });
 document.getElementById('f-cidade').addEventListener('change', function(e){ state.cidade = e.target.value; render(); });
 document.getElementById('f-destinatario').addEventListener('input', debounce(function(e){ state.destinatario = e.target.value; render(); }, 250));
@@ -962,10 +990,11 @@ function applyDateFilter(){
 });
 
 document.getElementById('btn-reset').addEventListener('click', function(){
-  state = { dateStart: null, dateEnd: null, status: "", uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
+  state = { dateStart: null, dateEnd: null, status: "", statusDetalhado: "", uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
   document.getElementById('f-date-start').value='';
   document.getElementById('f-date-end').value='';
   document.getElementById('f-status').value='';
+  document.getElementById('f-status-detalhado').value='';
   document.getElementById('f-uf').value='';
   document.getElementById('f-cidade').value='';
   document.getElementById('f-destinatario').value='';
@@ -985,6 +1014,22 @@ function fillStaticOptions(){
     var opt = document.createElement('option'); opt.value = v; opt.textContent = v; ufSel.appendChild(opt);
   });
   if (current) ufSel.value = current;
+
+  // Status detalhado: lista todo texto original que existe de verdade na base agora,
+  // ordenado por quantidade (o mais comum primeiro), mostrando a versão curta.
+  var statusSel = document.getElementById('f-status-detalhado');
+  var currentStatus = statusSel.value;
+  var contagem = groupCount(allRows, function(o){return o.status || '(vazio)';});
+  var statusOrdenados = Array.from(contagem.entries()).sort(function(a,b){return b[1]-a[1];});
+  statusSel.innerHTML = '<option value="">Todos os textos</option>';
+  statusOrdenados.forEach(function(entry){
+    var opt = document.createElement('option');
+    opt.value = entry[0];
+    opt.textContent = textoCurtoStatus(entry[0]) + ' (' + entry[1] + ')';
+    opt.title = entry[0];
+    statusSel.appendChild(opt);
+  });
+  if (currentStatus) statusSel.value = currentStatus;
 }
 
 function refreshCidadeOptions(){
@@ -1002,6 +1047,7 @@ function applyFilters(){
     if (state.dateStart && o.dataPostagem && o.dataPostagem < state.dateStart) return false;
     if (state.dateEnd && o.dataPostagem && o.dataPostagem > state.dateEnd) return false;
     if (state.status && o._bucket !== state.status) return false;
+    if (state.statusDetalhado && (o.status || '(vazio)') !== state.statusDetalhado) return false;
     if (state.uf && o.uf !== state.uf) return false;
     if (state.cidade && o.cidade !== state.cidade) return false;
     if (state.destinatario && o.destinatario.toLowerCase().indexOf(state.destinatario.toLowerCase()) === -1) return false;
