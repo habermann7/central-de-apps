@@ -874,11 +874,11 @@ document.getElementById("fileInput").addEventListener("change", function (e) {
   reader.onload = function (evt) {
     try {
       var data = new Uint8Array(evt.target.result);
-      // cellDates:false de propósito — o VIPP manda relatório às vezes como HTML
-      // disfarçado de .xls, e nesse caso a biblioteca tenta adivinhar a data sozinha
-      // e erra (lê 01/09 como "mês 01, dia 09" em vez de "dia 01, mês 09"). Deixando
-      // tudo como texto, quem decide a data somos nós, com o formato brasileiro certo.
-      var workbook = XLSX.read(data, { type: "array", cellDates: false, raw: false });
+      // raw:true = pega o valor cru, sem NENHUMA conversão automática de data por
+      // trás (testei com a biblioteca de verdade: toda conversão automática que
+      // existe é ambígua e erra o formato brasileiro). Quem decide a data agora é
+      // só a função parseDataVipp, sempre do nosso jeito.
+      var workbook = XLSX.read(data, { type: "array", raw: true });
       var sheet = workbook.Sheets[workbook.SheetNames[0]];
       var json = XLSX.utils.sheet_to_json(sheet, { defval: "", range: 1 });
       var linhas = json.filter(function (r) { return r.Registro && String(r.Registro).indexOf('http') === -1; });
@@ -891,14 +891,26 @@ document.getElementById("fileInput").addEventListener("change", function (e) {
   reader.readAsArrayBuffer(file);
 });
 
+function excelSerialParaData(serial){
+  // Excel (sistema de datas 1900): o dia 0 é 30/12/1899. Usado quando a
+  // planilha vem como .xlsx de verdade (data nativa), não como texto.
+  var epoch = Date.UTC(1899, 11, 30);
+  var ms = Math.round(serial * 86400000);
+  return new Date(epoch + ms);
+}
+
 function parseDataVipp(valor){
   if (!valor && valor !== 0) return "";
   if (valor instanceof Date) {
     return isNaN(valor.getTime()) ? "" : valor.toISOString();
   }
+  if (typeof valor === "number") {
+    var dSerial = excelSerialParaData(valor);
+    return isNaN(dSerial.getTime()) ? "" : dSerial.toISOString();
+  }
   var texto = String(valor).trim();
   // Formato brasileiro DD/MM/AAAA (com ou sem hora) — o jeito que o VIPP escreve
-  // quando a coluna vem como texto, não como data de verdade da planilha. O
+  // quando a coluna vem como texto (relatório em HTML disfarçado de .xls). O
   // JavaScript sozinho leria isso como MM/DD (formato americano) e trocaria
   // dia com mês, bagunçando tudo — por isso interpretamos na mão aqui.
   var m = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
@@ -908,7 +920,7 @@ function parseDataVipp(valor){
     var d = new Date(ano, mes-1, dia, hora, min, seg);
     if (!isNaN(d.getTime())) return d.toISOString();
   }
-  // último recurso: deixa o JS tentar sozinho
+  // último recurso: deixa o JS tentar sozinho (ex: formato ISO, sem ambiguidade)
   var d2 = new Date(texto);
   return isNaN(d2.getTime()) ? "" : d2.toISOString();
 }
