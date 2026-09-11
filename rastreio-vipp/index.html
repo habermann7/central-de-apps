@@ -874,7 +874,11 @@ document.getElementById("fileInput").addEventListener("change", function (e) {
   reader.onload = function (evt) {
     try {
       var data = new Uint8Array(evt.target.result);
-      var workbook = XLSX.read(data, { type: "array", cellDates: true });
+      // cellDates:false de propósito — o VIPP manda relatório às vezes como HTML
+      // disfarçado de .xls, e nesse caso a biblioteca tenta adivinhar a data sozinha
+      // e erra (lê 01/09 como "mês 01, dia 09" em vez de "dia 01, mês 09"). Deixando
+      // tudo como texto, quem decide a data somos nós, com o formato brasileiro certo.
+      var workbook = XLSX.read(data, { type: "array", cellDates: false, raw: false });
       var sheet = workbook.Sheets[workbook.SheetNames[0]];
       var json = XLSX.utils.sheet_to_json(sheet, { defval: "", range: 1 });
       var linhas = json.filter(function (r) { return r.Registro && String(r.Registro).indexOf('http') === -1; });
