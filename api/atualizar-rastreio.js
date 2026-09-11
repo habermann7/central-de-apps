@@ -118,7 +118,7 @@ export default async function handler(req, res) {
       const url =
         'https://api.correios.com.br/srorastro/v1/objetos/' +
         codigos.join(',') +
-        '?resultado=U';
+        '?resultado=U&idioma=pt-BR';
 
       const resposta = await fetch(url, {
         headers: { Authorization: 'Bearer ' + process.env.CORREIOS_CHAVE_ACESSO },
