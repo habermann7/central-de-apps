@@ -309,6 +309,10 @@
     font-family:'IBM Plex Mono',monospace;
     color:#fff;
     white-space:nowrap;
+    max-width:220px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    vertical-align:bottom;
   }
   .status-badge.entregue{background:var(--entregue);}
   .status-badge.aguardando{background:var(--aguardando);}
@@ -1097,7 +1101,7 @@ function render(){
       '<td>'+escapeHtml(o.uf)+'</td>'+
       '<td class="mono">'+(o.nf?escapeHtml(o.nf):'&mdash;')+'</td>'+
       '<td class="num">'+fmtMoney(o.valorPostagem)+'</td>'+
-      '<td><span class="status-badge '+o._bucket+'" title="Texto original: '+escapeHtml(o.status || '(vazio)')+'">'+STATUS_LABEL[o._bucket]+'</span></td>'+
+      '<td><span class="status-badge '+o._bucket+'" title="'+escapeHtml(o.status || STATUS_LABEL[o._bucket])+'">'+escapeHtml(o.status || STATUS_LABEL[o._bucket])+'</span></td>'+
       '<td class="mono">'+(o.atualizadoEm ? fmtDateTime(new Date(o.atualizadoEm)) : '&mdash;')+'</td>';
     detailBody.appendChild(tr);
   });
