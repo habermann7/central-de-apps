@@ -6,7 +6,7 @@
 // Usa as MESMAS variáveis de ambiente que api/criar-usuario.js já usa:
 //   FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY
 //
-// Variável nova que você precisa cadastrar no Vercel:
+// Variáveis já cadastradas no Vercel:
 //   CORREIOS_CHAVE_ACESSO -> a chave "cws-ch1_..." que você gerou
 //   ROBO_SEGREDO           -> uma senha qualquer, só sua, pra proteger essa URL
 
@@ -30,6 +30,20 @@ const STATUS_ENTREGUE = [
   'Objeto entregue ao remetente',
   'Objeto entregue na Caixa de Correios Inteligente',
 ];
+
+// A API dos Correios pode devolver a data do evento em nomes de campo
+// diferentes dependendo da versão. Tentamos os mais comuns, nessa ordem.
+function extrairDataEvento(evento) {
+  return (
+    evento.dtHrCriado ||
+    evento.dataHora ||
+    evento.data ||
+    evento.dtEvento ||
+    evento.dataEvento ||
+    evento.hora ||
+    null
+  );
+}
 
 function partesDe50(lista) {
   const grupos = [];
@@ -95,6 +109,7 @@ export default async function handler(req, res) {
     const lotes = partesDe50(pendentes);
     let atualizados = 0;
     const erros = [];
+    let amostraUltimoEvento = null; // só pra conferência manual, ver comentário abaixo
 
     for (const lote of lotes) {
       const codigos = lote.map((chave) => codigoPorChave[chave]);
@@ -122,7 +137,13 @@ export default async function handler(req, res) {
           (k) => codigoPorChave[k] === objeto.codObjeto
         );
         if (!chave) continue;
-        updates[CAMINHO_PEDIDOS + '/' + chave + '/status'] = eventos[0].descricao;
+        const ultimoEvento = eventos[0];
+        if (!amostraUltimoEvento) amostraUltimoEvento = ultimoEvento; // guarda o primeiro que aparecer, cru
+        updates[CAMINHO_PEDIDOS + '/' + chave + '/status'] = ultimoEvento.descricao;
+        const dataEvento = extrairDataEvento(ultimoEvento);
+        if (dataEvento) {
+          updates[CAMINHO_PEDIDOS + '/' + chave + '/dataEvento'] = dataEvento;
+        }
         updates[CAMINHO_PEDIDOS + '/' + chave + '/atualizadoEm'] = Date.now();
         atualizados++;
       }
@@ -137,6 +158,10 @@ export default async function handler(req, res) {
       totalPendentes: pendentes.length,
       atualizados,
       erros,
+      // Isso aqui é só pra conferência: mostra o evento cru que a API dos Correios
+      // devolveu, pra confirmar se "dataEvento" pegou o campo certo. Pode remover
+      // esse campo do retorno depois de conferir uma vez, se quiser deixar mais limpo.
+      amostraUltimoEvento,
     });
   } catch (err) {
     return res.status(500).json({ error: err.message });
