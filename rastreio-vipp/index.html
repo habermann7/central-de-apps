@@ -23,6 +23,7 @@
     --aguardando:#C1841F;
     --transferencia:#5C6F8C;
     --problema:#93493A;
+  --naoentregue:#8C5383;
     --retirada:#B4452F;
     --stamp:#B4452F;
   }
@@ -245,6 +246,7 @@
   .kpi.retirada .value{color:var(--retirada);}
   .kpi.transferencia .value{color:var(--transferencia);}
   .kpi.problema .value{color:var(--problema);}
+  .kpi.naoentregue .value{color:var(--naoentregue);}
   .kpi.valor .value{font-size:22px;}
 
   /* ---------- Panels / charts ---------- */
@@ -318,6 +320,7 @@
   .status-badge.transito{background:var(--transferencia);}
   .status-badge.retirada{background:var(--retirada);}
   .status-badge.problema{background:var(--problema);}
+  .status-badge.naoentregue{background:var(--naoentregue);}
 
   .table-panel{border:1px solid var(--line);background:var(--paper-raised);padding:18px 20px;margin-bottom:18px;}
   .table-scroll{overflow-x:auto;max-height:460px;overflow-y:auto;border:1px solid var(--line);}
@@ -421,6 +424,7 @@
         <option value="retirada">Aguardando retirada</option>
         <option value="transito">Em trânsito</option>
         <option value="aguardando">Aguardando ação</option>
+        <option value="naoentregue">Não entregue</option>
         <option value="problema">Problema</option>
       </select>
     </div>
@@ -475,6 +479,11 @@
       <div class="label">Em trânsito</div>
       <div class="value" id="kpi-transito">&mdash;</div>
       <div class="sub">em rota</div>
+    </div>
+    <div class="kpi naoentregue">
+      <div class="label">Não entregue</div>
+      <div class="value" id="kpi-naoentregue">&mdash;</div>
+      <div class="sub">falha de entrega</div>
     </div>
     <div class="kpi problema">
       <div class="label">Problema</div>
@@ -601,26 +610,26 @@ var STATUS_MAP = {
   "Objeto(s) Liberado(s) Para Download na Unidade Postadora": "aguardando",
   "Objeto(s) Gerado(s) Logistica Reversa": "aguardando",
   "Objeto(s) Não Etiquetado(s) Ou Range Esgotado": "aguardando",
+  "Objeto(s) Finalizado(s) Aguardando Liberação Para Download": "aguardando",
+  // Problema = questão administrativa/de sistema, não é falha de tentativa de entrega
   "Etiqueta Expirada": "problema",
   "Erro Geraçâo PPN": "problema",
-  "Objeto não entregue - Endereço insuficiente": "problema",
-  "Objeto não entregue - cliente mudou-se": "problema",
-  "Objeto não entregue - Endereço inexistente": "problema",
-  // Todos os "não entregue" novos que apareceram na planilha mais rica também são problema
-  "Objeto não entregue - carteiro não atendido": "problema",
-  "Objeto não entregue - cliente desconhecido no local": "problema",
-  "Objeto não entregue - endereço incorreto": "problema",
-  "Tentativa de entrega não efetuada": "problema",
   "Objeto apreendido por: Secretaria Estadual da Fazenda": "problema",
-  // "Comparado" é uma conferência interna VIPP x VisualPost, não uma ação pendente de verdade —
-  // "não divergente" tratamos como trânsito normal; "divergente" sinaliza algo a checar, vira problema
-  "Objeto(s) Comparado(s) entre o VIPP e VisualPost não Divergentes": "transito",
   "Objeto(s) Comparado(s) entre o VIPP e VisualPost divergentes": "problema",
-  "Objeto(s) Finalizado(s) Aguardando Liberação Para Download": "aguardando"
+  // Não entregue = tentativa de entrega que falhou de verdade (endereço, destinatário etc)
+  "Objeto não entregue - Endereço insuficiente": "naoentregue",
+  "Objeto não entregue - cliente mudou-se": "naoentregue",
+  "Objeto não entregue - Endereço inexistente": "naoentregue",
+  "Objeto não entregue - carteiro não atendido": "naoentregue",
+  "Objeto não entregue - cliente desconhecido no local": "naoentregue",
+  "Objeto não entregue - endereço incorreto": "naoentregue",
+  "Tentativa de entrega não efetuada": "naoentregue",
+  // "Comparado" é uma conferência interna VIPP x VisualPost, não uma ação pendente de verdade
+  "Objeto(s) Comparado(s) entre o VIPP e VisualPost não Divergentes": "transito"
 };
-var STATUS_LABEL = { entregue:"Entregue", retirada:"Aguardando retirada", transito:"Em trânsito", aguardando:"Aguardando ação", problema:"Problema" };
-var STATUS_COLOR = { entregue:"#2F7A54", retirada:"#B4452F", transito:"#5C6F8C", aguardando:"#C1841F", problema:"#93493A" };
-var STATUS_ORDER = ["retirada","problema","aguardando","transito","entregue"];
+var STATUS_LABEL = { entregue:"Entregue", retirada:"Aguardando retirada", naoentregue:"Não entregue", transito:"Em trânsito", aguardando:"Aguardando ação", problema:"Problema" };
+var STATUS_COLOR = { entregue:"#2F7A54", retirada:"#B4452F", naoentregue:"#8C5383", transito:"#5C6F8C", aguardando:"#C1841F", problema:"#93493A" };
+var STATUS_ORDER = ["retirada","naoentregue","problema","aguardando","transito","entregue"];
 
 // Versão curta e legível pro texto original de cada status — pros que a gente já
 // conhece. O que não tiver aqui, corta de forma inteligente (função abaixo).
@@ -1119,6 +1128,7 @@ function render(){
   document.getElementById('kpi-retirada').textContent = byBucket.retirada.toLocaleString('pt-BR');
   document.getElementById('kpi-pct-retirada').textContent = pctRetirada.toFixed(1) + '% do total';
   document.getElementById('kpi-transito').textContent = byBucket.transito.toLocaleString('pt-BR');
+  document.getElementById('kpi-naoentregue').textContent = byBucket.naoentregue.toLocaleString('pt-BR');
   document.getElementById('kpi-problema').textContent = byBucket.problema.toLocaleString('pt-BR');
   document.getElementById('kpi-valor').textContent = fmtMoney(valorTotal);
   document.getElementById('kpi-ticket').textContent = fmtMoney(ticketMedio);
