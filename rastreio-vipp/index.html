@@ -776,7 +776,7 @@ document.getElementById("fileInput").addEventListener("change", function (e) {
       var workbook = XLSX.read(data, { type: "array", cellDates: true });
       var sheet = workbook.Sheets[workbook.SheetNames[0]];
       var json = XLSX.utils.sheet_to_json(sheet, { defval: "", range: 1 });
-      var linhas = json.filter(function (r) { return r.Registro; });
+      var linhas = json.filter(function (r) { return r.Registro && String(r.Registro).indexOf('http') === -1; });
       salvarNoRealtimeDb(linhas, file.name);
     } catch (err) {
       document.getElementById("errorMsg").textContent = "Não consegui ler esse arquivo. Confirma se é o Excel exportado do VIPP.";
@@ -798,12 +798,18 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
     for (; i < fim; i++) {
       var r = linhas[i];
       var chave = chaveSegura(r.Registro);
+      // O VIPP exporta relatórios com nomes de coluna diferentes dependendo do tipo
+      // escolhido. Aceita os dois formatos que já vimos: o de "postagem" (Status,
+      // Servico) e o de "eventos" (DescricaoEvento, CodigoServicoCorreios, DataDoEvento).
+      var statusTexto = r.DescricaoEvento || r.Status || "";
+      var servicoTexto = r.Servico || (r.CodigoServicoCorreios != null ? String(r.CodigoServicoCorreios) : "");
+      var dataEventoTexto = r.DataDoEvento ? String(r.DataDoEvento) : "";
       if (existentes.has(chave)) {
         // já existe: atualiza só dado cadastral, preserva status/data do evento que o robô já tenha
         updates[CAMINHO_PEDIDOS + "/" + chave + "/destinatario"] = r.Destinatario || "";
         updates[CAMINHO_PEDIDOS + "/" + chave + "/cidade"] = r.CidadeDestinatario || "";
         updates[CAMINHO_PEDIDOS + "/" + chave + "/uf"] = r.UFDestinatario || "";
-        updates[CAMINHO_PEDIDOS + "/" + chave + "/servico"] = r.Servico || "";
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/servico"] = servicoTexto;
         updates[CAMINHO_PEDIDOS + "/" + chave + "/nf"] = r.NumeroNotaFiscal || "";
         updates[CAMINHO_PEDIDOS + "/" + chave + "/remetente"] = r.Remetente || "";
         updates[CAMINHO_PEDIDOS + "/" + chave + "/cep"] = r.CEPDestinatario || "";
@@ -815,9 +821,10 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
           destinatario: r.Destinatario || "",
           cidade: r.CidadeDestinatario || "",
           uf: r.UFDestinatario || "",
-          status: r.Status || "",
-          servico: r.Servico || "",
+          status: statusTexto,
+          servico: servicoTexto,
           dataPostagem: r.DataPostagem ? String(r.DataPostagem) : "",
+          dataEvento: dataEventoTexto,
           nf: r.NumeroNotaFiscal || "",
           remetente: r.Remetente || "",
           cep: r.CEPDestinatario || "",
