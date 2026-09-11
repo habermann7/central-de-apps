@@ -734,6 +734,9 @@ document.getElementById("fileInput").addEventListener("change", function (e) {
 
 function salvarNoRealtimeDb(linhas, nomeArquivo) {
   document.getElementById("fileInfo").textContent = "Salvando " + linhas.length + " pedidos...";
+  // pedidos que já existem na base não têm o status sobrescrito pela reimportação —
+  // o robô já pode ter uma info mais atual que o Excel do VIPP (que tem ~1 dia de atraso)
+  var existentes = new Set(allRows.map(function(r){ return chaveSegura(r.codigo); }));
   var i = 0;
   function proximoLote() {
     var updates = {};
@@ -741,20 +744,33 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
     for (; i < fim; i++) {
       var r = linhas[i];
       var chave = chaveSegura(r.Registro);
-      updates[CAMINHO_PEDIDOS + "/" + chave] = {
-        codigo: r.Registro,
-        destinatario: r.Destinatario || "",
-        cidade: r.CidadeDestinatario || "",
-        uf: r.UFDestinatario || "",
-        status: r.Status || "",
-        servico: r.Servico || "",
-        dataPostagem: r.DataPostagem ? String(r.DataPostagem) : "",
-        nf: r.NumeroNotaFiscal || "",
-        remetente: r.Remetente || "",
-        cep: r.CEPDestinatario || "",
-        valorPostagem: r.ValorPostagem !== "" && r.ValorPostagem != null ? Number(r.ValorPostagem) : 0,
-        atualizadoEm: Date.now()
-      };
+      if (existentes.has(chave)) {
+        // já existe: atualiza só dado cadastral, preserva status/data do evento que o robô já tenha
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/destinatario"] = r.Destinatario || "";
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/cidade"] = r.CidadeDestinatario || "";
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/uf"] = r.UFDestinatario || "";
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/servico"] = r.Servico || "";
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/nf"] = r.NumeroNotaFiscal || "";
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/remetente"] = r.Remetente || "";
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/cep"] = r.CEPDestinatario || "";
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/valorPostagem"] = r.ValorPostagem !== "" && r.ValorPostagem != null ? Number(r.ValorPostagem) : 0;
+      } else {
+        // pedido novo: grava tudo, inclusive o status inicial que veio do VIPP
+        updates[CAMINHO_PEDIDOS + "/" + chave] = {
+          codigo: r.Registro,
+          destinatario: r.Destinatario || "",
+          cidade: r.CidadeDestinatario || "",
+          uf: r.UFDestinatario || "",
+          status: r.Status || "",
+          servico: r.Servico || "",
+          dataPostagem: r.DataPostagem ? String(r.DataPostagem) : "",
+          nf: r.NumeroNotaFiscal || "",
+          remetente: r.Remetente || "",
+          cep: r.CEPDestinatario || "",
+          valorPostagem: r.ValorPostagem !== "" && r.ValorPostagem != null ? Number(r.ValorPostagem) : 0,
+          atualizadoEm: Date.now()
+        };
+      }
     }
     db.ref().update(updates).then(function () {
       if (i < linhas.length) {
