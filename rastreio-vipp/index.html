@@ -385,6 +385,8 @@
     </div>
   </div>
 
+  <div id="avisoErroAtualizacao" class="hidden" style="border:1px solid var(--problema);background:#F6E6E3;color:#6b201a;padding:10px 16px;margin-bottom:18px;font-size:12.5px;"></div>
+
   <div id="debugPanel" class="hidden" style="border:1px solid var(--line);background:#fff;padding:12px 14px;margin-bottom:18px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
       <strong style="font-size:12px;font-family:'IBM Plex Mono',monospace;">Resposta da última atualização (pra copiar e mandar se algo parecer estranho)</strong>
@@ -599,7 +601,18 @@ var STATUS_MAP = {
   "Erro Geraçâo PPN": "problema",
   "Objeto não entregue - Endereço insuficiente": "problema",
   "Objeto não entregue - cliente mudou-se": "problema",
-  "Objeto não entregue - Endereço inexistente": "problema"
+  "Objeto não entregue - Endereço inexistente": "problema",
+  // Todos os "não entregue" novos que apareceram na planilha mais rica também são problema
+  "Objeto não entregue - carteiro não atendido": "problema",
+  "Objeto não entregue - cliente desconhecido no local": "problema",
+  "Objeto não entregue - endereço incorreto": "problema",
+  "Tentativa de entrega não efetuada": "problema",
+  "Objeto apreendido por: Secretaria Estadual da Fazenda": "problema",
+  // "Comparado" é uma conferência interna VIPP x VisualPost, não uma ação pendente de verdade —
+  // "não divergente" tratamos como trânsito normal; "divergente" sinaliza algo a checar, vira problema
+  "Objeto(s) Comparado(s) entre o VIPP e VisualPost não Divergentes": "transito",
+  "Objeto(s) Comparado(s) entre o VIPP e VisualPost divergentes": "problema",
+  "Objeto(s) Finalizado(s) Aguardando Liberação Para Download": "aguardando"
 };
 var STATUS_LABEL = { entregue:"Entregue", retirada:"Aguardando retirada", transito:"Em trânsito", aguardando:"Aguardando ação", problema:"Problema" };
 var STATUS_COLOR = { entregue:"#2F7A54", retirada:"#B4452F", transito:"#5C6F8C", aguardando:"#C1841F", problema:"#93493A" };
@@ -733,23 +746,48 @@ auth.onAuthStateChanged(function (user) {
 });
 
 // -------- Atualizar agora --------
+var MAX_RODADAS_AUTOMATICAS = 6; // trava de segurança, pra nunca ficar num loop sem fim
+
 document.getElementById("atualizarAgoraBtn").addEventListener("click", async function () {
   var btn = this;
   btn.disabled = true;
-  btn.textContent = "Atualizando...";
   document.getElementById("errorMsg").textContent = "";
+  document.getElementById("avisoErroAtualizacao").classList.add("hidden");
+
+  var totalAtualizadosNaSessao = 0;
+  var rodada = 0;
+  var dados = null;
+
   try {
     var idToken = await auth.currentUser.getIdToken();
-    var resposta = await fetch("https://central-de-apps.vercel.app/api/atualizar-rastreio", {
-      headers: { Authorization: "Bearer " + idToken }
-    });
-    var dados = await resposta.json();
-    window._ultimaRespostaAtualizar = dados;
-    document.getElementById('btn-ver-tecnico').style.display = 'inline-block';
-    if (!resposta.ok) {
-      document.getElementById("errorMsg").textContent = "Erro ao atualizar: " + (dados.error || resposta.status);
-    } else {
-      document.getElementById("fileInfo").textContent = dados.atualizados + " pedidos atualizados agora";
+    do {
+      rodada++;
+      btn.textContent = rodada === 1 ? "Atualizando..." : "Atualizando... (rodada " + rodada + ")";
+      var resposta = await fetch("https://central-de-apps.vercel.app/api/atualizar-rastreio", {
+        headers: { Authorization: "Bearer " + idToken }
+      });
+      dados = await resposta.json();
+      window._ultimaRespostaAtualizar = dados;
+      document.getElementById('btn-ver-tecnico').style.display = 'inline-block';
+
+      if (!resposta.ok) {
+        document.getElementById("errorMsg").textContent = "Erro ao atualizar: " + (dados.error || resposta.status);
+        break;
+      }
+      totalAtualizadosNaSessao += (dados.atualizados || 0);
+      document.getElementById("fileInfo").textContent = totalAtualizadosNaSessao + " pedidos atualizados agora" + (dados.restantes ? " (ainda restam " + dados.restantes + ")" : "");
+    } while (dados && dados.restantes > 0 && rodada < MAX_RODADAS_AUTOMATICAS);
+
+    if (dados) {
+      var totalErros = (dados.erros ? dados.erros.length : 0) + (dados.semEventoOuErro || 0);
+      if (totalErros > 0) {
+        var aviso = document.getElementById("avisoErroAtualizacao");
+        aviso.textContent = "A última atualização teve " + (dados.semEventoOuErro || 0) + " pedido(s) com erro ou sem informação disponível. Clica em \"Ver detalhes técnicos\" pra ver quais.";
+        aviso.classList.remove("hidden");
+      }
+      if (dados.restantes > 0) {
+        document.getElementById("fileInfo").textContent = totalAtualizadosNaSessao + " pedidos atualizados — ainda restam " + dados.restantes + ", clica em \"Atualizar agora\" de novo pra continuar";
+      }
     }
   } catch (err) {
     document.getElementById("errorMsg").textContent = "Erro ao atualizar: " + err.message;
