@@ -31,6 +31,18 @@ const STATUS_ENTREGUE = [
   'Objeto entregue na Caixa de Correios Inteligente',
 ];
 
+// Status que não vão mudar mais — não faz sentido continuar gastando consulta
+// com eles. "Entregue" já para de ser consultado (acima); esses aqui também.
+const STATUS_MORTOS = [
+  'Etiqueta Expirada',
+  'Erro Geraçâo PPN',
+];
+
+// Se um código falhar (ex: "não localizado") essa quantidade de vezes seguidas,
+// para de tentar esse código — provavelmente é lixo (etiqueta nunca postada,
+// código digitado errado etc), não vale continuar gastando consulta com ele.
+const LIMITE_TENTATIVAS_SEM_SUCESSO = 5;
+
 // A API dos Correios não aceita vários códigos separados por vírgula na mesma
 // consulta (confirmado: ela trata a lista toda como se fosse 1 código só e
 // devolve "não localizado"). Por isso consultamos um código por vez — em
@@ -131,9 +143,13 @@ export default async function handler(req, res) {
     const snap = await admin.database().ref(CAMINHO_PEDIDOS).once('value');
     const todos = snap.val() || {};
 
-    const pendentes = Object.keys(todos).filter(
-      (chave) => !STATUS_ENTREGUE.includes(todos[chave].status)
-    );
+    const pendentes = Object.keys(todos).filter((chave) => {
+      const p = todos[chave];
+      if (STATUS_ENTREGUE.includes(p.status)) return false;
+      if (STATUS_MORTOS.includes(p.status)) return false;
+      if ((p.tentativasSemSucesso || 0) >= LIMITE_TENTATIVAS_SEM_SUCESSO) return false;
+      return true;
+    });
 
     if (pendentes.length === 0) {
       return res.status(200).json({ mensagem: 'Nada pendente pra atualizar', atualizados: 0 });
@@ -168,6 +184,8 @@ export default async function handler(req, res) {
         if (!r.ok) {
           if (r.erro) semEvento++;
           if (erros.length < 15 && r.erro) erros.push(r.codigo + ': ' + r.erro);
+          const tentativasAtuais = (todos[r.chave] && todos[r.chave].tentativasSemSucesso) || 0;
+          updates[CAMINHO_PEDIDOS + '/' + r.chave + '/tentativasSemSucesso'] = tentativasAtuais + 1;
           continue;
         }
         if (!amostraUltimoEvento) amostraUltimoEvento = r.evento;
@@ -177,6 +195,7 @@ export default async function handler(req, res) {
           updates[CAMINHO_PEDIDOS + '/' + r.chave + '/dataEvento'] = dataEvento;
         }
         updates[CAMINHO_PEDIDOS + '/' + r.chave + '/atualizadoEm'] = Date.now();
+        updates[CAMINHO_PEDIDOS + '/' + r.chave + '/tentativasSemSucesso'] = 0;
         atualizados++;
       }
 
