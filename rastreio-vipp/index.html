@@ -1,180 +1,542 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<title>Rastreio VIPP</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Rastreios &mdash; STIN PHARMA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <style>
-  :root {
-    --paper: #eef1f0;
-    --surface: #ffffff;
-    --ink: #14191b;
-    --muted: #5c6b6a;
-    --faint: #93a09e;
-    --line: #d9e0dd;
-    --accent: #b5651d;
-    --accent-ink: #6a3a10;
+  :root{
+    --ink:#16233F;
+    --ink-soft:#334867;
+    --paper:#F1EFE8;
+    --paper-raised:#FAFAF6;
+    --line:#D8D3C4;
+    --postal-blue:#2E5EA8;
+    --entregue:#2F7A54;
+    --aguardando:#C1841F;
+    --transferencia:#5C6F8C;
+    --problema:#93493A;
+    --retirada:#B4452F;
+    --stamp:#B4452F;
   }
-  * { box-sizing: border-box; }
-  body {
-    font-family: 'Inter', -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: var(--paper);
-    color: var(--ink);
-    margin: 0;
-    padding: 32px clamp(16px, 4vw, 48px);
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    line-height:1.5;
   }
-  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
-  .hidden { display: none !important; }
+  .wrap{max-width:1320px;margin:0 auto;padding:28px 24px 64px;}
+  .hidden{display:none !important;}
 
-  #loginScreen { max-width: 340px; margin: 12vh auto; text-align: left; }
-  #loginScreen .brand { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600; margin: 0 0 4px; }
-  #loginScreen .brand-sub { font-size: 13px; color: var(--muted); margin: 0 0 28px; }
-  #loginScreen label { display: block; font-size: 12px; color: var(--muted); margin: 0 0 6px; }
-  #loginScreen input {
-    width: 100%; padding: 11px 12px; margin-bottom: 14px;
-    border: 1px solid var(--line); border-radius: 6px; background: var(--surface);
-    font-size: 14px; font-family: inherit; color: var(--ink);
+  /* ---------- Login ---------- */
+  #loginScreen{max-width:340px;margin:14vh auto;background:var(--paper-raised);border:1px solid var(--ink);padding:28px 30px;}
+  #loginScreen h1{font-family:'Source Serif 4',serif;font-weight:600;font-size:24px;margin:0 0 4px;}
+  #loginScreen .sub{margin:0 0 24px;color:var(--ink-soft);font-size:13px;}
+  #loginScreen label{display:block;font-size:11.5px;color:var(--ink-soft);font-weight:600;margin-bottom:5px;}
+  #loginScreen input{
+    width:100%;padding:9px 10px;margin-bottom:14px;border:1px solid var(--line);
+    background:#fff;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--ink);
   }
-  #loginScreen input:focus { outline: none; border-color: var(--accent); }
+  #loginScreen input:focus{outline:2px solid var(--postal-blue);outline-offset:1px;}
+  .btn-primary{
+    width:100%;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:10px 14px;
+    background:var(--ink);color:#fff;border:none;cursor:pointer;
+  }
+  .btn-primary:hover{background:var(--postal-blue);}
+  .login-error{font-size:12.5px;color:var(--problema);margin-top:12px;min-height:1em;}
 
-  .app-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
-  .brand-block { display: flex; align-items: baseline; gap: 12px; }
-  .brand { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
-  .brand-sub { font-size: 13px; color: var(--muted); }
-  .rule { height: 1px; background: var(--line); margin: 14px 0 22px; }
+  /* ---------- Header (manifest strip) ---------- */
+  header.manifest{
+    border:1px solid var(--ink);
+    background:var(--paper-raised);
+    padding:22px 26px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:16px;
+    margin-bottom:18px;
+  }
+  header.manifest .title-block h1{
+    font-family:'Source Serif 4',serif;
+    font-weight:600;
+    font-size:28px;
+    margin:0 0 4px;
+    letter-spacing:0.2px;
+  }
+  header.manifest .title-block p{
+    margin:0;
+    color:var(--ink-soft);
+    font-size:13px;
+  }
+  header.manifest .meta{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    text-align:right;
+    color:var(--ink-soft);
+    border-left:1px solid var(--line);
+    padding-left:16px;
+  }
+  header.manifest .meta strong{color:var(--ink);}
+  .btn-ghost{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;padding:7px 12px;
+    background:transparent;border:1px solid var(--line);color:var(--ink-soft);cursor:pointer;
+  }
+  .btn-ghost:hover{border-color:var(--ink);color:var(--ink);}
 
-  .btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--ink); color: #fff; padding: 10px 16px;
-    border-radius: 6px; font-size: 13px; font-weight: 500;
-    cursor: pointer; border: none; font-family: 'Inter', sans-serif;
-    transition: background 120ms ease;
+  /* ---------- Toolbar (import / atualizar) ---------- */
+  .toolbar{
+    border:1px solid var(--line);background:var(--paper-raised);padding:14px 20px;
+    margin-bottom:18px;display:flex;align-items:center;flex-wrap:wrap;gap:12px;
   }
-  .btn:hover { background: #2b3436; }
-  .btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
-  .btn.ghost:hover { border-color: var(--faint); color: var(--ink); background: transparent; }
-  .btn.accent { background: var(--accent); }
-  .btn.accent:hover { background: #99551a; }
-  .btn:disabled { opacity: 0.55; cursor: default; }
-  #fileInput { display: none; }
-
-  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 20px; }
-  .info { font-size: 12.5px; color: var(--muted); }
-  .error { font-size: 12.5px; color: #8c3226; }
-  #search {
-    margin-left: auto; padding: 9px 12px; border: 1px solid var(--line);
-    border-radius: 6px; font-size: 13px; min-width: 230px;
-    font-family: inherit; background: var(--surface); color: var(--ink);
+  .toolbar label.file-btn{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;padding:8px 14px;
+    background:var(--ink);color:#fff;cursor:pointer;
   }
-  #search:focus { outline: none; border-color: var(--accent); }
+  .toolbar label.file-btn:hover{background:var(--postal-blue);}
+  .toolbar input[type=file]{display:none;}
+  .btn-accent{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;padding:8px 14px;
+    background:var(--stamp);color:#fff;border:none;cursor:pointer;
+  }
+  .btn-accent:hover{background:#8f3722;}
+  .btn-accent:disabled{opacity:0.55;cursor:default;}
+  .toolbar .info{font-size:12px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;}
+  .toolbar .error-msg{font-size:12px;color:var(--problema);}
 
-  #staleWarning {
-    display: none; margin-bottom: 18px; padding: 12px 16px;
-    background: #f6e6e3; border-left: 3px solid #8c3226; border-radius: 4px;
-    font-size: 13px; color: #6b201a;
+  #staleWarning{
+    display:none;margin-bottom:18px;padding:10px 16px;border:1px solid var(--problema);
+    background:#F6E6E3;color:#6b201a;font-size:12.5px;font-family:'IBM Plex Mono',monospace;
   }
 
-  .priority-box {
-    background: var(--surface); border: 1px solid var(--line);
-    border-left: 3px solid var(--accent); border-radius: 8px;
-    padding: 16px 18px; margin-bottom: 24px;
+  /* ---------- Priority box (radar aguardando retirada) ---------- */
+  .priority-box{
+    border:1px solid var(--retirada);background:#FBEFE9;padding:16px 20px;margin-bottom:18px;
   }
-  .priority-title {
-    font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 14px;
-    color: var(--accent-ink); margin-bottom: 12px;
-    display: flex; align-items: center; gap: 8px;
+  .priority-title{
+    font-family:'Source Serif 4',serif;font-weight:600;font-size:15px;color:#6b241a;
+    margin:0 0 10px;display:flex;align-items:center;gap:8px;
   }
-  .priority-title .count {
-    font-family: 'JetBrains Mono', monospace; background: var(--accent);
-    color: #fff; border-radius: 4px; padding: 1px 7px; font-size: 12px;
+  .priority-title .count{
+    font-family:'IBM Plex Mono',monospace;background:var(--retirada);color:#fff;
+    padding:1px 8px;font-size:11.5px;
   }
-  .priority-list { display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; }
-  .priority-item {
-    display: grid; grid-template-columns: 140px 1fr 110px auto; gap: 16px;
-    font-size: 13px; padding: 8px 10px; border-radius: 4px;
+  .priority-list{display:flex;flex-direction:column;gap:2px;max-height:220px;overflow-y:auto;}
+  .priority-item{
+    display:grid;grid-template-columns:150px 1fr 110px 90px auto;gap:14px;font-size:12.5px;
+    padding:6px 8px;font-family:'IBM Plex Mono',monospace;align-items:center;
   }
-  .priority-item:hover { background: #f7f0e8; }
-  .priority-item .codigo { font-weight: 500; color: var(--ink); }
-  .priority-item .dest { color: var(--muted); }
-  .priority-item .nf { color: var(--faint); }
-  .priority-item .loc { color: var(--faint); text-align: right; }
+  .priority-item:hover{background:#F3DDD3;}
+  .priority-item .dest{font-family:'Inter',sans-serif;color:var(--ink);}
+  .priority-item .nf{color:var(--ink-soft);}
+  .priority-item .loc{color:var(--ink-soft);text-align:right;}
+  .priority-item .dias{text-align:right;font-weight:600;}
+  .priority-item .dias.ok{color:var(--ink-soft);font-weight:400;}
+  .priority-item .dias.atencao{color:#9a6b0a;}
+  .priority-item .dias.urgente{color:#fff;background:var(--retirada);padding:1px 6px;border-radius:2px;}
 
-  .board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
-  .col-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
-  .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-  .col-title { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 13.5px; }
-  .col-count { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--faint); margin-left: auto; }
-  .col-list { display: flex; flex-direction: column; gap: 8px; max-height: 540px; overflow-y: auto; padding-right: 2px; }
+  /* ---------- Filter bar ---------- */
+  .filterbar{
+    border:1px solid var(--line);
+    background:var(--paper-raised);
+    padding:16px 20px;
+    margin-bottom:18px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:12px 16px;
+    align-items:end;
+  }
+  .filterbar .field{display:flex;flex-direction:column;gap:5px;}
+  .filterbar label{
+    font-size:11px;
+    color:var(--ink-soft);
+    font-weight:600;
+  }
+  .field-hint{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    color:var(--ink-soft);
+  }
+  .filterbar select, .filterbar input{
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    padding:7px 8px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--ink);
+  }
+  .filterbar select:focus, .filterbar input:focus{
+    outline:2px solid var(--postal-blue);
+    outline-offset:1px;
+  }
+  .filterbar .actions{
+    display:flex;
+    align-items:end;
+  }
+  .btn-reset{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    padding:8px 14px;
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    cursor:pointer;
+  }
+  .btn-reset:hover{background:var(--postal-blue);}
 
-  .card {
-    background: var(--surface); border: 1px solid var(--line);
-    border-radius: 8px; padding: 11px 13px; font-size: 13px;
-    transition: border-color 120ms ease;
+  /* ---------- Period result banner ---------- */
+  .period-banner{
+    display:none;
+    border:1px solid var(--postal-blue);
+    background:#EAF0FA;
+    color:var(--ink);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    padding:9px 16px;
+    margin-bottom:14px;
   }
-  .card:hover { border-color: var(--faint); }
-  .card .codigo {
-    font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 500;
-    letter-spacing: 0.02em; color: var(--muted); margin-bottom: 5px;
-  }
-  .card .dest { color: var(--ink); font-weight: 500; margin-bottom: 2px; }
-  .card .meta { color: var(--faint); font-size: 12px; margin-bottom: 8px; }
-  .card .pill { display: inline-block; font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 4px; }
-  .col-empty { font-size: 12px; color: var(--faint); padding: 8px 2px; }
+  .period-banner.show{display:block;}
+  .period-banner strong{color:var(--postal-blue);}
 
-  @media (max-width: 900px) {
-    .board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .priority-item { grid-template-columns: 1fr; gap: 2px; }
-    .priority-item .loc { text-align: left; }
+  /* ---------- KPI stubs ---------- */
+  .kpi-row{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:0;
+    margin-bottom:18px;
+    border:1px solid var(--ink);
+    background:var(--paper-raised);
   }
+  .kpi{
+    padding:16px 16px 14px;
+    border-right:1px dashed var(--line);
+    position:relative;
+  }
+  .kpi:last-child{border-right:none;}
+  .kpi .label{
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+  }
+  .kpi .value{
+    font-family:'Source Serif 4',serif;
+    font-size:26px;
+    font-weight:600;
+    line-height:1;
+  }
+  .kpi .sub{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:6px;
+  }
+  .kpi.entregue .value{color:var(--entregue);}
+  .kpi.retirada .value{color:var(--retirada);}
+  .kpi.transferencia .value{color:var(--transferencia);}
+  .kpi.problema .value{color:var(--problema);}
+  .kpi.valor .value{font-size:22px;}
+
+  /* ---------- Panels / charts ---------- */
+  .grid-2{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-bottom:18px;}
+  .grid-2b{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
+  @media(max-width:860px){.grid-2,.grid-2b{grid-template-columns:1fr;}}
+
+  .panel{
+    border:1px solid var(--line);
+    background:var(--paper-raised);
+    padding:18px 20px 14px;
+  }
+  .panel h2{
+    font-family:'Source Serif 4',serif;
+    font-size:16px;
+    font-weight:600;
+    margin:0 0 4px;
+  }
+  .panel .hint{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin:0 0 12px;
+  }
+  .chart-holder{position:relative;height:260px;}
+  .chart-holder.tall{height:320px;}
+
+  .status-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:10px;}
+  .status-legend .chip{
+    display:flex;align-items:center;gap:6px;
+    font-size:11.5px;
+    cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .status-legend .dot{width:9px;height:9px;display:inline-block;}
+  .status-legend .chip.dim{opacity:0.4;}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  thead th{
+    text-align:left;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--ink-soft);
+    border-bottom:1px solid var(--ink);
+    padding:6px 8px;
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:6px 8px;
+    border-bottom:1px solid var(--line);
+    vertical-align:top;
+  }
+  tbody tr:hover{background:#EFEBDD;}
+  td.num, th.num{text-align:right;font-family:'IBM Plex Mono',monospace;}
+  td.mono{font-family:'IBM Plex Mono',monospace;font-size:11.5px;}
+
+  .status-badge{
+    display:inline-block;
+    padding:2px 7px;
+    font-size:10.5px;
+    font-family:'IBM Plex Mono',monospace;
+    color:#fff;
+    white-space:nowrap;
+  }
+  .status-badge.entregue{background:var(--entregue);}
+  .status-badge.aguardando{background:var(--aguardando);}
+  .status-badge.transito{background:var(--transferencia);}
+  .status-badge.retirada{background:var(--retirada);}
+  .status-badge.problema{background:var(--problema);}
+
+  .table-panel{border:1px solid var(--line);background:var(--paper-raised);padding:18px 20px;margin-bottom:18px;}
+  .table-scroll{overflow-x:auto;max-height:460px;overflow-y:auto;border:1px solid var(--line);}
+  .table-scroll table{min-width:960px;}
+  .table-scroll thead th{position:sticky;top:0;background:var(--paper-raised);}
+  .row-count{font-size:11.5px;color:var(--ink-soft);margin-top:8px;font-family:'IBM Plex Mono',monospace;}
+
+  footer.note{
+    font-size:11px;
+    color:var(--ink-soft);
+    border-top:1px solid var(--line);
+    padding-top:14px;
+    margin-top:6px;
+  }
+
+  ::selection{background:var(--postal-blue);color:#fff;}
 </style>
 </head>
 <body>
 
 <div id="loginScreen">
-  <p class="brand">Rastreio VIPP</p>
-  <p class="brand-sub">Radar de pedidos — Expedição</p>
+  <h1>Painel de Rastreios</h1>
+  <p class="sub">STIN PHARMA &mdash; Expedição</p>
   <label for="loginEmail">E-mail</label>
-  <input type="email" id="loginEmail" placeholder="seu.email@stinpharma.com" />
+  <input type="email" id="loginEmail" placeholder="seu.email@stinpharma.com">
   <label for="loginSenha">Senha</label>
-  <input type="password" id="loginSenha" placeholder="••••••••" />
-  <button class="btn" id="loginBtn" style="width:100%; justify-content:center;">Entrar</button>
-  <p class="error" id="loginError" style="margin-top:12px;"></p>
+  <input type="password" id="loginSenha" placeholder="••••••••">
+  <button class="btn-primary" id="loginBtn">Entrar</button>
+  <p class="login-error" id="loginError"></p>
 </div>
 
-<div id="appScreen" class="hidden">
-  <div class="app-header">
-    <div class="brand-block">
-      <span class="brand">Rastreio VIPP</span>
-      <span class="brand-sub">Radar de pedidos — Expedição</span>
+<div id="appScreen" class="wrap hidden">
+
+  <header class="manifest">
+    <div class="title-block">
+      <h1>Painel de Rastreios</h1>
+      <p>Acompanhamento de postagens, eventos e entregas &mdash; base de rastreamento dos Correios</p>
     </div>
-    <button class="btn ghost" id="logoutBtn">Sair</button>
-  </div>
-  <div class="rule"></div>
+    <div class="meta">
+      Remetente base: <strong>STIN PHARMA</strong><br>
+      <span id="meta-total-obj">&mdash;</span> objetos na base &middot;
+      <button class="btn-ghost" id="logoutBtn" style="margin-left:8px;">Sair</button>
+    </div>
+  </header>
 
   <div class="toolbar">
-    <label class="btn" for="fileInput">Importar Excel do VIPP</label>
-    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
-    <button class="btn accent" id="atualizarAgoraBtn">Atualizar agora</button>
-    <span class="info mono" id="fileInfo"></span>
-    <span class="error" id="errorMsg"></span>
+    <label class="file-btn" for="fileInput">Importar Excel do VIPP</label>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+    <button class="btn-accent" id="atualizarAgoraBtn">Atualizar agora</button>
+    <span class="info" id="fileInfo"></span>
+    <span class="error-msg" id="errorMsg"></span>
     <span class="info" id="lastUpdate"></span>
-    <input type="text" id="search" placeholder="Buscar por código, cliente, cidade..." />
   </div>
 
   <div id="staleWarning"></div>
 
   <div class="priority-box" id="priorityBox" style="display:none">
     <div class="priority-title">Aguardando retirada — ligar pro cliente <span class="count" id="priorityCount">0</span></div>
+    <p style="margin:-6px 0 10px;font-size:11.5px;color:#8a5540;">Ordenado por quem está esperando há mais tempo &mdash; dias em vermelho = perto do prazo de devolução</p>
     <div class="priority-list" id="priorityList"></div>
   </div>
 
-  <div class="board" id="board"></div>
+  <div class="filterbar">
+    <div class="field">
+      <label>Data de postagem &mdash; De</label>
+      <input type="date" id="f-date-start">
+      <span class="field-hint" id="hint-date-start"></span>
+    </div>
+    <div class="field">
+      <label>Até</label>
+      <input type="date" id="f-date-end">
+      <span class="field-hint" id="hint-date-end"></span>
+    </div>
+    <div class="field">
+      <label>Status</label>
+      <select id="f-status">
+        <option value="">Todos</option>
+        <option value="entregue">Entregue</option>
+        <option value="retirada">Aguardando retirada</option>
+        <option value="transito">Em trânsito</option>
+        <option value="aguardando">Aguardando ação</option>
+        <option value="problema">Problema</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>UF destino</label>
+      <select id="f-uf"><option value="">Todas</option></select>
+    </div>
+    <div class="field">
+      <label>Cidade destino</label>
+      <select id="f-cidade"><option value="">Todas</option></select>
+    </div>
+    <div class="field">
+      <label>Destinatário</label>
+      <input type="text" id="f-destinatario" placeholder="Buscar nome...">
+    </div>
+    <div class="field">
+      <label>Registro</label>
+      <input type="text" id="f-registro" placeholder="Ex: AD8...BR">
+    </div>
+    <div class="field">
+      <label>Nota fiscal</label>
+      <input type="text" id="f-nf" placeholder="Número da NF">
+    </div>
+    <div class="field actions">
+      <button class="btn-reset" id="btn-reset" type="button">Limpar filtros</button>
+    </div>
+  </div>
+
+  <div class="period-banner" id="period-banner"></div>
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="label">Total de postagens</div>
+      <div class="value" id="kpi-total">&mdash;</div>
+      <div class="sub">objetos no período</div>
+    </div>
+    <div class="kpi entregue">
+      <div class="label">Total entregue</div>
+      <div class="value" id="kpi-entregue">&mdash;</div>
+      <div class="sub" id="kpi-pct-entregue">&mdash;</div>
+    </div>
+    <div class="kpi retirada">
+      <div class="label">Aguardando retirada</div>
+      <div class="value" id="kpi-retirada">&mdash;</div>
+      <div class="sub" id="kpi-pct-retirada">&mdash;</div>
+    </div>
+    <div class="kpi transferencia">
+      <div class="label">Em trânsito</div>
+      <div class="value" id="kpi-transito">&mdash;</div>
+      <div class="sub">em rota</div>
+    </div>
+    <div class="kpi problema">
+      <div class="label">Problema</div>
+      <div class="value" id="kpi-problema">&mdash;</div>
+      <div class="sub">precisa de ação</div>
+    </div>
+    <div class="kpi valor">
+      <div class="label">Valor total postagens</div>
+      <div class="value" id="kpi-valor">&mdash;</div>
+      <div class="sub">soma no período</div>
+    </div>
+    <div class="kpi valor">
+      <div class="label">Ticket médio</div>
+      <div class="value" id="kpi-ticket">&mdash;</div>
+      <div class="sub">valor / postagens</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <h2>Postagens por dia</h2>
+      <p class="hint">Volume de objetos postados, por dia, no período selecionado</p>
+      <div class="chart-holder"><canvas id="chart-por-dia"></canvas></div>
+    </div>
+    <div class="panel">
+      <h2>Status das entregas</h2>
+      <p class="hint">Clique em um status para filtrar todo o painel</p>
+      <div class="chart-holder"><canvas id="chart-status"></canvas></div>
+      <div class="status-legend" id="status-legend"></div>
+    </div>
+  </div>
+
+  <div class="grid-2b">
+    <div class="panel">
+      <h2>Postagens por estado</h2>
+      <p class="hint">Quantidade de objetos por UF de destino, do maior para o menor</p>
+      <div class="chart-holder tall"><canvas id="chart-uf-qtd"></canvas></div>
+    </div>
+    <div class="panel">
+      <h2>Valor postado por estado</h2>
+      <p class="hint">Soma do valor de postagem por UF de destino</p>
+      <div class="chart-holder tall"><canvas id="chart-uf-valor"></canvas></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:18px;">
+    <h2>Ranking de cidades</h2>
+    <p class="hint">Cidades com maior quantidade de postagens no período</p>
+    <div class="table-scroll" style="max-height:320px;">
+      <table>
+        <thead>
+          <tr><th>Cidade</th><th>UF</th><th class="num">Postagens</th><th class="num">Valor total</th></tr>
+        </thead>
+        <tbody id="ranking-cidades-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="table-panel">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;">
+      <div>
+        <h2 style="font-family:'Source Serif 4',serif;font-size:16px;margin:0 0 4px;">Detalhamento dos objetos</h2>
+        <p class="hint" style="margin:0;">Um objeto por linha &mdash; respeita todos os filtros acima</p>
+      </div>
+      <button class="btn-ghost" id="btn-exportar-csv" type="button">Exportar CSV</button>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Data postagem</th>
+            <th>Registro</th>
+            <th>Destinatário</th>
+            <th>Cidade</th>
+            <th>UF</th>
+            <th>Nota fiscal</th>
+            <th class="num">Valor</th>
+            <th>Status atual</th>
+            <th>Última verificação</th>
+          </tr>
+        </thead>
+        <tbody id="detail-body"></tbody>
+      </table>
+    </div>
+    <div class="row-count" id="detail-count"></div>
+  </div>
+
+  <footer class="note">
+    Dados ao vivo do Firebase (rastreioVipp/pedidos). O robô automático atualiza status e data do evento 1x/dia para pedidos ainda não entregues; pedidos já entregues não são mais consultados.
+  </footer>
+
 </div>
 
 <script>
@@ -196,6 +558,7 @@ var db = firebase.database();
 var GRUPO_PERMITIDO = "EXPEDIÇÃO";
 var CAMINHO_PEDIDOS = "rastreioVipp/pedidos";
 
+// -------- Classificação de status (mesma regra de sempre, mais fina) --------
 var STATUS_MAP = {
   "Objeto entregue ao destinatário": "entregue",
   "Objeto entregue ao remetente": "entregue",
@@ -214,32 +577,44 @@ var STATUS_MAP = {
   "Objeto não entregue - cliente mudou-se": "problema",
   "Objeto não entregue - Endereço inexistente": "problema"
 };
+var STATUS_LABEL = { entregue:"Entregue", retirada:"Aguardando retirada", transito:"Em trânsito", aguardando:"Aguardando ação", problema:"Problema" };
+var STATUS_COLOR = { entregue:"#2F7A54", retirada:"#B4452F", transito:"#5C6F8C", aguardando:"#C1841F", problema:"#93493A" };
+var STATUS_ORDER = ["retirada","problema","aguardando","transito","entregue"];
 
-var COLUMNS = [
-  { key: "problema", title: "Problema", color: "#a5332c", bg: "#f6e6e3", text: "#6b201a" },
-  { key: "aguardando", title: "Aguardando ação", color: "#b5651d", bg: "#f7ecd9", text: "#7a4210" },
-  { key: "transito", title: "Em trânsito", color: "#2b6079", bg: "#e2eef1", text: "#163842" },
-  { key: "entregue", title: "Entregue", color: "#3d6b40", bg: "#e6efe1", text: "#24401f" }
-];
+// Prazo de atenção pro radar de "aguardando retirada" — ajuste aqui se o prazo
+// real de devolução dos Correios pra vocês for diferente de 7 dias corridos.
+var PRAZO_ATENCAO_DIAS = 4;
+var PRAZO_URGENTE_DIAS = 7;
+var LIMITE_LINHAS_TABELA = 500; // performance: acima disso, pede pra refinar os filtros
 
-function bucketFor(status) { return STATUS_MAP[status] || "aguardando"; }
-function escapeHtml(str) { return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-
-function chaveSegura(codigo) {
-  return String(codigo).replace(/[.#$\[\]\/]/g, "");
+function debounce(fn, ms){
+  var t;
+  return function(){
+    var args = arguments, ctx = this;
+    clearTimeout(t);
+    t = setTimeout(function(){ fn.apply(ctx, args); }, ms);
+  };
 }
 
+function bucketFor(status){ return STATUS_MAP[status] || "aguardando"; }
+function escapeHtml(str){ return String(str == null ? "" : str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function chaveSegura(codigo){ return String(codigo).replace(/[.#$\[\]\/]/g, ""); }
+function fmtMoney(v){ return (v||0).toLocaleString('pt-BR', {style:'currency', currency:'BRL'}); }
+function fmtDateOnly(d){ if(!d) return ''; return d.toLocaleDateString('pt-BR'); }
+function fmtDateTime(d){ if(!d) return ''; return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+
+// -------- Login --------
 document.getElementById("loginBtn").addEventListener("click", function () {
   var email = document.getElementById("loginEmail").value.trim();
   var senha = document.getElementById("loginSenha").value;
   document.getElementById("loginError").textContent = "";
-  auth.signInWithEmailAndPassword(email, senha).catch(function (err) {
+  auth.signInWithEmailAndPassword(email, senha).catch(function () {
     document.getElementById("loginError").textContent = "E-mail ou senha incorretos.";
   });
 });
+document.getElementById("logoutBtn").addEventListener("click", function () { auth.signOut(); });
 
 var allRows = [];
-var refPedidos = null;
 
 auth.onAuthStateChanged(function (user) {
   if (!user) {
@@ -261,12 +636,9 @@ auth.onAuthStateChanged(function (user) {
   });
 });
 
-document.getElementById("logoutBtn").addEventListener("click", function () {
-  auth.signOut();
-});
-
+// -------- Atualizar agora --------
 document.getElementById("atualizarAgoraBtn").addEventListener("click", async function () {
-  var btn = document.getElementById("atualizarAgoraBtn");
+  var btn = this;
   btn.disabled = true;
   btn.textContent = "Atualizando...";
   document.getElementById("errorMsg").textContent = "";
@@ -279,7 +651,6 @@ document.getElementById("atualizarAgoraBtn").addEventListener("click", async fun
     if (!resposta.ok) {
       document.getElementById("errorMsg").textContent = "Erro ao atualizar: " + (dados.error || resposta.status);
     } else {
-      document.getElementById("errorMsg").textContent = "";
       document.getElementById("fileInfo").textContent = dados.atualizados + " pedidos atualizados agora";
     }
   } catch (err) {
@@ -293,31 +664,51 @@ document.getElementById("atualizarAgoraBtn").addEventListener("click", async fun
 function checarDesatualizado(maisRecente) {
   var aviso = document.getElementById("staleWarning");
   if (!maisRecente) { aviso.style.display = "none"; return; }
-  var horasSemAtualizar = (Date.now() - maisRecente) / 1000 / 60 / 60;
-  if (horasSemAtualizar > 26) {
+  var horas = (Date.now() - maisRecente) / 1000 / 60 / 60;
+  if (horas > 26) {
     aviso.style.display = "block";
-    aviso.textContent = "Nenhum pedido foi atualizado nas últimas " + Math.floor(horasSemAtualizar) + " horas. O robô automático pode ter parado (verifica se a chave da API dos Correios não expirou).";
+    aviso.textContent = "Nenhum pedido foi atualizado nas últimas " + Math.floor(horas) + " horas. O robô automático pode ter parado (verifica se a chave da API dos Correios não expirou).";
   } else {
     aviso.style.display = "none";
   }
 }
+
+// -------- Escuta o Firebase em tempo real --------
 function escutarPedidos() {
-  refPedidos = db.ref(CAMINHO_PEDIDOS);
-  refPedidos.on("value", function (snapshot) {
+  db.ref(CAMINHO_PEDIDOS).on("value", function (snapshot) {
     var dados = snapshot.val() || {};
-    allRows = Object.keys(dados).map(function (chave) { return dados[chave]; });
-    document.getElementById("fileInfo").textContent = allRows.length + " pedidos no total";
-    var maisRecente = allRows.reduce(function (max, r) {
-      return (r.atualizadoEm && r.atualizadoEm > max) ? r.atualizadoEm : max;
-    }, 0);
+    allRows = Object.keys(dados).map(function (chave) {
+      var r = dados[chave];
+      return {
+        codigo: r.codigo || "",
+        destinatario: r.destinatario || "",
+        cidade: r.cidade || "",
+        uf: r.uf || "",
+        status: r.status || "",
+        servico: r.servico || "",
+        nf: r.nf || "",
+        remetente: r.remetente || "",
+        cep: r.cep || "",
+        valorPostagem: Number(r.valorPostagem) || 0,
+        dataPostagem: r.dataPostagem ? new Date(r.dataPostagem) : null,
+        dataEvento: r.dataEvento ? new Date(r.dataEvento) : null,
+        atualizadoEm: r.atualizadoEm || null,
+        _bucket: bucketFor(r.status)
+      };
+    });
+    document.getElementById("meta-total-obj").textContent = allRows.length;
+    var maisRecente = allRows.reduce(function (max, r) { return (r.atualizadoEm && r.atualizadoEm > max) ? r.atualizadoEm : max; }, 0);
     if (maisRecente) {
-      document.getElementById("lastUpdate").textContent = "Última atualização: " + new Date(maisRecente).toLocaleString("pt-BR");
+      document.getElementById("lastUpdate").textContent = "Última verificação: " + new Date(maisRecente).toLocaleString("pt-BR");
     }
     checarDesatualizado(maisRecente);
+    refreshCidadeOptions();
+    fillStaticOptions();
     render();
   });
 }
 
+// -------- Importação de Excel do VIPP --------
 document.getElementById("fileInput").addEventListener("change", function (e) {
   var file = e.target.files[0];
   if (!file) return;
@@ -331,7 +722,6 @@ document.getElementById("fileInput").addEventListener("change", function (e) {
       var workbook = XLSX.read(data, { type: "array", cellDates: true });
       var sheet = workbook.Sheets[workbook.SheetNames[0]];
       var json = XLSX.utils.sheet_to_json(sheet, { defval: "", range: 1 });
-
       var linhas = json.filter(function (r) { return r.Registro; });
       salvarNoRealtimeDb(linhas, file.name);
     } catch (err) {
@@ -360,6 +750,9 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
         servico: r.Servico || "",
         dataPostagem: r.DataPostagem ? String(r.DataPostagem) : "",
         nf: r.NumeroNotaFiscal || "",
+        remetente: r.Remetente || "",
+        cep: r.CEPDestinatario || "",
+        valorPostagem: r.ValorPostagem !== "" && r.ValorPostagem != null ? Number(r.ValorPostagem) : 0,
         atualizadoEm: Date.now()
       };
     }
@@ -376,71 +769,299 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
   proximoLote();
 }
 
-function render() {
-  var term = document.getElementById("search").value.trim().toLowerCase();
-  var grouped = { problema: [], aguardando: [], transito: [], entregue: [], retirada: [] };
+// -------- Estado dos filtros --------
+var state = { dateStart: null, dateEnd: null, status: "", uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
 
-  allRows.forEach(function (row) {
-    if (term) {
-      var haystack = (row.codigo + " " + row.destinatario + " " + row.cidade + " " + row.status + " " + row.nf).toLowerCase();
-      if (haystack.indexOf(term) === -1) return;
-    }
-    grouped[bucketFor(row.status)].push(row);
-  });
+document.getElementById('f-status').addEventListener('change', function(e){ state.status = e.target.value; render(); });
+document.getElementById('f-uf').addEventListener('change', function(e){ state.uf = e.target.value; state.cidade=''; document.getElementById('f-cidade').value=''; refreshCidadeOptions(); render(); });
+document.getElementById('f-cidade').addEventListener('change', function(e){ state.cidade = e.target.value; render(); });
+document.getElementById('f-destinatario').addEventListener('input', debounce(function(e){ state.destinatario = e.target.value; render(); }, 250));
+document.getElementById('f-registro').addEventListener('input', debounce(function(e){ state.registro = e.target.value; render(); }, 250));
+document.getElementById('f-nf').addEventListener('input', debounce(function(e){ state.nf = e.target.value; render(); }, 250));
 
-  var priorityBox = document.getElementById("priorityBox");
-  var priorityList = document.getElementById("priorityList");
-  var retirada = grouped.retirada;
-  document.getElementById("priorityCount").textContent = retirada.length;
-  if (retirada.length > 0) {
-    priorityBox.style.display = "block";
-    priorityList.innerHTML = retirada.map(function (row) {
-      return '<div class="priority-item"><span class="codigo mono">' + escapeHtml(row.codigo) + '</span><span class="dest">' + escapeHtml(row.destinatario) + '</span><span class="nf mono">' + (row.nf ? "NF " + escapeHtml(row.nf) : "—") + '</span><span class="loc">' + escapeHtml(row.cidade) + '/' + escapeHtml(row.uf) + '</span></div>';
-    }).join("");
-  } else {
-    priorityBox.style.display = "none";
+function applyDateFilter(){
+  var startVal = document.getElementById('f-date-start').value;
+  var endVal = document.getElementById('f-date-end').value;
+  if (startVal && endVal && startVal > endVal){
+    var tmp = startVal; startVal = endVal; endVal = tmp;
+    document.getElementById('f-date-start').value = startVal;
+    document.getElementById('f-date-end').value = endVal;
   }
+  state.dateStart = startVal ? new Date(startVal + 'T00:00:00') : null;
+  state.dateEnd = endVal ? new Date(endVal + 'T23:59:59') : null;
+  render();
+}
+['f-date-start','f-date-end'].forEach(function(id){
+  document.getElementById(id).addEventListener('change', applyDateFilter);
+});
 
-  var aguardandoTotal = grouped.aguardando;
+document.getElementById('btn-reset').addEventListener('click', function(){
+  state = { dateStart: null, dateEnd: null, status: "", uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
+  document.getElementById('f-date-start').value='';
+  document.getElementById('f-date-end').value='';
+  document.getElementById('f-status').value='';
+  document.getElementById('f-uf').value='';
+  document.getElementById('f-cidade').value='';
+  document.getElementById('f-destinatario').value='';
+  document.getElementById('f-registro').value='';
+  document.getElementById('f-nf').value='';
+  refreshCidadeOptions();
+  render();
+});
 
-  var board = document.getElementById("board");
-  board.innerHTML = "";
+function uniqueSorted(arr){ return Array.from(new Set(arr.filter(Boolean))).sort(function(a,b){return a.localeCompare(b,'pt-BR');}); }
 
-  COLUMNS.forEach(function (col) {
-    var items = col.key === "aguardando" ? aguardandoTotal : grouped[col.key];
-    var colDiv = document.createElement("div");
+function fillStaticOptions(){
+  var ufSel = document.getElementById('f-uf');
+  var current = ufSel.value;
+  ufSel.innerHTML = '<option value="">Todas</option>';
+  uniqueSorted(allRows.map(function(o){return o.uf;})).forEach(function(v){
+    var opt = document.createElement('option'); opt.value = v; opt.textContent = v; ufSel.appendChild(opt);
+  });
+  if (current) ufSel.value = current;
+}
 
-    var header = document.createElement("div");
-    header.className = "col-header";
-    header.innerHTML = '<span class="dot" style="background:' + col.color + '"></span><span class="col-title">' + col.title + '</span><span class="col-count">' + items.length + '</span>';
-    colDiv.appendChild(header);
+function refreshCidadeOptions(){
+  var ufFilter = state.uf;
+  var sel = document.getElementById('f-cidade');
+  var current = sel.value;
+  sel.innerHTML = '<option value="">Todas</option>';
+  var cidades = uniqueSorted(allRows.filter(function(o){return !ufFilter || o.uf === ufFilter;}).map(function(o){return o.cidade;}));
+  cidades.forEach(function(c){ var opt = document.createElement('option'); opt.value = c; opt.textContent = c; sel.appendChild(opt); });
+  if (cidades.indexOf(current) !== -1) sel.value = current;
+}
 
-    var list = document.createElement("div");
-    list.className = "col-list";
-
-    if (items.length === 0) {
-      var emptyEl = document.createElement("div");
-      emptyEl.className = "col-empty";
-      emptyEl.textContent = "Nenhum pedido aqui";
-      list.appendChild(emptyEl);
-    } else {
-      items.forEach(function (row) {
-        var card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML =
-          '<div class="codigo">' + escapeHtml(row.codigo) + '</div>' +
-          '<div class="dest">' + escapeHtml(row.destinatario) + '</div>' +
-          '<div class="meta">' + escapeHtml(row.cidade) + (row.cidade && row.uf ? " / " : "") + escapeHtml(row.uf) + '</div>' +
-          '<span class="pill" style="background:' + col.bg + ';color:' + col.text + '">' + escapeHtml(row.status || "Sem status") + '</span>';
-        list.appendChild(card);
-      });
-    }
-    colDiv.appendChild(list);
-    board.appendChild(colDiv);
+function applyFilters(){
+  return allRows.filter(function(o){
+    if (state.dateStart && o.dataPostagem && o.dataPostagem < state.dateStart) return false;
+    if (state.dateEnd && o.dataPostagem && o.dataPostagem > state.dateEnd) return false;
+    if (state.status && o._bucket !== state.status) return false;
+    if (state.uf && o.uf !== state.uf) return false;
+    if (state.cidade && o.cidade !== state.cidade) return false;
+    if (state.destinatario && o.destinatario.toLowerCase().indexOf(state.destinatario.toLowerCase()) === -1) return false;
+    if (state.registro && o.codigo.toLowerCase().indexOf(state.registro.toLowerCase()) === -1) return false;
+    if (state.nf && (o.nf || '').indexOf(state.nf) === -1) return false;
+    return true;
   });
 }
 
-document.getElementById("search").addEventListener("input", render);
+function groupCount(arr, keyFn){
+  var m = new Map();
+  arr.forEach(function(o){ var k = keyFn(o); m.set(k, (m.get(k)||0)+1); });
+  return m;
+}
+function groupSum(arr, keyFn, valFn){
+  var m = new Map();
+  arr.forEach(function(o){ var k = keyFn(o); m.set(k, (m.get(k)||0)+valFn(o)); });
+  return m;
+}
+
+// -------- Charts --------
+var chartPorDia = new Chart(document.getElementById('chart-por-dia'), {
+  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:'#2E5EA8'}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+});
+var chartStatus = new Chart(document.getElementById('chart-status'), {
+  type:'doughnut', data:{labels:[],datasets:[{data:[],backgroundColor:[]}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+});
+var chartUfQtd = new Chart(document.getElementById('chart-uf-qtd'), {
+  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:'#5C6F8C'}]},
+  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}}}
+});
+var chartUfValor = new Chart(document.getElementById('chart-uf-valor'), {
+  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:'#C1841F'}]},
+  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}}}
+});
+
+function render(){
+  var filtered = applyFilters();
+  var total = filtered.length;
+
+  var byBucket = {};
+  STATUS_ORDER.forEach(function(b){ byBucket[b] = filtered.filter(function(o){return o._bucket===b;}).length; });
+
+  var valorTotal = filtered.reduce(function(s,o){return s+o.valorPostagem;},0);
+  var ticketMedio = total ? valorTotal/total : 0;
+  var pctEntregue = total ? (byBucket.entregue/total*100) : 0;
+  var pctRetirada = total ? (byBucket.retirada/total*100) : 0;
+
+  var banner = document.getElementById('period-banner');
+  if (state.dateStart || state.dateEnd){
+    var de = state.dateStart ? fmtDateOnly(state.dateStart) : 'início da base';
+    var ate = state.dateEnd ? fmtDateOnly(state.dateEnd) : 'hoje';
+    if (total > 0){
+      banner.innerHTML = '<strong>' + total.toLocaleString('pt-BR') + ' postagem(ns)</strong> entre ' + de + ' e ' + ate;
+    } else {
+      banner.innerHTML = '<strong>Nenhuma postagem encontrada</strong> entre ' + de + ' e ' + ate + '.';
+    }
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+
+  document.getElementById('kpi-total').textContent = total.toLocaleString('pt-BR');
+  document.getElementById('kpi-entregue').textContent = byBucket.entregue.toLocaleString('pt-BR');
+  document.getElementById('kpi-pct-entregue').textContent = pctEntregue.toFixed(1) + '% do total';
+  document.getElementById('kpi-retirada').textContent = byBucket.retirada.toLocaleString('pt-BR');
+  document.getElementById('kpi-pct-retirada').textContent = pctRetirada.toFixed(1) + '% do total';
+  document.getElementById('kpi-transito').textContent = byBucket.transito.toLocaleString('pt-BR');
+  document.getElementById('kpi-problema').textContent = byBucket.problema.toLocaleString('pt-BR');
+  document.getElementById('kpi-valor').textContent = fmtMoney(valorTotal);
+  document.getElementById('kpi-ticket').textContent = fmtMoney(ticketMedio);
+
+  // Priority box — sempre olha a base inteira (não respeita filtros, é radar fixo)
+  // Ordenado por quem está esperando há mais tempo (maior risco de devolução primeiro)
+  var agora = Date.now();
+  var retiradaGeral = allRows.filter(function(o){return o._bucket==='retirada';}).map(function(o){
+    var dias = o.dataPostagem ? Math.floor((agora - o.dataPostagem.getTime())/86400000) : null;
+    return Object.assign({}, o, {_diasEsperando: dias});
+  }).sort(function(a,b){
+    if (a._diasEsperando==null) return 1;
+    if (b._diasEsperando==null) return -1;
+    return b._diasEsperando - a._diasEsperando;
+  });
+  var priorityBox = document.getElementById('priorityBox');
+  var priorityList = document.getElementById('priorityList');
+  document.getElementById('priorityCount').textContent = retiradaGeral.length;
+  if (retiradaGeral.length > 0){
+    priorityBox.style.display = 'block';
+    priorityList.innerHTML = retiradaGeral.map(function(o){
+      var diasTxt = o._diasEsperando==null ? '—' : o._diasEsperando + 'd';
+      var diasClass = 'ok';
+      if (o._diasEsperando!=null && o._diasEsperando >= PRAZO_URGENTE_DIAS) diasClass = 'urgente';
+      else if (o._diasEsperando!=null && o._diasEsperando >= PRAZO_ATENCAO_DIAS) diasClass = 'atencao';
+      return '<div class="priority-item"><span class="mono">'+escapeHtml(o.codigo)+'</span><span class="dest">'+escapeHtml(o.destinatario)+'</span><span class="nf">'+(o.nf?'NF '+escapeHtml(o.nf):'—')+'</span><span class="dias '+diasClass+'">'+diasTxt+'</span><span class="loc">'+escapeHtml(o.cidade)+'/'+escapeHtml(o.uf)+'</span></div>';
+    }).join('');
+  } else {
+    priorityBox.style.display = 'none';
+  }
+
+  // Postagens por dia
+  var porDia = groupSum(filtered, function(o){ return o.dataPostagem ? o.dataPostagem.toISOString().slice(0,10) : 'sem-data'; }, function(){return 1;});
+  var diasOrdenados = Array.from(porDia.keys()).sort();
+  chartPorDia.data.labels = diasOrdenados.map(function(d){ return d==='sem-data' ? 'S/ data' : d.split('-').reverse().join('/'); });
+  chartPorDia.data.datasets[0].data = diasOrdenados.map(function(d){ return porDia.get(d); });
+  chartPorDia.update();
+
+  // Status donut
+  var statusCounts = groupCount(filtered, function(o){return o._bucket;});
+  var activeStatuses = STATUS_ORDER.filter(function(s){return statusCounts.get(s);});
+  chartStatus.data.labels = activeStatuses.map(function(s){return STATUS_LABEL[s];});
+  chartStatus.data.datasets[0].data = activeStatuses.map(function(s){return statusCounts.get(s);});
+  chartStatus.data.datasets[0].backgroundColor = activeStatuses.map(function(s){return STATUS_COLOR[s];});
+  chartStatus.update();
+
+  var legendEl = document.getElementById('status-legend');
+  legendEl.innerHTML = '';
+  STATUS_ORDER.forEach(function(s){
+    var count = statusCounts.get(s) || 0;
+    var chip = document.createElement('span');
+    chip.className = 'chip' + (state.status && state.status !== s ? ' dim' : '');
+    chip.innerHTML = '<span class="dot" style="background:'+STATUS_COLOR[s]+'"></span>' + STATUS_LABEL[s] + ' (' + count + ')';
+    chip.style.cursor = 'pointer';
+    chip.onclick = function(){
+      state.status = (state.status === s) ? '' : s;
+      document.getElementById('f-status').value = state.status;
+      render();
+    };
+    legendEl.appendChild(chip);
+  });
+
+  // Postagens por UF
+  var ufQtd = groupCount(filtered, function(o){return o.uf || 'N/D';});
+  var ufQtdSorted = Array.from(ufQtd.entries()).sort(function(a,b){return b[1]-a[1];});
+  chartUfQtd.data.labels = ufQtdSorted.map(function(e){return e[0];});
+  chartUfQtd.data.datasets[0].data = ufQtdSorted.map(function(e){return e[1];});
+  chartUfQtd.update();
+
+  var ufValor = groupSum(filtered, function(o){return o.uf || 'N/D';}, function(o){return o.valorPostagem;});
+  var ufValorSorted = Array.from(ufValor.entries()).sort(function(a,b){return b[1]-a[1];});
+  chartUfValor.data.labels = ufValorSorted.map(function(e){return e[0];});
+  chartUfValor.data.datasets[0].data = ufValorSorted.map(function(e){return e[1];});
+  chartUfValor.update();
+
+  // Ranking de cidades
+  var cidadeMap = new Map();
+  filtered.forEach(function(o){
+    var key = (o.cidade||'N/D') + '|' + (o.uf||'');
+    if (!cidadeMap.has(key)) cidadeMap.set(key, {cidade:o.cidade||'N/D', uf:o.uf||'', qtd:0, valor:0});
+    var rec = cidadeMap.get(key);
+    rec.qtd += 1; rec.valor += o.valorPostagem;
+  });
+  var rankingRows = Array.from(cidadeMap.values()).sort(function(a,b){return b.qtd-a.qtd;}).slice(0,15);
+  var rankBody = document.getElementById('ranking-cidades-body');
+  rankBody.innerHTML = '';
+  if (!rankingRows.length){
+    rankBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--ink-soft);padding:16px;">Nenhum registro para os filtros selecionados</td></tr>';
+  }
+  rankingRows.forEach(function(r){
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>'+escapeHtml(r.cidade)+'</td><td>'+escapeHtml(r.uf)+'</td><td class="num">'+r.qtd.toLocaleString('pt-BR')+'</td><td class="num">'+fmtMoney(r.valor)+'</td>';
+    rankBody.appendChild(tr);
+  });
+
+  // Detail table (guarda a lista completa ordenada pro export CSV; renderiza só um limite pra não travar o navegador)
+  var detailBody = document.getElementById('detail-body');
+  detailBody.innerHTML = '';
+  var sortedDetail = filtered.slice().sort(function(a,b){ return (b.dataPostagem||0) - (a.dataPostagem||0); });
+  window._ultimaListaFiltrada = sortedDetail;
+  if (!sortedDetail.length){
+    detailBody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--ink-soft);padding:20px;">Nenhum objeto encontrado para os filtros selecionados</td></tr>';
+  }
+  var paraRenderizar = sortedDetail.slice(0, LIMITE_LINHAS_TABELA);
+  paraRenderizar.forEach(function(o){
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>'+fmtDateOnly(o.dataPostagem)+'</td>'+
+      '<td class="mono">'+escapeHtml(o.codigo)+'</td>'+
+      '<td>'+escapeHtml(o.destinatario)+'</td>'+
+      '<td>'+escapeHtml(o.cidade)+'</td>'+
+      '<td>'+escapeHtml(o.uf)+'</td>'+
+      '<td class="mono">'+(o.nf?escapeHtml(o.nf):'&mdash;')+'</td>'+
+      '<td class="num">'+fmtMoney(o.valorPostagem)+'</td>'+
+      '<td><span class="status-badge '+o._bucket+'">'+STATUS_LABEL[o._bucket]+'</span></td>'+
+      '<td class="mono">'+(o.atualizadoEm ? fmtDateTime(new Date(o.atualizadoEm)) : '&mdash;')+'</td>';
+    detailBody.appendChild(tr);
+  });
+  var textoContagem = paraRenderizar.length + ' objeto(s) exibido(s)';
+  if (sortedDetail.length > paraRenderizar.length){
+    textoContagem += ' (mostrando os ' + LIMITE_LINHAS_TABELA + ' mais recentes de ' + sortedDetail.length + ' encontrados — refine os filtros ou exporte o CSV pra ver tudo)';
+  } else {
+    textoContagem += ' de ' + allRows.length + ' na base';
+  }
+  document.getElementById('detail-count').textContent = textoContagem;
+}
+
+function exportarCSV(){
+  var linhas = window._ultimaListaFiltrada || [];
+  var cab = ['Data postagem','Registro','Destinatario','Cidade','UF','Nota fiscal','Valor','Status','Ultima verificacao'];
+  var csv = [cab.join(';')];
+  linhas.forEach(function(o){
+    var campos = [
+      fmtDateOnly(o.dataPostagem),
+      o.codigo,
+      '"' + String(o.destinatario||'').replace(/"/g,'""') + '"',
+      o.cidade,
+      o.uf,
+      o.nf,
+      String(o.valorPostagem||0).replace('.',','),
+      STATUS_LABEL[o._bucket],
+      o.atualizadoEm ? fmtDateTime(new Date(o.atualizadoEm)) : ''
+    ];
+    csv.push(campos.join(';'));
+  });
+  var blob = new Blob(['\uFEFF' + csv.join('\n')], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'rastreio-vipp-' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+document.getElementById('btn-exportar-csv').addEventListener('click', exportarCSV);
 </script>
 </body>
 </html>
