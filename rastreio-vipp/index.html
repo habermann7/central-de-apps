@@ -605,6 +605,46 @@ var STATUS_LABEL = { entregue:"Entregue", retirada:"Aguardando retirada", transi
 var STATUS_COLOR = { entregue:"#2F7A54", retirada:"#B4452F", transito:"#5C6F8C", aguardando:"#C1841F", problema:"#93493A" };
 var STATUS_ORDER = ["retirada","problema","aguardando","transito","entregue"];
 
+// Versão curta e legível pro texto original de cada status — pros que a gente já
+// conhece. O que não tiver aqui, corta de forma inteligente (função abaixo).
+var STATUS_TEXTO_CURTO = {
+  "Objeto entregue ao destinatário": "Entregue",
+  "Objeto entregue ao remetente": "Entregue ao remetente",
+  "Objeto entregue na Caixa de Correios Inteligente": "Entregue (caixa inteligente)",
+  "Objeto em transferência": "Em transferência",
+  "Objeto saiu para entrega ao destinatário": "Saiu para entrega",
+  "Objeto postado": "Postado",
+  "Objeto ainda não chegou à Un.": "Aguardando unidade",
+  "Objeto aguardando retirada no endereço indicado": "Aguardando retirada",
+  "Objeto(s) Liberado(s) Para Download na Unidade Postadora": "Liberado p/ postagem",
+  "Objeto(s) Gerado(s) Logistica Reversa": "Logística reversa",
+  "Objeto(s) Não Etiquetado(s) Ou Range Esgotado": "Sem etiqueta",
+  "Etiqueta Expirada": "Etiqueta expirada",
+  "Erro Geraçâo PPN": "Erro geração PPN",
+  "Objeto não entregue - Endereço insuficiente": "Endereço insuficiente",
+  "Objeto não entregue - cliente mudou-se": "Cliente mudou-se",
+  "Objeto não entregue - Endereço inexistente": "Endereço inexistente",
+  "Objeto não entregue - carteiro não atendido": "Carteiro não atendido",
+  "Objeto não entregue - cliente desconhecido no local": "Cliente desconhecido",
+  "Objeto não entregue - endereço incorreto": "Endereço incorreto",
+  "Tentativa de entrega não efetuada": "Tentativa não efetuada",
+  "Objeto(s) Finalizado(s) Aguardando Liberação Para Download": "Aguardando liberação",
+  "Objeto(s) Comparado(s) entre o VIPP e VisualPost não Divergentes": "Conferência OK",
+  "Objeto(s) Comparado(s) entre o VIPP e VisualPost divergentes": "Conferência c/ divergência"
+};
+
+function textoCurtoStatus(status){
+  if (!status) return STATUS_LABEL.aguardando;
+  if (STATUS_TEXTO_CURTO[status]) return STATUS_TEXTO_CURTO[status];
+  // não conhecido ainda: corta no fim de uma palavra, não no meio
+  var LIMITE = 28;
+  if (status.length <= LIMITE) return status;
+  var cortado = status.slice(0, LIMITE);
+  var ultimoEspaco = cortado.lastIndexOf(' ');
+  if (ultimoEspaco > 10) cortado = cortado.slice(0, ultimoEspaco);
+  return cortado + '…';
+}
+
 // Prazo de atenção pro radar de "aguardando retirada" — ajuste aqui se o prazo
 // real de devolução dos Correios pra vocês for diferente de 7 dias corridos.
 var PRAZO_ATENCAO_DIAS = 4;
@@ -1101,7 +1141,7 @@ function render(){
       '<td>'+escapeHtml(o.uf)+'</td>'+
       '<td class="mono">'+(o.nf?escapeHtml(o.nf):'&mdash;')+'</td>'+
       '<td class="num">'+fmtMoney(o.valorPostagem)+'</td>'+
-      '<td><span class="status-badge '+o._bucket+'" title="'+escapeHtml(o.status || STATUS_LABEL[o._bucket])+'">'+escapeHtml(o.status || STATUS_LABEL[o._bucket])+'</span></td>'+
+      '<td><span class="status-badge '+o._bucket+'" title="'+escapeHtml(o.status || STATUS_LABEL[o._bucket])+'">'+escapeHtml(textoCurtoStatus(o.status))+'</span></td>'+
       '<td class="mono">'+(o.atualizadoEm ? fmtDateTime(new Date(o.atualizadoEm)) : '&mdash;')+'</td>';
     detailBody.appendChild(tr);
   });
