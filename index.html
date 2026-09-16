@@ -331,37 +331,31 @@
   .btn-clear:hover{ border-color:var(--accent); color:var(--accent); }
 
   /* ===================== ESTANTE (prateleiras por categoria) =====================
-     Layout tipo "mosaico" (CSS columns): cada prateleira flui pra próxima vaga livre
-     em vez de ficar presa numa linha — assim uma prateleira mais alta (mais apps
-     empilhados) não deixa buraco vazio do lado das prateleiras menores. */
-  #grid{ columns:264px; column-gap:24px; }
-  .shelf{ width:100%; display:inline-block; break-inside:avoid; margin-bottom:30px; }
+     Prateleiras empilhadas de cima pra baixo, em ordem alfabética previsível.
+     Dentro de cada prateleira, grade normal (auto-fill) — todo app aparece de
+     cara, sem precisar de hover pra descobrir o que tem escondido atrás. */
+  #grid{ display:flex; flex-direction:column; }
+  .shelf{ width:100%; margin-bottom:30px; }
   .shelf-label{
     font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
     color:var(--text-faint); margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border-soft);
     display:flex; align-items:center; justify-content:space-between;
   }
   .shelf-count{ background:var(--surface-2); border:1px solid var(--border); border-radius:20px; padding:1px 7px; font-size:9.5px; color:var(--text-dim); }
-  .wallet-stack{ position:relative; padding-bottom:16px; }
-  .wallet-stack::after{
-    content:''; position:absolute; left:-6px; right:-6px; bottom:4px; height:2px; border-radius:2px;
-    background:linear-gradient(90deg, transparent, var(--wood), transparent);
-    opacity:.4; pointer-events:none;
+  .wallet-stack{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:16px;
   }
-  .wallet-stack .card-wrap:not(:first-child){ margin-top:-104px; }
   .wallet-stack .card-wrap.stack-hidden{ display:none; }
   .stack-more-toggle{
-    display:flex; align-items:center; justify-content:center; gap:7px; width:100%;
-    padding:19px; border-radius:17px; cursor:pointer; text-align:center;
+    display:flex; align-items:center; justify-content:center; gap:7px; flex-direction:column;
+    min-height:100%; padding:19px; border-radius:17px; cursor:pointer; text-align:center;
     background:var(--surface-2); border:1px dashed var(--border); color:var(--text-dim);
     font-family:var(--mono); font-size:11.5px; letter-spacing:.03em; text-transform:uppercase;
     transition:border-color .15s ease, color .15s ease, background .15s ease;
   }
   .stack-more-toggle:hover{ color:var(--accent); border-color:color-mix(in srgb, var(--accent) 55%, var(--border)); background:var(--accent-soft); }
   .stack-more-toggle .plus-n{ font-family:var(--display); font-weight:700; font-size:14px; color:var(--accent); }
-  .wallet-stack .card-wrap{ position:relative; }
-  .wallet-stack .card-wrap:hover, .wallet-stack .card-wrap:focus-within{ z-index:50; }
-  #grid .add-card{ width:100%; display:inline-block; break-inside:avoid; margin-bottom:30px; min-height:120px; }
+  #grid .add-card{ width:230px; min-height:120px; }
   .card-wrap{
     position:relative; opacity:0; transform:translateY(10px); animation:fadeUp .5s cubic-bezier(.16,.9,.35,1) forwards;
     perspective:900px;
