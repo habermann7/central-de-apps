@@ -2,6 +2,11 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<script>
+  if (localStorage.getItem('rastreioVippTema') === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Painel de Rastreios &mdash; STIN PHARMA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -306,10 +311,10 @@
     </div>
   </div>
   <nav class="sidebar-nav">
-    <a href="#secao-kpis" class="nav-item active">Visão geral</a>
-    <a href="#priorityBox" class="nav-item">Radar de retirada</a>
-    <a href="#secao-graficos" class="nav-item">Gráficos</a>
-    <a href="#secao-tabela" class="nav-item">Objetos</a>
+    <a href="#" class="nav-item active" data-view="geral">Visão geral</a>
+    <a href="#" class="nav-item" data-view="radar">Radar de retirada</a>
+    <a href="#" class="nav-item" data-view="graficos">Gráficos</a>
+    <a href="#" class="nav-item" data-view="tabela">Objetos</a>
   </nav>
   <div class="sidebar-footer">
     <button class="theme-toggle" id="themeToggle" type="button">🌙 Modo escuro</button>
@@ -362,10 +367,12 @@
 
   <div id="staleWarning"></div>
 
+  <div id="view-radar">
   <div class="priority-box" id="priorityBox" style="display:none">
     <div class="priority-title">Aguardando retirada — ligar pro cliente <span class="count" id="priorityCount">0</span></div>
     <p style="margin:-6px 0 10px;font-size:11.5px;color:#8a5540;">Ordenado por quem está esperando há mais tempo &mdash; dias em vermelho = perto do prazo de devolução</p>
     <div class="priority-list" id="priorityList"></div>
+  </div>
   </div>
 
   <div class="filterbar">
@@ -465,6 +472,7 @@
     </div>
   </div>
 
+  <div id="view-graficos">
   <div class="grid-2" id="secao-graficos">
     <div class="panel">
       <h2>Postagens por dia</h2>
@@ -503,6 +511,7 @@
         <tbody id="ranking-cidades-body"></tbody>
       </table>
     </div>
+  </div>
   </div>
 
   <div class="table-panel" id="secao-tabela">
@@ -794,6 +803,7 @@ function dataValidaOuNula(valor){
   return isNaN(d.getTime()) ? null : d; // data corrompida vira "sem data" em vez de quebrar o painel
 }
 function escutarPedidos() {
+  db.ref(CAMINHO_PEDIDOS).off(); // evita empilhar ouvintes se a pessoa deslogar/logar de novo
   db.ref(CAMINHO_PEDIDOS).on("value", function (snapshot) {
     var dados = snapshot.val() || {};
     allRows = Object.keys(dados).map(function (chave) {
@@ -1058,6 +1068,24 @@ function groupSum(arr, keyFn, valFn){
 }
 
 // -------- Charts --------
+function corTema(nomeVar){ return getComputedStyle(document.documentElement).getPropertyValue(nomeVar).trim(); }
+
+// Cor de texto/linha de grade dos gráficos, respeitando o tema claro/escuro —
+// sem isso o texto dos eixos fica ilegível no modo escuro (bug corrigido).
+function aplicarCoresGraficos(){
+  var corTexto = corTema('--ink-soft');
+  var corGrade = corTema('--line');
+  [chartPorDia, chartUfQtd, chartUfValor].forEach(function(c){
+    ['x','y'].forEach(function(eixo){
+      if (c.options.scales && c.options.scales[eixo]){
+        c.options.scales[eixo].ticks = Object.assign({}, c.options.scales[eixo].ticks, {color: corTexto});
+        c.options.scales[eixo].grid = Object.assign({}, c.options.scales[eixo].grid, {color: corGrade});
+      }
+    });
+    c.update();
+  });
+}
+
 var chartPorDia = new Chart(document.getElementById('chart-por-dia'), {
   type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:'#2E5EA8'}]},
   options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
@@ -1074,6 +1102,7 @@ var chartUfValor = new Chart(document.getElementById('chart-uf-valor'), {
   type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:'#C1841F'}]},
   options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}}}
 });
+aplicarCoresGraficos();
 
 function render(){
  try {
@@ -1117,7 +1146,7 @@ function render(){
   // Ordenado por quem está esperando há mais tempo (maior risco de devolução primeiro)
   var agora = Date.now();
   var retiradaGeral = allRows.filter(function(o){return o._bucket==='retirada';}).map(function(o){
-    var dias = o.dataPostagem ? Math.floor((agora - o.dataPostagem.getTime())/86400000) : null;
+    var dataBase = o.dataEvento || o.dataPostagem; var dias = dataBase ? Math.floor((agora - dataBase.getTime())/86400000) : null;
     return Object.assign({}, o, {_diasEsperando: dias});
   }).sort(function(a,b){
     if (a._diasEsperando==null) return 1;
@@ -1298,73 +1327,35 @@ document.getElementById('btn-exportar-csv').addEventListener('click', exportarCS
           localStorage.setItem('rastreioVippTema', 'dark');
         }
         atualizarTexto();
+        // recoloreia os gráficos existentes pro novo tema, sem precisar recarregar a página
+        if (typeof aplicarCoresGraficos === 'function') aplicarCoresGraficos();
       });
     }
-    var secoes = ['secao-kpis', 'priorityBox', 'secao-graficos', 'secao-tabela']
-      .map(function (id) { return document.getElementById(id); })
-      .filter(Boolean);
-    var navItems = Array.prototype.slice.call(document.querySelectorAll('.nav-item'));
-    if (secoes.length && navItems.length && 'IntersectionObserver' in window) {
-      var observer = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (!entry.isIntersecting) return;
-          var href = '#' + entry.target.id;
-          navItems.forEach(function (a) {
-            a.classList.toggle('active', a.getAttribute('href') === href);
-          });
-        });
-      }, { rootMargin: '-20% 0px -70% 0px' });
-      secoes.forEach(function (s) { observer.observe(s); });
-    }
-  });
-})();
-</script>
 
-<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
-  <div style="max-width:320px;width:100%;">
-    <div id="__gateMsg" style="font-size:14px;color:#8a93a3;line-height:1.6;">Verificando acesso...</div>
-  </div>
-</div>
-<style id="__gateStyle">body > *:not(#__gateOverlay){ display:none !important; }</style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
-<script>
-(function(){
-  var GRUPOS_PERMITIDOS = ["EXPEDIÇÃO"];
-  var firebaseConfig = {
-    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
-    authDomain: "stinpharma-qualidade.firebaseapp.com",
-    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
-    projectId: "stinpharma-qualidade",
-    storageBucket: "stinpharma-qualidade.firebasestorage.app",
-    messagingSenderId: "422803826984",
-    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
-    measurementId: "G-6C0TLHH2VP"
-  };
-  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  function liberar(){
-    var st = document.getElementById('__gateStyle');
-    var ov = document.getElementById('__gateOverlay');
-    if(st) st.remove();
-    if(ov) ov.remove();
-  }
-  function negar(msg){
-    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Central de Apps</a>';
-  }
-  var jaResolveu = false;
-  setTimeout(function(){
-    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
-  }, 10000);
-  firebase.auth().onAuthStateChanged(function(user){
-    jaResolveu = true;
-    if(!user){ negar('Você precisa entrar pela Central de Apps.'); return; }
-    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
-      var dados = snap.val();
-      var meusGrupos = (dados && dados.grupos) || [];
-      var permitido = GRUPOS_PERMITIDOS.some(function(g){ return meusGrupos.indexOf(g) !== -1; });
-      if(permitido){ liberar(); } else { negar('Você não tem permissão pra acessar este app.'); }
-    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
+    // Navegação da sidebar: cada opção mostra só a sua seção; "Visão geral" mostra tudo de novo.
+    var VIEWS = {
+      kpis: document.getElementById('secao-kpis'),
+      radar: document.getElementById('view-radar'),
+      graficos: document.getElementById('view-graficos'),
+      tabela: document.getElementById('secao-tabela')
+    };
+    function mostrarView(nome) {
+      Object.keys(VIEWS).forEach(function (chave) {
+        var el = VIEWS[chave];
+        if (!el) return;
+        el.style.display = (nome === 'geral' || chave === nome) ? '' : 'none';
+      });
+      document.querySelectorAll('.nav-item').forEach(function (a) {
+        a.classList.toggle('active', a.getAttribute('data-view') === nome);
+      });
+    }
+    document.querySelectorAll('.nav-item').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        mostrarView(a.getAttribute('data-view'));
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
   });
 })();
 </script>
