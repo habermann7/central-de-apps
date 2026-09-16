@@ -1352,12 +1352,24 @@ function formatarCategoria(cat){
   return limpo.toLowerCase().replace(/(^|\s)\S/g, function(c){ return c.toUpperCase(); });
 }
 
+// paleta enxuta e dessaturada (terrosa/joia) — cada categoria sempre cai na mesma cor,
+// sem precisar de ninguém escolher hex na mão ao cadastrar um app
+const PALETA_CATEGORIA = ['#D9A15A', '#4E8368', '#5B7FA6', '#A6485B', '#3F8E8A', '#B8963E'];
+function corPorCategoria(categoriaFormatada){
+  let hash = 0;
+  for(let i = 0; i < categoriaFormatada.length; i++){
+    hash = (hash * 31 + categoriaFormatada.charCodeAt(i)) >>> 0;
+  }
+  return PALETA_CATEGORIA[hash % PALETA_CATEGORIA.length];
+}
+
 function cardHtml(app, i, extraClass){
   const acessoNormal = tenhoAcesso(app);
   const isFav = ehFavorito(app.file);
+  const corCard = app.color || corPorCategoria(formatarCategoria(app.category));
   return `
     <div class="card-wrap${extraClass ? ' ' + extraClass : ''}" style="animation-delay:${i * 55}ms">
-      <a class="card" href="./${app.file}" style="--accent-card:${app.color || '#D9A15A'}" onclick="abrirApp(this, event, '${escapeAttr(app.file)}')">
+      <a class="card" href="./${app.file}" style="--accent-card:${corCard}" onclick="abrirApp(this, event, '${escapeAttr(app.file)}')">
         <div class="card-body">
           <div class="card-top">
             <span class="card-index">${String(i + 1).padStart(2, '0')}</span>
