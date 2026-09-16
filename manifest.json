@@ -108,5 +108,16 @@
     "grupos": [
       "PCP"
     ]
+  },
+  {
+    "title": "Rastreio VIPP",
+    "category": "EXPEDIÇÃO",
+    "description": "Kanban de rastreio dos pedidos, com prioridade pra pedidos aguardando retirada",
+    "file": "rastreio-vipp/index.html",
+    "icon": "🧩",
+    "color": "#f59e0b",
+    "grupos": [
+      "EXPEDIÇÃO"
+    ]
   }
 ]
