@@ -119,5 +119,16 @@
     "grupos": [
       "EXPEDIÇÃO"
     ]
+  },
+  {
+    "title": "RASTREIO VIPP",
+    "category": "EXPEDIÇÃO",
+    "description": "Rastreio de pedidos VIPP, sendo atualizado com API correios em tempo real",
+    "file": "rastreio-vipp.html",
+    "icon": "🧩",
+    "color": "#ffd54d",
+    "grupos": [
+      "EXPEDIÇÃO"
+    ]
   }
 ]
