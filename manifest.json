@@ -108,5 +108,16 @@
     "grupos": [
       "PCP"
     ]
+  },
+  {
+    "title": "RASTREIO VIPP",
+    "category": "EXPEDIÇÃO",
+    "description": "Rastreio vipp com API do correios. atualizando em tempo real",
+    "file": "index.html",
+    "icon": "🧩",
+    "color": "#c084fc",
+    "grupos": [
+      "EXPEDIÇÃO"
+    ]
   }
 ]
