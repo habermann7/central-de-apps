@@ -112,7 +112,7 @@
   {
     "title": "RASTREIO VIPP",
     "category": "EXPEDIÇÃO",
-    "description": "Rastreio de pedidos VIPP, sendo atualizado com API correios em tempo real",
+    "description": "Rastreio de pedidos VIPP. atualizado com API Correios em tempo REAL",
     "file": "rastreio-vipp.html",
     "icon": "🧩",
     "color": "#ffd54d",
