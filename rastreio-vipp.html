@@ -499,6 +499,7 @@
       <div class="nav-item active" data-tab="visao-geral">Visão Geral</div>
       <div class="nav-item" data-tab="retirada">Aguardando Retirada <span class="nav-badge" id="nav-badge-retirada">0</span></div>
       <div class="nav-item" data-tab="detalhamento">Detalhamento</div>
+      <div class="nav-item" data-tab="gestao">Gestão / Reunião Semanal</div>
     </nav>
 
     <div class="main-content">
@@ -625,6 +626,76 @@
             </table>
           </div>
           <div class="row-count" id="detail-count"></div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-gestao">
+        <p class="hint" style="margin:0 0 14px;">Essa aba respeita os filtros de data/empresa acima — útil pra fechar o período certo antes da reunião. Definição de "atraso": pedido não entregue que já passou do prazo prometido, ou pedido entregue cuja entrega ocorreu depois do prazo.</p>
+
+        <div class="kpi-row">
+          <div class="kpi">
+            <div class="label">Envios no período</div>
+            <div class="value" id="kpiG-total">&mdash;</div>
+            <div class="sub">objetos postados</div>
+          </div>
+          <div class="kpi valor">
+            <div class="label">Gasto com postagem</div>
+            <div class="value" id="kpiG-gasto">&mdash;</div>
+            <div class="sub">soma no período</div>
+          </div>
+          <div class="kpi retirada">
+            <div class="label">Pedidos em atraso</div>
+            <div class="value" id="kpiG-atraso">&mdash;</div>
+            <div class="sub" id="kpiG-atraso-pct">&mdash;</div>
+          </div>
+          <div class="kpi naoentregue">
+            <div class="label">Com ocorrência</div>
+            <div class="value" id="kpiG-ocorrencia">&mdash;</div>
+            <div class="sub">não entregue + problema</div>
+          </div>
+        </div>
+
+        <div class="grid-2b">
+          <div class="panel">
+            <h2>Gasto por empresa</h2>
+            <p class="hint">Soma do valor de postagem, por empresa, no período</p>
+            <div class="chart-holder"><canvas id="chart-gasto-empresa"></canvas></div>
+          </div>
+          <div class="panel">
+            <h2>Envios e gasto por mês</h2>
+            <p class="hint">Quantidade de envios (linha) e valor gasto (barra), por mês</p>
+            <div class="chart-holder"><canvas id="chart-periodo-mensal"></canvas></div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:18px;">
+          <h2>Ranking por UF — envios e atrasos</h2>
+          <p class="hint">Quantos foram enviados por estado, e quantos desses estão em atraso</p>
+          <div class="table-scroll" style="max-height:340px;">
+            <table>
+              <thead>
+                <tr><th>UF</th><th class="num">Enviados</th><th class="num">Em atraso</th><th class="num">% atraso</th></tr>
+              </thead>
+              <tbody id="ranking-uf-atraso-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:18px;">
+          <h2>Etiquetas sem postagem confirmada</h2>
+          <p class="hint">Expiradas, erro de geração ou sem etiqueta — não entram nos gráficos de período porque não têm data de postagem</p>
+          <div class="kpi-row" style="border:none;background:transparent;">
+            <div class="kpi problema" style="border:1px solid var(--line);">
+              <div class="label">Quantidade</div>
+              <div class="value" id="kpiG-semetiqueta-qtd">&mdash;</div>
+              <div class="sub">objetos</div>
+            </div>
+            <div class="kpi problema" style="border:1px solid var(--line);">
+              <div class="label">Valor envolvido</div>
+              <div class="value" id="kpiG-semetiqueta-valor">&mdash;</div>
+              <div class="sub">soma</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -902,8 +973,25 @@ function dataValidaOuNula(valor){
 function escutarPedidos() {
   db.ref(CAMINHO_PEDIDOS).on("value", function (snapshot) {
     var dados = snapshot.val() || {};
+    var agoraTs = Date.now();
     allRows = Object.keys(dados).map(function (chave) {
       var r = dados[chave];
+      var bucket = bucketFor(r.status);
+      var dataPostagem = dataValidaOuNula(r.dataPostagem);
+      var dataEvento = dataValidaOuNula(r.dataEvento);
+      var prazoDias = (r.prazoDias != null && r.prazoDias !== "") ? Number(r.prazoDias) : null;
+      // Atraso: se já entregue, compara quando o evento de entrega aconteceu vs prazo
+      // prometido; se ainda não entregue, compara o tempo já decorrido vs o prazo.
+      var atrasado = false;
+      if (prazoDias != null && dataPostagem) {
+        if (bucket === 'entregue' && dataEvento) {
+          var diasAteEntrega = Math.floor((dataEvento.getTime() - dataPostagem.getTime()) / 86400000);
+          atrasado = diasAteEntrega > prazoDias;
+        } else if (bucket !== 'entregue') {
+          var diasDecorridos = Math.floor((agoraTs - dataPostagem.getTime()) / 86400000);
+          atrasado = diasDecorridos > prazoDias;
+        }
+      }
       return {
         codigo: r.codigo || "",
         destinatario: r.destinatario || "",
@@ -916,10 +1004,12 @@ function escutarPedidos() {
         cep: r.cep || "",
         empresa: r.empresa || "Stin Pharma",
         valorPostagem: Number(r.valorPostagem) || 0,
-        dataPostagem: dataValidaOuNula(r.dataPostagem),
-        dataEvento: dataValidaOuNula(r.dataEvento),
+        dataPostagem: dataPostagem,
+        dataEvento: dataEvento,
+        prazoDias: prazoDias,
         atualizadoEm: r.atualizadoEm || null,
-        _bucket: bucketFor(r.status)
+        _bucket: bucket,
+        _atrasado: atrasado
       };
     });
     document.getElementById("meta-total-obj").textContent = allRows.length;
@@ -1016,6 +1106,7 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
       var servicoTexto = r.Servico || (r.CodigoServicoCorreios != null ? String(r.CodigoServicoCorreios) : "");
       var dataEventoTexto = r.DataDoEvento ? parseDataVipp(r.DataDoEvento) : "";
       var dataPostagemTexto = r.DataPostagem ? parseDataVipp(r.DataPostagem) : "";
+      var prazoDias = r.Prazo !== "" && r.Prazo != null ? Number(r.Prazo) : null;
       if (existentes.has(chave)) {
         // já existe: atualiza só dado cadastral, preserva status/data do evento que o robô já tenha
         updates[CAMINHO_PEDIDOS + "/" + chave + "/destinatario"] = r.Destinatario || "";
@@ -1028,6 +1119,7 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
         updates[CAMINHO_PEDIDOS + "/" + chave + "/valorPostagem"] = r.ValorPostagem !== "" && r.ValorPostagem != null ? Number(r.ValorPostagem) : 0;
         updates[CAMINHO_PEDIDOS + "/" + chave + "/dataPostagem"] = dataPostagemTexto;
         updates[CAMINHO_PEDIDOS + "/" + chave + "/empresa"] = empresaSelecionada;
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/prazoDias"] = prazoDias;
       } else {
         // pedido novo: grava tudo, inclusive o status inicial que veio do VIPP
         updates[CAMINHO_PEDIDOS + "/" + chave] = {
@@ -1043,6 +1135,7 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
           remetente: r.Remetente || "",
           cep: r.CEPDestinatario || "",
           empresa: empresaSelecionada,
+          prazoDias: prazoDias,
           valorPostagem: r.ValorPostagem !== "" && r.ValorPostagem != null ? Number(r.ValorPostagem) : 0,
           atualizadoEm: Date.now()
         };
@@ -1186,6 +1279,23 @@ var chartUfQtd = new Chart(document.getElementById('chart-uf-qtd'), {
 var chartUfValor = new Chart(document.getElementById('chart-uf-valor'), {
   type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:'#C1841F'}]},
   options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}}}
+});
+var chartGastoEmpresa = new Chart(document.getElementById('chart-gasto-empresa'), {
+  type:'doughnut', data:{labels:[],datasets:[{data:[],backgroundColor:['#2E5EA8','#8C5383','#5C6F8C','#C1841F']}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}}}
+});
+var chartPeriodoMensal = new Chart(document.getElementById('chart-periodo-mensal'), {
+  data:{labels:[],datasets:[
+    {type:'bar',label:'Gasto (R$)',data:[],backgroundColor:'#2F7A54',yAxisID:'y'},
+    {type:'line',label:'Envios',data:[],borderColor:'#B4452F',backgroundColor:'#B4452F',yAxisID:'y1',tension:0.3}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    scales:{
+      y:{beginAtZero:true,position:'left',title:{display:true,text:'R$'}},
+      y1:{beginAtZero:true,position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'envios'}}
+    },
+    plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}}
+  }
 });
 
 function render(){
@@ -1349,6 +1459,8 @@ function render(){
     textoContagem += ' de ' + allRows.length + ' na base';
   }
   document.getElementById('detail-count').textContent = textoContagem;
+
+  renderGestao(filtered);
  } catch (erroRender) {
   // Blindagem: se algum dado vier quebrado (ex: data corrompida), não deixa o
   // painel inteiro travar — mostra um aviso claro em vez de ficar tudo em branco.
@@ -1357,6 +1469,78 @@ function render(){
   avisoErro.textContent = 'O painel encontrou um dado inesperado e não conseguiu montar tudo. Detalhe técnico: ' + erroRender.message;
   avisoErro.classList.remove('hidden');
  }
+}
+
+function renderGestao(filtered){
+  // Essa aba usa "filtered" (mesmos filtros de data/empresa/etc da tela) — mas
+  // etiquetas sem data de postagem nunca aparecem em "filtered" quando há filtro
+  // de data ativo, por isso elas têm o card próprio (busca na base inteira, allRows).
+
+  var total = filtered.length;
+  var gastoTotal = filtered.reduce(function(s,o){return s+o.valorPostagem;},0);
+  var comAtraso = filtered.filter(function(o){return o._atrasado;});
+  var comOcorrencia = filtered.filter(function(o){return o._bucket==='naoentregue' || o._bucket==='problema';});
+
+  document.getElementById('kpiG-total').textContent = total.toLocaleString('pt-BR');
+  document.getElementById('kpiG-gasto').textContent = fmtMoney(gastoTotal);
+  document.getElementById('kpiG-atraso').textContent = comAtraso.length.toLocaleString('pt-BR');
+  document.getElementById('kpiG-atraso-pct').textContent = (total ? (comAtraso.length/total*100).toFixed(1) : '0.0') + '% do total';
+  document.getElementById('kpiG-ocorrencia').textContent = comOcorrencia.length.toLocaleString('pt-BR');
+
+  // Gasto por empresa
+  var gastoEmpresa = groupSum(filtered, function(o){return o.empresa || 'N/D';}, function(o){return o.valorPostagem;});
+  var gastoEmpresaSorted = Array.from(gastoEmpresa.entries()).sort(function(a,b){return b[1]-a[1];});
+  chartGastoEmpresa.data.labels = gastoEmpresaSorted.map(function(e){return e[0];});
+  chartGastoEmpresa.data.datasets[0].data = gastoEmpresaSorted.map(function(e){return e[1];});
+  chartGastoEmpresa.update();
+
+  // Envios e gasto por mês (usa dataPostagem, agrupado por ano-mês)
+  var porMes = new Map();
+  filtered.forEach(function(o){
+    if (!o.dataPostagem) return;
+    var chave = o.dataPostagem.getFullYear() + '-' + String(o.dataPostagem.getMonth()+1).padStart(2,'0');
+    if (!porMes.has(chave)) porMes.set(chave, {qtd:0, valor:0});
+    var rec = porMes.get(chave);
+    rec.qtd += 1; rec.valor += o.valorPostagem;
+  });
+  var mesesOrdenados = Array.from(porMes.keys()).sort();
+  var nomesMes = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  chartPeriodoMensal.data.labels = mesesOrdenados.map(function(m){
+    var partes = m.split('-'); return nomesMes[parseInt(partes[1],10)-1] + '/' + partes[0].slice(2);
+  });
+  chartPeriodoMensal.data.datasets[0].data = mesesOrdenados.map(function(m){return porMes.get(m).valor;});
+  chartPeriodoMensal.data.datasets[1].data = mesesOrdenados.map(function(m){return porMes.get(m).qtd;});
+  chartPeriodoMensal.update();
+
+  // Ranking por UF — envios e atrasos
+  var ufMap = new Map();
+  filtered.forEach(function(o){
+    var uf = o.uf || 'N/D';
+    if (!ufMap.has(uf)) ufMap.set(uf, {qtd:0, atraso:0});
+    var rec = ufMap.get(uf);
+    rec.qtd += 1;
+    if (o._atrasado) rec.atraso += 1;
+  });
+  var ufRows = Array.from(ufMap.entries()).sort(function(a,b){return b[1].qtd-a[1].qtd;});
+  var rankUfBody = document.getElementById('ranking-uf-atraso-body');
+  rankUfBody.innerHTML = '';
+  if (!ufRows.length){
+    rankUfBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--ink-soft);padding:16px;">Nenhum registro para os filtros selecionados</td></tr>';
+  }
+  ufRows.forEach(function(e){
+    var uf = e[0], rec = e[1];
+    var pct = rec.qtd ? (rec.atraso/rec.qtd*100).toFixed(1) : '0.0';
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>'+escapeHtml(uf)+'</td><td class="num">'+rec.qtd.toLocaleString('pt-BR')+'</td><td class="num">'+rec.atraso.toLocaleString('pt-BR')+'</td><td class="num">'+pct+'%</td>';
+    rankUfBody.appendChild(tr);
+  });
+
+  // Etiquetas sem postagem confirmada — sempre olha a base inteira (não tem data pra filtrar por período)
+  var semEtiqueta = allRows.filter(function(o){
+    return o.status === 'Etiqueta Expirada' || o.status === 'Erro Geraçâo PPN' || o.status === 'Objeto(s) Não Etiquetado(s) Ou Range Esgotado';
+  });
+  document.getElementById('kpiG-semetiqueta-qtd').textContent = semEtiqueta.length.toLocaleString('pt-BR');
+  document.getElementById('kpiG-semetiqueta-valor').textContent = fmtMoney(semEtiqueta.reduce(function(s,o){return s+o.valorPostagem;},0));
 }
 
 function exportarCSV(){
