@@ -151,6 +151,13 @@ export default async function handler(req, res) {
       return true;
     });
 
+    // Ordena por quem foi verificado há mais tempo (ou nunca foi verificado) primeiro.
+    // Sem isso, quando sobra mais pendente do que cabe numa execução, sempre os
+    // mesmos primeiros da lista são escolhidos de novo — muita coisa em trânsito
+    // não muda de status de uma consulta pra outra, então o resto nunca era
+    // alcançado. Assim, cada execução sempre avança pros próximos.
+    pendentes.sort((a, b) => (todos[a].atualizadoEm || 0) - (todos[b].atualizadoEm || 0));
+
     if (pendentes.length === 0) {
       return res.status(200).json({ mensagem: 'Nada pendente pra atualizar', atualizados: 0 });
     }
