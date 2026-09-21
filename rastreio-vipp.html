@@ -1024,6 +1024,44 @@ function escutarPedidos() {
 }
 
 // -------- Importação de Excel do VIPP --------
+// O VIPP tem pelo menos 3 formatos de relatório diferentes, cada um com nomes de
+// coluna próprios. Essa função traduz qualquer um deles pro mesmo formato interno,
+// então o resto do código nem precisa saber qual veio.
+function primeiroValor() {
+  for (var i = 0; i < arguments.length; i++) {
+    if (arguments[i] !== undefined && arguments[i] !== "") return arguments[i];
+  }
+  return "";
+}
+function normalizarLinhaVipp(r) {
+  return {
+    Registro: primeiroValor(r.Registro, r['Reg. Correios']),
+    Destinatario: primeiroValor(r.Destinatario, r['Nome Dest']),
+    CidadeDestinatario: primeiroValor(r.CidadeDestinatario, r['Cid Dest']),
+    UFDestinatario: primeiroValor(r.UFDestinatario, r['UF Dest']),
+    CEPDestinatario: primeiroValor(r.CEPDestinatario, r['CEP Dest']),
+    Status: primeiroValor(r.Status),
+    DescricaoEvento: primeiroValor(r.DescricaoEvento),
+    Servico: primeiroValor(r.Servico, r['Desc Serviço']),
+    CodigoServicoCorreios: r.CodigoServicoCorreios,
+    DataPostagem: primeiroValor(r.DataPostagem, r['Dta Postagem']),
+    DataDoEvento: primeiroValor(r.DataDoEvento, r['Dta Entregat']),
+    Prazo: primeiroValor(r.Prazo, r['Prazo Est (dias)']),
+    NumeroNotaFiscal: primeiroValor(r.NumeroNotaFiscal, r['Nro NF']),
+    Remetente: primeiroValor(r.Remetente, r['Nome Rem.']),
+    ValorPostagem: primeiroValor(r.ValorPostagem, r['Vlr Tarifa (R$)'])
+  };
+}
+// Detecta a empresa pelo texto do Remetente da própria linha (quando o relatório
+// traz esse campo). Só cai no que tá selecionado no seletor se não conseguir
+// identificar — assim o seletor vira reforço/exceção, não obrigação.
+function detectarEmpresa(remetenteTexto, valorSelecionado) {
+  var t = String(remetenteTexto || '').toUpperCase();
+  if (t.indexOf('MAY') !== -1) return 'Mayderma';
+  if (t.indexOf('STIN') !== -1) return 'Stin Pharma';
+  return valorSelecionado;
+}
+
 document.getElementById("fileInput").addEventListener("change", function (e) {
   var file = e.target.files[0];
   if (!file) return;
@@ -1041,7 +1079,7 @@ document.getElementById("fileInput").addEventListener("change", function (e) {
       var workbook = XLSX.read(data, { type: "array", raw: true });
       var sheet = workbook.Sheets[workbook.SheetNames[0]];
       var json = XLSX.utils.sheet_to_json(sheet, { defval: "", range: 1 });
-      var linhas = json.filter(function (r) { return r.Registro && String(r.Registro).indexOf('http') === -1; });
+      var linhas = json.map(normalizarLinhaVipp).filter(function (r) { return r.Registro && String(r.Registro).indexOf('http') === -1; });
       salvarNoRealtimeDb(linhas, file.name);
     } catch (err) {
       document.getElementById("errorMsg").textContent = "Não consegui ler esse arquivo. Confirma se é o Excel exportado do VIPP.";
@@ -1106,6 +1144,7 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
       var dataEventoTexto = r.DataDoEvento ? parseDataVipp(r.DataDoEvento) : "";
       var dataPostagemTexto = r.DataPostagem ? parseDataVipp(r.DataPostagem) : "";
       var prazoDias = r.Prazo !== "" && r.Prazo != null ? Number(r.Prazo) : null;
+      var empresaDaLinha = detectarEmpresa(r.Remetente, empresaSelecionada);
       if (existentes.has(chave)) {
         // já existe: atualiza só dado cadastral, preserva status/data do evento que o robô já tenha
         updates[CAMINHO_PEDIDOS + "/" + chave + "/destinatario"] = r.Destinatario || "";
@@ -1117,7 +1156,7 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
         updates[CAMINHO_PEDIDOS + "/" + chave + "/cep"] = r.CEPDestinatario || "";
         updates[CAMINHO_PEDIDOS + "/" + chave + "/valorPostagem"] = r.ValorPostagem !== "" && r.ValorPostagem != null ? Number(r.ValorPostagem) : 0;
         updates[CAMINHO_PEDIDOS + "/" + chave + "/dataPostagem"] = dataPostagemTexto;
-        updates[CAMINHO_PEDIDOS + "/" + chave + "/empresa"] = empresaSelecionada;
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/empresa"] = empresaDaLinha;
         updates[CAMINHO_PEDIDOS + "/" + chave + "/prazoDias"] = prazoDias;
       } else {
         // pedido novo: grava tudo, inclusive o status inicial que veio do VIPP
@@ -1133,7 +1172,7 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
           nf: r.NumeroNotaFiscal || "",
           remetente: r.Remetente || "",
           cep: r.CEPDestinatario || "",
-          empresa: empresaSelecionada,
+          empresa: empresaDaLinha,
           prazoDias: prazoDias,
           valorPostagem: r.ValorPostagem !== "" && r.ValorPostagem != null ? Number(r.ValorPostagem) : 0,
           atualizadoEm: Date.now()
