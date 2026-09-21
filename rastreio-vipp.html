@@ -2,15 +2,10 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<script>
-  if (localStorage.getItem('rastreioVippTema') === 'dark') {
-    document.documentElement.setAttribute('data-theme', 'dark');
-  }
-</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Painel de Rastreios &mdash; STIN PHARMA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -18,249 +13,307 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <style>
   :root{
-    --bg:#f3f4f8;
-    --sidebar-bg:#ffffff;
-    --card:#ffffff;
-    --ink:#181a24;
-    --ink-soft:#6b7280;
-    --faint:#9aa0ac;
-    --line:#e7e9f0;
-    --primary:#2e5ea8;
-    --primary-soft:#eaf1fb;
-    --entregue:#1f9d5c; --entregue-soft:#e5f7ee;
-    --aguardando:#c1841f; --aguardando-soft:#fbf1de;
-    --transferencia:#4a6fa8; --transferencia-soft:#eaf0fa;
-    --problema:#c0392b; --problema-soft:#fbeae7;
-    --naoentregue:#8c5383; --naoentregue-soft:#f4eaf3;
-    --retirada:#c0392b; --retirada-soft:#fbeae7;
-    --stamp:#2e5ea8;
-    --radius:14px;
-    --shadow:0 1px 2px rgba(16,24,40,.04), 0 2px 8px rgba(16,24,40,.05);
-  }
-  html[data-theme="dark"]{
-    --bg:#0f1117;
-    --sidebar-bg:#161822;
-    --card:#1a1d29;
-    --ink:#e9eaf0;
-    --ink-soft:#9aa0ac;
-    --faint:#6b7280;
-    --line:#2a2d3a;
-    --primary:#6d9eea;
-    --primary-soft:#1c2a40;
-    --entregue-soft:#123322; --aguardando-soft:#3a2c10; --transferencia-soft:#1c2a40;
-    --problema-soft:#3a1f1a; --naoentregue-soft:#2f2030; --retirada-soft:#3a1f1a;
-    --shadow:0 1px 2px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.35);
+    --ink:#16233F;
+    --ink-soft:#334867;
+    --paper:#F1EFE8;
+    --paper-raised:#FAFAF6;
+    --line:#D8D3C4;
+    --postal-blue:#2E5EA8;
+    --entregue:#2F7A54;
+    --aguardando:#C1841F;
+    --transferencia:#5C6F8C;
+    --problema:#93493A;
+  --naoentregue:#8C5383;
+    --retirada:#B4452F;
+    --stamp:#B4452F;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background:var(--bg);
+    background:var(--paper);
     color:var(--ink);
     font-family:'Inter',sans-serif;
     font-size:14px;
     line-height:1.5;
-    transition:background 150ms ease, color 150ms ease;
   }
+  .wrap{max-width:1320px;margin:0 auto;padding:28px 24px 64px;}
   .hidden{display:none !important;}
 
   /* ---------- Login ---------- */
-  #loginScreen{max-width:340px;margin:14vh auto;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 32px;}
-  #loginScreen h1{font-family:'Inter',sans-serif;font-weight:700;font-size:22px;margin:0 0 4px;letter-spacing:-0.01em;}
+  #loginScreen{max-width:340px;margin:14vh auto;background:var(--paper-raised);border:1px solid var(--ink);padding:28px 30px;}
+  #loginScreen h1{font-family:'Source Serif 4',serif;font-weight:600;font-size:24px;margin:0 0 4px;}
   #loginScreen .sub{margin:0 0 24px;color:var(--ink-soft);font-size:13px;}
   #loginScreen label{display:block;font-size:11.5px;color:var(--ink-soft);font-weight:600;margin-bottom:5px;}
   #loginScreen input{
-    width:100%;padding:10px 12px;margin-bottom:14px;border:1px solid var(--line);border-radius:9px;
-    background:var(--bg);font-family:'Inter',sans-serif;font-size:13.5px;color:var(--ink);
+    width:100%;padding:9px 10px;margin-bottom:14px;border:1px solid var(--line);
+    background:#fff;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--ink);
   }
-  #loginScreen input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);}
+  #loginScreen input:focus{outline:2px solid var(--postal-blue);outline-offset:1px;}
   .btn-primary{
-    width:100%;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;padding:11px 14px;border-radius:9px;
-    background:var(--primary);color:#fff;border:none;cursor:pointer;
+    width:100%;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:10px 14px;
+    background:var(--ink);color:#fff;border:none;cursor:pointer;
   }
-  .btn-primary:hover{background:#254e8c;}
+  .btn-primary:hover{background:var(--postal-blue);}
   .login-error{font-size:12.5px;color:var(--problema);margin-top:12px;min-height:1em;}
 
-  /* ---------- Shell / Sidebar ---------- */
-  #appScreen.shell{display:flex;align-items:stretch;min-height:100vh;}
-  .sidebar{
-    width:232px;flex-shrink:0;background:var(--sidebar-bg);border-right:1px solid var(--line);
-    padding:22px 16px;display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh;
-  }
-  .sidebar-brand{display:flex;align-items:center;gap:10px;padding:0 6px;}
-  .brand-mark{
-    width:34px;height:34px;border-radius:9px;background:var(--primary);color:#fff;
-    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;
-  }
-  .brand-name{font-weight:700;font-size:14px;line-height:1.2;color:var(--ink);}
-  .brand-sub{font-size:11px;color:var(--faint);}
-  .sidebar-nav{display:flex;flex-direction:column;gap:2px;}
-  .nav-item{
-    display:block;padding:9px 10px;border-radius:8px;font-size:13px;font-weight:500;
-    color:var(--ink-soft);text-decoration:none;transition:background 100ms ease, color 100ms ease;
-  }
-  .nav-item:hover{background:var(--bg);color:var(--ink);}
-  .nav-item.active{background:var(--primary-soft);color:var(--primary);}
-  .sidebar-footer{margin-top:auto;display:flex;flex-direction:column;gap:8px;}
-  .theme-toggle{
-    width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);
-    color:var(--ink-soft);font-family:'Inter',sans-serif;font-size:12.5px;cursor:pointer;text-align:left;
-  }
-  .theme-toggle:hover{border-color:var(--primary);color:var(--primary);}
-
-  .main{flex:1;min-width:0;padding:26px 32px 60px;max-width:1360px;}
-
-  /* ---------- Buttons (shared) ---------- */
-  .btn-ghost{
-    font-family:'Inter',sans-serif;font-weight:500;font-size:12px;padding:8px 13px;border-radius:8px;
-    background:transparent;border:1px solid var(--line);color:var(--ink-soft);cursor:pointer;
-  }
-  .btn-ghost:hover{border-color:var(--primary);color:var(--primary);}
-
-  /* ---------- Header (topbar) ---------- */
+  /* ---------- Header (manifest strip) ---------- */
   header.manifest{
-    background:transparent;border:none;padding:0 0 22px;
-    display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;margin-bottom:4px;
+    border:1px solid var(--ink);
+    background:var(--paper-raised);
+    padding:22px 26px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:16px;
+    margin-bottom:18px;
   }
   header.manifest .title-block h1{
-    font-family:'Inter',sans-serif;font-weight:700;font-size:24px;margin:0 0 4px;letter-spacing:-0.01em;
+    font-family:'Source Serif 4',serif;
+    font-weight:600;
+    font-size:28px;
+    margin:0 0 4px;
+    letter-spacing:0.2px;
   }
-  header.manifest .title-block p{margin:0;color:var(--ink-soft);font-size:13px;}
+  header.manifest .title-block p{
+    margin:0;
+    color:var(--ink-soft);
+    font-size:13px;
+  }
   header.manifest .meta{
-    font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:right;color:var(--ink-soft);
-    border-left:none;padding-left:0;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    text-align:right;
+    color:var(--ink-soft);
+    border-left:1px solid var(--line);
+    padding-left:16px;
   }
   header.manifest .meta strong{color:var(--ink);}
+  .btn-ghost{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;padding:7px 12px;
+    background:transparent;border:1px solid var(--line);color:var(--ink-soft);cursor:pointer;
+  }
+  .btn-ghost:hover{border-color:var(--ink);color:var(--ink);}
 
-  /* ---------- Toolbar ---------- */
+  /* ---------- Toolbar (import / atualizar) ---------- */
   .toolbar{
-    border:1px solid var(--line);background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
-    padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;flex-wrap:wrap;gap:12px;
+    border:1px solid var(--line);background:var(--paper-raised);padding:14px 20px;
+    margin-bottom:18px;display:flex;align-items:center;flex-wrap:wrap;gap:12px;
   }
   .toolbar label.file-btn{
-    font-family:'Inter',sans-serif;font-weight:600;font-size:12px;padding:9px 15px;border-radius:8px;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;padding:8px 14px;
     background:var(--ink);color:#fff;cursor:pointer;
   }
-  .toolbar label.file-btn:hover{background:var(--primary);}
+  .toolbar label.file-btn:hover{background:var(--postal-blue);}
   .toolbar input[type=file]{display:none;}
   .btn-accent{
-    font-family:'Inter',sans-serif;font-weight:600;font-size:12px;padding:9px 15px;border-radius:8px;
-    background:var(--primary);color:#fff;border:none;cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;padding:8px 14px;
+    background:var(--stamp);color:#fff;border:none;cursor:pointer;
   }
-  .btn-accent:hover{background:#254e8c;}
+  .btn-accent:hover{background:#8f3722;}
   .btn-accent:disabled{opacity:0.55;cursor:default;}
   .toolbar .info{font-size:12px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;}
   .toolbar .error-msg{font-size:12px;color:var(--problema);}
 
   #staleWarning{
-    display:none;margin-bottom:18px;padding:12px 16px;border:1px solid var(--problema);border-radius:10px;
-    background:var(--problema-soft);color:var(--problema);font-size:12.5px;font-family:'IBM Plex Mono',monospace;
+    display:none;margin-bottom:18px;padding:10px 16px;border:1px solid var(--problema);
+    background:#F6E6E3;color:#6b201a;font-size:12.5px;font-family:'IBM Plex Mono',monospace;
   }
 
-  /* ---------- Priority box (radar) ---------- */
+  /* ---------- Priority box (radar aguardando retirada) ---------- */
   .priority-box{
-    border:1px solid var(--line);border-left:4px solid var(--retirada);background:var(--card);
-    border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 22px;margin-bottom:18px;
+    border:1px solid var(--retirada);background:#FBEFE9;padding:16px 20px;margin-bottom:18px;
   }
   .priority-title{
-    font-family:'Inter',sans-serif;font-weight:700;font-size:15px;color:var(--retirada);
+    font-family:'Source Serif 4',serif;font-weight:600;font-size:15px;color:#6b241a;
     margin:0 0 10px;display:flex;align-items:center;gap:8px;
   }
   .priority-title .count{
-    font-family:'IBM Plex Mono',monospace;background:var(--retirada);color:#fff;border-radius:6px;
+    font-family:'IBM Plex Mono',monospace;background:var(--retirada);color:#fff;
     padding:1px 8px;font-size:11.5px;
   }
   .priority-list{max-height:220px;overflow-y:auto;}
   .priority-list table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:'IBM Plex Mono',monospace;}
-  .priority-list td{padding:7px 8px;vertical-align:middle;}
-  .priority-list tr:hover td{background:var(--retirada-soft);}
+  .priority-list td{padding:6px 8px;vertical-align:middle;}
+  .priority-list tr:hover td{background:#F3DDD3;}
   .priority-list td.dest{font-family:'Inter',sans-serif;color:var(--ink);width:32%;}
   .priority-list td.nf{color:var(--ink-soft);white-space:nowrap;}
   .priority-list td.loc{color:var(--ink-soft);text-align:right;white-space:nowrap;}
   .priority-list td.dias{text-align:right;font-weight:600;white-space:nowrap;}
-  .priority-list td.dias .selo{display:inline-block;min-width:44px;text-align:center;border-radius:6px;}
+  .priority-list td.dias .selo{display:inline-block;min-width:44px;text-align:center;}
   .priority-list td.dias.ok .selo{color:var(--ink-soft);font-weight:400;}
   .priority-list td.dias.atencao .selo{color:#9a6b0a;}
-  .priority-list td.dias.urgente .selo{color:#fff;background:var(--retirada);padding:2px 7px;}
+  .priority-list td.dias.urgente .selo{color:#fff;background:var(--retirada);padding:1px 6px;border-radius:2px;}
 
   /* ---------- Filter bar ---------- */
   .filterbar{
-    border:1px solid var(--line);background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
-    padding:16px 20px;margin-bottom:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
-    gap:12px 16px;align-items:end;
+    border:1px solid var(--line);
+    background:var(--paper-raised);
+    padding:16px 20px;
+    margin-bottom:18px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:12px 16px;
+    align-items:end;
   }
   .filterbar .field{display:flex;flex-direction:column;gap:5px;}
-  .filterbar label{font-size:11px;color:var(--ink-soft);font-weight:600;}
-  .field-hint{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--faint);}
+  .filterbar label{
+    font-size:11px;
+    color:var(--ink-soft);
+    font-weight:600;
+  }
+  .field-hint{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    color:var(--ink-soft);
+  }
   .filterbar select, .filterbar input{
-    font-family:'Inter',sans-serif;font-size:13px;padding:8px 9px;border:1px solid var(--line);border-radius:8px;
-    background:var(--bg);color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    padding:7px 8px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--ink);
   }
-  .filterbar select:focus, .filterbar input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);}
-  .filterbar .actions{display:flex;align-items:end;}
+  .filterbar select:focus, .filterbar input:focus{
+    outline:2px solid var(--postal-blue);
+    outline-offset:1px;
+  }
+  .filterbar .actions{
+    display:flex;
+    align-items:end;
+  }
   .btn-reset{
-    font-family:'Inter',sans-serif;font-weight:600;font-size:12px;padding:9px 15px;border-radius:8px;
-    background:var(--ink);color:#fff;border:none;cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    padding:8px 14px;
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    cursor:pointer;
   }
-  .btn-reset:hover{background:var(--primary);}
+  .btn-reset:hover{background:var(--postal-blue);}
 
   /* ---------- Period result banner ---------- */
   .period-banner{
-    display:none;border:1px solid var(--primary);border-radius:10px;background:var(--primary-soft);color:var(--ink);
-    font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:9px 16px;margin-bottom:14px;
+    display:none;
+    border:1px solid var(--postal-blue);
+    background:#EAF0FA;
+    color:var(--ink);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    padding:9px 16px;
+    margin-bottom:14px;
   }
   .period-banner.show{display:block;}
-  .period-banner strong{color:var(--primary);}
+  .period-banner strong{color:var(--postal-blue);}
 
-  /* ---------- KPI cards ---------- */
+  /* ---------- KPI stubs ---------- */
   .kpi-row{
-    display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:18px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:0;
+    margin-bottom:18px;
+    border:1px solid var(--ink);
+    background:var(--paper-raised);
   }
   .kpi{
-    padding:16px 18px;border-radius:var(--radius);background:var(--card);border:1px solid var(--line);
-    box-shadow:var(--shadow);position:relative;
+    padding:16px 16px 14px;
+    border-right:1px dashed var(--line);
+    position:relative;
   }
-  .kpi .label{font-size:11px;color:var(--ink-soft);margin-bottom:10px;font-weight:500;}
-  .kpi .value{font-family:'Inter',sans-serif;font-size:25px;font-weight:700;line-height:1;letter-spacing:-0.01em;}
-  .kpi .sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--faint);margin-top:7px;}
+  .kpi:last-child{border-right:none;}
+  .kpi .label{
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+  }
+  .kpi .value{
+    font-family:'Source Serif 4',serif;
+    font-size:26px;
+    font-weight:600;
+    line-height:1;
+  }
+  .kpi .sub{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:6px;
+  }
   .kpi.entregue .value{color:var(--entregue);}
   .kpi.retirada .value{color:var(--retirada);}
   .kpi.transferencia .value{color:var(--transferencia);}
   .kpi.problema .value{color:var(--problema);}
   .kpi.naoentregue .value{color:var(--naoentregue);}
-  .kpi.valor .value{font-size:21px;}
+  .kpi.valor .value{font-size:22px;}
 
   /* ---------- Panels / charts ---------- */
   .grid-2{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-bottom:18px;}
   .grid-2b{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
-  @media(max-width:1000px){.grid-2,.grid-2b{grid-template-columns:1fr;}}
+  @media(max-width:860px){.grid-2,.grid-2b{grid-template-columns:1fr;}}
 
   .panel{
-    border:1px solid var(--line);background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
-    padding:20px 22px 16px;
+    border:1px solid var(--line);
+    background:var(--paper-raised);
+    padding:18px 20px 14px;
   }
-  .panel h2{font-family:'Inter',sans-serif;font-size:15px;font-weight:700;margin:0 0 4px;}
-  .panel .hint{font-size:11.5px;color:var(--ink-soft);margin:0 0 14px;}
+  .panel h2{
+    font-family:'Source Serif 4',serif;
+    font-size:16px;
+    font-weight:600;
+    margin:0 0 4px;
+  }
+  .panel .hint{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin:0 0 12px;
+  }
   .chart-holder{position:relative;height:260px;}
   .chart-holder.tall{height:320px;}
 
-  .status-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:12px;}
-  .status-legend .chip{display:flex;align-items:center;gap:6px;font-size:11.5px;cursor:pointer;font-family:'IBM Plex Mono',monospace;color:var(--ink-soft);}
-  .status-legend .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  .status-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:10px;}
+  .status-legend .chip{
+    display:flex;align-items:center;gap:6px;
+    font-size:11.5px;
+    cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .status-legend .dot{width:9px;height:9px;display:inline-block;}
   .status-legend .chip.dim{opacity:0.4;}
 
   table{width:100%;border-collapse:collapse;font-size:12.5px;}
   thead th{
-    text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--faint);
-    border-bottom:1px solid var(--line);padding:8px;white-space:nowrap;
+    text-align:left;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--ink-soft);
+    border-bottom:1px solid var(--ink);
+    padding:6px 8px;
+    white-space:nowrap;
   }
-  tbody td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top;}
-  tbody tr:hover{background:var(--bg);}
+  tbody td{
+    padding:6px 8px;
+    border-bottom:1px solid var(--line);
+    vertical-align:top;
+  }
+  tbody tr:hover{background:#EFEBDD;}
   td.num, th.num{text-align:right;font-family:'IBM Plex Mono',monospace;}
   td.mono{font-family:'IBM Plex Mono',monospace;font-size:11.5px;}
 
   .status-badge{
-    display:inline-block;padding:3px 9px;border-radius:999px;font-size:10.5px;font-family:'Inter',sans-serif;font-weight:600;
-    color:#fff;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom;
+    display:inline-block;
+    padding:2px 7px;
+    font-size:10.5px;
+    font-family:'IBM Plex Mono',monospace;
+    color:#fff;
+    white-space:nowrap;
+    max-width:220px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    vertical-align:bottom;
   }
   .status-badge.entregue{background:var(--entregue);}
   .status-badge.aguardando{background:var(--aguardando);}
@@ -269,23 +322,21 @@
   .status-badge.problema{background:var(--problema);}
   .status-badge.naoentregue{background:var(--naoentregue);}
 
-  .table-panel{border:1px solid var(--line);background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 22px;margin-bottom:18px;}
-  .table-scroll{overflow-x:auto;max-height:460px;overflow-y:auto;border:1px solid var(--line);border-radius:10px;}
+  .table-panel{border:1px solid var(--line);background:var(--paper-raised);padding:18px 20px;margin-bottom:18px;}
+  .table-scroll{overflow-x:auto;max-height:460px;overflow-y:auto;border:1px solid var(--line);}
   .table-scroll table{min-width:960px;}
-  .table-scroll thead th{position:sticky;top:0;background:var(--card);}
-  .row-count{font-size:11.5px;color:var(--faint);margin-top:8px;font-family:'IBM Plex Mono',monospace;}
+  .table-scroll thead th{position:sticky;top:0;background:var(--paper-raised);}
+  .row-count{font-size:11.5px;color:var(--ink-soft);margin-top:8px;font-family:'IBM Plex Mono',monospace;}
 
-  footer.note{font-size:11px;color:var(--faint);border-top:1px solid var(--line);padding-top:14px;margin-top:6px;}
-
-  ::selection{background:var(--primary);color:#fff;}
-
-  @media(max-width:900px){
-    #appScreen.shell{flex-direction:column;}
-    .sidebar{width:100%;height:auto;position:relative;flex-direction:row;align-items:center;flex-wrap:wrap;}
-    .sidebar-nav{flex-direction:row;flex-wrap:wrap;}
-    .sidebar-footer{margin-top:0;flex-direction:row;}
-    .main{padding:20px;}
+  footer.note{
+    font-size:11px;
+    color:var(--ink-soft);
+    border-top:1px solid var(--line);
+    padding-top:14px;
+    margin-top:6px;
   }
+
+  ::selection{background:var(--postal-blue);color:#fff;}
 </style>
 </head>
 <body>
@@ -301,26 +352,7 @@
   <p class="login-error" id="loginError"></p>
 </div>
 
-<div id="appScreen" class="shell hidden">
-<aside class="sidebar">
-  <div class="sidebar-brand">
-    <span class="brand-mark">RV</span>
-    <div>
-      <div class="brand-name">Rastreio VIPP</div>
-      <div class="brand-sub">STIN Pharma &middot; Expedição</div>
-    </div>
-  </div>
-  <nav class="sidebar-nav">
-    <a href="#" class="nav-item active" data-view="geral">Visão geral</a>
-    <a href="#" class="nav-item" data-view="radar">Radar de retirada</a>
-    <a href="#" class="nav-item" data-view="graficos">Gráficos</a>
-    <a href="#" class="nav-item" data-view="tabela">Objetos</a>
-  </nav>
-  <div class="sidebar-footer">
-    <button class="theme-toggle" id="themeToggle" type="button">🌙 Modo escuro</button>
-  </div>
-</aside>
-<main class="main">
+<div id="appScreen" class="wrap hidden">
 
   <header class="manifest">
     <div class="title-block">
@@ -335,6 +367,10 @@
   </header>
 
   <div class="toolbar">
+    <select id="import-empresa" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:8px 10px;border:1px solid var(--line);background:#fff;color:var(--ink);">
+      <option value="Stin Pharma">Stin Pharma</option>
+      <option value="Mayderma">Mayderma</option>
+    </select>
     <label class="file-btn" for="fileInput">Importar Excel do VIPP</label>
     <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
     <button class="btn-accent" id="atualizarAgoraBtn">Atualizar agora</button>
@@ -367,12 +403,10 @@
 
   <div id="staleWarning"></div>
 
-  <div id="view-radar">
   <div class="priority-box" id="priorityBox" style="display:none">
     <div class="priority-title">Aguardando retirada — ligar pro cliente <span class="count" id="priorityCount">0</span></div>
     <p style="margin:-6px 0 10px;font-size:11.5px;color:#8a5540;">Ordenado por quem está esperando há mais tempo &mdash; dias em vermelho = perto do prazo de devolução</p>
     <div class="priority-list" id="priorityList"></div>
-  </div>
   </div>
 
   <div class="filterbar">
@@ -403,6 +437,14 @@
       <select id="f-status-detalhado"><option value="">Todos os textos</option></select>
     </div>
     <div class="field">
+      <label>Empresa</label>
+      <select id="f-empresa">
+        <option value="">Todas</option>
+        <option value="Stin Pharma">Stin Pharma</option>
+        <option value="Mayderma">Mayderma</option>
+      </select>
+    </div>
+    <div class="field">
       <label>UF destino</label>
       <select id="f-uf"><option value="">Todas</option></select>
     </div>
@@ -429,7 +471,7 @@
 
   <div class="period-banner" id="period-banner"></div>
 
-  <div class="kpi-row" id="secao-kpis">
+  <div class="kpi-row">
     <div class="kpi">
       <div class="label">Total de postagens</div>
       <div class="value" id="kpi-total">&mdash;</div>
@@ -472,8 +514,7 @@
     </div>
   </div>
 
-  <div id="view-graficos">
-  <div class="grid-2" id="secao-graficos">
+  <div class="grid-2">
     <div class="panel">
       <h2>Postagens por dia</h2>
       <p class="hint">Volume de objetos postados, por dia, no período selecionado</p>
@@ -512,9 +553,8 @@
       </table>
     </div>
   </div>
-  </div>
 
-  <div class="table-panel" id="secao-tabela">
+  <div class="table-panel">
     <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;">
       <div>
         <h2 style="font-family:'Source Serif 4',serif;font-size:16px;margin:0 0 4px;">Detalhamento dos objetos</h2>
@@ -527,6 +567,7 @@
         <thead>
           <tr>
             <th>Data postagem</th>
+            <th>Empresa</th>
             <th>Registro</th>
             <th>Destinatário</th>
             <th>Cidade</th>
@@ -547,7 +588,6 @@
     Dados ao vivo do Firebase (rastreioVipp/pedidos). O robô automático atualiza status e data do evento 1x/dia para pedidos ainda não entregues; pedidos já entregues não são mais consultados.
   </footer>
 
-</main>
 </div>
 
 <script>
@@ -803,7 +843,6 @@ function dataValidaOuNula(valor){
   return isNaN(d.getTime()) ? null : d; // data corrompida vira "sem data" em vez de quebrar o painel
 }
 function escutarPedidos() {
-  db.ref(CAMINHO_PEDIDOS).off(); // evita empilhar ouvintes se a pessoa deslogar/logar de novo
   db.ref(CAMINHO_PEDIDOS).on("value", function (snapshot) {
     var dados = snapshot.val() || {};
     allRows = Object.keys(dados).map(function (chave) {
@@ -818,6 +857,7 @@ function escutarPedidos() {
         nf: r.nf || "",
         remetente: r.remetente || "",
         cep: r.cep || "",
+        empresa: r.empresa || "Stin Pharma",
         valorPostagem: Number(r.valorPostagem) || 0,
         dataPostagem: dataValidaOuNula(r.dataPostagem),
         dataEvento: dataValidaOuNula(r.dataEvento),
@@ -901,6 +941,7 @@ function parseDataVipp(valor){
 
 function salvarNoRealtimeDb(linhas, nomeArquivo) {
   document.getElementById("fileInfo").textContent = "Salvando " + linhas.length + " pedidos...";
+  var empresaSelecionada = document.getElementById('import-empresa').value;
   // pedidos que já existem na base não têm o status sobrescrito pela reimportação —
   // o robô já pode ter uma info mais atual que o Excel do VIPP (que tem ~1 dia de atraso)
   var existentes = new Set(allRows.map(function(r){ return chaveSegura(r.codigo); }));
@@ -929,6 +970,7 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
         updates[CAMINHO_PEDIDOS + "/" + chave + "/cep"] = r.CEPDestinatario || "";
         updates[CAMINHO_PEDIDOS + "/" + chave + "/valorPostagem"] = r.ValorPostagem !== "" && r.ValorPostagem != null ? Number(r.ValorPostagem) : 0;
         updates[CAMINHO_PEDIDOS + "/" + chave + "/dataPostagem"] = dataPostagemTexto;
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/empresa"] = empresaSelecionada;
       } else {
         // pedido novo: grava tudo, inclusive o status inicial que veio do VIPP
         updates[CAMINHO_PEDIDOS + "/" + chave] = {
@@ -943,6 +985,7 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
           nf: r.NumeroNotaFiscal || "",
           remetente: r.Remetente || "",
           cep: r.CEPDestinatario || "",
+          empresa: empresaSelecionada,
           valorPostagem: r.ValorPostagem !== "" && r.ValorPostagem != null ? Number(r.ValorPostagem) : 0,
           atualizadoEm: Date.now()
         };
@@ -962,10 +1005,11 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
 }
 
 // -------- Estado dos filtros --------
-var state = { dateStart: null, dateEnd: null, status: "", statusDetalhado: "", uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
+var state = { dateStart: null, dateEnd: null, status: "", statusDetalhado: "", empresa: "", uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
 
 document.getElementById('f-status').addEventListener('change', function(e){ state.status = e.target.value; render(); });
 document.getElementById('f-status-detalhado').addEventListener('change', function(e){ state.statusDetalhado = e.target.value; render(); });
+document.getElementById('f-empresa').addEventListener('change', function(e){ state.empresa = e.target.value; render(); });
 document.getElementById('f-uf').addEventListener('change', function(e){ state.uf = e.target.value; state.cidade=''; document.getElementById('f-cidade').value=''; refreshCidadeOptions(); render(); });
 document.getElementById('f-cidade').addEventListener('change', function(e){ state.cidade = e.target.value; render(); });
 document.getElementById('f-destinatario').addEventListener('input', debounce(function(e){ state.destinatario = e.target.value; render(); }, 250));
@@ -989,11 +1033,12 @@ function applyDateFilter(){
 });
 
 document.getElementById('btn-reset').addEventListener('click', function(){
-  state = { dateStart: null, dateEnd: null, status: "", statusDetalhado: "", uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
+  state = { dateStart: null, dateEnd: null, status: "", statusDetalhado: "", empresa: "", uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
   document.getElementById('f-date-start').value='';
   document.getElementById('f-date-end').value='';
   document.getElementById('f-status').value='';
   document.getElementById('f-status-detalhado').value='';
+  document.getElementById('f-empresa').value='';
   document.getElementById('f-uf').value='';
   document.getElementById('f-cidade').value='';
   document.getElementById('f-destinatario').value='';
@@ -1047,6 +1092,7 @@ function applyFilters(){
     if (state.dateEnd && o.dataPostagem && o.dataPostagem > state.dateEnd) return false;
     if (state.status && o._bucket !== state.status) return false;
     if (state.statusDetalhado && (o.status || '(vazio)') !== state.statusDetalhado) return false;
+    if (state.empresa && o.empresa !== state.empresa) return false;
     if (state.uf && o.uf !== state.uf) return false;
     if (state.cidade && o.cidade !== state.cidade) return false;
     if (state.destinatario && o.destinatario.toLowerCase().indexOf(state.destinatario.toLowerCase()) === -1) return false;
@@ -1068,24 +1114,6 @@ function groupSum(arr, keyFn, valFn){
 }
 
 // -------- Charts --------
-function corTema(nomeVar){ return getComputedStyle(document.documentElement).getPropertyValue(nomeVar).trim(); }
-
-// Cor de texto/linha de grade dos gráficos, respeitando o tema claro/escuro —
-// sem isso o texto dos eixos fica ilegível no modo escuro (bug corrigido).
-function aplicarCoresGraficos(){
-  var corTexto = corTema('--ink-soft');
-  var corGrade = corTema('--line');
-  [chartPorDia, chartUfQtd, chartUfValor].forEach(function(c){
-    ['x','y'].forEach(function(eixo){
-      if (c.options.scales && c.options.scales[eixo]){
-        c.options.scales[eixo].ticks = Object.assign({}, c.options.scales[eixo].ticks, {color: corTexto});
-        c.options.scales[eixo].grid = Object.assign({}, c.options.scales[eixo].grid, {color: corGrade});
-      }
-    });
-    c.update();
-  });
-}
-
 var chartPorDia = new Chart(document.getElementById('chart-por-dia'), {
   type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:'#2E5EA8'}]},
   options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
@@ -1102,7 +1130,6 @@ var chartUfValor = new Chart(document.getElementById('chart-uf-valor'), {
   type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:'#C1841F'}]},
   options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}}}
 });
-aplicarCoresGraficos();
 
 function render(){
  try {
@@ -1146,7 +1173,7 @@ function render(){
   // Ordenado por quem está esperando há mais tempo (maior risco de devolução primeiro)
   var agora = Date.now();
   var retiradaGeral = allRows.filter(function(o){return o._bucket==='retirada';}).map(function(o){
-    var dataBase = o.dataEvento || o.dataPostagem; var dias = dataBase ? Math.floor((agora - dataBase.getTime())/86400000) : null;
+    var dias = o.dataPostagem ? Math.floor((agora - o.dataPostagem.getTime())/86400000) : null;
     return Object.assign({}, o, {_diasEsperando: dias});
   }).sort(function(a,b){
     if (a._diasEsperando==null) return 1;
@@ -1239,13 +1266,14 @@ function render(){
   var sortedDetail = filtered.slice().sort(function(a,b){ return (b.dataPostagem||0) - (a.dataPostagem||0); });
   window._ultimaListaFiltrada = sortedDetail;
   if (!sortedDetail.length){
-    detailBody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--ink-soft);padding:20px;">Nenhum objeto encontrado para os filtros selecionados</td></tr>';
+    detailBody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--ink-soft);padding:20px;">Nenhum objeto encontrado para os filtros selecionados</td></tr>';
   }
   var paraRenderizar = sortedDetail.slice(0, LIMITE_LINHAS_TABELA);
   paraRenderizar.forEach(function(o){
     var tr = document.createElement('tr');
     tr.innerHTML =
       '<td>'+fmtDateOnly(o.dataPostagem)+'</td>'+
+      '<td>'+escapeHtml(o.empresa)+'</td>'+
       '<td class="mono">'+escapeHtml(o.codigo)+'</td>'+
       '<td>'+escapeHtml(o.destinatario)+'</td>'+
       '<td>'+escapeHtml(o.cidade)+'</td>'+
@@ -1275,11 +1303,12 @@ function render(){
 
 function exportarCSV(){
   var linhas = window._ultimaListaFiltrada || [];
-  var cab = ['Data postagem','Registro','Destinatario','Cidade','UF','Nota fiscal','Valor','Status','Ultima verificacao'];
+  var cab = ['Data postagem','Empresa','Registro','Destinatario','Cidade','UF','Nota fiscal','Valor','Status','Ultima verificacao'];
   var csv = [cab.join(';')];
   linhas.forEach(function(o){
     var campos = [
       fmtDateOnly(o.dataPostagem),
+      o.empresa,
       o.codigo,
       '"' + String(o.destinatario||'').replace(/"/g,'""') + '"',
       o.cidade,
@@ -1302,62 +1331,6 @@ function exportarCSV(){
   URL.revokeObjectURL(url);
 }
 document.getElementById('btn-exportar-csv').addEventListener('click', exportarCSV);
-</script>
-<script>
-(function () {
-  var salvo = localStorage.getItem('rastreioVippTema');
-  if (salvo === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-
-  function atualizarTexto() {
-    var ativo = document.documentElement.getAttribute('data-theme') === 'dark';
-    var btn = document.getElementById('themeToggle');
-    if (btn) btn.textContent = (ativo ? '☀️' : '🌙') + ' Modo ' + (ativo ? 'claro' : 'escuro');
-  }
-  document.addEventListener('DOMContentLoaded', function () {
-    atualizarTexto();
-    var btn = document.getElementById('themeToggle');
-    if (btn) {
-      btn.addEventListener('click', function () {
-        var ativo = document.documentElement.getAttribute('data-theme') === 'dark';
-        if (ativo) {
-          document.documentElement.removeAttribute('data-theme');
-          localStorage.setItem('rastreioVippTema', 'light');
-        } else {
-          document.documentElement.setAttribute('data-theme', 'dark');
-          localStorage.setItem('rastreioVippTema', 'dark');
-        }
-        atualizarTexto();
-        // recoloreia os gráficos existentes pro novo tema, sem precisar recarregar a página
-        if (typeof aplicarCoresGraficos === 'function') aplicarCoresGraficos();
-      });
-    }
-
-    // Navegação da sidebar: cada opção mostra só a sua seção; "Visão geral" mostra tudo de novo.
-    var VIEWS = {
-      kpis: document.getElementById('secao-kpis'),
-      radar: document.getElementById('view-radar'),
-      graficos: document.getElementById('view-graficos'),
-      tabela: document.getElementById('secao-tabela')
-    };
-    function mostrarView(nome) {
-      Object.keys(VIEWS).forEach(function (chave) {
-        var el = VIEWS[chave];
-        if (!el) return;
-        el.style.display = (nome === 'geral' || chave === nome) ? '' : 'none';
-      });
-      document.querySelectorAll('.nav-item').forEach(function (a) {
-        a.classList.toggle('active', a.getAttribute('data-view') === nome);
-      });
-    }
-    document.querySelectorAll('.nav-item').forEach(function (a) {
-      a.addEventListener('click', function (e) {
-        e.preventDefault();
-        mostrarView(a.getAttribute('data-view'));
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
-    });
-  });
-})();
 </script>
 </body>
 </html>
