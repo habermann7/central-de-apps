@@ -322,6 +322,29 @@
   .status-badge.problema{background:var(--problema);}
   .status-badge.naoentregue{background:var(--naoentregue);}
 
+  .app-body{display:flex;gap:22px;align-items:flex-start;}
+  .sidebar{
+    width:210px;flex:none;position:sticky;top:20px;
+    border:1px solid var(--ink);background:var(--paper-raised);
+  }
+  .sidebar .nav-item{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:12px 16px;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:12px;
+    border-bottom:1px dashed var(--line);color:var(--ink-soft);
+  }
+  .sidebar .nav-item:last-child{border-bottom:none;}
+  .sidebar .nav-item:hover{background:var(--paper);color:var(--ink);}
+  .sidebar .nav-item.active{background:var(--ink);color:#fff;}
+  .sidebar .nav-badge{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--retirada);color:#fff;
+    padding:1px 6px;border-radius:2px;
+  }
+  .sidebar .nav-item.active .nav-badge{background:#fff;color:var(--retirada);}
+  .main-content{flex:1;min-width:0;}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+  @media(max-width:860px){.app-body{flex-direction:column;} .sidebar{width:100%;position:static;display:flex;}}
+
   .table-panel{border:1px solid var(--line);background:var(--paper-raised);padding:18px 20px;margin-bottom:18px;}
   .table-scroll{overflow-x:auto;max-height:460px;overflow-y:auto;border:1px solid var(--line);}
   .table-scroll table{min-width:960px;}
@@ -471,117 +494,141 @@
 
   <div class="period-banner" id="period-banner"></div>
 
-  <div class="kpi-row">
-    <div class="kpi">
-      <div class="label">Total de postagens</div>
-      <div class="value" id="kpi-total">&mdash;</div>
-      <div class="sub">objetos no período</div>
-    </div>
-    <div class="kpi entregue">
-      <div class="label">Total entregue</div>
-      <div class="value" id="kpi-entregue">&mdash;</div>
-      <div class="sub" id="kpi-pct-entregue">&mdash;</div>
-    </div>
-    <div class="kpi retirada">
-      <div class="label">Aguardando retirada</div>
-      <div class="value" id="kpi-retirada">&mdash;</div>
-      <div class="sub" id="kpi-pct-retirada">&mdash;</div>
-    </div>
-    <div class="kpi transferencia">
-      <div class="label">Em trânsito</div>
-      <div class="value" id="kpi-transito">&mdash;</div>
-      <div class="sub">em rota</div>
-    </div>
-    <div class="kpi naoentregue">
-      <div class="label">Não entregue</div>
-      <div class="value" id="kpi-naoentregue">&mdash;</div>
-      <div class="sub">falha de entrega</div>
-    </div>
-    <div class="kpi problema">
-      <div class="label">Problema</div>
-      <div class="value" id="kpi-problema">&mdash;</div>
-      <div class="sub">precisa de ação</div>
-    </div>
-    <div class="kpi valor">
-      <div class="label">Valor total postagens</div>
-      <div class="value" id="kpi-valor">&mdash;</div>
-      <div class="sub">soma no período</div>
-    </div>
-    <div class="kpi valor">
-      <div class="label">Ticket médio</div>
-      <div class="value" id="kpi-ticket">&mdash;</div>
-      <div class="sub">valor / postagens</div>
-    </div>
-  </div>
+  <div class="app-body">
+    <nav class="sidebar">
+      <div class="nav-item active" data-tab="visao-geral">Visão Geral</div>
+      <div class="nav-item" data-tab="retirada">Aguardando Retirada <span class="nav-badge" id="nav-badge-retirada">0</span></div>
+      <div class="nav-item" data-tab="detalhamento">Detalhamento</div>
+    </nav>
 
-  <div class="grid-2">
-    <div class="panel">
-      <h2>Postagens por dia</h2>
-      <p class="hint">Volume de objetos postados, por dia, no período selecionado</p>
-      <div class="chart-holder"><canvas id="chart-por-dia"></canvas></div>
-    </div>
-    <div class="panel">
-      <h2>Status das entregas</h2>
-      <p class="hint">Clique em um status para filtrar todo o painel</p>
-      <div class="chart-holder"><canvas id="chart-status"></canvas></div>
-      <div class="status-legend" id="status-legend"></div>
-    </div>
-  </div>
+    <div class="main-content">
 
-  <div class="grid-2b">
-    <div class="panel">
-      <h2>Postagens por estado</h2>
-      <p class="hint">Quantidade de objetos por UF de destino, do maior para o menor</p>
-      <div class="chart-holder tall"><canvas id="chart-uf-qtd"></canvas></div>
-    </div>
-    <div class="panel">
-      <h2>Valor postado por estado</h2>
-      <p class="hint">Soma do valor de postagem por UF de destino</p>
-      <div class="chart-holder tall"><canvas id="chart-uf-valor"></canvas></div>
-    </div>
-  </div>
+      <div class="tab-panel active" id="tab-visao-geral">
+        <div class="kpi-row">
+          <div class="kpi">
+            <div class="label">Total de postagens</div>
+            <div class="value" id="kpi-total">&mdash;</div>
+            <div class="sub">objetos no período</div>
+          </div>
+          <div class="kpi entregue">
+            <div class="label">Total entregue</div>
+            <div class="value" id="kpi-entregue">&mdash;</div>
+            <div class="sub" id="kpi-pct-entregue">&mdash;</div>
+          </div>
+          <div class="kpi retirada">
+            <div class="label">Aguardando retirada</div>
+            <div class="value" id="kpi-retirada">&mdash;</div>
+            <div class="sub" id="kpi-pct-retirada">&mdash;</div>
+          </div>
+          <div class="kpi transferencia">
+            <div class="label">Em trânsito</div>
+            <div class="value" id="kpi-transito">&mdash;</div>
+            <div class="sub">em rota</div>
+          </div>
+          <div class="kpi naoentregue">
+            <div class="label">Não entregue</div>
+            <div class="value" id="kpi-naoentregue">&mdash;</div>
+            <div class="sub">falha de entrega</div>
+          </div>
+          <div class="kpi problema">
+            <div class="label">Problema</div>
+            <div class="value" id="kpi-problema">&mdash;</div>
+            <div class="sub">precisa de ação</div>
+          </div>
+          <div class="kpi valor">
+            <div class="label">Valor total postagens</div>
+            <div class="value" id="kpi-valor">&mdash;</div>
+            <div class="sub">soma no período</div>
+          </div>
+          <div class="kpi valor">
+            <div class="label">Ticket médio</div>
+            <div class="value" id="kpi-ticket">&mdash;</div>
+            <div class="sub">valor / postagens</div>
+          </div>
+        </div>
 
-  <div class="panel" style="margin-bottom:18px;">
-    <h2>Ranking de cidades</h2>
-    <p class="hint">Cidades com maior quantidade de postagens no período</p>
-    <div class="table-scroll" style="max-height:320px;">
-      <table>
-        <thead>
-          <tr><th>Cidade</th><th>UF</th><th class="num">Postagens</th><th class="num">Valor total</th></tr>
-        </thead>
-        <tbody id="ranking-cidades-body"></tbody>
-      </table>
-    </div>
-  </div>
+        <div class="grid-2">
+          <div class="panel">
+            <h2>Postagens por dia</h2>
+            <p class="hint">Volume de objetos postados, por dia, no período selecionado</p>
+            <div class="chart-holder"><canvas id="chart-por-dia"></canvas></div>
+          </div>
+          <div class="panel">
+            <h2>Status das entregas</h2>
+            <p class="hint">Clique em um status para filtrar todo o painel</p>
+            <div class="chart-holder"><canvas id="chart-status"></canvas></div>
+            <div class="status-legend" id="status-legend"></div>
+          </div>
+        </div>
 
-  <div class="table-panel">
-    <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;">
-      <div>
-        <h2 style="font-family:'Source Serif 4',serif;font-size:16px;margin:0 0 4px;">Detalhamento dos objetos</h2>
-        <p class="hint" style="margin:0;">Um objeto por linha &mdash; respeita todos os filtros acima</p>
+        <div class="grid-2b">
+          <div class="panel">
+            <h2>Postagens por estado</h2>
+            <p class="hint">Quantidade de objetos por UF de destino, do maior para o menor</p>
+            <div class="chart-holder tall"><canvas id="chart-uf-qtd"></canvas></div>
+          </div>
+          <div class="panel">
+            <h2>Valor postado por estado</h2>
+            <p class="hint">Soma do valor de postagem por UF de destino</p>
+            <div class="chart-holder tall"><canvas id="chart-uf-valor"></canvas></div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:18px;">
+          <h2>Ranking de cidades</h2>
+          <p class="hint">Cidades com maior quantidade de postagens no período</p>
+          <div class="table-scroll" style="max-height:320px;">
+            <table>
+              <thead>
+                <tr><th>Cidade</th><th>UF</th><th class="num">Postagens</th><th class="num">Valor total</th></tr>
+              </thead>
+              <tbody id="ranking-cidades-body"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
-      <button class="btn-ghost" id="btn-exportar-csv" type="button">Exportar CSV</button>
+
+      <div class="tab-panel" id="tab-retirada">
+        <div class="priority-box" id="priorityBox" style="display:none;margin-bottom:0;">
+          <div class="priority-title">Aguardando retirada — ligar pro cliente <span class="count" id="priorityCount">0</span></div>
+          <p style="margin:-6px 0 10px;font-size:11.5px;color:#8a5540;">Ordenado por quem está esperando há mais tempo &mdash; dias em vermelho = perto do prazo de devolução. Essa lista não respeita os filtros acima — é um radar fixo, olha a base inteira.</p>
+          <div class="priority-list" id="priorityList" style="max-height:none;"></div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-detalhamento">
+        <div class="table-panel">
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;">
+            <div>
+              <h2 style="font-family:'Source Serif 4',serif;font-size:16px;margin:0 0 4px;">Detalhamento dos objetos</h2>
+              <p class="hint" style="margin:0;">Um objeto por linha &mdash; respeita todos os filtros acima</p>
+            </div>
+            <button class="btn-ghost" id="btn-exportar-csv" type="button">Exportar CSV</button>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data postagem</th>
+                  <th>Empresa</th>
+                  <th>Registro</th>
+                  <th>Destinatário</th>
+                  <th>Cidade</th>
+                  <th>UF</th>
+                  <th>Nota fiscal</th>
+                  <th class="num">Valor</th>
+                  <th>Status atual</th>
+                  <th>Última verificação</th>
+                </tr>
+              </thead>
+              <tbody id="detail-body"></tbody>
+            </table>
+          </div>
+          <div class="row-count" id="detail-count"></div>
+        </div>
+      </div>
+
     </div>
-    <div class="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Data postagem</th>
-            <th>Empresa</th>
-            <th>Registro</th>
-            <th>Destinatário</th>
-            <th>Cidade</th>
-            <th>UF</th>
-            <th>Nota fiscal</th>
-            <th class="num">Valor</th>
-            <th>Status atual</th>
-            <th>Última verificação</th>
-          </tr>
-        </thead>
-        <tbody id="detail-body"></tbody>
-      </table>
-    </div>
-    <div class="row-count" id="detail-count"></div>
   </div>
 
   <footer class="note">
@@ -717,6 +764,16 @@ document.getElementById("loginBtn").addEventListener("click", function () {
   });
 });
 document.getElementById("logoutBtn").addEventListener("click", function () { auth.signOut(); });
+
+// -------- Navegação lateral (abas) --------
+document.querySelectorAll('.sidebar .nav-item').forEach(function(item){
+  item.addEventListener('click', function(){
+    document.querySelectorAll('.sidebar .nav-item').forEach(function(i){ i.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+    item.classList.add('active');
+    document.getElementById('tab-' + item.dataset.tab).classList.add('active');
+  });
+});
 document.getElementById("btn-ver-tecnico").addEventListener("click", function(){
   document.getElementById("debugConteudo").textContent = JSON.stringify(window._ultimaRespostaAtualizar, null, 2);
   document.getElementById("debugPanel").classList.remove("hidden");
@@ -1183,6 +1240,7 @@ function render(){
   var priorityBox = document.getElementById('priorityBox');
   var priorityList = document.getElementById('priorityList');
   document.getElementById('priorityCount').textContent = retiradaGeral.length;
+  document.getElementById('nav-badge-retirada').textContent = retiradaGeral.length;
   if (retiradaGeral.length > 0){
     priorityBox.style.display = 'block';
     priorityList.innerHTML = '<table><tbody>' + retiradaGeral.map(function(o){
