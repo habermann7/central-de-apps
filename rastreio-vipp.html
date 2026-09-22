@@ -369,16 +369,17 @@
   .brand-title{font-family:'Inter',sans-serif;font-weight:700;font-size:16px;color:var(--ink);}
   .brand-sub{font-family:'Inter',sans-serif;font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
   .sidebar .nav-group-label{
-    font-family:'Inter',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;
-    color:var(--ink-soft);padding:14px 10px 6px;
+    font-family:'Inter',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
+    color:#9CA3AF;padding:10px;margin-top:10px;border-top:1px solid var(--line);
   }
+  .sidebar .nav-group-label:first-of-type{margin-top:0;border-top:none;}
   .sidebar .nav-item{
     display:flex;align-items:center;justify-content:space-between;gap:8px;
-    padding:9px 10px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;font-size:13.5px;
-    border-radius:7px;color:var(--ink-soft);margin-bottom:2px;
+    padding:9px 10px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;font-size:14px;
+    border-radius:7px;color:var(--ink);margin-bottom:2px;
   }
-  .sidebar .nav-item:hover{background:var(--paper);color:var(--ink);}
-  .sidebar .nav-item.active{background:#EFF6FF;color:var(--postal-blue);}
+  .sidebar .nav-item:hover{background:var(--paper);}
+  .sidebar .nav-item.active{background:#EFF6FF;color:var(--postal-blue);font-weight:600;}
   .sidebar .nav-badge{
     font-family:'Inter',sans-serif;font-weight:600;font-size:10px;background:var(--retirada);color:#fff;
     padding:1px 7px;border-radius:20px;
@@ -451,8 +452,7 @@
         <p class="topbar-sub">Acompanhamento de postagens e entregas &mdash; base de rastreamento dos Correios</p>
       </div>
       <div class="empresa-switch" id="empresa-switch">
-        <button type="button" class="empresa-btn active" data-empresa="">Todas</button>
-        <button type="button" class="empresa-btn" data-empresa="Stin Pharma">Stin Pharma</button>
+        <button type="button" class="empresa-btn active" data-empresa="Stin Pharma">Stin Pharma</button>
         <button type="button" class="empresa-btn" data-empresa="Mayderma">Mayderma</button>
       </div>
     </div>
@@ -1273,7 +1273,7 @@ function salvarNoRealtimeDb(linhas, nomeArquivo, empresaFallback) {
 }
 
 // -------- Estado dos filtros --------
-var state = { dateStart: null, dateEnd: null, status: "", statusDetalhado: "", empresa: "", uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
+var state = { dateStart: null, dateEnd: null, status: "", statusDetalhado: "", empresa: "Stin Pharma", uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
 
 document.getElementById('f-status').addEventListener('change', function(e){ state.status = e.target.value; render(); });
 document.getElementById('f-status-detalhado').addEventListener('change', function(e){ state.statusDetalhado = e.target.value; render(); });
@@ -1308,13 +1308,12 @@ function applyDateFilter(){
 });
 
 document.getElementById('btn-reset').addEventListener('click', function(){
-  state = { dateStart: null, dateEnd: null, status: "", statusDetalhado: "", empresa: "", uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
+  var empresaAtual = state.empresa;
+  state = { dateStart: null, dateEnd: null, status: "", statusDetalhado: "", empresa: empresaAtual, uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
   document.getElementById('f-date-start').value='';
   document.getElementById('f-date-end').value='';
   document.getElementById('f-status').value='';
   document.getElementById('f-status-detalhado').value='';
-  document.querySelectorAll('.empresa-btn').forEach(function(b){ b.classList.remove('active'); });
-  document.querySelector('.empresa-btn[data-empresa=""]').classList.add('active');
   document.getElementById('f-uf').value='';
   document.getElementById('f-cidade').value='';
   document.getElementById('f-destinatario').value='';
