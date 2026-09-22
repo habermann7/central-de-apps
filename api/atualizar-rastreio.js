@@ -101,7 +101,7 @@ async function consultarUmCodigo(codigo) {
     return { codigo, ok: false, erro: objeto.mensagem || 'sem eventos', dadosCrus: dados };
   }
 
-  return { codigo, ok: true, evento: eventos[0], dadosCrus: dados };
+  return { codigo, ok: true, evento: eventos[0], dtPrevista: objeto.dtPrevista || null, dadosCrus: dados };
 }
 
 export default async function handler(req, res) {
@@ -200,6 +200,9 @@ export default async function handler(req, res) {
         const dataEvento = extrairDataEvento(r.evento);
         if (dataEvento) {
           updates[CAMINHO_PEDIDOS + '/' + r.chave + '/dataEvento'] = dataEvento;
+        }
+        if (r.dtPrevista) {
+          updates[CAMINHO_PEDIDOS + '/' + r.chave + '/dataPrevista'] = r.dtPrevista;
         }
         updates[CAMINHO_PEDIDOS + '/' + r.chave + '/atualizadoEm'] = Date.now();
         updates[CAMINHO_PEDIDOS + '/' + r.chave + '/tentativasSemSucesso'] = 0;
