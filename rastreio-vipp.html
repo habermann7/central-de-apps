@@ -1,237 +1,1740 @@
-// api/atualizar-rastreio.js
-//
-// Função serverless que roda sozinha (chamada pelo agendamento do vercel.json)
-// e atualiza o status dos pedidos pendentes consultando a API dos Correios.
-//
-// Usa as MESMAS variáveis de ambiente que api/criar-usuario.js já usa:
-//   FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY
-//
-// Variáveis já cadastradas no Vercel:
-//   CORREIOS_CHAVE_ACESSO -> a chave "cws-ch1_..." que você gerou
-//   ROBO_SEGREDO           -> uma senha qualquer, só sua, pra proteger essa URL
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rastro &mdash; STIN PHARMA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<style>
+  :root{
+    --ink:#111827;
+    --ink-soft:#6B7280;
+    --paper:#F4F5F7;
+    --paper-raised:#FFFFFF;
+    --line:#E5E7EB;
+    --postal-blue:#2563EB;
+    --entregue:#0D9488;
+    --aguardando:#D97706;
+    --transferencia:#64748B;
+    --problema:#DC2626;
+  --naoentregue:#9333EA;
+    --retirada:#EA580C;
+    --stamp:#EA580C;
+    --radius:10px;
+    --shadow:0 1px 3px rgba(16,24,40,.08), 0 1px 2px rgba(16,24,40,.04);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    line-height:1.5;
+  }
+  .wrap{max-width:1320px;margin:0 auto;padding:28px 24px 64px;}
+  .hidden{display:none !important;}
 
-import admin from 'firebase-admin';
+  /* ---------- Login ---------- */
+  #loginScreen{max-width:340px;margin:14vh auto;background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 30px;}
+  #loginScreen h1{font-family:'Inter',sans-serif;font-weight:600;font-size:24px;margin:0 0 4px;}
+  #loginScreen .sub{margin:0 0 24px;color:var(--ink-soft);font-size:13px;}
+  #loginScreen label{display:block;font-size:11.5px;color:var(--ink-soft);font-weight:600;margin-bottom:5px;}
+  #loginScreen input{
+    width:100%;padding:9px 10px;margin-bottom:14px;border:1px solid var(--line);border-radius:7px;
+    background:#fff;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--ink);
+  }
+  #loginScreen input:focus{outline:2px solid var(--postal-blue);outline-offset:1px;}
+  .btn-primary{
+    width:100%;font-family:'Inter',sans-serif;font-weight:500;font-size:13px;padding:10px 14px;border-radius:7px;
+    background:var(--ink);color:#fff;border:none;cursor:pointer;
+  }
+  .btn-primary:hover{background:var(--postal-blue);}
+  .login-error{font-size:12.5px;color:var(--problema);margin-top:12px;min-height:1em;}
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
-    }),
-    databaseURL: 'https://stinpharma-qualidade-default-rtdb.firebaseio.com',
+  /* ---------- Header (manifest strip) ---------- */
+  header.manifest{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    background:var(--paper-raised);
+    padding:22px 26px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:16px;
+    margin-bottom:18px;
+  }
+  header.manifest .title-block h1{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:28px;
+    margin:0 0 4px;
+    letter-spacing:0.2px;
+  }
+  header.manifest .title-block p{
+    margin:0;
+    color:var(--ink-soft);
+    font-size:13px;
+  }
+  header.manifest .meta{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    text-align:right;
+    color:var(--ink-soft);
+    border-left:1px solid var(--line);
+    padding-left:16px;
+  }
+  header.manifest .meta strong{color:var(--ink);}
+  .btn-ghost{
+    font-family:'Inter',sans-serif;font-weight:500;font-size:12px;padding:8px 14px;border-radius:7px;
+    background:transparent;border:1px solid var(--line);color:var(--ink-soft);cursor:pointer;
+  }
+  .btn-ghost:hover{border-color:var(--ink);color:var(--ink);}
+
+  /* ---------- Toolbar (import / atualizar) ---------- */
+  .empresa-switch{display:flex;gap:0;margin-bottom:18px;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);width:fit-content;overflow:hidden;}
+  .empresa-btn{
+    font-family:'Inter',sans-serif;font-weight:500;font-size:13px;padding:10px 20px;
+    background:var(--paper-raised);color:var(--ink-soft);border:none;border-right:1px solid var(--line);cursor:pointer;
+  }
+  .empresa-btn:last-child{border-right:none;}
+  .empresa-btn:hover{background:var(--paper);color:var(--ink);}
+  .empresa-btn.active{background:var(--postal-blue);color:#fff;}
+
+  .toolbar{
+    border:1px solid var(--line);background:var(--paper-raised);padding:14px 20px;
+    border-radius:var(--radius);box-shadow:var(--shadow);
+    margin-bottom:18px;display:flex;align-items:center;flex-wrap:wrap;gap:12px;
+  }
+  .toolbar label.file-btn{
+    font-family:'Inter',sans-serif;font-weight:500;font-size:12.5px;padding:9px 16px;border-radius:7px;
+    background:var(--ink);color:#fff;cursor:pointer;
+  }
+  .toolbar label.file-btn:hover{background:var(--postal-blue);}
+  .toolbar input[type=file]{display:none;}
+  .btn-accent{
+    font-family:'Inter',sans-serif;font-weight:500;font-size:12.5px;padding:9px 16px;border-radius:7px;
+    background:var(--stamp);color:#fff;border:none;cursor:pointer;
+  }
+  .btn-accent:hover{background:#c2410c;}
+  .btn-accent:disabled{opacity:0.55;cursor:default;}
+  .toolbar .info{font-size:12.5px;color:var(--ink-soft);font-family:'Inter',sans-serif;}
+  .toolbar .error-msg{font-size:12px;color:var(--problema);}
+
+  #staleWarning{
+    display:none;margin-bottom:18px;padding:10px 16px;border:1px solid var(--problema);
+    border-radius:var(--radius);
+    background:#FEF2F2;color:#991B1B;font-size:12.5px;font-family:'Inter',sans-serif;
+  }
+
+  /* ---------- Priority box (radar aguardando retirada) ---------- */
+  .priority-box{
+    border:1px solid #FED7AA;border-radius:var(--radius);box-shadow:var(--shadow);background:#FFF7ED;padding:16px 20px;margin-bottom:18px;
+  }
+  .priority-title{
+    font-family:'Inter',sans-serif;font-weight:600;font-size:15px;color:#9A3412;
+    margin:0 0 10px;display:flex;align-items:center;gap:8px;
+  }
+  .priority-title .count{
+    font-family:'IBM Plex Mono',monospace;background:var(--retirada);color:#fff;border-radius:5px;
+    padding:1px 8px;font-size:11.5px;
+  }
+  .priority-list{max-height:220px;overflow-y:auto;}
+  .priority-list table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:'IBM Plex Mono',monospace;}
+  .priority-list td{padding:6px 8px;vertical-align:middle;}
+  .priority-list tr:hover td{background:#FFEDD5;}
+  .priority-list td.dest{font-family:'Inter',sans-serif;color:var(--ink);width:32%;}
+  .priority-list td.nf{color:var(--ink-soft);white-space:nowrap;}
+  .priority-list td.loc{color:var(--ink-soft);text-align:right;white-space:nowrap;}
+  .priority-list td.dias{text-align:right;font-weight:600;white-space:nowrap;}
+  .priority-list td.dias .selo{display:inline-block;min-width:44px;text-align:center;border-radius:5px;}
+  .priority-list td.dias.ok .selo{color:var(--ink-soft);font-weight:400;}
+  .priority-list td.dias.atencao .selo{color:#9a6b0a;}
+  .priority-list td.dias.urgente .selo{color:#fff;background:var(--retirada);padding:1px 6px;border-radius:5px;}
+
+  /* ---------- Filter bar ---------- */
+  .filterbar{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    background:var(--paper-raised);
+    padding:16px 20px;
+    margin-bottom:18px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:12px 16px;
+    align-items:end;
+  }
+  .filterbar .field{display:flex;flex-direction:column;gap:5px;}
+  .filterbar label{
+    font-size:11px;
+    color:var(--ink-soft);
+    font-weight:600;
+  }
+  .field-hint{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    color:var(--ink-soft);
+  }
+  .filterbar select, .filterbar input{
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    padding:7px 9px;
+    border-radius:7px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--ink);
+  }
+  .filterbar select:focus, .filterbar input:focus{
+    outline:2px solid var(--postal-blue);
+    outline-offset:1px;
+  }
+  .filterbar .actions{
+    display:flex;
+    align-items:end;
+  }
+  .btn-reset{
+    font-family:'Inter',sans-serif;
+    font-weight:500;
+    font-size:12px;
+    padding:8px 14px;
+    border-radius:7px;
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    cursor:pointer;
+  }
+  .btn-reset:hover{background:var(--postal-blue);}
+
+  /* ---------- Period result banner ---------- */
+  .period-banner{
+    display:none;
+    border:1px solid #BFDBFE;
+    border-radius:var(--radius);
+    background:#EFF6FF;
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:12.5px;
+    padding:9px 16px;
+    margin-bottom:14px;
+  }
+  .period-banner.show{display:block;}
+  .period-banner strong{color:var(--postal-blue);}
+
+  /* ---------- KPI stubs ---------- */
+  .kpi-row{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:0;
+    margin-bottom:18px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    background:var(--paper-raised);
+    overflow:hidden;
+  }
+  .kpi{
+    padding:16px 16px 14px;
+    border-right:1px solid var(--line);
+    position:relative;
+  }
+  .kpi:last-child{border-right:none;}
+  .kpi .label{
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+  }
+  .kpi .value{
+    font-family:'Inter',sans-serif;
+    font-size:26px;
+    font-weight:700;
+    line-height:1;
+  }
+  .kpi .sub{
+    font-family:'Inter',sans-serif;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:6px;
+  }
+  .kpi.entregue .value{color:var(--entregue);}
+  .kpi.retirada .value{color:var(--retirada);}
+  .kpi.transferencia .value{color:var(--transferencia);}
+  .kpi.problema .value{color:var(--problema);}
+  .kpi.naoentregue .value{color:var(--naoentregue);}
+  .kpi.valor .value{font-size:22px;}
+
+  /* ---------- Panels / charts ---------- */
+  .grid-2{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-bottom:18px;}
+  .grid-2b{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
+  @media(max-width:860px){.grid-2,.grid-2b{grid-template-columns:1fr;}}
+
+  .panel{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    background:var(--paper-raised);
+    padding:18px 20px 14px;
+  }
+  .panel h2{
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    font-weight:600;
+    margin:0 0 4px;
+  }
+  .panel .hint{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin:0 0 12px;
+  }
+  .chart-holder{position:relative;height:260px;}
+
+  .gasto-empresa-lista{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+  .gasto-empresa-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;}
+  .gasto-empresa-item .nome{display:flex;align-items:center;gap:8px;font-family:'Inter',sans-serif;font-weight:500;font-size:13px;color:var(--ink);}
+  .gasto-empresa-item .dot{width:10px;height:10px;border-radius:50%;flex:none;}
+  .gasto-empresa-item .valores{text-align:right;}
+  .gasto-empresa-item .valor{font-family:'Inter',sans-serif;font-weight:700;font-size:16px;color:var(--ink);}
+  .gasto-empresa-item .pct{font-family:'Inter',sans-serif;font-size:11.5px;color:var(--ink-soft);}
+  .chart-holder.tall{height:320px;}
+
+  .status-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:10px;}
+  .status-legend .chip{
+    display:flex;align-items:center;gap:6px;
+    font-size:11.5px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .status-legend .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  .status-legend .chip.dim{opacity:0.4;}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  thead th{
+    text-align:left;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--ink-soft);
+    border-bottom:1px solid var(--ink);
+    padding:6px 8px;
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:6px 8px;
+    border-bottom:1px solid var(--line);
+    vertical-align:top;
+  }
+  tbody tr:hover{background:#EFEBDD;}
+  td.num, th.num{text-align:right;font-family:'IBM Plex Mono',monospace;}
+  td.mono{font-family:'IBM Plex Mono',monospace;font-size:11.5px;}
+
+  .status-badge{
+    display:inline-block;
+    padding:2px 9px;
+    border-radius:20px;
+    font-size:10.5px;
+    font-family:'Inter',sans-serif;
+    font-weight:500;
+    color:#fff;
+    white-space:nowrap;
+    max-width:220px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    vertical-align:bottom;
+  }
+  .status-badge.entregue{background:var(--entregue);}
+  .status-badge.aguardando{background:var(--aguardando);}
+  .status-badge.transito{background:var(--transferencia);}
+  .status-badge.retirada{background:var(--retirada);}
+  .status-badge.problema{background:var(--problema);}
+  .status-badge.naoentregue{background:var(--naoentregue);}
+
+  /* ---------- Esqueleto: menu lateral de altura total + área principal ---------- */
+  .app-layout{display:flex;min-height:100vh;}
+  .sidebar{
+    width:236px;flex:none;position:sticky;top:0;height:100vh;overflow-y:auto;
+    background:var(--paper-raised);border-right:1px solid var(--line);
+    padding:18px 12px;display:flex;flex-direction:column;
+  }
+  .sidebar-brand{padding:4px 10px 18px;border-bottom:1px solid var(--line);margin-bottom:8px;}
+  .brand-title{font-family:'Inter',sans-serif;font-weight:700;font-size:16px;color:var(--ink);}
+  .brand-sub{font-family:'Inter',sans-serif;font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+  .sidebar .nav-group-label{
+    font-family:'Inter',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
+    color:#9CA3AF;padding:10px;margin-top:10px;border-top:1px solid var(--line);
+  }
+  .sidebar .nav-group-label:first-of-type{margin-top:0;border-top:none;}
+  .sidebar .nav-item{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:9px 10px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;font-size:14px;
+    border-radius:7px;color:var(--ink);margin-bottom:2px;
+  }
+  .sidebar .nav-item:hover{background:var(--paper);}
+  .sidebar .nav-item.active{background:#EFF6FF;color:var(--postal-blue);font-weight:600;}
+  .sidebar .nav-badge{
+    font-family:'Inter',sans-serif;font-weight:600;font-size:10px;background:var(--retirada);color:#fff;
+    padding:1px 7px;border-radius:20px;
+  }
+  .sidebar-footer{margin-top:auto;padding:14px 10px 0;border-top:1px solid var(--line);}
+  .sidebar-meta{font-family:'Inter',sans-serif;font-size:12px;color:var(--ink-soft);margin-bottom:10px;}
+  .main-area{flex:1;min-width:0;padding:24px 28px 48px;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px;}
+  .topbar h1{font-family:'Inter',sans-serif;font-size:22px;font-weight:700;margin:0 0 2px;color:var(--ink);}
+  .topbar-sub{margin:0;font-size:13px;color:var(--ink-soft);}
+  .topbar .empresa-switch{margin-bottom:0;}
+  .main-content{flex:1;min-width:0;}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .table-panel{border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);background:var(--paper-raised);padding:18px 20px;margin-bottom:18px;}
+  .table-scroll{overflow-x:auto;max-height:460px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;}
+  .table-scroll table{min-width:960px;}
+  .table-scroll thead th{position:sticky;top:0;background:var(--paper-raised);}
+  .row-count{font-size:11.5px;color:var(--ink-soft);margin-top:8px;font-family:'IBM Plex Mono',monospace;}
+
+  footer.note{
+    font-size:11px;
+    color:var(--ink-soft);
+    border-top:1px solid var(--line);
+    padding-top:14px;
+    margin-top:6px;
+  }
+
+  ::selection{background:var(--postal-blue);color:#fff;}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <h1>Rastro</h1>
+  <p class="sub">STIN PHARMA &mdash; Expedição</p>
+  <label for="loginEmail">E-mail</label>
+  <input type="email" id="loginEmail" placeholder="seu.email@stinpharma.com">
+  <label for="loginSenha">Senha</label>
+  <input type="password" id="loginSenha" placeholder="••••••••">
+  <button class="btn-primary" id="loginBtn">Entrar</button>
+  <p class="login-error" id="loginError"></p>
+</div>
+
+<div id="appScreen" class="app-layout hidden">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-title">Rastro</div>
+    </div>
+    <div class="nav-group-label">Painel</div>
+    <div class="nav-item active" data-tab="visao-geral" data-label="Visão Geral">Visão Geral</div>
+    <div class="nav-item" data-tab="retirada" data-label="Aguardando Retirada">Aguardando Retirada <span class="nav-badge" id="nav-badge-retirada">0</span></div>
+    <div class="nav-item" data-tab="detalhamento" data-label="Detalhamento">Detalhamento</div>
+    <div class="nav-group-label">Administração</div>
+    <div class="nav-item" data-tab="gestao" data-label="Gestão">Gestão</div>
+    <div class="sidebar-footer">
+      <div class="sidebar-meta"><span id="meta-total-obj">&mdash;</span> objetos na base</div>
+      <button class="btn-ghost" id="logoutBtn" type="button" style="width:100%;">Sair</button>
+    </div>
+  </aside>
+
+  <main class="main-area">
+
+    <div class="topbar">
+      <div>
+        <h1 id="topbar-title">Visão Geral</h1>
+      </div>
+      <div class="empresa-switch" id="empresa-switch">
+        <button type="button" class="empresa-btn active" data-empresa="Stin Pharma">Stin Pharma</button>
+        <button type="button" class="empresa-btn" data-empresa="Mayderma">Mayderma</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <label class="file-btn" for="fileInput">Importar Excel do VIPP</label>
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+      <button class="btn-accent" id="atualizarAgoraBtn">Atualizar agora</button>
+      <span class="info" id="fileInfo"></span>
+      <span class="error-msg" id="errorMsg"></span>
+      <span class="info" id="lastUpdate" style="margin-left:auto;"></span>
+      <button class="btn-ghost" id="btn-ver-tecnico" type="button" style="display:none;">Ver detalhes técnicos</button>
+    </div>
+
+    <div id="empresaPerguntaBox" class="hidden" style="border:1px solid #BFDBFE;border-radius:10px;background:#EFF6FF;padding:16px 20px;margin-bottom:18px;">
+      <p style="margin:0 0 4px;font-weight:600;">Não consegui identificar a empresa desse arquivo.</p>
+      <p style="margin:0 0 12px;font-size:12.5px;color:var(--ink-soft);"><span id="empresaPerguntaArquivo"></span> &mdash; o relatório não traz o nome do remetente. De qual empresa ele é?</p>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-reset" type="button" data-empresa="Stin Pharma">Stin Pharma</button>
+        <button class="btn-reset" type="button" data-empresa="Mayderma">Mayderma</button>
+        <button class="btn-ghost" type="button" id="empresaPerguntaCancelar">Cancelar importação</button>
+      </div>
+    </div>
+
+  <div id="avisoErroAtualizacao" class="hidden" style="border:1px solid #FCA5A5;border-radius:10px;background:#FEF2F2;color:#991B1B;padding:10px 16px;margin-bottom:18px;font-size:12.5px;"></div>
+
+  <div id="debugPanel" class="hidden" style="border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);background:#fff;padding:12px 14px;margin-bottom:18px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <strong style="font-size:12px;font-family:'IBM Plex Mono',monospace;">Resposta da última atualização (pra copiar e mandar se algo parecer estranho)</strong>
+      <button class="btn-ghost" id="btn-fechar-tecnico" type="button">Fechar</button>
+    </div>
+    <pre id="debugConteudo" style="font-size:11px;white-space:pre-wrap;max-height:260px;overflow:auto;margin:0;font-family:'IBM Plex Mono',monospace;"></pre>
+  </div>
+
+  <div id="staleWarning"></div>
+
+  <div class="filterbar">
+    <div class="field">
+      <label>Data de postagem &mdash; De</label>
+      <input type="date" id="f-date-start">
+      <span class="field-hint" id="hint-date-start"></span>
+    </div>
+    <div class="field">
+      <label>Até</label>
+      <input type="date" id="f-date-end">
+      <span class="field-hint" id="hint-date-end"></span>
+    </div>
+    <div class="field">
+      <label>Status</label>
+      <select id="f-status">
+        <option value="">Todos</option>
+        <option value="entregue">Entregue</option>
+        <option value="retirada">Aguardando retirada</option>
+        <option value="transito">Em trânsito</option>
+        <option value="aguardando">Aguardando ação</option>
+        <option value="naoentregue">Não entregue</option>
+        <option value="problema">Problema</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Status detalhado</label>
+      <select id="f-status-detalhado"><option value="">Todos os textos</option></select>
+    </div>
+    <div class="field">
+      <label>UF destino</label>
+      <select id="f-uf"><option value="">Todas</option></select>
+    </div>
+    <div class="field">
+      <label>Cidade destino</label>
+      <select id="f-cidade"><option value="">Todas</option></select>
+    </div>
+    <div class="field">
+      <label>Destinatário</label>
+      <input type="text" id="f-destinatario" placeholder="Buscar nome...">
+    </div>
+    <div class="field">
+      <label>Registro</label>
+      <input type="text" id="f-registro" placeholder="Ex: AD8...BR">
+    </div>
+    <div class="field">
+      <label>Nota fiscal</label>
+      <input type="text" id="f-nf" placeholder="Número da NF">
+    </div>
+    <div class="field actions">
+      <button class="btn-reset" id="btn-reset" type="button">Limpar filtros</button>
+    </div>
+  </div>
+
+  <div class="period-banner" id="period-banner"></div>
+
+    <div class="main-content">
+
+      <div class="tab-panel active" id="tab-visao-geral">
+        <div class="kpi-row">
+          <div class="kpi">
+            <div class="label">Total de postagens</div>
+            <div class="value" id="kpi-total">&mdash;</div>
+            <div class="sub">objetos no período</div>
+          </div>
+          <div class="kpi entregue">
+            <div class="label">Total entregue</div>
+            <div class="value" id="kpi-entregue">&mdash;</div>
+            <div class="sub" id="kpi-pct-entregue">&mdash;</div>
+          </div>
+          <div class="kpi retirada">
+            <div class="label">Aguardando retirada</div>
+            <div class="value" id="kpi-retirada">&mdash;</div>
+            <div class="sub" id="kpi-pct-retirada">&mdash;</div>
+          </div>
+          <div class="kpi transferencia">
+            <div class="label">Em trânsito</div>
+            <div class="value" id="kpi-transito">&mdash;</div>
+            <div class="sub">em rota</div>
+          </div>
+          <div class="kpi naoentregue">
+            <div class="label">Não entregue</div>
+            <div class="value" id="kpi-naoentregue">&mdash;</div>
+            <div class="sub">falha de entrega</div>
+          </div>
+          <div class="kpi problema">
+            <div class="label">Problema</div>
+            <div class="value" id="kpi-problema">&mdash;</div>
+            <div class="sub">precisa de ação</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <h2>Postagens por dia</h2>
+            <p class="hint">Volume de objetos postados, por dia, no período selecionado</p>
+            <div class="chart-holder"><canvas id="chart-por-dia"></canvas></div>
+          </div>
+          <div class="panel">
+            <h2>Status das entregas</h2>
+            <p class="hint">Clique em um status para filtrar todo o painel</p>
+            <div class="chart-holder"><canvas id="chart-status"></canvas></div>
+            <div class="status-legend" id="status-legend"></div>
+          </div>
+        </div>
+
+        <div class="grid-2b">
+          <div class="panel">
+            <h2>Postagens por estado</h2>
+            <p class="hint">Quantidade de objetos por UF de destino, do maior para o menor</p>
+            <div class="chart-holder tall"><canvas id="chart-uf-qtd"></canvas></div>
+          </div>
+          <div class="panel">
+            <h2>Valor postado por estado</h2>
+            <p class="hint">Soma do valor de postagem por UF de destino</p>
+            <div class="chart-holder tall"><canvas id="chart-uf-valor"></canvas></div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:18px;">
+          <h2>Ranking de cidades</h2>
+          <p class="hint">Cidades com maior quantidade de postagens no período</p>
+          <div class="table-scroll" style="max-height:320px;">
+            <table>
+              <thead>
+                <tr><th>Cidade</th><th>UF</th><th class="num">Postagens</th><th class="num">Valor total</th></tr>
+              </thead>
+              <tbody id="ranking-cidades-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-retirada">
+        <div class="priority-box" id="priorityBox" style="display:none;margin-bottom:0;">
+          <div class="priority-title">Aguardando retirada — ligar pro cliente <span class="count" id="priorityCount">0</span></div>
+          <p style="margin:-6px 0 10px;font-size:11.5px;color:#8a5540;">Ordenado por quem está esperando há mais tempo &mdash; dias em vermelho = perto do prazo de devolução. Essa lista não respeita os filtros acima — é um radar fixo, olha a base inteira.</p>
+          <div class="priority-list" id="priorityList" style="max-height:none;"></div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-detalhamento">
+        <div class="table-panel">
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;">
+            <div>
+              <h2 style="font-family:'Inter',sans-serif;font-size:16px;margin:0 0 4px;">Detalhamento dos objetos</h2>
+              <p class="hint" style="margin:0;">Um objeto por linha &mdash; respeita todos os filtros acima</p>
+            </div>
+            <button class="btn-ghost" id="btn-exportar-csv" type="button">Exportar CSV</button>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data postagem</th>
+                  <th>Empresa</th>
+                  <th>Registro</th>
+                  <th>Destinatário</th>
+                  <th>Cidade</th>
+                  <th>UF</th>
+                  <th>Nota fiscal</th>
+                  <th class="num">Valor</th>
+                  <th>Status atual</th>
+                  <th>Última verificação</th>
+                </tr>
+              </thead>
+              <tbody id="detail-body"></tbody>
+            </table>
+          </div>
+          <div class="row-count" id="detail-count"></div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-gestao">
+
+        <div class="kpi-row">
+          <div class="kpi">
+            <div class="label">Envios no período</div>
+            <div class="value" id="kpiG-total">&mdash;</div>
+            <div class="sub">objetos postados</div>
+          </div>
+          <div class="kpi valor">
+            <div class="label">Gasto com postagem</div>
+            <div class="value" id="kpiG-gasto">&mdash;</div>
+            <div class="sub">soma no período</div>
+          </div>
+          <div class="kpi valor">
+            <div class="label">Ticket médio</div>
+            <div class="value" id="kpiG-ticket">&mdash;</div>
+            <div class="sub">gasto / envios</div>
+          </div>
+          <div class="kpi retirada">
+            <div class="label">Pedidos em atraso</div>
+            <div class="value" id="kpiG-atraso">&mdash;</div>
+            <div class="sub" id="kpiG-atraso-pct">&mdash;</div>
+          </div>
+          <div class="kpi naoentregue">
+            <div class="label">Com ocorrência</div>
+            <div class="value" id="kpiG-ocorrencia">&mdash;</div>
+            <div class="sub">não entregue + problema</div>
+          </div>
+        </div>
+
+        <div class="grid-2b">
+          <div class="panel">
+            <h2>Gasto por empresa</h2>
+            <p class="hint">Soma do valor de postagem, por empresa, no período &mdash; sempre mostra as duas juntas, mesmo com uma empresa selecionada no topo</p>
+            <div class="chart-holder"><canvas id="chart-gasto-empresa"></canvas></div>
+            <div id="gasto-empresa-lista" class="gasto-empresa-lista"></div>
+          </div>
+          <div class="panel">
+            <h2>Envios e gasto por mês</h2>
+            <p class="hint">Quantidade de envios (linha) e valor gasto (barra), por mês</p>
+            <div class="chart-holder"><canvas id="chart-periodo-mensal"></canvas></div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:18px;">
+          <h2>Ranking por UF — envios e atrasos</h2>
+          <p class="hint">Quantos foram enviados por estado, e quantos desses estão em atraso</p>
+          <div class="table-scroll" style="max-height:340px;">
+            <table>
+              <thead>
+                <tr><th>UF</th><th class="num">Enviados</th><th class="num">Em atraso</th><th class="num">% atraso</th></tr>
+              </thead>
+              <tbody id="ranking-uf-atraso-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:18px;">
+          <h2>Etiquetas sem postagem confirmada</h2>
+          <p class="hint">Expiradas, erro de geração ou sem etiqueta — não entram nos gráficos de período porque não têm data de postagem</p>
+          <div class="kpi-row" style="border:none;background:transparent;">
+            <div class="kpi problema" style="border:1px solid var(--line);">
+              <div class="label">Quantidade</div>
+              <div class="value" id="kpiG-semetiqueta-qtd">&mdash;</div>
+              <div class="sub">objetos</div>
+            </div>
+            <div class="kpi problema" style="border:1px solid var(--line);">
+              <div class="label">Valor envolvido</div>
+              <div class="value" id="kpiG-semetiqueta-valor">&mdash;</div>
+              <div class="sub">soma</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel zona-risco" style="margin-bottom:18px;">
+          <h2>Zona de risco</h2>
+          <p class="hint">Ações que apagam dados. Use só se for recomeçar a base do zero.</p>
+          <button class="btn-ghost" id="btn-limpar-base" type="button" style="color:var(--problema);border-color:var(--problema);">Limpar base</button>
+          <div style="margin-top:14px;">
+  <div id="limparBaseModal" class="hidden" style="border:1px solid #FCA5A5;border-radius:10px;background:#FEF2F2;padding:16px 20px;margin-bottom:0;">
+    <p style="margin:0 0 4px;font-weight:600;color:#6b201a;">Isso apaga TODOS os pedidos da base (não dá pra desfazer).</p>
+    <p style="margin:0 0 10px;font-size:12.5px;color:#6b201a;">Digite <strong>LIMPAR</strong> abaixo pra confirmar:</p>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input type="text" id="limparBaseInput" style="padding:7px 8px;border:1px solid var(--problema);font-family:'IBM Plex Mono',monospace;">
+      <button class="btn-accent" id="btn-confirmar-limpar" type="button">Confirmar exclusão</button>
+      <button class="btn-ghost" id="btn-cancelar-limpar" type="button">Cancelar</button>
+    </div>
+  </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  <footer class="note">
+    Dados ao vivo do Firebase (rastreioVipp/pedidos). O robô automático atualiza status e data do evento 1x/dia para pedidos ainda não entregues; pedidos já entregues não são mais consultados.
+  </footer>
+
+  </main>
+</div>
+
+<script>
+var firebaseConfig = {
+  apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+  authDomain: "stinpharma-qualidade.firebaseapp.com",
+  databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+  projectId: "stinpharma-qualidade",
+  storageBucket: "stinpharma-qualidade.firebasestorage.app",
+  messagingSenderId: "422803826984",
+  appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+  measurementId: "G-6C0TLHH2VP"
+};
+
+firebase.initializeApp(firebaseConfig);
+var auth = firebase.auth();
+var db = firebase.database();
+
+var GRUPO_PERMITIDO = "EXPEDIÇÃO";
+var CAMINHO_PEDIDOS = "rastreioVipp/pedidos";
+
+// -------- Classificação de status (mesma regra de sempre, mais fina) --------
+var STATUS_MAP = {
+  "Objeto entregue ao destinatário": "entregue",
+  "Objeto entregue ao remetente": "entregue",
+  "Objeto entregue na Caixa de Correios Inteligente": "entregue",
+  "Objeto em transferência": "transito",
+  "Objeto saiu para entrega ao destinatário": "transito",
+  "Objeto postado": "transito",
+  "Objeto ainda não chegou à Un.": "transito",
+  "Objeto ainda não chegou à unidade": "transito",
+  "Objeto aguardando retirada no endereço indicado": "retirada",
+  "Objeto(s) Liberado(s) Para Download na Unidade Postadora": "aguardando",
+  "Objeto(s) Gerado(s) Logistica Reversa": "aguardando",
+  "Objeto(s) Não Etiquetado(s) Ou Range Esgotado": "aguardando",
+  "Objeto(s) Finalizado(s) Aguardando Liberação Para Download": "aguardando",
+  // Problema = questão administrativa/de sistema, não é falha de tentativa de entrega
+  "Etiqueta Expirada": "problema",
+  "Erro Geraçâo PPN": "problema",
+  "Objeto apreendido por: Secretaria Estadual da Fazenda": "problema",
+  "Objeto(s) Comparado(s) entre o VIPP e VisualPost divergentes": "problema",
+  // Não entregue = tentativa de entrega que falhou de verdade (endereço, destinatário etc)
+  "Objeto não entregue - Endereço insuficiente": "naoentregue",
+  "Objeto não entregue - cliente mudou-se": "naoentregue",
+  "Objeto não entregue - Endereço inexistente": "naoentregue",
+  "Objeto não entregue - carteiro não atendido": "naoentregue",
+  "Objeto não entregue - cliente desconhecido no local": "naoentregue",
+  "Objeto não entregue - endereço incorreto": "naoentregue",
+  "Tentativa de entrega não efetuada": "naoentregue",
+  // "Comparado" é uma conferência interna VIPP x VisualPost, não uma ação pendente de verdade
+  "Objeto(s) Comparado(s) entre o VIPP e VisualPost não Divergentes": "transito"
+};
+var STATUS_LABEL = { entregue:"Entregue", retirada:"Aguardando retirada", naoentregue:"Não entregue", transito:"Em trânsito", aguardando:"Aguardando ação", problema:"Problema" };
+var STATUS_COLOR = { entregue:"#2F7A54", retirada:"#B4452F", naoentregue:"#8C5383", transito:"#5C6F8C", aguardando:"#C1841F", problema:"#93493A" };
+var STATUS_ORDER = ["retirada","naoentregue","problema","aguardando","transito","entregue"];
+
+// Versão curta e legível pro texto original de cada status — pros que a gente já
+// conhece. O que não tiver aqui, corta de forma inteligente (função abaixo).
+var STATUS_TEXTO_CURTO = {
+  "Objeto entregue ao destinatário": "Entregue",
+  "Objeto entregue ao remetente": "Entregue ao remetente",
+  "Objeto entregue na Caixa de Correios Inteligente": "Entregue (caixa inteligente)",
+  "Objeto em transferência": "Em transferência",
+  "Objeto saiu para entrega ao destinatário": "Saiu para entrega",
+  "Objeto postado": "Postado",
+  "Objeto ainda não chegou à Un.": "Aguardando unidade",
+  "Objeto ainda não chegou à unidade": "Aguardando unidade",
+  "Objeto aguardando retirada no endereço indicado": "Aguardando retirada",
+  "Objeto(s) Liberado(s) Para Download na Unidade Postadora": "Liberado p/ postagem",
+  "Objeto(s) Gerado(s) Logistica Reversa": "Logística reversa",
+  "Objeto(s) Não Etiquetado(s) Ou Range Esgotado": "Sem etiqueta",
+  "Etiqueta Expirada": "Etiqueta expirada",
+  "Erro Geraçâo PPN": "Erro geração PPN",
+  "Objeto não entregue - Endereço insuficiente": "Endereço insuficiente",
+  "Objeto não entregue - cliente mudou-se": "Cliente mudou-se",
+  "Objeto não entregue - Endereço inexistente": "Endereço inexistente",
+  "Objeto não entregue - carteiro não atendido": "Carteiro não atendido",
+  "Objeto não entregue - cliente desconhecido no local": "Cliente desconhecido",
+  "Objeto não entregue - endereço incorreto": "Endereço incorreto",
+  "Tentativa de entrega não efetuada": "Tentativa não efetuada",
+  "Objeto(s) Finalizado(s) Aguardando Liberação Para Download": "Aguardando liberação",
+  "Objeto(s) Comparado(s) entre o VIPP e VisualPost não Divergentes": "Conferência OK",
+  "Objeto(s) Comparado(s) entre o VIPP e VisualPost divergentes": "Conferência c/ divergência"
+};
+
+function textoCurtoStatus(status){
+  if (!status) return STATUS_LABEL.aguardando;
+  if (STATUS_TEXTO_CURTO[status]) return STATUS_TEXTO_CURTO[status];
+  // não conhecido ainda: corta no fim de uma palavra, não no meio
+  var LIMITE = 28;
+  if (status.length <= LIMITE) return status;
+  var cortado = status.slice(0, LIMITE);
+  var ultimoEspaco = cortado.lastIndexOf(' ');
+  if (ultimoEspaco > 10) cortado = cortado.slice(0, ultimoEspaco);
+  return cortado + '…';
+}
+
+// Prazo de atenção pro radar de "aguardando retirada" — ajuste aqui se o prazo
+// real de devolução dos Correios pra vocês for diferente de 7 dias corridos.
+var PRAZO_ATENCAO_DIAS = 4;
+var PRAZO_URGENTE_DIAS = 7;
+var LIMITE_LINHAS_TABELA = 500; // performance: acima disso, pede pra refinar os filtros
+
+function debounce(fn, ms){
+  var t;
+  return function(){
+    var args = arguments, ctx = this;
+    clearTimeout(t);
+    t = setTimeout(function(){ fn.apply(ctx, args); }, ms);
+  };
+}
+
+function bucketFor(status){ return STATUS_MAP[status] || "aguardando"; }
+function escapeHtml(str){ return String(str == null ? "" : str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function chaveSegura(codigo){ return String(codigo).replace(/[.#$\[\]\/]/g, ""); }
+function fmtMoney(v){ return (v||0).toLocaleString('pt-BR', {style:'currency', currency:'BRL'}); }
+function fmtDateOnly(d){ if(!d) return ''; return d.toLocaleDateString('pt-BR'); }
+function fmtDateTime(d){ if(!d) return ''; return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+
+// -------- Login --------
+document.getElementById("loginBtn").addEventListener("click", function () {
+  var email = document.getElementById("loginEmail").value.trim();
+  var senha = document.getElementById("loginSenha").value;
+  document.getElementById("loginError").textContent = "";
+  auth.signInWithEmailAndPassword(email, senha).catch(function () {
+    document.getElementById("loginError").textContent = "E-mail ou senha incorretos.";
   });
-}
+});
+document.getElementById("logoutBtn").addEventListener("click", function () { auth.signOut(); });
 
-const CAMINHO_PEDIDOS = 'rastreioVipp/pedidos';
-
-const STATUS_ENTREGUE = [
-  'Objeto entregue ao destinatário',
-  'Objeto entregue ao remetente',
-  'Objeto entregue na Caixa de Correios Inteligente',
-];
-
-// Status que não vão mudar mais — não faz sentido continuar gastando consulta
-// com eles. "Entregue" já para de ser consultado (acima); esses aqui também.
-const STATUS_MORTOS = [
-  'Etiqueta Expirada',
-  'Erro Geraçâo PPN',
-];
-
-// Se um código falhar (ex: "não localizado") essa quantidade de vezes seguidas,
-// para de tentar esse código — provavelmente é lixo (etiqueta nunca postada,
-// código digitado errado etc), não vale continuar gastando consulta com ele.
-const LIMITE_TENTATIVAS_SEM_SUCESSO = 5;
-
-// A API dos Correios não aceita vários códigos separados por vírgula na mesma
-// consulta (confirmado: ela trata a lista toda como se fosse 1 código só e
-// devolve "não localizado"). Por isso consultamos um código por vez — em
-// paralelo, pra não demorar demais, e em quantidade limitada por execução,
-// pra não estourar o tempo máximo que a Vercel dá pra função rodar.
-const CONCORRENCIA = 10; // quantas consultas simultâneas por rodada
-const LIMITE_POR_EXECUCAO = 250; // máximo de pedidos consultados por clique/execução
-
-// A API dos Correios pode devolver a data do evento em nomes de campo
-// diferentes dependendo da versão. Tentamos os mais comuns, nessa ordem.
-function extrairDataEvento(evento) {
-  return (
-    evento.dtHrCriado ||
-    evento.dataHora ||
-    evento.data ||
-    evento.dtEvento ||
-    evento.dataEvento ||
-    evento.hora ||
-    null
-  );
-}
-
-function partesDe(lista, tamanho) {
-  const grupos = [];
-  for (let i = 0; i < lista.length; i += tamanho) {
-    grupos.push(lista.slice(i, i + tamanho));
-  }
-  return grupos;
-}
-
-async function consultarUmCodigo(codigo) {
-  const url =
-    'https://api.correios.com.br/srorastro/v1/objetos/' +
-    encodeURIComponent(codigo) +
-    '?resultado=U&idioma=pt-BR';
-
-  const resposta = await fetch(url, {
-    headers: {
-      Authorization: 'Bearer ' + process.env.CORREIOS_CHAVE_ACESSO,
-      'Accept-Language': 'pt-BR',
-    },
+// -------- Navegação lateral (abas) --------
+document.querySelectorAll('.sidebar .nav-item').forEach(function(item){
+  item.addEventListener('click', function(){
+    document.querySelectorAll('.sidebar .nav-item').forEach(function(i){ i.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+    item.classList.add('active');
+    document.getElementById('topbar-title').textContent = item.dataset.label;
+    document.getElementById('tab-' + item.dataset.tab).classList.add('active');
   });
-
-  if (!resposta.ok) {
-    const textoErro = await resposta.text().catch(() => '');
-    return { codigo, ok: false, erro: 'HTTP ' + resposta.status + (textoErro ? ' — ' + textoErro.slice(0, 200) : '') };
+});
+document.getElementById("btn-ver-tecnico").addEventListener("click", function(){
+  document.getElementById("debugConteudo").textContent = JSON.stringify(window._ultimaRespostaAtualizar, null, 2);
+  document.getElementById("debugPanel").classList.remove("hidden");
+});
+document.getElementById("btn-fechar-tecnico").addEventListener("click", function(){
+  document.getElementById("debugPanel").classList.add("hidden");
+});
+document.getElementById("btn-limpar-base").addEventListener("click", function(){
+  document.getElementById("limparBaseInput").value = "";
+  document.getElementById("limparBaseModal").classList.remove("hidden");
+});
+document.getElementById("btn-cancelar-limpar").addEventListener("click", function(){
+  document.getElementById("limparBaseModal").classList.add("hidden");
+});
+document.getElementById("btn-confirmar-limpar").addEventListener("click", function(){
+  if (document.getElementById("limparBaseInput").value.trim() !== "LIMPAR") {
+    alert('Digite exatamente "LIMPAR" (maiúsculo) pra confirmar.');
+    return;
   }
+  var btn = this;
+  btn.disabled = true;
+  btn.textContent = "Apagando...";
+  db.ref(CAMINHO_PEDIDOS).remove().then(function(){
+    document.getElementById("limparBaseModal").classList.add("hidden");
+    document.getElementById("fileInfo").textContent = "Base limpa — pronto pra importar do zero";
+  }).catch(function(err){
+    alert("Erro ao limpar: " + err.message);
+  }).finally(function(){
+    btn.disabled = false;
+    btn.textContent = "Confirmar exclusão";
+  });
+});
 
-  const dados = await resposta.json();
-  const objetos = dados.objetos || dados.objeto || [];
-  const objeto = objetos[0];
-  if (!objeto) return { codigo, ok: false, erro: 'resposta sem objeto', dadosCrus: dados };
+var allRows = [];
 
-  const eventos = objeto.eventos || objeto.evento || [];
-  if (eventos.length === 0) {
-    return { codigo, ok: false, erro: objeto.mensagem || 'sem eventos', dadosCrus: dados };
+auth.onAuthStateChanged(function (user) {
+  if (!user) {
+    document.getElementById("loginScreen").classList.remove("hidden");
+    document.getElementById("appScreen").classList.add("hidden");
+    return;
   }
-
-  return { codigo, ok: true, evento: eventos[0], dtPrevista: objeto.dtPrevista || null, dadosCrus: dados };
-}
-
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-robo-segredo');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  const segredoEsperado = process.env.ROBO_SEGREDO;
-  const segredoRecebido = req.headers['x-robo-segredo'] || req.query.segredo;
-  const autorizacaoHeader = req.headers['authorization'] || '';
-
-  let autorizado = false;
-
-  // caminho 1: chamada automática do cron, com a senha do robô
-  if (segredoEsperado && segredoRecebido === segredoEsperado) {
-    autorizado = true;
-  }
-
-  // caminho 2: clique manual de um usuário logado (botão "Atualizar agora")
-  if (!autorizado && autorizacaoHeader.startsWith('Bearer ')) {
-    const idToken = autorizacaoHeader.replace('Bearer ', '');
-    try {
-      await admin.auth().verifyIdToken(idToken);
-      autorizado = true;
-    } catch (err) {
-      // token inválido, segue como não autorizado
+  db.ref("centralApps/usuarios/" + user.uid).once("value").then(function (snap) {
+    var perfil = snap.val();
+    var temAcesso = perfil && (perfil.admin === true || (Array.isArray(perfil.grupos) && perfil.grupos.indexOf(GRUPO_PERMITIDO) !== -1));
+    if (!temAcesso) {
+      document.getElementById("loginError").textContent = "Sua conta não tem acesso a este app.";
+      auth.signOut();
+      return;
     }
-  }
+    document.getElementById("loginScreen").classList.add("hidden");
+    document.getElementById("appScreen").classList.remove("hidden");
+    escutarPedidos();
+  });
+});
 
-  if (!autorizado) {
-    return res.status(401).json({ error: 'Não autorizado' });
-  }
+// -------- Atualizar agora --------
+var MAX_RODADAS_AUTOMATICAS = 6; // trava de segurança, pra nunca ficar num loop sem fim
+
+document.getElementById("atualizarAgoraBtn").addEventListener("click", async function () {
+  var btn = this;
+  btn.disabled = true;
+  document.getElementById("errorMsg").textContent = "";
+  document.getElementById("avisoErroAtualizacao").classList.add("hidden");
+
+  var totalAtualizadosNaSessao = 0;
+  var rodada = 0;
+  var dados = null;
 
   try {
-    const snap = await admin.database().ref(CAMINHO_PEDIDOS).once('value');
-    const todos = snap.val() || {};
+    var idToken = await auth.currentUser.getIdToken();
+    do {
+      rodada++;
+      btn.textContent = rodada === 1 ? "Atualizando..." : "Atualizando... (rodada " + rodada + ")";
+      var resposta = await fetch("https://central-de-apps.vercel.app/api/atualizar-rastreio", {
+        headers: { Authorization: "Bearer " + idToken }
+      });
+      dados = await resposta.json();
+      window._ultimaRespostaAtualizar = dados;
+      document.getElementById('btn-ver-tecnico').style.display = 'inline-block';
 
-    const pendentes = Object.keys(todos).filter((chave) => {
-      const p = todos[chave];
-      if (STATUS_ENTREGUE.includes(p.status)) return false;
-      if (STATUS_MORTOS.includes(p.status)) return false;
-      if ((p.tentativasSemSucesso || 0) >= LIMITE_TENTATIVAS_SEM_SUCESSO) return false;
-      return true;
-    });
-
-    // Ordena por quem foi verificado há mais tempo (ou nunca foi verificado) primeiro.
-    // Sem isso, quando sobra mais pendente do que cabe numa execução, sempre os
-    // mesmos primeiros da lista são escolhidos de novo — muita coisa em trânsito
-    // não muda de status de uma consulta pra outra, então o resto nunca era
-    // alcançado. Assim, cada execução sempre avança pros próximos.
-    pendentes.sort((a, b) => (todos[a].atualizadoEm || 0) - (todos[b].atualizadoEm || 0));
-
-    if (pendentes.length === 0) {
-      return res.status(200).json({ mensagem: 'Nada pendente pra atualizar', atualizados: 0 });
-    }
-
-    // guarda o código de rastreio real de cada chave (pra montar a URL da consulta)
-    const codigoPorChave = {};
-    pendentes.forEach((chave) => {
-      codigoPorChave[chave] = todos[chave].codigo || chave;
-    });
-
-    // se tiver mais pendente do que dá pra processar numa execução só, pega só
-    // o começo — o resto fica pra o próximo clique ou a próxima rodada do robô
-    const paraProcessar = pendentes.slice(0, LIMITE_POR_EXECUCAO);
-    const restantes = pendentes.length - paraProcessar.length;
-
-    const rodadas = partesDe(paraProcessar, CONCORRENCIA);
-    let atualizados = 0;
-    let semEvento = 0;
-    const erros = [];
-    let amostraUltimoEvento = null; // só pra conferência manual
-    let amostraRespostaCrua = null; // idem — resposta crua da 1ª consulta
-
-    for (const rodada of rodadas) {
-      const resultados = await Promise.all(
-        rodada.map((chave) => consultarUmCodigo(codigoPorChave[chave]).then((r) => ({ chave, ...r })))
-      );
-
-      const updates = {};
-      for (const r of resultados) {
-        if (!amostraRespostaCrua && r.dadosCrus) amostraRespostaCrua = r.dadosCrus;
-        if (!r.ok) {
-          if (r.erro) semEvento++;
-          if (erros.length < 15 && r.erro) erros.push(r.codigo + ': ' + r.erro);
-          const tentativasAtuais = (todos[r.chave] && todos[r.chave].tentativasSemSucesso) || 0;
-          updates[CAMINHO_PEDIDOS + '/' + r.chave + '/tentativasSemSucesso'] = tentativasAtuais + 1;
-          continue;
-        }
-        if (!amostraUltimoEvento) amostraUltimoEvento = r.evento;
-        updates[CAMINHO_PEDIDOS + '/' + r.chave + '/status'] = r.evento.descricao || r.evento.msg || '';
-        const dataEvento = extrairDataEvento(r.evento);
-        if (dataEvento) {
-          updates[CAMINHO_PEDIDOS + '/' + r.chave + '/dataEvento'] = dataEvento;
-        }
-        if (r.dtPrevista) {
-          updates[CAMINHO_PEDIDOS + '/' + r.chave + '/dataPrevista'] = r.dtPrevista;
-        }
-        updates[CAMINHO_PEDIDOS + '/' + r.chave + '/atualizadoEm'] = Date.now();
-        updates[CAMINHO_PEDIDOS + '/' + r.chave + '/tentativasSemSucesso'] = 0;
-        atualizados++;
+      if (!resposta.ok) {
+        document.getElementById("errorMsg").textContent = "Erro ao atualizar: " + (dados.error || resposta.status);
+        break;
       }
+      totalAtualizadosNaSessao += (dados.atualizados || 0);
+      document.getElementById("fileInfo").textContent = totalAtualizadosNaSessao + " pedidos atualizados agora" + (dados.restantes ? " (ainda restam " + dados.restantes + ")" : "");
+    } while (dados && dados.restantes > 0 && rodada < MAX_RODADAS_AUTOMATICAS);
 
-      // grava aos poucos, a cada rodada — se o tempo acabar no meio, o que já
-      // foi consultado não se perde
-      if (Object.keys(updates).length > 0) {
-        await admin.database().ref().update(updates);
+    if (dados) {
+      var totalErros = (dados.erros ? dados.erros.length : 0) + (dados.semEventoOuErro || 0);
+      if (totalErros > 0) {
+        var aviso = document.getElementById("avisoErroAtualizacao");
+        aviso.textContent = "A última atualização teve " + (dados.semEventoOuErro || 0) + " pedido(s) com erro ou sem informação disponível. Clica em \"Ver detalhes técnicos\" pra ver quais.";
+        aviso.classList.remove("hidden");
+      }
+      if (dados.restantes > 0) {
+        document.getElementById("fileInfo").textContent = totalAtualizadosNaSessao + " pedidos atualizados — ainda restam " + dados.restantes + ", clica em \"Atualizar agora\" de novo pra continuar";
       }
     }
-
-    return res.status(200).json({
-      mensagem: 'Atualização concluída',
-      totalPendentes: pendentes.length,
-      processadosNessaExecucao: paraProcessar.length,
-      restantes, // se > 0, clica em "Atualizar agora" de novo pra continuar
-      atualizados,
-      semEventoOuErro: semEvento,
-      erros,
-      // Isso aqui é só pra conferência: mostra o evento cru que a API dos Correios
-      // devolveu, pra confirmar se "dataEvento" pegou o campo certo. Pode remover
-      // esse campo do retorno depois de conferir uma vez, se quiser deixar mais limpo.
-      amostraUltimoEvento,
-      // Idem: resposta crua da 1ª chamada, sem filtro nenhum.
-      amostraRespostaCrua,
-    });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    document.getElementById("errorMsg").textContent = "Erro ao atualizar: " + err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Atualizar agora";
+  }
+});
+
+function checarDesatualizado(maisRecente) {
+  var aviso = document.getElementById("staleWarning");
+  if (!maisRecente) { aviso.style.display = "none"; return; }
+  var horas = (Date.now() - maisRecente) / 1000 / 60 / 60;
+  if (horas > 26) {
+    aviso.style.display = "block";
+    aviso.textContent = "Nenhum pedido foi atualizado nas últimas " + Math.floor(horas) + " horas. O robô automático pode ter parado (verifica se a chave da API dos Correios não expirou).";
+  } else {
+    aviso.style.display = "none";
   }
 }
+
+// -------- Escuta o Firebase em tempo real --------
+function dataValidaOuNula(valor){
+  if (!valor) return null;
+  var d = new Date(valor);
+  return isNaN(d.getTime()) ? null : d; // data corrompida vira "sem data" em vez de quebrar o painel
+}
+function escutarPedidos() {
+  db.ref(CAMINHO_PEDIDOS).on("value", function (snapshot) {
+    var dados = snapshot.val() || {};
+    var agoraTs = Date.now();
+    allRows = Object.keys(dados).map(function (chave) {
+      var r = dados[chave];
+      var bucket = bucketFor(r.status);
+      var dataPostagem = dataValidaOuNula(r.dataPostagem);
+      var dataEvento = dataValidaOuNula(r.dataEvento);
+      var prazoDias = (r.prazoDias != null && r.prazoDias !== "") ? Number(r.prazoDias) : null;
+      var dataPrevista = dataValidaOuNula(r.dataPrevista);
+      // Atraso: preferência é a dataPrevista que os próprios Correios calculam pra
+      // aquele objeto específico (mais precisa que um prazo genérico por serviço).
+      // Só cai pro cálculo por prazoDias quando o robô ainda não trouxe a previsão
+      // real (pedido nunca consultado, ou consultado antes dessa mudança existir).
+      var atrasado = false;
+      if (dataPrevista) {
+        if (bucket === 'entregue' && dataEvento) {
+          atrasado = dataEvento.getTime() > dataPrevista.getTime();
+        } else if (bucket !== 'entregue') {
+          atrasado = agoraTs > dataPrevista.getTime();
+        }
+      } else if (prazoDias != null && dataPostagem) {
+        if (bucket === 'entregue' && dataEvento) {
+          var diasAteEntrega = Math.floor((dataEvento.getTime() - dataPostagem.getTime()) / 86400000);
+          atrasado = diasAteEntrega > prazoDias;
+        } else if (bucket !== 'entregue') {
+          var diasDecorridos = Math.floor((agoraTs - dataPostagem.getTime()) / 86400000);
+          atrasado = diasDecorridos > prazoDias;
+        }
+      }
+      return {
+        codigo: r.codigo || "",
+        destinatario: r.destinatario || "",
+        cidade: r.cidade || "",
+        uf: r.uf || "",
+        status: r.status || "",
+        servico: r.servico || "",
+        nf: r.nf || "",
+        remetente: r.remetente || "",
+        cep: r.cep || "",
+        empresa: r.empresa || "Stin Pharma",
+        valorPostagem: Number(r.valorPostagem) || 0,
+        dataPostagem: dataPostagem,
+        dataEvento: dataEvento,
+        prazoDias: prazoDias,
+        dataPrevista: dataPrevista,
+        atualizadoEm: r.atualizadoEm || null,
+        _bucket: bucket,
+        _atrasado: atrasado
+      };
+    });
+    document.getElementById("meta-total-obj").textContent = allRows.length;
+    var maisRecente = allRows.reduce(function (max, r) { return (r.atualizadoEm && r.atualizadoEm > max) ? r.atualizadoEm : max; }, 0);
+    if (maisRecente) {
+      document.getElementById("lastUpdate").textContent = "Última verificação: " + new Date(maisRecente).toLocaleString("pt-BR");
+    }
+    checarDesatualizado(maisRecente);
+    refreshCidadeOptions();
+    fillStaticOptions();
+    render();
+  });
+}
+
+// -------- Importação de Excel do VIPP --------
+// O VIPP tem pelo menos 3 formatos de relatório diferentes, cada um com nomes de
+// coluna próprios. Essa função traduz qualquer um deles pro mesmo formato interno,
+// então o resto do código nem precisa saber qual veio.
+function primeiroValor() {
+  for (var i = 0; i < arguments.length; i++) {
+    if (arguments[i] !== undefined && arguments[i] !== "") return arguments[i];
+  }
+  return "";
+}
+function normalizarLinhaVipp(r) {
+  return {
+    Registro: primeiroValor(r.Registro, r['Reg. Correios']),
+    Destinatario: primeiroValor(r.Destinatario, r['Nome Dest']),
+    CidadeDestinatario: primeiroValor(r.CidadeDestinatario, r['Cid Dest']),
+    UFDestinatario: primeiroValor(r.UFDestinatario, r['UF Dest']),
+    CEPDestinatario: primeiroValor(r.CEPDestinatario, r['CEP Dest']),
+    Status: primeiroValor(r.Status),
+    DescricaoEvento: primeiroValor(r.DescricaoEvento),
+    Servico: primeiroValor(r.Servico, r['Desc Serviço']),
+    CodigoServicoCorreios: r.CodigoServicoCorreios,
+    DataPostagem: primeiroValor(r.DataPostagem, r['Dta Postagem']),
+    DataDoEvento: primeiroValor(r.DataDoEvento, r['Dta Entregat']),
+    Prazo: primeiroValor(r.Prazo, r['Prazo Est (dias)']),
+    NumeroNotaFiscal: primeiroValor(r.NumeroNotaFiscal, r['Nro NF']),
+    Remetente: primeiroValor(r.Remetente, r['Nome Rem.']),
+    ValorPostagem: primeiroValor(r.ValorPostagem, r['Vlr Tarifa (R$)'])
+  };
+}
+// Detecta a empresa pelo texto do Remetente da própria linha (quando o relatório
+// traz esse campo). Só cai no que tá selecionado no seletor se não conseguir
+// identificar — assim o seletor vira reforço/exceção, não obrigação.
+function detectarEmpresa(remetenteTexto, valorSelecionado) {
+  var t = String(remetenteTexto || '').toUpperCase();
+  if (t.indexOf('MAY') !== -1) return 'Mayderma';
+  if (t.indexOf('STIN') !== -1) return 'Stin Pharma';
+  return valorSelecionado;
+}
+
+document.getElementById("fileInput").addEventListener("change", function (e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  document.getElementById("errorMsg").textContent = "";
+  document.getElementById("fileInfo").textContent = "Lendo arquivo...";
+
+  var reader = new FileReader();
+  reader.onload = function (evt) {
+    try {
+      var data = new Uint8Array(evt.target.result);
+      // raw:true = pega o valor cru, sem NENHUMA conversão automática de data por
+      // trás (testei com a biblioteca de verdade: toda conversão automática que
+      // existe é ambígua e erra o formato brasileiro). Quem decide a data agora é
+      // só a função parseDataVipp, sempre do nosso jeito.
+      var workbook = XLSX.read(data, { type: "array", raw: true });
+      var sheet = workbook.Sheets[workbook.SheetNames[0]];
+      var json = XLSX.utils.sheet_to_json(sheet, { defval: "", range: 1 });
+      var linhas = json.map(normalizarLinhaVipp).filter(function (r) { return r.Registro && String(r.Registro).indexOf('http') === -1; });
+      // Empresa: detecta sozinho pelo remetente. Só pergunta se alguma linha não
+      // tiver remetente reconhecível (alguns formatos de relatório não trazem).
+      var precisaPerguntar = linhas.some(function (r) { return !detectarEmpresa(r.Remetente, null); });
+      if (precisaPerguntar) {
+        document.getElementById("fileInfo").textContent = "";
+        perguntarEmpresa(file.name).then(function (escolha) {
+          if (!escolha) { document.getElementById("fileInfo").textContent = "Importação cancelada"; return; }
+          salvarNoRealtimeDb(linhas, file.name, escolha);
+        });
+      } else {
+        salvarNoRealtimeDb(linhas, file.name, null);
+      }
+    } catch (err) {
+      document.getElementById("errorMsg").textContent = "Não consegui ler esse arquivo. Confirma se é o Excel exportado do VIPP.";
+      document.getElementById("fileInfo").textContent = "";
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  e.target.value = ""; // permite escolher o mesmo arquivo de novo, se precisar reimportar
+});
+
+// Caixa de pergunta que aparece só quando o arquivo não diz de qual empresa é
+function perguntarEmpresa(nomeArquivo) {
+  return new Promise(function (resolve) {
+    var box = document.getElementById('empresaPerguntaBox');
+    document.getElementById('empresaPerguntaArquivo').textContent = nomeArquivo;
+    box.classList.remove('hidden');
+    box.querySelectorAll('button[data-empresa]').forEach(function (b) {
+      b.onclick = function () { box.classList.add('hidden'); resolve(b.dataset.empresa); };
+    });
+    document.getElementById('empresaPerguntaCancelar').onclick = function () { box.classList.add('hidden'); resolve(null); };
+  });
+}
+
+function excelSerialParaData(serial){
+  // Excel (sistema de datas 1900): o dia 0 é 30/12/1899. Usado quando a
+  // planilha vem como .xlsx de verdade (data nativa), não como texto.
+  var epoch = Date.UTC(1899, 11, 30);
+  var ms = Math.round(serial * 86400000);
+  return new Date(epoch + ms);
+}
+
+function parseDataVipp(valor){
+  if (!valor && valor !== 0) return "";
+  if (valor instanceof Date) {
+    return isNaN(valor.getTime()) ? "" : valor.toISOString();
+  }
+  if (typeof valor === "number") {
+    var dSerial = excelSerialParaData(valor);
+    return isNaN(dSerial.getTime()) ? "" : dSerial.toISOString();
+  }
+  var texto = String(valor).trim();
+  // Formato brasileiro DD/MM/AAAA (com ou sem hora) — o jeito que o VIPP escreve
+  // quando a coluna vem como texto (relatório em HTML disfarçado de .xls). O
+  // JavaScript sozinho leria isso como MM/DD (formato americano) e trocaria
+  // dia com mês, bagunçando tudo — por isso interpretamos na mão aqui.
+  var m = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+  if (m) {
+    var dia = parseInt(m[1],10), mes = parseInt(m[2],10), ano = parseInt(m[3],10);
+    var hora = m[4]?parseInt(m[4],10):0, min = m[5]?parseInt(m[5],10):0, seg = m[6]?parseInt(m[6],10):0;
+    var d = new Date(ano, mes-1, dia, hora, min, seg);
+    if (!isNaN(d.getTime())) return d.toISOString();
+  }
+  // último recurso: deixa o JS tentar sozinho (ex: formato ISO, sem ambiguidade)
+  var d2 = new Date(texto);
+  return isNaN(d2.getTime()) ? "" : d2.toISOString();
+}
+
+function salvarNoRealtimeDb(linhas, nomeArquivo, empresaFallback) {
+  document.getElementById("fileInfo").textContent = "Salvando " + linhas.length + " pedidos...";
+  var empresaSelecionada = empresaFallback || 'Stin Pharma';
+  // pedidos que já existem na base não têm o status sobrescrito pela reimportação —
+  // o robô já pode ter uma info mais atual que o Excel do VIPP (que tem ~1 dia de atraso)
+  var existentes = new Set(allRows.map(function(r){ return chaveSegura(r.codigo); }));
+  var i = 0;
+  function proximoLote() {
+    var updates = {};
+    var fim = Math.min(i + 500, linhas.length);
+    for (; i < fim; i++) {
+      var r = linhas[i];
+      var chave = chaveSegura(r.Registro);
+      // O VIPP exporta relatórios com nomes de coluna diferentes dependendo do tipo
+      // escolhido. Aceita os dois formatos que já vimos: o de "postagem" (Status,
+      // Servico) e o de "eventos" (DescricaoEvento, CodigoServicoCorreios, DataDoEvento).
+      var statusTexto = r.DescricaoEvento || r.Status || "";
+      var servicoTexto = r.Servico || (r.CodigoServicoCorreios != null ? String(r.CodigoServicoCorreios) : "");
+      var dataEventoTexto = r.DataDoEvento ? parseDataVipp(r.DataDoEvento) : "";
+      var dataPostagemTexto = r.DataPostagem ? parseDataVipp(r.DataPostagem) : "";
+      var prazoDias = r.Prazo !== "" && r.Prazo != null ? Number(r.Prazo) : null;
+      var empresaDaLinha = detectarEmpresa(r.Remetente, empresaSelecionada);
+      if (existentes.has(chave)) {
+        // já existe: atualiza só dado cadastral, preserva status/data do evento que o robô já tenha
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/destinatario"] = r.Destinatario || "";
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/cidade"] = r.CidadeDestinatario || "";
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/uf"] = r.UFDestinatario || "";
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/servico"] = servicoTexto;
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/nf"] = r.NumeroNotaFiscal || "";
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/remetente"] = r.Remetente || "";
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/cep"] = r.CEPDestinatario || "";
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/valorPostagem"] = r.ValorPostagem !== "" && r.ValorPostagem != null ? Number(r.ValorPostagem) : 0;
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/dataPostagem"] = dataPostagemTexto;
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/empresa"] = empresaDaLinha;
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/prazoDias"] = prazoDias;
+      } else {
+        // pedido novo: grava tudo, inclusive o status inicial que veio do VIPP
+        updates[CAMINHO_PEDIDOS + "/" + chave] = {
+          codigo: r.Registro,
+          destinatario: r.Destinatario || "",
+          cidade: r.CidadeDestinatario || "",
+          uf: r.UFDestinatario || "",
+          status: statusTexto,
+          servico: servicoTexto,
+          dataPostagem: dataPostagemTexto,
+          dataEvento: dataEventoTexto,
+          nf: r.NumeroNotaFiscal || "",
+          remetente: r.Remetente || "",
+          cep: r.CEPDestinatario || "",
+          empresa: empresaDaLinha,
+          prazoDias: prazoDias,
+          valorPostagem: r.ValorPostagem !== "" && r.ValorPostagem != null ? Number(r.ValorPostagem) : 0,
+          atualizadoEm: Date.now()
+        };
+      }
+    }
+    db.ref().update(updates).then(function () {
+      if (i < linhas.length) {
+        proximoLote();
+      } else {
+        document.getElementById("fileInfo").textContent = nomeArquivo + " importado — " + linhas.length + " pedidos";
+      }
+    }).catch(function (err) {
+      document.getElementById("errorMsg").textContent = "Erro ao salvar: " + err.message;
+    });
+  }
+  proximoLote();
+}
+
+// -------- Estado dos filtros --------
+var state = { dateStart: null, dateEnd: null, status: "", statusDetalhado: "", empresa: "Stin Pharma", uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
+
+document.getElementById('f-status').addEventListener('change', function(e){ state.status = e.target.value; render(); });
+document.getElementById('f-status-detalhado').addEventListener('change', function(e){ state.statusDetalhado = e.target.value; render(); });
+document.querySelectorAll('.empresa-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('.empresa-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    state.empresa = btn.dataset.empresa;
+    render();
+  });
+});
+document.getElementById('f-uf').addEventListener('change', function(e){ state.uf = e.target.value; state.cidade=''; document.getElementById('f-cidade').value=''; refreshCidadeOptions(); render(); });
+document.getElementById('f-cidade').addEventListener('change', function(e){ state.cidade = e.target.value; render(); });
+document.getElementById('f-destinatario').addEventListener('input', debounce(function(e){ state.destinatario = e.target.value; render(); }, 250));
+document.getElementById('f-registro').addEventListener('input', debounce(function(e){ state.registro = e.target.value; render(); }, 250));
+document.getElementById('f-nf').addEventListener('input', debounce(function(e){ state.nf = e.target.value; render(); }, 250));
+
+function applyDateFilter(){
+  var startVal = document.getElementById('f-date-start').value;
+  var endVal = document.getElementById('f-date-end').value;
+  if (startVal && endVal && startVal > endVal){
+    var tmp = startVal; startVal = endVal; endVal = tmp;
+    document.getElementById('f-date-start').value = startVal;
+    document.getElementById('f-date-end').value = endVal;
+  }
+  state.dateStart = startVal ? new Date(startVal + 'T00:00:00') : null;
+  state.dateEnd = endVal ? new Date(endVal + 'T23:59:59') : null;
+  render();
+}
+['f-date-start','f-date-end'].forEach(function(id){
+  document.getElementById(id).addEventListener('change', applyDateFilter);
+});
+
+document.getElementById('btn-reset').addEventListener('click', function(){
+  var empresaAtual = state.empresa;
+  state = { dateStart: null, dateEnd: null, status: "", statusDetalhado: "", empresa: empresaAtual, uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
+  document.getElementById('f-date-start').value='';
+  document.getElementById('f-date-end').value='';
+  document.getElementById('f-status').value='';
+  document.getElementById('f-status-detalhado').value='';
+  document.getElementById('f-uf').value='';
+  document.getElementById('f-cidade').value='';
+  document.getElementById('f-destinatario').value='';
+  document.getElementById('f-registro').value='';
+  document.getElementById('f-nf').value='';
+  refreshCidadeOptions();
+  render();
+});
+
+function uniqueSorted(arr){ return Array.from(new Set(arr.filter(Boolean))).sort(function(a,b){return a.localeCompare(b,'pt-BR');}); }
+
+function fillStaticOptions(){
+  var ufSel = document.getElementById('f-uf');
+  var current = ufSel.value;
+  ufSel.innerHTML = '<option value="">Todas</option>';
+  uniqueSorted(allRows.map(function(o){return o.uf;})).forEach(function(v){
+    var opt = document.createElement('option'); opt.value = v; opt.textContent = v; ufSel.appendChild(opt);
+  });
+  if (current) ufSel.value = current;
+
+  // Status detalhado: lista todo texto original que existe de verdade na base agora,
+  // ordenado por quantidade (o mais comum primeiro), mostrando a versão curta.
+  var statusSel = document.getElementById('f-status-detalhado');
+  var currentStatus = statusSel.value;
+  var contagem = groupCount(allRows, function(o){return o.status || '(vazio)';});
+  var statusOrdenados = Array.from(contagem.entries()).sort(function(a,b){return b[1]-a[1];});
+  statusSel.innerHTML = '<option value="">Todos os textos</option>';
+  statusOrdenados.forEach(function(entry){
+    var opt = document.createElement('option');
+    opt.value = entry[0];
+    opt.textContent = textoCurtoStatus(entry[0]) + ' (' + entry[1] + ')';
+    opt.title = entry[0];
+    statusSel.appendChild(opt);
+  });
+  if (currentStatus) statusSel.value = currentStatus;
+}
+
+function refreshCidadeOptions(){
+  var ufFilter = state.uf;
+  var sel = document.getElementById('f-cidade');
+  var current = sel.value;
+  sel.innerHTML = '<option value="">Todas</option>';
+  var cidades = uniqueSorted(allRows.filter(function(o){return !ufFilter || o.uf === ufFilter;}).map(function(o){return o.cidade;}));
+  cidades.forEach(function(c){ var opt = document.createElement('option'); opt.value = c; opt.textContent = c; sel.appendChild(opt); });
+  if (cidades.indexOf(current) !== -1) sel.value = current;
+}
+
+function applyFilters(){
+  return allRows.filter(function(o){
+    if (state.dateStart && o.dataPostagem && o.dataPostagem < state.dateStart) return false;
+    if (state.dateEnd && o.dataPostagem && o.dataPostagem > state.dateEnd) return false;
+    if (state.status && o._bucket !== state.status) return false;
+    if (state.statusDetalhado && (o.status || '(vazio)') !== state.statusDetalhado) return false;
+    if (state.empresa && o.empresa !== state.empresa) return false;
+    if (state.uf && o.uf !== state.uf) return false;
+    if (state.cidade && o.cidade !== state.cidade) return false;
+    if (state.destinatario && o.destinatario.toLowerCase().indexOf(state.destinatario.toLowerCase()) === -1) return false;
+    if (state.registro && o.codigo.toLowerCase().indexOf(state.registro.toLowerCase()) === -1) return false;
+    if (state.nf && (o.nf || '').indexOf(state.nf) === -1) return false;
+    return true;
+  });
+}
+
+// Igual a applyFilters, mas sem o filtro de empresa — usado no gráfico "Gasto por
+// empresa" da Gestão, que precisa sempre comparar as duas juntas, mesmo com o
+// botão Stin Pharma/Mayderma do topo selecionado numa só.
+function applyFiltersSemEmpresa(){
+  return allRows.filter(function(o){
+    if (state.dateStart && o.dataPostagem && o.dataPostagem < state.dateStart) return false;
+    if (state.dateEnd && o.dataPostagem && o.dataPostagem > state.dateEnd) return false;
+    if (state.status && o._bucket !== state.status) return false;
+    if (state.statusDetalhado && (o.status || '(vazio)') !== state.statusDetalhado) return false;
+    if (state.uf && o.uf !== state.uf) return false;
+    if (state.cidade && o.cidade !== state.cidade) return false;
+    if (state.destinatario && o.destinatario.toLowerCase().indexOf(state.destinatario.toLowerCase()) === -1) return false;
+    if (state.registro && o.codigo.toLowerCase().indexOf(state.registro.toLowerCase()) === -1) return false;
+    if (state.nf && (o.nf || '').indexOf(state.nf) === -1) return false;
+    return true;
+  });
+}
+
+function groupCount(arr, keyFn){
+  var m = new Map();
+  arr.forEach(function(o){ var k = keyFn(o); m.set(k, (m.get(k)||0)+1); });
+  return m;
+}
+function groupSum(arr, keyFn, valFn){
+  var m = new Map();
+  arr.forEach(function(o){ var k = keyFn(o); m.set(k, (m.get(k)||0)+valFn(o)); });
+  return m;
+}
+
+// -------- Charts --------
+var chartPorDia = new Chart(document.getElementById('chart-por-dia'), {
+  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:'#2E5EA8'}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+});
+var chartStatus = new Chart(document.getElementById('chart-status'), {
+  type:'doughnut', data:{labels:[],datasets:[{data:[],backgroundColor:[]}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+});
+var chartUfQtd = new Chart(document.getElementById('chart-uf-qtd'), {
+  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:'#5C6F8C'}]},
+  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}}}
+});
+var chartUfValor = new Chart(document.getElementById('chart-uf-valor'), {
+  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:'#C1841F'}]},
+  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}}}
+});
+var chartGastoEmpresa = new Chart(document.getElementById('chart-gasto-empresa'), {
+  type:'doughnut', data:{labels:[],datasets:[{data:[],backgroundColor:['#2E5EA8','#8C5383','#5C6F8C','#C1841F']}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}}}
+});
+var chartPeriodoMensal = new Chart(document.getElementById('chart-periodo-mensal'), {
+  data:{labels:[],datasets:[
+    {type:'bar',label:'Gasto (R$)',data:[],backgroundColor:'#2F7A54',yAxisID:'y'},
+    {type:'line',label:'Envios',data:[],borderColor:'#B4452F',backgroundColor:'#B4452F',yAxisID:'y1',tension:0.3}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    scales:{
+      y:{beginAtZero:true,position:'left',title:{display:true,text:'R$'}},
+      y1:{beginAtZero:true,position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'envios'}}
+    },
+    plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}}
+  }
+});
+
+function render(){
+ try {
+  var filtered = applyFilters();
+  var total = filtered.length;
+
+  var byBucket = {};
+  STATUS_ORDER.forEach(function(b){ byBucket[b] = filtered.filter(function(o){return o._bucket===b;}).length; });
+
+  var valorTotal = filtered.reduce(function(s,o){return s+o.valorPostagem;},0);
+  var ticketMedio = total ? valorTotal/total : 0;
+  var pctEntregue = total ? (byBucket.entregue/total*100) : 0;
+  var pctRetirada = total ? (byBucket.retirada/total*100) : 0;
+
+  var banner = document.getElementById('period-banner');
+  if (state.dateStart || state.dateEnd){
+    var de = state.dateStart ? fmtDateOnly(state.dateStart) : 'início da base';
+    var ate = state.dateEnd ? fmtDateOnly(state.dateEnd) : 'hoje';
+    if (total > 0){
+      banner.innerHTML = '<strong>' + total.toLocaleString('pt-BR') + ' postagem(ns)</strong> entre ' + de + ' e ' + ate;
+    } else {
+      banner.innerHTML = '<strong>Nenhuma postagem encontrada</strong> entre ' + de + ' e ' + ate + '.';
+    }
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+
+  document.getElementById('kpi-total').textContent = total.toLocaleString('pt-BR');
+  document.getElementById('kpi-entregue').textContent = byBucket.entregue.toLocaleString('pt-BR');
+  document.getElementById('kpi-pct-entregue').textContent = pctEntregue.toFixed(1) + '% do total';
+  document.getElementById('kpi-retirada').textContent = byBucket.retirada.toLocaleString('pt-BR');
+  document.getElementById('kpi-pct-retirada').textContent = pctRetirada.toFixed(1) + '% do total';
+  document.getElementById('kpi-transito').textContent = byBucket.transito.toLocaleString('pt-BR');
+  document.getElementById('kpi-naoentregue').textContent = byBucket.naoentregue.toLocaleString('pt-BR');
+  document.getElementById('kpi-problema').textContent = byBucket.problema.toLocaleString('pt-BR');
+
+  // Priority box — sempre olha a base inteira (não respeita filtros, é radar fixo)
+  // Ordenado por quem está esperando há mais tempo (maior risco de devolução primeiro)
+  var agora = Date.now();
+  var retiradaGeral = allRows.filter(function(o){return o._bucket==='retirada';}).map(function(o){
+    var dias = o.dataPostagem ? Math.floor((agora - o.dataPostagem.getTime())/86400000) : null;
+    return Object.assign({}, o, {_diasEsperando: dias});
+  }).sort(function(a,b){
+    if (a._diasEsperando==null) return 1;
+    if (b._diasEsperando==null) return -1;
+    return b._diasEsperando - a._diasEsperando;
+  });
+  var priorityBox = document.getElementById('priorityBox');
+  var priorityList = document.getElementById('priorityList');
+  document.getElementById('priorityCount').textContent = retiradaGeral.length;
+  document.getElementById('nav-badge-retirada').textContent = retiradaGeral.length;
+  if (retiradaGeral.length > 0){
+    priorityBox.style.display = 'block';
+    priorityList.innerHTML = '<table><tbody>' + retiradaGeral.map(function(o){
+      var diasTxt = o._diasEsperando==null ? '—' : o._diasEsperando + 'd';
+      var diasClass = 'ok';
+      if (o._diasEsperando!=null && o._diasEsperando >= PRAZO_URGENTE_DIAS) diasClass = 'urgente';
+      else if (o._diasEsperando!=null && o._diasEsperando >= PRAZO_ATENCAO_DIAS) diasClass = 'atencao';
+      return '<tr><td class="mono">'+escapeHtml(o.codigo)+'</td><td class="dest">'+escapeHtml(o.destinatario)+'</td><td class="nf">'+(o.nf?'NF '+escapeHtml(o.nf):'—')+'</td><td class="dias '+diasClass+'"><span class="selo">'+diasTxt+'</span></td><td class="loc">'+escapeHtml(o.cidade)+'/'+escapeHtml(o.uf)+'</td></tr>';
+    }).join('') + '</tbody></table>';
+  } else {
+    priorityBox.style.display = 'none';
+  }
+
+  // Postagens por dia
+  var porDia = groupSum(filtered, function(o){ return o.dataPostagem ? o.dataPostagem.toISOString().slice(0,10) : 'sem-data'; }, function(){return 1;});
+  var diasOrdenados = Array.from(porDia.keys()).sort();
+  chartPorDia.data.labels = diasOrdenados.map(function(d){ return d==='sem-data' ? 'S/ data' : d.split('-').reverse().join('/'); });
+  chartPorDia.data.datasets[0].data = diasOrdenados.map(function(d){ return porDia.get(d); });
+  chartPorDia.update();
+
+  // Status donut
+  var statusCounts = groupCount(filtered, function(o){return o._bucket;});
+  var activeStatuses = STATUS_ORDER.filter(function(s){return statusCounts.get(s);});
+  chartStatus.data.labels = activeStatuses.map(function(s){return STATUS_LABEL[s];});
+  chartStatus.data.datasets[0].data = activeStatuses.map(function(s){return statusCounts.get(s);});
+  chartStatus.data.datasets[0].backgroundColor = activeStatuses.map(function(s){return STATUS_COLOR[s];});
+  chartStatus.update();
+
+  var legendEl = document.getElementById('status-legend');
+  legendEl.innerHTML = '';
+  STATUS_ORDER.forEach(function(s){
+    var count = statusCounts.get(s) || 0;
+    var chip = document.createElement('span');
+    chip.className = 'chip' + (state.status && state.status !== s ? ' dim' : '');
+    chip.innerHTML = '<span class="dot" style="background:'+STATUS_COLOR[s]+'"></span>' + STATUS_LABEL[s] + ' (' + count + ')';
+    chip.style.cursor = 'pointer';
+    chip.onclick = function(){
+      state.status = (state.status === s) ? '' : s;
+      document.getElementById('f-status').value = state.status;
+      render();
+    };
+    legendEl.appendChild(chip);
+  });
+
+  // Postagens por UF
+  var ufQtd = groupCount(filtered, function(o){return o.uf || 'N/D';});
+  var ufQtdSorted = Array.from(ufQtd.entries()).sort(function(a,b){return b[1]-a[1];});
+  chartUfQtd.data.labels = ufQtdSorted.map(function(e){return e[0];});
+  chartUfQtd.data.datasets[0].data = ufQtdSorted.map(function(e){return e[1];});
+  chartUfQtd.update();
+
+  var ufValor = groupSum(filtered, function(o){return o.uf || 'N/D';}, function(o){return o.valorPostagem;});
+  var ufValorSorted = Array.from(ufValor.entries()).sort(function(a,b){return b[1]-a[1];});
+  chartUfValor.data.labels = ufValorSorted.map(function(e){return e[0];});
+  chartUfValor.data.datasets[0].data = ufValorSorted.map(function(e){return e[1];});
+  chartUfValor.update();
+
+  // Ranking de cidades
+  var cidadeMap = new Map();
+  filtered.forEach(function(o){
+    var key = (o.cidade||'N/D') + '|' + (o.uf||'');
+    if (!cidadeMap.has(key)) cidadeMap.set(key, {cidade:o.cidade||'N/D', uf:o.uf||'', qtd:0, valor:0});
+    var rec = cidadeMap.get(key);
+    rec.qtd += 1; rec.valor += o.valorPostagem;
+  });
+  var rankingRows = Array.from(cidadeMap.values()).sort(function(a,b){return b.qtd-a.qtd;}).slice(0,15);
+  var rankBody = document.getElementById('ranking-cidades-body');
+  rankBody.innerHTML = '';
+  if (!rankingRows.length){
+    rankBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--ink-soft);padding:16px;">Nenhum registro para os filtros selecionados</td></tr>';
+  }
+  rankingRows.forEach(function(r){
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>'+escapeHtml(r.cidade)+'</td><td>'+escapeHtml(r.uf)+'</td><td class="num">'+r.qtd.toLocaleString('pt-BR')+'</td><td class="num">'+fmtMoney(r.valor)+'</td>';
+    rankBody.appendChild(tr);
+  });
+
+  // Detail table (guarda a lista completa ordenada pro export CSV; renderiza só um limite pra não travar o navegador)
+  var detailBody = document.getElementById('detail-body');
+  detailBody.innerHTML = '';
+  var sortedDetail = filtered.slice().sort(function(a,b){ return (b.dataPostagem||0) - (a.dataPostagem||0); });
+  window._ultimaListaFiltrada = sortedDetail;
+  if (!sortedDetail.length){
+    detailBody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--ink-soft);padding:20px;">Nenhum objeto encontrado para os filtros selecionados</td></tr>';
+  }
+  var paraRenderizar = sortedDetail.slice(0, LIMITE_LINHAS_TABELA);
+  paraRenderizar.forEach(function(o){
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>'+fmtDateOnly(o.dataPostagem)+'</td>'+
+      '<td>'+escapeHtml(o.empresa)+'</td>'+
+      '<td class="mono">'+escapeHtml(o.codigo)+'</td>'+
+      '<td>'+escapeHtml(o.destinatario)+'</td>'+
+      '<td>'+escapeHtml(o.cidade)+'</td>'+
+      '<td>'+escapeHtml(o.uf)+'</td>'+
+      '<td class="mono">'+(o.nf?escapeHtml(o.nf):'&mdash;')+'</td>'+
+      '<td class="num">'+fmtMoney(o.valorPostagem)+'</td>'+
+      '<td><span class="status-badge '+o._bucket+'" title="'+escapeHtml(o.status || STATUS_LABEL[o._bucket])+'">'+escapeHtml(textoCurtoStatus(o.status))+'</span></td>'+
+      '<td class="mono">'+(o.atualizadoEm ? fmtDateTime(new Date(o.atualizadoEm)) : '&mdash;')+'</td>';
+    detailBody.appendChild(tr);
+  });
+  var textoContagem = paraRenderizar.length + ' objeto(s) exibido(s)';
+  if (sortedDetail.length > paraRenderizar.length){
+    textoContagem += ' (mostrando os ' + LIMITE_LINHAS_TABELA + ' mais recentes de ' + sortedDetail.length + ' encontrados — refine os filtros ou exporte o CSV pra ver tudo)';
+  } else {
+    textoContagem += ' de ' + allRows.length + ' na base';
+  }
+  document.getElementById('detail-count').textContent = textoContagem;
+
+  renderGestao(filtered);
+ } catch (erroRender) {
+  // Blindagem: se algum dado vier quebrado (ex: data corrompida), não deixa o
+  // painel inteiro travar — mostra um aviso claro em vez de ficar tudo em branco.
+  console.error('Erro ao renderizar o painel:', erroRender);
+  var avisoErro = document.getElementById('avisoErroAtualizacao');
+  avisoErro.textContent = 'O painel encontrou um dado inesperado e não conseguiu montar tudo. Detalhe técnico: ' + erroRender.message;
+  avisoErro.classList.remove('hidden');
+ }
+}
+
+function renderGestao(filtered){
+  // Essa aba usa "filtered" (mesmos filtros de data/empresa/etc da tela) — mas
+  // etiquetas sem data de postagem nunca aparecem em "filtered" quando há filtro
+  // de data ativo, por isso elas têm o card próprio (busca na base inteira, allRows).
+
+  var total = filtered.length;
+  var gastoTotal = filtered.reduce(function(s,o){return s+o.valorPostagem;},0);
+  var comAtraso = filtered.filter(function(o){return o._atrasado;});
+  var comOcorrencia = filtered.filter(function(o){return o._bucket==='naoentregue' || o._bucket==='problema';});
+
+  document.getElementById('kpiG-total').textContent = total.toLocaleString('pt-BR');
+  document.getElementById('kpiG-gasto').textContent = fmtMoney(gastoTotal);
+  document.getElementById('kpiG-ticket').textContent = fmtMoney(total ? gastoTotal/total : 0);
+  document.getElementById('kpiG-atraso').textContent = comAtraso.length.toLocaleString('pt-BR');
+  document.getElementById('kpiG-atraso-pct').textContent = (total ? (comAtraso.length/total*100).toFixed(1) : '0.0') + '% do total';
+  document.getElementById('kpiG-ocorrencia').textContent = comOcorrencia.length.toLocaleString('pt-BR');
+
+  // Gasto por empresa — sempre compara as duas juntas, ignora o botão Stin Pharma/Mayderma do topo
+  var filteredSemEmpresa = applyFiltersSemEmpresa();
+  var gastoEmpresa = groupSum(filteredSemEmpresa, function(o){return o.empresa || 'N/D';}, function(o){return o.valorPostagem;});
+  var gastoEmpresaSorted = Array.from(gastoEmpresa.entries()).sort(function(a,b){return b[1]-a[1];});
+  chartGastoEmpresa.data.labels = gastoEmpresaSorted.map(function(e){return e[0];});
+  chartGastoEmpresa.data.datasets[0].data = gastoEmpresaSorted.map(function(e){return e[1];});
+  chartGastoEmpresa.update();
+
+  var coresGastoEmpresa = chartGastoEmpresa.data.datasets[0].backgroundColor;
+  var listaGastoEmpresa = document.getElementById('gasto-empresa-lista');
+  var totalGastoEmpresas = gastoEmpresaSorted.reduce(function(s,e){return s+e[1];}, 0);
+  listaGastoEmpresa.innerHTML = gastoEmpresaSorted.map(function(e, i){
+    var pct = totalGastoEmpresas ? (e[1]/totalGastoEmpresas*100).toFixed(1) : '0.0';
+    return '<div class="gasto-empresa-item">'
+      + '<span class="nome"><span class="dot" style="background:'+coresGastoEmpresa[i % coresGastoEmpresa.length]+'"></span>'+escapeHtml(e[0])+'</span>'
+      + '<span class="valores"><div class="valor">'+fmtMoney(e[1])+'</div><div class="pct">'+pct+'% do total</div></span>'
+      + '</div>';
+  }).join('') || '<p class="hint" style="margin:0;">Nenhum registro para os filtros selecionados</p>';
+
+  // Envios e gasto por mês (usa dataPostagem, agrupado por ano-mês)
+  var porMes = new Map();
+  filtered.forEach(function(o){
+    if (!o.dataPostagem) return;
+    var chave = o.dataPostagem.getFullYear() + '-' + String(o.dataPostagem.getMonth()+1).padStart(2,'0');
+    if (!porMes.has(chave)) porMes.set(chave, {qtd:0, valor:0});
+    var rec = porMes.get(chave);
+    rec.qtd += 1; rec.valor += o.valorPostagem;
+  });
+  var mesesOrdenados = Array.from(porMes.keys()).sort();
+  var nomesMes = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  chartPeriodoMensal.data.labels = mesesOrdenados.map(function(m){
+    var partes = m.split('-'); return nomesMes[parseInt(partes[1],10)-1] + '/' + partes[0].slice(2);
+  });
+  chartPeriodoMensal.data.datasets[0].data = mesesOrdenados.map(function(m){return porMes.get(m).valor;});
+  chartPeriodoMensal.data.datasets[1].data = mesesOrdenados.map(function(m){return porMes.get(m).qtd;});
+  chartPeriodoMensal.update();
+
+  // Ranking por UF — envios e atrasos
+  var ufMap = new Map();
+  filtered.forEach(function(o){
+    var uf = o.uf || 'N/D';
+    if (!ufMap.has(uf)) ufMap.set(uf, {qtd:0, atraso:0});
+    var rec = ufMap.get(uf);
+    rec.qtd += 1;
+    if (o._atrasado) rec.atraso += 1;
+  });
+  var ufRows = Array.from(ufMap.entries()).sort(function(a,b){return b[1].qtd-a[1].qtd;});
+  var rankUfBody = document.getElementById('ranking-uf-atraso-body');
+  rankUfBody.innerHTML = '';
+  if (!ufRows.length){
+    rankUfBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--ink-soft);padding:16px;">Nenhum registro para os filtros selecionados</td></tr>';
+  }
+  ufRows.forEach(function(e){
+    var uf = e[0], rec = e[1];
+    var pct = rec.qtd ? (rec.atraso/rec.qtd*100).toFixed(1) : '0.0';
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>'+escapeHtml(uf)+'</td><td class="num">'+rec.qtd.toLocaleString('pt-BR')+'</td><td class="num">'+rec.atraso.toLocaleString('pt-BR')+'</td><td class="num">'+pct+'%</td>';
+    rankUfBody.appendChild(tr);
+  });
+
+  // Etiquetas sem postagem confirmada — sempre olha a base inteira (não tem data pra filtrar por período)
+  var semEtiqueta = allRows.filter(function(o){
+    return o.status === 'Etiqueta Expirada' || o.status === 'Erro Geraçâo PPN' || o.status === 'Objeto(s) Não Etiquetado(s) Ou Range Esgotado';
+  });
+  document.getElementById('kpiG-semetiqueta-qtd').textContent = semEtiqueta.length.toLocaleString('pt-BR');
+  document.getElementById('kpiG-semetiqueta-valor').textContent = fmtMoney(semEtiqueta.reduce(function(s,o){return s+o.valorPostagem;},0));
+}
+
+function exportarCSV(){
+  var linhas = window._ultimaListaFiltrada || [];
+  var cab = ['Data postagem','Empresa','Registro','Destinatario','Cidade','UF','Nota fiscal','Valor','Status','Ultima verificacao'];
+  var csv = [cab.join(';')];
+  linhas.forEach(function(o){
+    var campos = [
+      fmtDateOnly(o.dataPostagem),
+      o.empresa,
+      o.codigo,
+      '"' + String(o.destinatario||'').replace(/"/g,'""') + '"',
+      o.cidade,
+      o.uf,
+      o.nf,
+      String(o.valorPostagem||0).replace('.',','),
+      STATUS_LABEL[o._bucket],
+      o.atualizadoEm ? fmtDateTime(new Date(o.atualizadoEm)) : ''
+    ];
+    csv.push(campos.join(';'));
+  });
+  var blob = new Blob(['\uFEFF' + csv.join('\n')], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'rastreio-vipp-' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+document.getElementById('btn-exportar-csv').addEventListener('click', exportarCSV);
+</script>
+</body>
+</html>
