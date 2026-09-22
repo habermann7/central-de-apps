@@ -126,7 +126,7 @@
   }
   .btn-accent:hover{background:#c2410c;}
   .btn-accent:disabled{opacity:0.55;cursor:default;}
-  .toolbar .info{font-size:12px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;}
+  .toolbar .info{font-size:12.5px;color:var(--ink-soft);font-family:'Inter',sans-serif;}
   .toolbar .error-msg{font-size:12px;color:var(--problema);}
 
   #staleWarning{
@@ -350,19 +350,23 @@
   .status-badge.problema{background:var(--problema);}
   .status-badge.naoentregue{background:var(--naoentregue);}
 
-  .app-body{display:flex;gap:22px;align-items:flex-start;}
+  /* ---------- Esqueleto: menu lateral de altura total + área principal ---------- */
+  .app-layout{display:flex;min-height:100vh;}
   .sidebar{
-    width:220px;flex:none;position:sticky;top:20px;
-    border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
-    background:var(--paper-raised);padding:10px;
+    width:236px;flex:none;position:sticky;top:0;height:100vh;overflow-y:auto;
+    background:var(--paper-raised);border-right:1px solid var(--line);
+    padding:18px 12px;display:flex;flex-direction:column;
   }
+  .sidebar-brand{padding:4px 10px 18px;border-bottom:1px solid var(--line);margin-bottom:8px;}
+  .brand-title{font-family:'Inter',sans-serif;font-weight:700;font-size:16px;color:var(--ink);}
+  .brand-sub{font-family:'Inter',sans-serif;font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
   .sidebar .nav-group-label{
     font-family:'Inter',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;
-    color:var(--ink-soft);padding:10px 10px 6px;
+    color:var(--ink-soft);padding:14px 10px 6px;
   }
   .sidebar .nav-item{
     display:flex;align-items:center;justify-content:space-between;gap:8px;
-    padding:9px 10px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;font-size:13px;
+    padding:9px 10px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;font-size:13.5px;
     border-radius:7px;color:var(--ink-soft);margin-bottom:2px;
   }
   .sidebar .nav-item:hover{background:var(--paper);color:var(--ink);}
@@ -371,11 +375,16 @@
     font-family:'Inter',sans-serif;font-weight:600;font-size:10px;background:var(--retirada);color:#fff;
     padding:1px 7px;border-radius:20px;
   }
-  .sidebar .nav-item.active .nav-badge{background:var(--retirada);color:#fff;}
+  .sidebar-footer{margin-top:auto;padding:14px 10px 0;border-top:1px solid var(--line);}
+  .sidebar-meta{font-family:'Inter',sans-serif;font-size:12px;color:var(--ink-soft);margin-bottom:10px;}
+  .main-area{flex:1;min-width:0;padding:24px 28px 48px;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px;}
+  .topbar h1{font-family:'Inter',sans-serif;font-size:22px;font-weight:700;margin:0 0 2px;color:var(--ink);}
+  .topbar-sub{margin:0;font-size:13px;color:var(--ink-soft);}
+  .topbar .empresa-switch{margin-bottom:0;}
   .main-content{flex:1;min-width:0;}
   .tab-panel{display:none;}
   .tab-panel.active{display:block;}
-  @media(max-width:860px){.app-body{flex-direction:column;} .sidebar{width:100%;position:static;display:flex;}}
 
   .table-panel{border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);background:var(--paper-raised);padding:18px 20px;margin-bottom:18px;}
   .table-scroll{overflow-x:auto;max-height:460px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;}
@@ -407,50 +416,58 @@
   <p class="login-error" id="loginError"></p>
 </div>
 
-<div id="appScreen" class="wrap hidden">
+<div id="appScreen" class="app-layout hidden">
 
-  <header class="manifest">
-    <div class="title-block">
-      <h1>Painel de Rastreios</h1>
-      <p>Acompanhamento de postagens, eventos e entregas &mdash; base de rastreamento dos Correios</p>
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-title">Rastreio VIPP</div>
+      <div class="brand-sub">Correios &middot; Stin Pharma &amp; Mayderma</div>
     </div>
-    <div class="meta">
-      Empresa: <strong id="meta-empresa-ativa">Todas</strong><br>
-      <span id="meta-total-obj">&mdash;</span> objetos na base &middot;
-      <button class="btn-ghost" id="logoutBtn" style="margin-left:8px;">Sair</button>
+    <div class="nav-group-label">Painel</div>
+    <div class="nav-item active" data-tab="visao-geral" data-label="Visão Geral">Visão Geral</div>
+    <div class="nav-item" data-tab="retirada" data-label="Aguardando Retirada">Aguardando Retirada <span class="nav-badge" id="nav-badge-retirada">0</span></div>
+    <div class="nav-item" data-tab="detalhamento" data-label="Detalhamento">Detalhamento</div>
+    <div class="nav-group-label">Administração</div>
+    <div class="nav-item" data-tab="gestao" data-label="Gestão">Gestão</div>
+    <div class="sidebar-footer">
+      <div class="sidebar-meta"><span id="meta-total-obj">&mdash;</span> objetos na base</div>
+      <button class="btn-ghost" id="logoutBtn" type="button" style="width:100%;">Sair</button>
     </div>
-  </header>
+  </aside>
 
-  <div class="empresa-switch" id="empresa-switch">
-    <button type="button" class="empresa-btn active" data-empresa="">Todas</button>
-    <button type="button" class="empresa-btn" data-empresa="Stin Pharma">Stin Pharma</button>
-    <button type="button" class="empresa-btn" data-empresa="Mayderma">Mayderma</button>
-  </div>
+  <main class="main-area">
 
-  <div class="toolbar">
-    <select id="import-empresa" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:8px 10px;border:1px solid var(--line);background:#fff;color:var(--ink);">
-      <option value="Stin Pharma">Stin Pharma</option>
-      <option value="Mayderma">Mayderma</option>
-    </select>
-    <label class="file-btn" for="fileInput">Importar Excel do VIPP</label>
-    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
-    <button class="btn-accent" id="atualizarAgoraBtn">Atualizar agora</button>
-    <span class="info" id="fileInfo"></span>
-    <span class="error-msg" id="errorMsg"></span>
-    <span class="info" id="lastUpdate"></span>
-    <button class="btn-ghost" id="btn-ver-tecnico" type="button" style="display:none;">Ver detalhes técnicos</button>
-    <button class="btn-ghost" id="btn-limpar-base" type="button" style="margin-left:auto;color:var(--problema);border-color:var(--problema);">Limpar base</button>
-  </div>
-
-  <div id="limparBaseModal" class="hidden" style="border:1px solid #FCA5A5;border-radius:10px;background:#FEF2F2;padding:16px 20px;margin-bottom:18px;">
-    <p style="margin:0 0 4px;font-weight:600;color:#6b201a;">Isso apaga TODOS os pedidos da base (não dá pra desfazer).</p>
-    <p style="margin:0 0 10px;font-size:12.5px;color:#6b201a;">Digite <strong>LIMPAR</strong> abaixo pra confirmar:</p>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <input type="text" id="limparBaseInput" style="padding:7px 8px;border:1px solid var(--problema);font-family:'IBM Plex Mono',monospace;">
-      <button class="btn-accent" id="btn-confirmar-limpar" type="button">Confirmar exclusão</button>
-      <button class="btn-ghost" id="btn-cancelar-limpar" type="button">Cancelar</button>
+    <div class="topbar">
+      <div>
+        <h1 id="topbar-title">Visão Geral</h1>
+        <p class="topbar-sub">Acompanhamento de postagens e entregas &mdash; base de rastreamento dos Correios</p>
+      </div>
+      <div class="empresa-switch" id="empresa-switch">
+        <button type="button" class="empresa-btn active" data-empresa="">Todas</button>
+        <button type="button" class="empresa-btn" data-empresa="Stin Pharma">Stin Pharma</button>
+        <button type="button" class="empresa-btn" data-empresa="Mayderma">Mayderma</button>
+      </div>
     </div>
-  </div>
+
+    <div class="toolbar">
+      <label class="file-btn" for="fileInput">Importar Excel do VIPP</label>
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+      <button class="btn-accent" id="atualizarAgoraBtn">Atualizar agora</button>
+      <span class="info" id="fileInfo"></span>
+      <span class="error-msg" id="errorMsg"></span>
+      <span class="info" id="lastUpdate" style="margin-left:auto;"></span>
+      <button class="btn-ghost" id="btn-ver-tecnico" type="button" style="display:none;">Ver detalhes técnicos</button>
+    </div>
+
+    <div id="empresaPerguntaBox" class="hidden" style="border:1px solid #BFDBFE;border-radius:10px;background:#EFF6FF;padding:16px 20px;margin-bottom:18px;">
+      <p style="margin:0 0 4px;font-weight:600;">Não consegui identificar a empresa desse arquivo.</p>
+      <p style="margin:0 0 12px;font-size:12.5px;color:var(--ink-soft);"><span id="empresaPerguntaArquivo"></span> &mdash; o relatório não traz o nome do remetente. De qual empresa ele é?</p>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-reset" type="button" data-empresa="Stin Pharma">Stin Pharma</button>
+        <button class="btn-reset" type="button" data-empresa="Mayderma">Mayderma</button>
+        <button class="btn-ghost" type="button" id="empresaPerguntaCancelar">Cancelar importação</button>
+      </div>
+    </div>
 
   <div id="avisoErroAtualizacao" class="hidden" style="border:1px solid #FCA5A5;border-radius:10px;background:#FEF2F2;color:#991B1B;padding:10px 16px;margin-bottom:18px;font-size:12.5px;"></div>
 
@@ -518,16 +535,6 @@
 
   <div class="period-banner" id="period-banner"></div>
 
-  <div class="app-body">
-    <nav class="sidebar">
-      <div class="nav-group-label">Painel</div>
-      <div class="nav-item active" data-tab="visao-geral">Visão Geral</div>
-      <div class="nav-item" data-tab="retirada">Aguardando Retirada <span class="nav-badge" id="nav-badge-retirada">0</span></div>
-      <div class="nav-item" data-tab="detalhamento">Detalhamento</div>
-      <div class="nav-group-label">Administração</div>
-      <div class="nav-item" data-tab="gestao">Gestão</div>
-    </nav>
-
     <div class="main-content">
 
       <div class="tab-panel active" id="tab-visao-geral">
@@ -561,16 +568,6 @@
             <div class="label">Problema</div>
             <div class="value" id="kpi-problema">&mdash;</div>
             <div class="sub">precisa de ação</div>
-          </div>
-          <div class="kpi valor">
-            <div class="label">Valor total postagens</div>
-            <div class="value" id="kpi-valor">&mdash;</div>
-            <div class="sub">soma no período</div>
-          </div>
-          <div class="kpi valor">
-            <div class="label">Ticket médio</div>
-            <div class="value" id="kpi-ticket">&mdash;</div>
-            <div class="sub">valor / postagens</div>
           </div>
         </div>
 
@@ -668,6 +665,11 @@
             <div class="value" id="kpiG-gasto">&mdash;</div>
             <div class="sub">soma no período</div>
           </div>
+          <div class="kpi valor">
+            <div class="label">Ticket médio</div>
+            <div class="value" id="kpiG-ticket">&mdash;</div>
+            <div class="sub">gasto / envios</div>
+          </div>
           <div class="kpi retirada">
             <div class="label">Pedidos em atraso</div>
             <div class="value" id="kpiG-atraso">&mdash;</div>
@@ -722,15 +724,32 @@
             </div>
           </div>
         </div>
+
+        <div class="panel zona-risco" style="margin-bottom:18px;">
+          <h2>Zona de risco</h2>
+          <p class="hint">Ações que apagam dados. Use só se for recomeçar a base do zero.</p>
+          <button class="btn-ghost" id="btn-limpar-base" type="button" style="color:var(--problema);border-color:var(--problema);">Limpar base</button>
+          <div style="margin-top:14px;">
+  <div id="limparBaseModal" class="hidden" style="border:1px solid #FCA5A5;border-radius:10px;background:#FEF2F2;padding:16px 20px;margin-bottom:0;">
+    <p style="margin:0 0 4px;font-weight:600;color:#6b201a;">Isso apaga TODOS os pedidos da base (não dá pra desfazer).</p>
+    <p style="margin:0 0 10px;font-size:12.5px;color:#6b201a;">Digite <strong>LIMPAR</strong> abaixo pra confirmar:</p>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input type="text" id="limparBaseInput" style="padding:7px 8px;border:1px solid var(--problema);font-family:'IBM Plex Mono',monospace;">
+      <button class="btn-accent" id="btn-confirmar-limpar" type="button">Confirmar exclusão</button>
+      <button class="btn-ghost" id="btn-cancelar-limpar" type="button">Cancelar</button>
+    </div>
+  </div>
+          </div>
+        </div>
       </div>
 
     </div>
-  </div>
 
   <footer class="note">
     Dados ao vivo do Firebase (rastreioVipp/pedidos). O robô automático atualiza status e data do evento 1x/dia para pedidos ainda não entregues; pedidos já entregues não são mais consultados.
   </footer>
 
+  </main>
 </div>
 
 <script>
@@ -867,6 +886,7 @@ document.querySelectorAll('.sidebar .nav-item').forEach(function(item){
     document.querySelectorAll('.sidebar .nav-item').forEach(function(i){ i.classList.remove('active'); });
     document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
     item.classList.add('active');
+    document.getElementById('topbar-title').textContent = item.dataset.label;
     document.getElementById('tab-' + item.dataset.tab).classList.add('active');
   });
 });
@@ -1106,14 +1126,39 @@ document.getElementById("fileInput").addEventListener("change", function (e) {
       var sheet = workbook.Sheets[workbook.SheetNames[0]];
       var json = XLSX.utils.sheet_to_json(sheet, { defval: "", range: 1 });
       var linhas = json.map(normalizarLinhaVipp).filter(function (r) { return r.Registro && String(r.Registro).indexOf('http') === -1; });
-      salvarNoRealtimeDb(linhas, file.name);
+      // Empresa: detecta sozinho pelo remetente. Só pergunta se alguma linha não
+      // tiver remetente reconhecível (alguns formatos de relatório não trazem).
+      var precisaPerguntar = linhas.some(function (r) { return !detectarEmpresa(r.Remetente, null); });
+      if (precisaPerguntar) {
+        document.getElementById("fileInfo").textContent = "";
+        perguntarEmpresa(file.name).then(function (escolha) {
+          if (!escolha) { document.getElementById("fileInfo").textContent = "Importação cancelada"; return; }
+          salvarNoRealtimeDb(linhas, file.name, escolha);
+        });
+      } else {
+        salvarNoRealtimeDb(linhas, file.name, null);
+      }
     } catch (err) {
       document.getElementById("errorMsg").textContent = "Não consegui ler esse arquivo. Confirma se é o Excel exportado do VIPP.";
       document.getElementById("fileInfo").textContent = "";
     }
   };
   reader.readAsArrayBuffer(file);
+  e.target.value = ""; // permite escolher o mesmo arquivo de novo, se precisar reimportar
 });
+
+// Caixa de pergunta que aparece só quando o arquivo não diz de qual empresa é
+function perguntarEmpresa(nomeArquivo) {
+  return new Promise(function (resolve) {
+    var box = document.getElementById('empresaPerguntaBox');
+    document.getElementById('empresaPerguntaArquivo').textContent = nomeArquivo;
+    box.classList.remove('hidden');
+    box.querySelectorAll('button[data-empresa]').forEach(function (b) {
+      b.onclick = function () { box.classList.add('hidden'); resolve(b.dataset.empresa); };
+    });
+    document.getElementById('empresaPerguntaCancelar').onclick = function () { box.classList.add('hidden'); resolve(null); };
+  });
+}
 
 function excelSerialParaData(serial){
   // Excel (sistema de datas 1900): o dia 0 é 30/12/1899. Usado quando a
@@ -1149,9 +1194,9 @@ function parseDataVipp(valor){
   return isNaN(d2.getTime()) ? "" : d2.toISOString();
 }
 
-function salvarNoRealtimeDb(linhas, nomeArquivo) {
+function salvarNoRealtimeDb(linhas, nomeArquivo, empresaFallback) {
   document.getElementById("fileInfo").textContent = "Salvando " + linhas.length + " pedidos...";
-  var empresaSelecionada = document.getElementById('import-empresa').value;
+  var empresaSelecionada = empresaFallback || 'Stin Pharma';
   // pedidos que já existem na base não têm o status sobrescrito pela reimportação —
   // o robô já pode ter uma info mais atual que o Excel do VIPP (que tem ~1 dia de atraso)
   var existentes = new Set(allRows.map(function(r){ return chaveSegura(r.codigo); }));
@@ -1228,7 +1273,6 @@ document.querySelectorAll('.empresa-btn').forEach(function(btn){
     document.querySelectorAll('.empresa-btn').forEach(function(b){ b.classList.remove('active'); });
     btn.classList.add('active');
     state.empresa = btn.dataset.empresa;
-    document.getElementById('meta-empresa-ativa').textContent = btn.dataset.empresa || 'Todas';
     render();
   });
 });
@@ -1262,7 +1306,6 @@ document.getElementById('btn-reset').addEventListener('click', function(){
   document.getElementById('f-status-detalhado').value='';
   document.querySelectorAll('.empresa-btn').forEach(function(b){ b.classList.remove('active'); });
   document.querySelector('.empresa-btn[data-empresa=""]').classList.add('active');
-  document.getElementById('meta-empresa-ativa').textContent = 'Todas';
   document.getElementById('f-uf').value='';
   document.getElementById('f-cidade').value='';
   document.getElementById('f-destinatario').value='';
@@ -1407,8 +1450,6 @@ function render(){
   document.getElementById('kpi-transito').textContent = byBucket.transito.toLocaleString('pt-BR');
   document.getElementById('kpi-naoentregue').textContent = byBucket.naoentregue.toLocaleString('pt-BR');
   document.getElementById('kpi-problema').textContent = byBucket.problema.toLocaleString('pt-BR');
-  document.getElementById('kpi-valor').textContent = fmtMoney(valorTotal);
-  document.getElementById('kpi-ticket').textContent = fmtMoney(ticketMedio);
 
   // Priority box — sempre olha a base inteira (não respeita filtros, é radar fixo)
   // Ordenado por quem está esperando há mais tempo (maior risco de devolução primeiro)
@@ -1557,6 +1598,7 @@ function renderGestao(filtered){
 
   document.getElementById('kpiG-total').textContent = total.toLocaleString('pt-BR');
   document.getElementById('kpiG-gasto').textContent = fmtMoney(gastoTotal);
+  document.getElementById('kpiG-ticket').textContent = fmtMoney(total ? gastoTotal/total : 0);
   document.getElementById('kpiG-atraso').textContent = comAtraso.length.toLocaleString('pt-BR');
   document.getElementById('kpiG-atraso-pct').textContent = (total ? (comAtraso.length/total*100).toFixed(1) : '0.0') + '% do total';
   document.getElementById('kpiG-ocorrencia').textContent = comOcorrencia.length.toLocaleString('pt-BR');
