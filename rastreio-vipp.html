@@ -691,7 +691,7 @@
         <div class="grid-2b">
           <div class="panel">
             <h2>Gasto por empresa</h2>
-            <p class="hint">Soma do valor de postagem, por empresa, no período</p>
+            <p class="hint">Soma do valor de postagem, por empresa, no período &mdash; sempre mostra as duas juntas, mesmo com uma empresa selecionada no topo</p>
             <div class="chart-holder"><canvas id="chart-gasto-empresa"></canvas></div>
             <div id="gasto-empresa-lista" class="gasto-empresa-lista"></div>
           </div>
@@ -1375,6 +1375,24 @@ function applyFilters(){
   });
 }
 
+// Igual a applyFilters, mas sem o filtro de empresa — usado no gráfico "Gasto por
+// empresa" da Gestão, que precisa sempre comparar as duas juntas, mesmo com o
+// botão Stin Pharma/Mayderma do topo selecionado numa só.
+function applyFiltersSemEmpresa(){
+  return allRows.filter(function(o){
+    if (state.dateStart && o.dataPostagem && o.dataPostagem < state.dateStart) return false;
+    if (state.dateEnd && o.dataPostagem && o.dataPostagem > state.dateEnd) return false;
+    if (state.status && o._bucket !== state.status) return false;
+    if (state.statusDetalhado && (o.status || '(vazio)') !== state.statusDetalhado) return false;
+    if (state.uf && o.uf !== state.uf) return false;
+    if (state.cidade && o.cidade !== state.cidade) return false;
+    if (state.destinatario && o.destinatario.toLowerCase().indexOf(state.destinatario.toLowerCase()) === -1) return false;
+    if (state.registro && o.codigo.toLowerCase().indexOf(state.registro.toLowerCase()) === -1) return false;
+    if (state.nf && (o.nf || '').indexOf(state.nf) === -1) return false;
+    return true;
+  });
+}
+
 function groupCount(arr, keyFn){
   var m = new Map();
   arr.forEach(function(o){ var k = keyFn(o); m.set(k, (m.get(k)||0)+1); });
@@ -1609,8 +1627,9 @@ function renderGestao(filtered){
   document.getElementById('kpiG-atraso-pct').textContent = (total ? (comAtraso.length/total*100).toFixed(1) : '0.0') + '% do total';
   document.getElementById('kpiG-ocorrencia').textContent = comOcorrencia.length.toLocaleString('pt-BR');
 
-  // Gasto por empresa
-  var gastoEmpresa = groupSum(filtered, function(o){return o.empresa || 'N/D';}, function(o){return o.valorPostagem;});
+  // Gasto por empresa — sempre compara as duas juntas, ignora o botão Stin Pharma/Mayderma do topo
+  var filteredSemEmpresa = applyFiltersSemEmpresa();
+  var gastoEmpresa = groupSum(filteredSemEmpresa, function(o){return o.empresa || 'N/D';}, function(o){return o.valorPostagem;});
   var gastoEmpresaSorted = Array.from(gastoEmpresa.entries()).sort(function(a,b){return b[1]-a[1];});
   chartGastoEmpresa.data.labels = gastoEmpresaSorted.map(function(e){return e[0];});
   chartGastoEmpresa.data.datasets[0].data = gastoEmpresaSorted.map(function(e){return e[1];});
