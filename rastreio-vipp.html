@@ -297,6 +297,14 @@
     margin:0 0 12px;
   }
   .chart-holder{position:relative;height:260px;}
+
+  .gasto-empresa-lista{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+  .gasto-empresa-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;}
+  .gasto-empresa-item .nome{display:flex;align-items:center;gap:8px;font-family:'Inter',sans-serif;font-weight:500;font-size:13px;color:var(--ink);}
+  .gasto-empresa-item .dot{width:10px;height:10px;border-radius:50%;flex:none;}
+  .gasto-empresa-item .valores{text-align:right;}
+  .gasto-empresa-item .valor{font-family:'Inter',sans-serif;font-weight:700;font-size:16px;color:var(--ink);}
+  .gasto-empresa-item .pct{font-family:'Inter',sans-serif;font-size:11.5px;color:var(--ink-soft);}
   .chart-holder.tall{height:320px;}
 
   .status-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:10px;}
@@ -687,6 +695,7 @@
             <h2>Gasto por empresa</h2>
             <p class="hint">Soma do valor de postagem, por empresa, no período</p>
             <div class="chart-holder"><canvas id="chart-gasto-empresa"></canvas></div>
+            <div id="gasto-empresa-lista" class="gasto-empresa-lista"></div>
           </div>
           <div class="panel">
             <h2>Envios e gasto por mês</h2>
@@ -1609,6 +1618,17 @@ function renderGestao(filtered){
   chartGastoEmpresa.data.labels = gastoEmpresaSorted.map(function(e){return e[0];});
   chartGastoEmpresa.data.datasets[0].data = gastoEmpresaSorted.map(function(e){return e[1];});
   chartGastoEmpresa.update();
+
+  var coresGastoEmpresa = chartGastoEmpresa.data.datasets[0].backgroundColor;
+  var listaGastoEmpresa = document.getElementById('gasto-empresa-lista');
+  var totalGastoEmpresas = gastoEmpresaSorted.reduce(function(s,e){return s+e[1];}, 0);
+  listaGastoEmpresa.innerHTML = gastoEmpresaSorted.map(function(e, i){
+    var pct = totalGastoEmpresas ? (e[1]/totalGastoEmpresas*100).toFixed(1) : '0.0';
+    return '<div class="gasto-empresa-item">'
+      + '<span class="nome"><span class="dot" style="background:'+coresGastoEmpresa[i % coresGastoEmpresa.length]+'"></span>'+escapeHtml(e[0])+'</span>'
+      + '<span class="valores"><div class="valor">'+fmtMoney(e[1])+'</div><div class="pct">'+pct+'% do total</div></span>'
+      + '</div>';
+  }).join('') || '<p class="hint" style="margin:0;">Nenhum registro para os filtros selecionados</p>';
 
   // Envios e gasto por mês (usa dataPostagem, agrupado por ano-mês)
   var porMes = new Map();
