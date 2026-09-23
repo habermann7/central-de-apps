@@ -26,6 +26,9 @@
   --naoentregue:#9333EA;
     --retirada:#EA580C;
     --stamp:#EA580C;
+    --brand-stin:#EDA996;
+    --brand-stin-ink:#8A4A30;
+    --brand-mayderma:#1A4773;
     --radius:10px;
     --shadow:0 1px 3px rgba(16,24,40,.08), 0 1px 2px rgba(16,24,40,.04);
   }
@@ -168,6 +171,8 @@
   .empresa-btn:last-child{border-right:none;}
   .empresa-btn:hover{background:var(--paper);color:var(--ink);}
   .empresa-btn.active{background:var(--postal-blue);color:#fff;}
+  .empresa-btn.active[data-empresa="Stin Pharma"]{background:var(--brand-stin);color:var(--brand-stin-ink);}
+  .empresa-btn.active[data-empresa="Mayderma"]{background:var(--brand-mayderma);color:#fff;}
 
   .toolbar{
     border:1px solid var(--line);background:var(--paper-raised);padding:14px 20px;
@@ -221,8 +226,8 @@
   .priority-list td.dias.urgente .selo{color:#fff;background:var(--retirada);padding:1px 6px;border-radius:5px;}
   .priority-list td.etag{width:1%;white-space:nowrap;}
   .empresa-tag{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;padding:2px 6px;border-radius:5px;white-space:nowrap;}
-  .empresa-tag.sp{background:#DBEAFE;color:#1D4ED8;}
-  .empresa-tag.md{background:#FCE7F3;color:#9D174D;}
+  .empresa-tag.sp{background:#F7E3DA;color:var(--brand-stin-ink);}
+  .empresa-tag.md{background:#DDE6EF;color:var(--brand-mayderma);}
 
   /* ---------- Botão que abre/fecha os filtros ---------- */
   .filterbar-toggle-row{margin-bottom:12px;}
@@ -1010,6 +1015,8 @@ var PRAZO_ATENCAO_DIAS = 4;
 var PRAZO_URGENTE_DIAS = 7;
 var LIMITE_LINHAS_TABELA = 500; // performance: acima disso, pede pra refinar os filtros
 
+var EMPRESA_COLOR = { 'Stin Pharma': '#EDA996', 'Mayderma': '#1A4773' };
+function corEmpresa(nome){ return EMPRESA_COLOR[nome] || '#8C5383'; }
 function abrevEmpresa(emp){
   if (emp === 'Mayderma') return 'MD';
   if (emp === 'Stin Pharma') return 'SP';
@@ -1817,7 +1824,7 @@ function render(){
     var tr = document.createElement('tr');
     tr.innerHTML =
       '<td>'+fmtDateOnly(o.dataPostagem)+'</td>'+
-      '<td>'+escapeHtml(o.empresa)+'</td>'+
+      '<td><span class="dot" style="width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:1px;background:'+corEmpresa(o.empresa)+';"></span>'+escapeHtml(o.empresa)+'</td>'+
       '<td class="mono">'+escapeHtml(o.codigo)+'</td>'+
       '<td>'+escapeHtml(o.destinatario)+'</td>'+
       '<td>'+escapeHtml(o.cidade)+'</td>'+
@@ -1870,6 +1877,7 @@ function renderGestao(filtered){
   var gastoEmpresaSorted = Array.from(gastoEmpresa.entries()).sort(function(a,b){return b[1]-a[1];});
   chartGastoEmpresa.data.labels = gastoEmpresaSorted.map(function(e){return e[0];});
   chartGastoEmpresa.data.datasets[0].data = gastoEmpresaSorted.map(function(e){return e[1];});
+  chartGastoEmpresa.data.datasets[0].backgroundColor = gastoEmpresaSorted.map(function(e){return corEmpresa(e[0]);});
   chartGastoEmpresa.update();
 
   var coresGastoEmpresa = chartGastoEmpresa.data.datasets[0].backgroundColor;
