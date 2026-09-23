@@ -72,6 +72,23 @@
     *, *::before, *::after{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
   }
 
+  /* ---------- Skeleton: enquanto os dados do Firebase ainda não chegaram ---------- */
+  @keyframes shimmer{ 0%{background-position:100% 0;} 100%{background-position:-100% 0;} }
+  .app-loading .kpi .value, .app-loading .kpi .sub{ color:transparent !important; position:relative; }
+  .app-loading .kpi .value::after, .app-loading .kpi .sub::after{
+    content:'';position:absolute;left:0;top:10%;bottom:10%;right:30%;border-radius:4px;
+    background:linear-gradient(90deg,#e5e7eb 25%,#eef0f2 37%,#e5e7eb 63%);
+    background-size:300% 100%;animation:shimmer 1.3s ease-in-out infinite;
+  }
+  .app-loading .kpi .sub::after{right:50%;}
+  .app-loading .chart-holder canvas{ visibility:hidden; }
+  .app-loading .chart-holder::after{
+    content:'';position:absolute;inset:0;border-radius:8px;
+    background:linear-gradient(90deg,#e5e7eb 25%,#eef0f2 37%,#e5e7eb 63%);
+    background-size:300% 100%;animation:shimmer 1.3s ease-in-out infinite;
+  }
+  .chart-holder{ position:relative; }
+
   /* ---------- Login ---------- */
   #loginScreen{max-width:340px;margin:14vh auto;background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 30px;}
   #loginScreen h1{font-family:'Inter',sans-serif;font-weight:600;font-size:24px;margin:0 0 4px;}
@@ -1010,6 +1027,7 @@ auth.onAuthStateChanged(function (user) {
     }
     document.getElementById("loginScreen").classList.add("hidden");
     document.getElementById("appScreen").classList.remove("hidden");
+    document.getElementById("appScreen").classList.add("app-loading");
     escutarPedidos();
   });
 });
@@ -1147,6 +1165,7 @@ function escutarPedidos() {
     refreshCidadeOptions();
     fillStaticOptions();
     render();
+    document.getElementById("appScreen").classList.remove("app-loading");
   });
 }
 
