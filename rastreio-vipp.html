@@ -219,6 +219,10 @@
   .priority-list td.dias.ok .selo{color:var(--ink-soft);font-weight:400;}
   .priority-list td.dias.atencao .selo{color:#9a6b0a;}
   .priority-list td.dias.urgente .selo{color:#fff;background:var(--retirada);padding:1px 6px;border-radius:5px;}
+  .priority-list td.etag{width:1%;white-space:nowrap;}
+  .empresa-tag{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;padding:2px 6px;border-radius:5px;white-space:nowrap;}
+  .empresa-tag.sp{background:#DBEAFE;color:#1D4ED8;}
+  .empresa-tag.md{background:#FCE7F3;color:#9D174D;}
 
   /* ---------- Botão que abre/fecha os filtros ---------- */
   .filterbar-toggle-row{margin-bottom:12px;}
@@ -760,6 +764,11 @@
       </div>
 
       <div class="tab-panel" id="tab-retirada">
+        <div class="empresa-switch" id="retirada-empresa-switch" style="margin-bottom:14px;">
+          <button type="button" class="empresa-btn active" data-empresa="">Todas</button>
+          <button type="button" class="empresa-btn" data-empresa="Stin Pharma">Stin Pharma</button>
+          <button type="button" class="empresa-btn" data-empresa="Mayderma">Mayderma</button>
+        </div>
         <div class="priority-box" id="priorityBox" style="display:none;margin-bottom:0;">
           <div class="priority-title">Aguardando retirada — ligar pro cliente <span class="count" id="priorityCount">0</span></div>
           <p style="margin:-6px 0 10px;font-size:11.5px;color:#8a5540;">Ordenado por quem está esperando há mais tempo &mdash; dias em vermelho = perto do prazo de devolução. Essa lista não respeita os filtros acima — é um radar fixo, olha a base inteira.</p>
@@ -1000,6 +1009,21 @@ function textoCurtoStatus(status){
 var PRAZO_ATENCAO_DIAS = 4;
 var PRAZO_URGENTE_DIAS = 7;
 var LIMITE_LINHAS_TABELA = 500; // performance: acima disso, pede pra refinar os filtros
+
+function abrevEmpresa(emp){
+  if (emp === 'Mayderma') return 'MD';
+  if (emp === 'Stin Pharma') return 'SP';
+  return (emp||'—').slice(0,2).toUpperCase();
+}
+var retiradaEmpresaSel = '';
+document.querySelectorAll('#retirada-empresa-switch .empresa-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('#retirada-empresa-switch .empresa-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    retiradaEmpresaSel = btn.dataset.empresa;
+    render();
+  });
+});
 
 function debounce(fn, ms){
   var t;
@@ -1686,7 +1710,9 @@ function render(){
   // Priority box — sempre olha a base inteira (não respeita filtros, é radar fixo)
   // Ordenado por quem está esperando há mais tempo (maior risco de devolução primeiro)
   var agora = Date.now();
-  var retiradaGeral = allRows.filter(function(o){return o._bucket==='retirada';}).map(function(o){
+  var retiradaGeral = allRows.filter(function(o){
+    return o._bucket==='retirada' && (!retiradaEmpresaSel || o.empresa === retiradaEmpresaSel);
+  }).map(function(o){
     var dias = o.dataPostagem ? Math.floor((agora - o.dataPostagem.getTime())/86400000) : null;
     return Object.assign({}, o, {_diasEsperando: dias});
   }).sort(function(a,b){
@@ -1697,8 +1723,9 @@ function render(){
   var priorityBox = document.getElementById('priorityBox');
   var priorityList = document.getElementById('priorityList');
   document.getElementById('priorityCount').textContent = retiradaGeral.length;
-  document.getElementById('nav-badge-retirada').textContent = retiradaGeral.length;
-  document.getElementById('nav-badge-retirada').classList.toggle('pulso', retiradaGeral.length > 0);
+  var totalGeralRetirada = allRows.filter(function(o){return o._bucket==='retirada';}).length;
+  document.getElementById('nav-badge-retirada').textContent = totalGeralRetirada;
+  document.getElementById('nav-badge-retirada').classList.toggle('pulso', totalGeralRetirada > 0);
   if (retiradaGeral.length > 0){
     priorityBox.style.display = 'block';
     priorityList.innerHTML = '<table><tbody>' + retiradaGeral.map(function(o){
@@ -1706,7 +1733,8 @@ function render(){
       var diasClass = 'ok';
       if (o._diasEsperando!=null && o._diasEsperando >= PRAZO_URGENTE_DIAS) diasClass = 'urgente';
       else if (o._diasEsperando!=null && o._diasEsperando >= PRAZO_ATENCAO_DIAS) diasClass = 'atencao';
-      return '<tr><td class="mono">'+escapeHtml(o.codigo)+'</td><td class="dest">'+escapeHtml(o.destinatario)+'</td><td class="nf">'+(o.nf?'NF '+escapeHtml(o.nf):'—')+'</td><td class="dias '+diasClass+'"><span class="selo">'+diasTxt+'</span></td><td class="loc">'+escapeHtml(o.cidade)+'/'+escapeHtml(o.uf)+'</td></tr>';
+      var tagClass = o.empresa === 'Mayderma' ? 'md' : 'sp';
+      return '<tr><td class="etag"><span class="empresa-tag '+tagClass+'">'+abrevEmpresa(o.empresa)+'</span></td><td class="mono">'+escapeHtml(o.codigo)+'</td><td class="dest">'+escapeHtml(o.destinatario)+'</td><td class="nf">'+(o.nf?'NF '+escapeHtml(o.nf):'—')+'</td><td class="dias '+diasClass+'"><span class="selo">'+diasTxt+'</span></td><td class="loc">'+escapeHtml(o.cidade)+'/'+escapeHtml(o.uf)+'</td></tr>';
     }).join('') + '</tbody></table>';
   } else {
     priorityBox.style.display = 'none';
