@@ -56,7 +56,7 @@
   @keyframes painelEntra{ from{opacity:0; transform:translateY(3px);} to{opacity:1; transform:translateY(0);} }
 
   #staleWarning, #avisoErroAtualizacao, #empresaPerguntaBox,
-  .period-banner.show, #debugPanel, #limparBaseModal{
+  .period-banner.show, #debugPanel, #limparBaseModal, #filterbar{
     animation: painelEntra .2s ease-out;
   }
 
@@ -190,6 +190,26 @@
   .priority-list td.dias.ok .selo{color:var(--ink-soft);font-weight:400;}
   .priority-list td.dias.atencao .selo{color:#9a6b0a;}
   .priority-list td.dias.urgente .selo{color:#fff;background:var(--retirada);padding:1px 6px;border-radius:5px;}
+
+  /* ---------- Botão que abre/fecha os filtros ---------- */
+  .filterbar-toggle-row{margin-bottom:12px;}
+  .btn-filtros{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:'Inter',sans-serif;font-weight:500;font-size:13px;
+    padding:9px 14px;border-radius:var(--radius);
+    background:var(--paper-raised);border:1px solid var(--line);box-shadow:var(--shadow);
+    color:var(--ink);cursor:pointer;
+  }
+  .btn-filtros:hover{border-color:var(--postal-blue);color:var(--postal-blue);}
+  .btn-filtros .chevron{transition:transform .18s ease-out;color:var(--ink-soft);}
+  .btn-filtros[aria-expanded="true"] .chevron{transform:rotate(180deg);}
+  .btn-filtros[aria-expanded="true"]{border-color:var(--postal-blue);color:var(--postal-blue);}
+  .badge-filtros{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;
+    background:var(--postal-blue);color:#fff;border-radius:20px;
+    min-width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;
+    padding:0 5px;
+  }
 
   /* ---------- Filter bar ---------- */
   .filterbar{
@@ -518,7 +538,16 @@
 
   <div id="staleWarning"></div>
 
-  <div class="filterbar">
+  <div class="filterbar-toggle-row">
+    <button class="btn-filtros" id="btn-toggle-filtros" type="button" aria-expanded="false">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+      Filtros
+      <span class="badge-filtros hidden" id="badge-filtros-count">0</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+  </div>
+
+  <div class="filterbar" id="filterbar" style="display:none;">
     <div class="field">
       <label>Data de postagem &mdash; De</label>
       <input type="date" id="f-date-start">
@@ -1334,6 +1363,23 @@ document.getElementById('f-destinatario').addEventListener('input', debounce(fun
 document.getElementById('f-registro').addEventListener('input', debounce(function(e){ state.registro = e.target.value; render(); }, 250));
 document.getElementById('f-nf').addEventListener('input', debounce(function(e){ state.nf = e.target.value; render(); }, 250));
 
+// -------- Painel de filtros: abre/fecha + contador de filtros ativos --------
+document.getElementById('btn-toggle-filtros').addEventListener('click', function(){
+  var painel = document.getElementById('filterbar');
+  var aberto = painel.style.display !== 'none';
+  painel.style.display = aberto ? 'none' : 'grid';
+  this.setAttribute('aria-expanded', String(!aberto));
+});
+function atualizarBadgeFiltros(){
+  var ativos = ['status','statusDetalhado','uf','cidade','destinatario','registro','nf']
+    .filter(function(k){ return !!state[k]; }).length;
+  if (state.dateStart) ativos++;
+  if (state.dateEnd) ativos++;
+  var badge = document.getElementById('badge-filtros-count');
+  badge.textContent = ativos;
+  badge.classList.toggle('hidden', ativos === 0);
+}
+
 function applyDateFilter(){
   var startVal = document.getElementById('f-date-start').value;
   var endVal = document.getElementById('f-date-end').value;
@@ -1486,6 +1532,7 @@ var chartPeriodoMensal = new Chart(document.getElementById('chart-periodo-mensal
 
 function render(){
  try {
+  atualizarBadgeFiltros();
   var filtered = applyFilters();
   var total = filtered.length;
 
