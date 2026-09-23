@@ -89,6 +89,18 @@
   }
   .chart-holder{ position:relative; }
 
+  /* ---------- Sub-abas dentro de Visão Geral ---------- */
+  .subtab-nav{display:flex;gap:0;margin-bottom:16px;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);width:fit-content;overflow:hidden;}
+  .subtab-btn{
+    font-family:'Inter',sans-serif;font-weight:500;font-size:12.5px;padding:8px 18px;
+    background:var(--paper-raised);color:var(--ink-soft);border:none;border-right:1px solid var(--line);cursor:pointer;
+  }
+  .subtab-btn:last-child{border-right:none;}
+  .subtab-btn:hover{background:var(--paper);color:var(--ink);}
+  .subtab-btn.active{background:var(--ink);color:#fff;}
+  .subtab-panel{display:none;}
+  .subtab-panel.active{display:block;animation:painelEntra .18s ease-out;}
+
   /* ---------- Login ---------- */
   #loginScreen{max-width:340px;margin:14vh auto;background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 30px;}
   #loginScreen h1{font-family:'Inter',sans-serif;font-weight:600;font-size:24px;margin:0 0 4px;}
@@ -429,31 +441,58 @@
   /* ---------- Esqueleto: menu lateral de altura total + área principal ---------- */
   .app-layout{display:flex;min-height:100vh;}
   .sidebar{
-    width:236px;flex:none;position:sticky;top:0;height:100vh;overflow-y:auto;
+    width:196px;flex:none;position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden;
     background:var(--paper-raised);border-right:1px solid var(--line);
     padding:18px 12px;display:flex;flex-direction:column;
+    transition:width .18s ease-out;
   }
-  .sidebar-brand{padding:4px 10px 18px;border-bottom:1px solid var(--line);margin-bottom:8px;}
-  .brand-title{font-family:'Inter',sans-serif;font-weight:700;font-size:16px;color:var(--ink);}
+  .sidebar-brand{padding:4px 6px 18px 10px;border-bottom:1px solid var(--line);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+  .brand-title{font-family:'Inter',sans-serif;font-weight:700;font-size:16px;color:var(--ink);white-space:nowrap;overflow:hidden;}
   .brand-sub{font-family:'Inter',sans-serif;font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+  .sidebar-collapse-btn{
+    flex:none;width:24px;height:24px;display:flex;align-items:center;justify-content:center;
+    background:transparent;border:1px solid var(--line);border-radius:6px;color:var(--ink-soft);cursor:pointer;
+  }
+  .sidebar-collapse-btn:hover{color:var(--ink);border-color:var(--ink);}
+  .sidebar-collapse-btn svg{transition:transform .18s ease-out;}
   .sidebar .nav-group-label{
     font-family:'Inter',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
-    color:#9CA3AF;padding:10px;margin-top:10px;border-top:1px solid var(--line);
+    color:#9CA3AF;padding:10px;margin-top:10px;border-top:1px solid var(--line);white-space:nowrap;overflow:hidden;
   }
   .sidebar .nav-group-label:first-of-type{margin-top:0;border-top:none;}
   .sidebar .nav-item{
-    display:flex;align-items:center;justify-content:space-between;gap:8px;
-    padding:9px 10px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;font-size:14px;
-    border-radius:7px;color:var(--ink);margin-bottom:2px;
+    display:flex;align-items:center;justify-content:flex-start;gap:9px;
+    padding:8px 10px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;font-size:13.5px;
+    border-radius:7px;color:var(--ink);margin-bottom:2px;white-space:nowrap;overflow:hidden;
   }
   .sidebar .nav-item:hover{background:var(--paper);}
   .sidebar .nav-item.active{background:#EFF6FF;color:var(--postal-blue);font-weight:600;}
+  .sidebar .nav-icon{flex:none;width:16px;height:16px;display:flex;color:var(--ink-soft);}
+  .sidebar .nav-icon svg{width:16px;height:16px;}
+  .sidebar .nav-item.active .nav-icon{color:var(--postal-blue);}
+  .sidebar .nav-item:hover .nav-icon{color:var(--ink);}
+  .sidebar .nav-label{overflow:hidden;text-overflow:ellipsis;flex:1;}
   .sidebar .nav-badge{
-    font-family:'Inter',sans-serif;font-weight:600;font-size:10px;background:var(--retirada);color:#fff;
+    flex:none;font-family:'Inter',sans-serif;font-weight:600;font-size:10px;background:var(--retirada);color:#fff;
     padding:1px 7px;border-radius:20px;
   }
+  @keyframes badgePulso{0%,100%{box-shadow:0 0 0 0 rgba(234,88,12,.45);}50%{box-shadow:0 0 0 4px rgba(234,88,12,0);}}
+  .sidebar .nav-badge.pulso{animation:badgePulso 2s ease-in-out infinite;}
   .sidebar-footer{margin-top:auto;padding:14px 10px 0;border-top:1px solid var(--line);}
-  .sidebar-meta{font-family:'Inter',sans-serif;font-size:12px;color:var(--ink-soft);margin-bottom:10px;}
+  .sidebar-meta{font-family:'Inter',sans-serif;font-size:12px;color:var(--ink-soft);margin-bottom:10px;white-space:nowrap;overflow:hidden;}
+
+  /* ---------- Sidebar recolhida: só ícones ---------- */
+  .sidebar.collapsed{width:56px;padding-left:8px;padding-right:8px;}
+  .sidebar.collapsed .brand-title, .sidebar.collapsed .nav-group-label,
+  .sidebar.collapsed .nav-label, .sidebar.collapsed .sidebar-meta,
+  .sidebar.collapsed .logout-label{display:none;}
+  .sidebar.collapsed .sidebar-brand{justify-content:center;}
+  .sidebar.collapsed .nav-item{justify-content:center;padding:9px;}
+  .sidebar.collapsed .nav-badge{position:absolute;transform:translate(10px,-10px);padding:0;width:8px;height:8px;font-size:0;min-width:0;border-radius:50%;}
+  .sidebar.collapsed .nav-item{position:relative;}
+  .sidebar.collapsed .sidebar-collapse-btn svg{transform:rotate(180deg);}
+  .sidebar.collapsed .sidebar-footer{padding-left:0;padding-right:0;}
+  .sidebar.collapsed #logoutBtn{width:auto;padding:8px;}
   .main-area{flex:1;min-width:0;padding:24px 28px 48px;}
   .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px;}
   .topbar h1{font-family:'Inter',sans-serif;font-size:22px;font-weight:700;margin:0 0 2px;color:var(--ink);}
@@ -495,16 +534,32 @@
 
 <div id="appScreen" class="app-layout hidden">
 
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="brand-title">Rastro</div>
+      <button class="sidebar-collapse-btn" id="btn-collapse-sidebar" type="button" title="Recolher menu">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+      </button>
     </div>
     <div class="nav-group-label">Painel</div>
-    <div class="nav-item active" data-tab="visao-geral" data-label="Visão Geral">Visão Geral</div>
-    <div class="nav-item" data-tab="retirada" data-label="Aguardando Retirada">Aguardando Retirada <span class="nav-badge" id="nav-badge-retirada">0</span></div>
-    <div class="nav-item" data-tab="detalhamento" data-label="Detalhamento">Detalhamento</div>
+    <div class="nav-item active" data-tab="visao-geral" data-label="Visão Geral" title="Visão Geral">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+      <span class="nav-label">Visão Geral</span>
+    </div>
+    <div class="nav-item" data-tab="retirada" data-label="Aguardando Retirada" title="Aguardando Retirada">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></span>
+      <span class="nav-label">Aguardando Retirada</span>
+      <span class="nav-badge" id="nav-badge-retirada">0</span>
+    </div>
+    <div class="nav-item" data-tab="detalhamento" data-label="Detalhamento" title="Detalhamento">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>
+      <span class="nav-label">Detalhamento</span>
+    </div>
     <div class="nav-group-label">Administração</div>
-    <div class="nav-item" data-tab="gestao" data-label="Gestão">Gestão</div>
+    <div class="nav-item" data-tab="gestao" data-label="Gestão" title="Gestão">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></span>
+      <span class="nav-label">Gestão</span>
+    </div>
     <div class="sidebar-footer">
       <div class="sidebar-meta"><span id="meta-total-obj">&mdash;</span> objetos na base</div>
       <button class="btn-ghost" id="logoutBtn" type="button" style="width:100%;">Sair</button>
@@ -654,43 +709,52 @@
           </div>
         </div>
 
-        <div class="grid-2">
-          <div class="panel">
-            <h2>Postagens por dia</h2>
-            <p class="hint">Volume de objetos postados, por dia, no período selecionado</p>
-            <div class="chart-holder"><canvas id="chart-por-dia"></canvas></div>
-          </div>
-          <div class="panel">
-            <h2>Status das entregas</h2>
-            <p class="hint">Clique em um status para filtrar todo o painel</p>
-            <div class="chart-holder"><canvas id="chart-status"></canvas></div>
-            <div class="status-legend" id="status-legend"></div>
+        <div class="subtab-nav" id="subtab-visao-nav">
+          <button type="button" class="subtab-btn active" data-subtab="volume">Volume</button>
+          <button type="button" class="subtab-btn" data-subtab="geografico">Geográfico</button>
+        </div>
+
+        <div class="subtab-panel active" id="subtab-volume">
+          <div class="grid-2">
+            <div class="panel">
+              <h2>Postagens por dia</h2>
+              <p class="hint">Volume de objetos postados, por dia, no período selecionado</p>
+              <div class="chart-holder"><canvas id="chart-por-dia"></canvas></div>
+            </div>
+            <div class="panel">
+              <h2>Status das entregas</h2>
+              <p class="hint">Clique em um status para filtrar todo o painel</p>
+              <div class="chart-holder"><canvas id="chart-status"></canvas></div>
+              <div class="status-legend" id="status-legend"></div>
+            </div>
           </div>
         </div>
 
-        <div class="grid-2b">
-          <div class="panel">
-            <h2>Postagens por estado</h2>
-            <p class="hint">Quantidade de objetos por UF de destino, do maior para o menor</p>
-            <div class="chart-holder tall"><canvas id="chart-uf-qtd"></canvas></div>
+        <div class="subtab-panel" id="subtab-geografico">
+          <div class="grid-2b">
+            <div class="panel">
+              <h2>Postagens por estado</h2>
+              <p class="hint">Quantidade de objetos por UF de destino, do maior para o menor</p>
+              <div class="chart-holder tall"><canvas id="chart-uf-qtd"></canvas></div>
+            </div>
+            <div class="panel">
+              <h2>Valor postado por estado</h2>
+              <p class="hint">Soma do valor de postagem por UF de destino</p>
+              <div class="chart-holder tall"><canvas id="chart-uf-valor"></canvas></div>
+            </div>
           </div>
-          <div class="panel">
-            <h2>Valor postado por estado</h2>
-            <p class="hint">Soma do valor de postagem por UF de destino</p>
-            <div class="chart-holder tall"><canvas id="chart-uf-valor"></canvas></div>
-          </div>
-        </div>
 
-        <div class="panel" style="margin-bottom:18px;">
-          <h2>Ranking de cidades</h2>
-          <p class="hint">Cidades com maior quantidade de postagens no período</p>
-          <div class="table-scroll" style="max-height:320px;">
-            <table>
-              <thead>
-                <tr><th>Cidade</th><th>UF</th><th class="num">Postagens</th><th class="num">Valor total</th></tr>
-              </thead>
-              <tbody id="ranking-cidades-body"></tbody>
-            </table>
+          <div class="panel" style="margin-bottom:18px;">
+            <h2>Ranking de cidades</h2>
+            <p class="hint">Cidades com maior quantidade de postagens no período</p>
+            <div class="table-scroll" style="max-height:320px;">
+              <table>
+                <thead>
+                  <tr><th>Cidade</th><th>UF</th><th class="num">Postagens</th><th class="num">Valor total</th></tr>
+                </thead>
+                <tbody id="ranking-cidades-body"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -965,6 +1029,39 @@ document.getElementById("loginBtn").addEventListener("click", function () {
 document.getElementById("logoutBtn").addEventListener("click", function () { auth.signOut(); });
 
 // -------- Navegação lateral (abas) --------
+// -------- Sub-abas de Visão Geral (Volume / Geográfico) --------
+document.querySelectorAll('#subtab-visao-nav .subtab-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('#subtab-visao-nav .subtab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('#tab-visao-geral .subtab-panel').forEach(function(p){ p.classList.remove('active'); });
+    btn.classList.add('active');
+    var painel = document.getElementById('subtab-' + btn.dataset.subtab);
+    painel.classList.add('active');
+    // Gráficos que nasceram escondidos às vezes ficam com tamanho errado até
+    // a gente forçar um resize agora que o painel deles está visível de verdade.
+    if (btn.dataset.subtab === 'geografico'){
+      chartUfQtd.resize();
+      chartUfValor.resize();
+    } else {
+      chartPorDia.resize();
+      chartStatus.resize();
+    }
+  });
+});
+
+// -------- Sidebar: recolher/expandir, com preferência salva --------
+(function(){
+  var sidebar = document.getElementById('sidebar');
+  var btn = document.getElementById('btn-collapse-sidebar');
+  var salvo = null;
+  try { salvo = localStorage.getItem('rastro-sidebar-recolhida'); } catch(e){}
+  if (salvo === '1') sidebar.classList.add('collapsed');
+  btn.addEventListener('click', function(){
+    sidebar.classList.toggle('collapsed');
+    try { localStorage.setItem('rastro-sidebar-recolhida', sidebar.classList.contains('collapsed') ? '1' : '0'); } catch(e){}
+  });
+})();
+
 document.querySelectorAll('.sidebar .nav-item').forEach(function(item){
   item.addEventListener('click', function(){
     document.querySelectorAll('.sidebar .nav-item').forEach(function(i){ i.classList.remove('active'); });
@@ -1601,6 +1698,7 @@ function render(){
   var priorityList = document.getElementById('priorityList');
   document.getElementById('priorityCount').textContent = retiradaGeral.length;
   document.getElementById('nav-badge-retirada').textContent = retiradaGeral.length;
+  document.getElementById('nav-badge-retirada').classList.toggle('pulso', retiradaGeral.length > 0);
   if (retiradaGeral.length > 0){
     priorityBox.style.display = 'block';
     priorityList.innerHTML = '<table><tbody>' + retiradaGeral.map(function(o){
