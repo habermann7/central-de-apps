@@ -41,6 +41,37 @@
   .wrap{max-width:1320px;margin:0 auto;padding:28px 24px 64px;}
   .hidden{display:none !important;}
 
+  /* ---------- Movimento: transições suaves em vez de trocas secas ---------- */
+  a, button, input, select, .nav-item, .empresa-btn, .status-legend .chip,
+  .btn-primary, .btn-ghost, .btn-accent, .btn-reset, .file-btn,
+  tbody tr, .priority-list tr, .gasto-empresa-item, .status-badge{
+    transition: background-color .15s ease-out, border-color .15s ease-out,
+      color .15s ease-out, opacity .15s ease-out, box-shadow .15s ease-out,
+      transform .1s ease-out;
+  }
+  button:not(:disabled):active, .empresa-btn:active, .nav-item:active{
+    transform:scale(0.97);
+  }
+  .tab-panel.active{ animation: painelEntra .18s ease-out; }
+  @keyframes painelEntra{ from{opacity:0; transform:translateY(3px);} to{opacity:1; transform:translateY(0);} }
+
+  #staleWarning, #avisoErroAtualizacao, #empresaPerguntaBox,
+  .period-banner.show, #debugPanel, #limparBaseModal{
+    animation: painelEntra .2s ease-out;
+  }
+
+  .btn-accent.is-loading, .btn-primary.is-loading{ position:relative; }
+  .btn-accent.is-loading::before, .btn-primary.is-loading::before{
+    content:'';display:inline-block;width:11px;height:11px;margin-right:7px;vertical-align:-1.5px;
+    border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;
+    animation: girar .6s linear infinite;
+  }
+  @keyframes girar{ to{ transform:rotate(360deg); } }
+
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+  }
+
   /* ---------- Login ---------- */
   #loginScreen{max-width:340px;margin:14vh auto;background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 30px;}
   #loginScreen h1{font-family:'Inter',sans-serif;font-weight:600;font-size:24px;margin:0 0 4px;}
@@ -918,6 +949,7 @@ document.getElementById("btn-confirmar-limpar").addEventListener("click", functi
   }
   var btn = this;
   btn.disabled = true;
+  btn.classList.add("is-loading");
   btn.textContent = "Apagando...";
   db.ref(CAMINHO_PEDIDOS).remove().then(function(){
     document.getElementById("limparBaseModal").classList.add("hidden");
@@ -926,6 +958,7 @@ document.getElementById("btn-confirmar-limpar").addEventListener("click", functi
     alert("Erro ao limpar: " + err.message);
   }).finally(function(){
     btn.disabled = false;
+    btn.classList.remove("is-loading");
     btn.textContent = "Confirmar exclusão";
   });
 });
@@ -958,6 +991,7 @@ var MAX_RODADAS_AUTOMATICAS = 6; // trava de segurança, pra nunca ficar num loo
 document.getElementById("atualizarAgoraBtn").addEventListener("click", async function () {
   var btn = this;
   btn.disabled = true;
+  btn.classList.add("is-loading");
   document.getElementById("errorMsg").textContent = "";
   document.getElementById("avisoErroAtualizacao").classList.add("hidden");
 
@@ -1000,6 +1034,7 @@ document.getElementById("atualizarAgoraBtn").addEventListener("click", async fun
     document.getElementById("errorMsg").textContent = "Erro ao atualizar: " + err.message;
   } finally {
     btn.disabled = false;
+    btn.classList.remove("is-loading");
     btn.textContent = "Atualizar agora";
   }
 });
