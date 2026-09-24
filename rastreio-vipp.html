@@ -607,7 +607,6 @@ body{background:var(--paper);-webkit-font-smoothing:antialiased}
 .status-legend{gap:7px;margin-top:20px}.status-legend .chip{border:1px solid var(--line);padding:6px 9px;border-radius:7px;font-size:10px;background:#fff;font-family:inherit;color:var(--ink)}
 .status-legend .chip[aria-pressed="true"]{border-color:var(--postal-blue);background:#F1F5F9}
 .table-scroll{border-color:#edf0f5;border-radius:10px}thead th{font-size:10px;letter-spacing:.035em;color:#64748b}tbody td{padding-top:13px;padding-bottom:13px}
-.motion-control{font-size:11px;display:flex;gap:7px;align-items:center;margin-left:auto;color:var(--ink-soft);cursor:pointer}.motion-control input{accent-color:var(--postal-blue)}
 .chart-empty{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:var(--ink-soft);font-size:12px;pointer-events:none;background:#ffffffed;border-radius:10px}.chart-empty small{margin-top:5px;color:#79879b}
 .chart-data{margin-top:12px;font-size:11px;color:var(--ink-soft)}.chart-data summary{cursor:pointer;width:fit-content}.chart-data .table-scroll{margin-top:8px;max-height:220px}.chart-data table{min-width:100%;font-variant-numeric:tabular-nums}
 .tab-panel.active,.subtab-panel.active{animation:painelEntra 200ms var(--ease-out)}
@@ -617,7 +616,7 @@ body{background:var(--paper);-webkit-font-smoothing:antialiased}
 @media(min-width:901px){.sidebar:not(.collapsed){width:232px}.sidebar .nav-item{font-size:12px}}
 @media(min-width:1400px){#tab-visao-geral>.kpi-row{grid-template-columns:repeat(7,minmax(0,1fr))}}
 @media(max-width:1100px){.grid-2,.grid-2b{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:640px){.main-area{padding:20px 14px 35px;width:100%}.topbar h1{font-size:26px}.topbar{gap:14px}.kpi-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.kpi{padding:15px}.panel,.table-panel{padding:17px}.sidebar,.sidebar.collapsed{width:100%}.sidebar .nav-item{flex:none;padding:7px 9px}.sidebar-footer{padding-left:7px}.chart-holder{height:260px}.motion-control{margin-left:0}.filterbar-toggle-row{flex-wrap:wrap}.empresa-switch{max-width:100%}}
+@media(max-width:640px){.main-area{padding:20px 14px 35px;width:100%}.topbar h1{font-size:26px}.topbar{gap:14px}.kpi-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.kpi{padding:15px}.panel,.table-panel{padding:17px}.sidebar,.sidebar.collapsed{width:100%}.sidebar .nav-item{flex:none;padding:7px 9px}.sidebar-footer{padding-left:7px}.chart-holder{height:260px}.filterbar-toggle-row{flex-wrap:wrap}.empresa-switch{max-width:100%}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.kpi:hover{transform:none}}
 #loginScreen{max-width:390px;padding:38px;border-radius:20px;box-shadow:0 20px 70px #17294410}#loginScreen h1{font-size:32px;letter-spacing:-1px}#loginScreen input{padding:12px}#loginScreen .btn-primary{padding:12px;background:var(--postal-blue)}
 
@@ -738,7 +737,6 @@ button,.empresa-btn,.nav-item{transition:transform 120ms var(--ease-out),backgro
   <div class="operation-feedback" aria-live="polite" aria-atomic="true"><span id="operation-state" data-state="idle">Pronto para consultar</span><span id="received-at"></span></div>
   <div id="change-summary" class="change-summary hidden" role="status" aria-atomic="true"></div>
   <div class="filterbar-toggle-row">
-<label class="motion-control" style="order:2"><input id="motion-toggle" type="checkbox" checked> Animações</label>
     <button class="btn-filtros" id="btn-toggle-filtros" type="button" aria-expanded="false">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
       Filtros
@@ -1948,7 +1946,6 @@ Chart.defaults.font.family = "'Inter', sans-serif";
 Chart.defaults.color = '#6B7280';
 var motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
 var motionEnabled = !motionPreference.matches;
-try { motionEnabled = motionEnabled && localStorage.getItem('rastro-motion') !== 'off'; } catch(e){}
 Chart.defaults.animation.duration = motionEnabled ? 280 : 0;
 Chart.defaults.animation.easing = 'easeOutQuart';
 Chart.defaults.plugins.tooltip.backgroundColor = '#111827';
@@ -2009,9 +2006,33 @@ var pluginTextoCentral = {
   }
 };
 
+// Escreve o valor na ponta de cada barra horizontal — evita precisar passar o
+// mouse pra saber o número exato, dá um acabamento mais "relatório pronto".
+var pluginRotuloBarra = {
+  id: 'rotuloBarra',
+  afterDatasetsDraw: function(chart){
+    var cfg = chart.config.options.plugins && chart.config.options.plugins.rotuloBarra;
+    if (!cfg || !chart.chartArea) return;
+    var ctx = chart.ctx;
+    var meta = chart.getDatasetMeta(0);
+    ctx.save();
+    ctx.font = "600 10.5px 'Inter', sans-serif";
+    ctx.fillStyle = '#334155';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    meta.data.forEach(function(bar, i){
+      var val = chart.data.datasets[0].data[i];
+      if (val == null) return;
+      var texto = cfg.formatar ? cfg.formatar(val) : String(val);
+      ctx.fillText(texto, bar.x + 6, bar.y);
+    });
+    ctx.restore();
+  }
+};
+
 var chartPorDia = new Chart(document.getElementById('chart-por-dia'), {
   type:'bar',
-  data:{labels:[],datasets:[{data:[],backgroundColor:function(c){return gradienteVertical(c,'#2E5EA8');},borderRadius:5,borderSkipped:false,maxBarThickness:32,hoverBackgroundColor:'#2E5EA8'}]},
+  data:{labels:[],datasets:[{data:[],backgroundColor:function(c){return gradienteVertical(c,'#2C57E4');},borderRadius:5,borderSkipped:false,maxBarThickness:32,hoverBackgroundColor:'#2C57E4'}]},
   options:{responsive:true,maintainAspectRatio:false,
     plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.parsed.y.toLocaleString('pt-BR')+' objeto(s)';}}}},
     scales:{
@@ -2036,27 +2057,29 @@ var chartStatus = new Chart(document.getElementById('chart-status'), {
   plugins:[pluginTextoCentral]
 });
 var chartUfQtd = new Chart(document.getElementById('chart-uf-qtd'), {
-  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:function(c){return gradienteHorizontal(c,'#5C6F8C');},borderRadius:5,borderSkipped:false,hoverBackgroundColor:'#5C6F8C'}]},
-  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
-    plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.parsed.x.toLocaleString('pt-BR')+' objeto(s)';}}}},
+  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:function(c){return gradienteHorizontal(c,'#2C57E4');},borderRadius:5,borderSkipped:false,hoverBackgroundColor:'#2C57E4'}]},
+  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',layout:{padding:{right:44}},
+    plugins:{legend:{display:false},rotuloBarra:{formatar:function(v){return v.toLocaleString('pt-BR');}},tooltip:{callbacks:{label:function(ctx){return ctx.parsed.x.toLocaleString('pt-BR')+' objeto(s)';}}}},
     scales:{
       x:{beginAtZero:true,grid:{color:'#F1F2F4'},border:{display:false},ticks:{font:{size:10.5}}},
       y:{grid:{display:false},border:{display:false},ticks:{font:{size:11}}}
     }
-  }
+  },
+  plugins:[pluginRotuloBarra]
 });
 var chartUfValor = new Chart(document.getElementById('chart-uf-valor'), {
-  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:function(c){return gradienteHorizontal(c,'#C1841F');},borderRadius:5,borderSkipped:false,hoverBackgroundColor:'#C1841F'}]},
-  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
-    plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return fmtMoney(ctx.parsed.x);}}}},
+  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:function(c){return gradienteHorizontal(c,'#0D8A82');},borderRadius:5,borderSkipped:false,hoverBackgroundColor:'#0D8A82'}]},
+  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',layout:{padding:{right:56}},
+    plugins:{legend:{display:false},rotuloBarra:{formatar:fmtMoney},tooltip:{callbacks:{label:function(ctx){return fmtMoney(ctx.parsed.x);}}}},
     scales:{
       x:{beginAtZero:true,grid:{color:'#F1F2F4'},border:{display:false},ticks:{font:{size:10.5},callback:function(v){return 'R$ '+v.toLocaleString('pt-BR');}}},
       y:{grid:{display:false},border:{display:false},ticks:{font:{size:11}}}
     }
-  }
+  },
+  plugins:[pluginRotuloBarra]
 });
 var chartGastoEmpresa = new Chart(document.getElementById('chart-gasto-empresa'), {
-  type:'doughnut', data:{labels:[],datasets:[{data:[],backgroundColor:['#2E5EA8','#8C5383','#5C6F8C','#C1841F'],hoverOffset:8,borderWidth:2,borderColor:'#fff'}]},
+  type:'doughnut', data:{labels:[],datasets:[{data:[],backgroundColor:['#EDA996','#1A4773'],hoverOffset:8,borderWidth:2,borderColor:'#fff'}]},
   options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
     plugins:{
       legend:{position:'bottom',labels:{boxWidth:10,font:{size:11},padding:14}},
@@ -2068,8 +2091,8 @@ var chartGastoEmpresa = new Chart(document.getElementById('chart-gasto-empresa')
 });
 var chartPeriodoMensal = new Chart(document.getElementById('chart-periodo-mensal'), {
   data:{labels:[],datasets:[
-    {type:'bar',label:'Gasto (R$)',data:[],backgroundColor:function(c){return gradienteVertical(c,'#2F7A54');},borderRadius:5,borderSkipped:false,yAxisID:'y',order:2},
-    {type:'line',label:'Envios',data:[],borderColor:'#B4452F',backgroundColor:'rgba(180,69,47,0.12)',yAxisID:'y1',tension:0.35,fill:true,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:'#fff',pointBorderColor:'#B4452F',pointBorderWidth:2,order:1}
+    {type:'bar',label:'Gasto (R$)',data:[],backgroundColor:function(c){return gradienteVertical(c,'#0D8A82');},borderRadius:5,borderSkipped:false,yAxisID:'y',order:2},
+    {type:'line',label:'Envios',data:[],borderColor:'#2C57E4',backgroundColor:'rgba(44,87,228,0.12)',yAxisID:'y1',tension:0.35,fill:true,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:'#fff',pointBorderColor:'#2C57E4',pointBorderWidth:2,order:1}
   ]},
   options:{responsive:true,maintainAspectRatio:false,
     interaction:{mode:'index',intersect:false},
@@ -2404,7 +2427,7 @@ document.getElementById('btn-exportar-csv').addEventListener('click', exportarCS
   var charts=[chartPorDia,chartStatus,chartUfQtd,chartUfValor,chartGastoEmpresa,chartPeriodoMensal];
   var records=new Map(),animations=new Map(),timers=new Set(),cardsSeen=new WeakSet();
   var ready=false,keyboard=false,frame=0,epoch=0;
-  var control=document.getElementById('motion-toggle'),ease='cubic-bezier(.23,1,.32,1)';
+  var ease='cubic-bezier(.23,1,.32,1)';
   function canMove(){return motionEnabled&&!motionPreference.matches&&!keyboard&&!document.hidden;}
   function inView(el){var r=el.getBoundingClientRect();return !!el.getClientRects().length&&r.width>0&&r.height>0&&r.bottom>0&&r.top<innerHeight;}
   function animate(el,frames,options){
@@ -2444,15 +2467,12 @@ document.getElementById('btn-exportar-csv').addEventListener('click', exportarCS
     });
   }
   function applyPolicy(){
-    motionEnabled=motionEnabled&&!motionPreference.matches;
-    control.checked=motionEnabled;control.disabled=motionPreference.matches;
-    control.title=motionPreference.matches?'Movimento reduzido ativado no sistema':'';
+    motionEnabled=!motionPreference.matches;
     document.documentElement.classList.toggle('motion-off',!motionEnabled);
     charts.forEach(function(c){c.options.animation.duration=motionEnabled?280:0;});
     cancelAll();schedule();
   }
-  control.addEventListener('change',function(){motionEnabled=control.checked&&!motionPreference.matches;try{localStorage.setItem('rastro-motion',motionEnabled?'on':'off');}catch(e){}applyPolicy();});
-  motionPreference.addEventListener('change',function(){motionEnabled=!motionPreference.matches;try{motionEnabled=motionEnabled&&localStorage.getItem('rastro-motion')!=='off';}catch(e){}applyPolicy();});
+  motionPreference.addEventListener('change',function(){motionEnabled=!motionPreference.matches;applyPolicy();});
   document.addEventListener('keydown',function(){if(!keyboard){keyboard=true;document.documentElement.classList.add('keyboard-input');cancelAll();}},true);
   document.addEventListener('pointerdown',function(){keyboard=false;document.documentElement.classList.remove('keyboard-input');},true);
   document.addEventListener('visibilitychange',function(){if(document.hidden)cancelAll();else schedule();});
