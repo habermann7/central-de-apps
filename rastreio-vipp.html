@@ -527,6 +527,13 @@
   }
 
   ::selection{background:var(--postal-blue);color:#fff;}
+
+  .panel.zona-risco{
+    border-color:#FCA5A5;
+    background:linear-gradient(180deg,#FEF2F2 0%,var(--paper-raised) 90px);
+  }
+  .panel.zona-risco h2{color:#B91C1C;}
+  .panel.zona-risco h2::before{content:'⚠ ';}
 </style>
 </head>
 <body>
@@ -1529,9 +1536,9 @@ var state = { dateStart: null, dateEnd: null, status: "", statusDetalhado: "", e
 
 document.getElementById('f-status').addEventListener('change', function(e){ state.status = e.target.value; render(); });
 document.getElementById('f-status-detalhado').addEventListener('change', function(e){ state.statusDetalhado = e.target.value; render(); });
-document.querySelectorAll('.empresa-btn').forEach(function(btn){
+document.querySelectorAll('#empresa-switch .empresa-btn').forEach(function(btn){
   btn.addEventListener('click', function(){
-    document.querySelectorAll('.empresa-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('#empresa-switch .empresa-btn').forEach(function(b){ b.classList.remove('active'); });
     btn.classList.add('active');
     state.empresa = btn.dataset.empresa;
     render();
