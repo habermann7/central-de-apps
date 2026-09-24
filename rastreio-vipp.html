@@ -1177,6 +1177,8 @@ document.getElementById("atualizarAgoraBtn").addEventListener("click", async fun
   document.getElementById("avisoErroAtualizacao").classList.add("hidden");
 
   var totalAtualizadosNaSessao = 0;
+  var totalTocadosNaSessao = 0; // quantos pedidos essa sessão realmente consultou (soma das rodadas)
+  var totalPendentesInicial = null; // tamanho do lote pendente na 1ª rodada, pra saber quando já deu a volta completa
   var rodada = 0;
   var dados = null;
 
@@ -1196,9 +1198,15 @@ document.getElementById("atualizarAgoraBtn").addEventListener("click", async fun
         document.getElementById("errorMsg").textContent = "Erro ao atualizar: " + (dados.error || resposta.status);
         break;
       }
+      if (totalPendentesInicial === null) totalPendentesInicial = dados.totalPendentes || 0;
       totalAtualizadosNaSessao += (dados.atualizados || 0);
+      totalTocadosNaSessao += (dados.processadosNessaExecucao || 0);
       document.getElementById("fileInfo").textContent = totalAtualizadosNaSessao + " pedidos atualizados agora" + (dados.restantes ? " (ainda restam " + dados.restantes + ")" : "");
-    } while (dados && dados.restantes > 0 && rodada < MAX_RODADAS_AUTOMATICAS);
+    } while (
+      dados && dados.restantes > 0 &&
+      totalTocadosNaSessao < totalPendentesInicial &&
+      rodada < MAX_RODADAS_AUTOMATICAS
+    );
 
     if (dados) {
       var totalErros = (dados.erros ? dados.erros.length : 0) + (dados.semEventoOuErro || 0);
@@ -1207,8 +1215,13 @@ document.getElementById("atualizarAgoraBtn").addEventListener("click", async fun
         aviso.textContent = "A última atualização teve " + (dados.semEventoOuErro || 0) + " pedido(s) com erro ou sem informação disponível. Clica em \"Ver detalhes técnicos\" pra ver quais.";
         aviso.classList.remove("hidden");
       }
-      if (dados.restantes > 0) {
+      var voltaCompleta = totalTocadosNaSessao >= totalPendentesInicial;
+      if (dados.restantes > 0 && !voltaCompleta) {
         document.getElementById("fileInfo").textContent = totalAtualizadosNaSessao + " pedidos atualizados — ainda restam " + dados.restantes + ", clica em \"Atualizar agora\" de novo pra continuar";
+      } else if (dados.restantes > 0 && voltaCompleta) {
+        // Todo mundo já foi consultado nessa sessão; o número que "sobra" é só
+        // pedido que continua em trânsito/aguardando de verdade — não é erro.
+        document.getElementById("fileInfo").textContent = totalAtualizadosNaSessao + " de " + totalPendentesInicial + " pedidos verificados — os demais seguem em trânsito ou aguardando ação (normal, não indica erro)";
       }
     }
   } catch (err) {
