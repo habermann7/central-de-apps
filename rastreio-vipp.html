@@ -572,6 +572,86 @@
     .kpi-row{grid-template-columns:repeat(2,1fr);}
     .kpi{border-right:none;border-bottom:1px solid var(--line);}
   }
+
+/* Rastro • camada visual 2026. Regras operacionais preservadas. */
+:root{--paper:#f5f7fb;--ink:#172944;--ink-soft:#64748b;--line:#e3e9f1;--postal-blue:#334155;--radius:16px;--shadow:0 3px 16px rgba(23,41,68,.035);--ease-out:cubic-bezier(.23,1,.32,1)}
+body{background:radial-gradient(ellipse at 95% 0%,#eaf0ff 0,transparent 40%),var(--paper);-webkit-font-smoothing:antialiased}
+.main-area{padding:32px clamp(18px,3vw,48px) 48px;max-width:1800px;margin:auto}
+.sidebar{background:#14243d;color:#d5dfef;border:0;transition:none}
+.sidebar .brand-title{color:#fff;font-size:23px;letter-spacing:-1px}
+.brand-title::before{content:'↗';display:inline-grid;place-items:center;width:30px;height:30px;background:#334155;border-radius:9px;margin-right:9px;font-size:24px;color:white}
+.sidebar-brand{padding-bottom:25px;border-color:#ffffff18}
+.sidebar .nav-group-label,.sidebar-footer{border-color:#ffffff18}
+.sidebar .nav-group-label{color:#96a8c3;font-size:9px;letter-spacing:.14em}
+.sidebar .nav-item{color:#c6d3e7;padding-top:12px;padding-bottom:12px;margin-bottom:5px;border-radius:10px}
+.sidebar .nav-item.active{background:#ffffff12;color:#fff;box-shadow:inset 3px 0 #94a3b8}
+.sidebar .nav-icon,.sidebar .nav-item.active .nav-icon{color:#b8c2d6}
+.sidebar .nav-item:hover{background:#ffffff0d;color:#fff}
+.sidebar .nav-item:hover .nav-icon{color:#fff}
+.sidebar .btn-ghost,.sidebar-collapse-btn{color:#c6d3e7;border-color:#ffffff25}
+.sidebar-meta{color:#96a8c3}.sidebar .nav-badge.pulso{animation:none}
+.topbar{margin-bottom:26px;gap:20px}.topbar h1{font-size:30px;letter-spacing:-1.1px;font-weight:700}
+.eyebrow{font-size:10px;font-weight:700;color:var(--postal-blue);letter-spacing:.16em;text-transform:uppercase;margin-bottom:6px}
+.topbar-sub{font-size:12px;margin-top:6px}
+.empresa-switch{padding:4px;background:#e9edf5;border:0;box-shadow:none;border-radius:12px;gap:3px}
+.empresa-btn{border:0;background:transparent;border-radius:8px;font-size:12px;padding:9px 15px}
+.empresa-btn.active[data-empresa="Stin Pharma"]{background:var(--brand-stin);color:var(--brand-stin-ink);box-shadow:0 2px 5px #17294412}
+.empresa-btn.active[data-empresa="Mayderma"]{background:var(--brand-mayderma);color:#fff;box-shadow:0 2px 5px #17294412}
+.toolbar{border-radius:12px;padding:12px 16px;box-shadow:none;gap:10px}
+.btn-accent{background:var(--postal-blue);border-radius:8px}.file-btn,.btn-ghost,.btn-reset,.btn-filtros{border-radius:8px}
+.filterbar-toggle-row{display:flex;align-items:center;gap:12px;margin:16px 0}.filterbar{border-radius:12px}
+.kpi-row{gap:10px;background:none;border:none;box-shadow:none;overflow:visible;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));margin-bottom:24px}
+.kpi{--kpi-accent:var(--postal-blue);background:#fff;border:1px solid var(--line)!important;border-radius:13px;padding:19px 15px 17px;box-shadow:var(--shadow);min-width:0}
+.kpi::before{content:'';display:block;width:22px;height:3px;background:var(--kpi-accent);border-radius:3px;margin-bottom:15px}
+.kpi.retirada{--kpi-accent:var(--retirada)}.kpi.naoentregue{--kpi-accent:var(--naoentregue)}.kpi.problema{--kpi-accent:var(--problema)}.kpi.aguardando{--kpi-accent:var(--aguardando)}.kpi.transferencia{--kpi-accent:var(--transferencia)}.kpi.entregue{--kpi-accent:var(--entregue)}
+.kpi .label{font-size:10px;letter-spacing:.025em;min-height:30px;margin-bottom:8px;color:#57677e;font-weight:600}
+.kpi .value{font-size:30px;letter-spacing:-1px;font-variant-numeric:tabular-nums}.kpi .sub{font-size:10.5px;margin-top:9px}
+.kpi.valor .value{font-size:21px;letter-spacing:-.6px}
+.subtab-nav{border:0;background:#e9edf5;padding:4px;border-radius:10px;box-shadow:none;gap:3px;margin-bottom:18px}
+.subtab-btn{background:transparent;border:0;border-radius:7px;padding:8px 18px;font-size:12px}
+.subtab-btn.active{background:#fff;color:var(--ink);box-shadow:0 1px 4px #17294415}
+.panel,.table-panel{padding:23px;border-radius:16px;box-shadow:var(--shadow);min-width:0}
+.panel h2{font-size:14px;letter-spacing:-.2px}.panel .hint{font-size:11px;margin-bottom:24px;line-height:1.7}
+.chart-holder{height:285px}.chart-holder.tall{height:350px}
+.grid-2{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px}
+.status-legend{gap:7px;margin-top:20px}.status-legend .chip{border:1px solid var(--line);padding:6px 9px;border-radius:7px;font-size:10px;background:#fff;font-family:inherit;color:var(--ink)}
+.status-legend .chip[aria-pressed="true"]{border-color:var(--postal-blue);background:#F1F5F9}
+.table-scroll{border-color:#edf0f5;border-radius:10px}thead th{font-size:10px;letter-spacing:.035em;color:#64748b}tbody td{padding-top:13px;padding-bottom:13px}
+.motion-control{font-size:11px;display:flex;gap:7px;align-items:center;margin-left:auto;color:var(--ink-soft);cursor:pointer}.motion-control input{accent-color:var(--postal-blue)}
+.chart-empty{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:var(--ink-soft);font-size:12px;pointer-events:none;background:#ffffffed;border-radius:10px}.chart-empty small{margin-top:5px;color:#79879b}
+.chart-data{margin-top:12px;font-size:11px;color:var(--ink-soft)}.chart-data summary{cursor:pointer;width:fit-content}.chart-data .table-scroll{margin-top:8px;max-height:220px}.chart-data table{min-width:100%;font-variant-numeric:tabular-nums}
+.demo-banner{padding:10px 18px;background:#fff5db;color:#70500d;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12px;border-bottom:1px solid #ead9af}.demo-banner button{background:#fff;border:1px solid #d9c795;border-radius:7px;padding:6px 12px;cursor:pointer;color:#70500d;font:inherit}.demo-banner span{margin-right:auto}
+.tab-panel.active,.subtab-panel.active{animation:painelEntra 200ms var(--ease-out)}
+:focus-visible{outline:3px solid var(--postal-blue);outline-offset:3px}
+.motion-off *, .motion-off *::before, .motion-off *::after{animation:none!important;transition:none!important}
+@media(hover:hover) and (pointer:fine){.kpi{transition:transform 180ms var(--ease-out),box-shadow 180ms ease}.kpi:hover{transform:translateY(-2px);box-shadow:0 6px 20px #1729440b}}
+@media(min-width:901px){.sidebar:not(.collapsed){width:232px}.sidebar .nav-item{font-size:12px}}
+@media(min-width:1400px){#tab-visao-geral>.kpi-row{grid-template-columns:repeat(7,minmax(0,1fr))}}
+@media(max-width:1100px){.grid-2,.grid-2b{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:640px){.main-area{padding:20px 14px 35px;width:100%}.topbar h1{font-size:26px}.topbar{gap:14px}.topbar-sub{max-width:270px}.kpi-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.kpi{padding:15px}.panel,.table-panel{padding:17px}.sidebar,.sidebar.collapsed{width:100%}.sidebar .nav-item{flex:none;padding:7px 9px}.sidebar-footer{padding-left:7px}.chart-holder{height:260px}.motion-control{margin-left:0}.filterbar-toggle-row{flex-wrap:wrap}.empresa-switch{max-width:100%}.demo-banner{font-size:11px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.kpi:hover{transform:none}}
+#loginScreen{max-width:390px;padding:38px;border-radius:20px;box-shadow:0 20px 70px #17294410}#loginScreen h1{font-size:32px;letter-spacing:-1px}#loginScreen input{padding:12px}#loginScreen .btn-primary{padding:12px;background:var(--postal-blue)}
+
+/* One motion policy for pointer, keyboard, reduced motion and session changes. */
+.tab-panel.active,.subtab-panel.active,#filterbar{animation:none!important}
+button,.empresa-btn,.nav-item{transition:transform 120ms var(--ease-out),background-color 150ms ease,color 150ms ease,border-color 150ms ease}
+.keyboard-input button:active,.keyboard-input .nav-item:active{transform:none}
+.keyboard-input *, .keyboard-input *::before,.keyboard-input *::after{animation:none!important}
+.motion-off .kpi:hover{transform:none}
+.kpi-flash{position:absolute;inset:0;border-radius:inherit;background:linear-gradient(110deg,rgba(51,65,85,.15),rgba(13,148,136,.08));opacity:0;pointer-events:none}
+.operation-feedback{display:flex;align-items:center;justify-content:space-between;gap:8px 20px;flex-wrap:wrap;margin:12px 2px;color:var(--ink-soft);font-size:11px;min-height:20px}
+#operation-state{display:inline-flex;align-items:center;gap:8px;min-width:0;overflow-wrap:anywhere}
+#operation-state::before{content:'';width:6px;height:6px;border-radius:50%;background:#94a3b8;flex:none}
+#operation-state[data-state="loading"]::before{background:var(--postal-blue);animation:consulting 900ms ease-in-out infinite alternate}
+#operation-state[data-state="success"]::before{background:var(--entregue)}
+#operation-state[data-state="warning"]::before{background:var(--aguardando)}
+#operation-state[data-state="error"]::before{background:var(--problema)}
+@keyframes consulting{from{opacity:.3}to{opacity:1}}
+.change-summary{border:1px solid #E2E8F0;border-left:3px solid var(--postal-blue);border-radius:10px;background:#F8FAFC;color:#334155;padding:11px 14px;margin:12px 0 16px;font-size:12px;line-height:1.65;overflow-wrap:anywhere}
+#filterbar{overflow:hidden;box-sizing:border-box}
+#atualizarAgoraBtn{min-width:155px}
+@media(max-width:640px){.operation-feedback{align-items:flex-start;flex-direction:column}.change-summary{font-size:11px}}
+
 </style>
 </head>
 <body>
@@ -625,7 +705,7 @@
 
     <div class="topbar">
       <div>
-        <h1 id="topbar-title">Visão Geral</h1>
+        <div class="eyebrow">Central de expedição</div><h1 id="topbar-title">Visão Geral</h1><p class="topbar-sub">Cada envio acompanhado. Cada decisão, mais clara.</p>
       </div>
       <div class="empresa-switch" id="empresa-switch">
         <button type="button" class="empresa-btn active" data-empresa="Stin Pharma">Stin Pharma</button>
@@ -665,7 +745,10 @@
 
   <div id="staleWarning"></div>
 
+  <div class="operation-feedback" aria-live="polite" aria-atomic="true"><span id="operation-state" data-state="idle">Pronto para consultar</span><span id="received-at"></span></div>
+  <div id="change-summary" class="change-summary hidden" role="status" aria-atomic="true"></div>
   <div class="filterbar-toggle-row">
+<label class="motion-control" style="order:2"><input id="motion-toggle" type="checkbox" checked> Animações</label>
     <button class="btn-filtros" id="btn-toggle-filtros" type="button" aria-expanded="false">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
       Filtros
@@ -1076,7 +1159,7 @@ var PRAZO_URGENTE_DIAS = 7;
 var LIMITE_LINHAS_TABELA = 500; // performance: acima disso, pede pra refinar os filtros
 
 var EMPRESA_COLOR = { 'Stin Pharma': '#EDA996', 'Mayderma': '#1A4773' };
-function corEmpresa(nome){ return EMPRESA_COLOR[nome] || '#8C5383'; }
+function corEmpresa(nome){ return Object.prototype.hasOwnProperty.call(EMPRESA_COLOR,nome) ? EMPRESA_COLOR[nome] : '#8C5383'; }
 function abrevEmpresa(emp){
   if (emp === 'Mayderma') return 'MD';
   if (emp === 'Stin Pharma') return 'SP';
@@ -1096,12 +1179,12 @@ var detailSort = { campo: 'dataPostagem', dir: -1 };
 function valorOrdenavel(o, campo){
   switch(campo){
     case 'dataPostagem': return o.dataPostagem ? o.dataPostagem.getTime() : 0;
-    case 'empresa': return (o.empresa || '').toLowerCase();
-    case 'codigo': return (o.codigo || '').toLowerCase();
-    case 'destinatario': return (o.destinatario || '').toLowerCase();
-    case 'cidade': return (o.cidade || '').toLowerCase();
-    case 'uf': return (o.uf || '').toLowerCase();
-    case 'nf': return (o.nf || '').toLowerCase();
+    case 'empresa': return String(o.empresa == null ? '' : o.empresa).toLowerCase();
+    case 'codigo': return String(o.codigo == null ? '' : o.codigo).toLowerCase();
+    case 'destinatario': return String(o.destinatario == null ? '' : o.destinatario).toLowerCase();
+    case 'cidade': return String(o.cidade == null ? '' : o.cidade).toLowerCase();
+    case 'uf': return String(o.uf == null ? '' : o.uf).toLowerCase();
+    case 'nf': return String(o.nf == null ? '' : o.nf).toLowerCase();
     case 'valorPostagem': return o.valorPostagem || 0;
     case 'status': return STATUS_ORDER.indexOf(o._bucket);
     case 'atualizadoEm': return o.atualizadoEm || 0;
@@ -1136,8 +1219,8 @@ function debounce(fn, ms){
   };
 }
 
-function bucketFor(status){ return STATUS_MAP[status] || "aguardando"; }
-function escapeHtml(str){ return String(str == null ? "" : str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function bucketFor(status){ return Object.prototype.hasOwnProperty.call(STATUS_MAP,status) ? STATUS_MAP[status] : "aguardando"; }
+function escapeHtml(str){ return String(str == null ? "" : str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
 function chaveSegura(codigo){ return String(codigo).replace(/[.#$\[\]\/]/g, ""); }
 function fmtMoney(v){ return (v||0).toLocaleString('pt-BR', {style:'currency', currency:'BRL'}); }
 function fmtDateOnly(d){ if(!d) return ''; return d.toLocaleDateString('pt-BR'); }
@@ -1259,26 +1342,81 @@ document.getElementById("btn-confirmar-limpar").addEventListener("click", functi
 });
 
 var allRows = [];
-
-auth.onAuthStateChanged(function (user) {
-  if (!user) {
-    document.getElementById("loginScreen").classList.remove("hidden");
-    document.getElementById("appScreen").classList.add("hidden");
-    return;
+// A snapshot comparison is independent of view filters and does not persist customer data.
+var rastroUpdates=(function(){
+  var previous=null,changes=new Map(),received=null,hasComparison=false;
+  function operation(kind,text){var el=document.getElementById('operation-state');el.dataset.state=kind;el.textContent=text;}
+  function show(){
+    var el=document.getElementById('change-summary');
+    if(!hasComparison){el.textContent='';el.classList.add('hidden');return;}
+    var company=state.empresa,counts=changes.get(company)||{changed:0,added:0};
+    var parts=[];
+    if(counts.changed)parts.push(counts.changed+' '+(counts.changed===1?'envio mudou':'envios mudaram')+' de status');
+    if(counts.added)parts.push(counts.added+' '+(counts.added===1?'novo envio recebido':'novos envios recebidos'));
+    var text=(parts.length?parts.join(' · '):'Nenhuma mudança de status ou nova entrada')+' na base de '+company+'.';
+    text+=' Base completa da empresa, independentemente dos filtros.';
+    if(el.textContent!==text)el.textContent=text;
+    el.classList.remove('hidden');
   }
-  db.ref("centralApps/usuarios/" + user.uid).once("value").then(function (snap) {
-    var perfil = snap.val();
-    var temAcesso = perfil && (perfil.admin === true || (Array.isArray(perfil.grupos) && perfil.grupos.indexOf(GRUPO_PERMITIDO) !== -1));
-    if (!temAcesso) {
-      document.getElementById("loginError").textContent = "Sua conta não tem acesso a este app.";
-      auth.signOut();
-      return;
-    }
-    document.getElementById("loginScreen").classList.add("hidden");
-    document.getElementById("appScreen").classList.remove("hidden");
-    document.getElementById("appScreen").classList.add("app-loading");
+  function receive(rows){
+    var next=new Map();changes=new Map();hasComparison=previous!==null;
+    rows.forEach(function(row){
+      var key=JSON.stringify([row.empresa,row.codigo]);
+      if(next.has(key))return;
+      next.set(key,String(row.status||''));
+      if(!previous)return;
+      var count=changes.get(row.empresa)||{changed:0,added:0};
+      if(!previous.has(key))count.added++;
+      else if(previous.get(key)!==String(row.status||''))count.changed++;
+      changes.set(row.empresa,count);
+    });
+    previous=next;received=new Date();
+    document.getElementById('received-at').textContent='Dados recebidos às '+received.toLocaleTimeString('pt-BR');
+    show();
+    if(window.rastroMotion)window.rastroMotion.dataReady();
+  }
+  function reset(){previous=null;changes=new Map();hasComparison=false;received=null;show();document.getElementById('received-at').textContent='';operation('idle','Pronto para consultar');}
+  return {receive:receive,show:show,reset:reset,operation:operation};
+})();
+
+
+var pedidosRef=null, pedidosCallback=null, authVersion=0, atualizacaoController=null;
+async function buscarAtualizacao(idToken){
+  var controller=new AbortController();atualizacaoController=controller;
+  var timeout=setTimeout(function(){controller.abort();},45000);
+  try{
+    var response=await fetch('https://central-de-apps.vercel.app/api/atualizar-rastreio',{headers:{Authorization:'Bearer '+idToken},signal:controller.signal});
+    var data;
+    try{data=await response.json();}catch(e){if(controller.signal.aborted)throw e;throw new Error('O serviço retornou uma resposta inválida (HTTP '+response.status+').');}
+    if(!data||typeof data!=='object')throw new Error('O serviço retornou uma resposta vazia.');
+    return {resposta:response,dados:data};
+  }catch(e){if(controller.signal.aborted)throw new Error('A atualização foi interrompida ou excedeu 45 segundos. Tente novamente.');throw e;}
+  finally{clearTimeout(timeout);if(atualizacaoController===controller)atualizacaoController=null;}
+}
+function pararEscutaPedidos(){if(pedidosRef&&pedidosCallback)pedidosRef.off('value',pedidosCallback);pedidosRef=null;pedidosCallback=null;}
+auth.onAuthStateChanged(function (user) {
+  var version=++authVersion;
+  rastroUpdates.reset();
+  if(window.rastroMotion)window.rastroMotion.reset();
+  if(atualizacaoController)atualizacaoController.abort();
+  pararEscutaPedidos();
+  document.getElementById('appScreen').classList.add('hidden');
+  document.getElementById('appScreen').classList.remove('app-loading');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  allRows=[];window._ultimaListaFiltrada=[];
+  if(typeof chartPorDia!=='undefined' && chartPorDia){render();document.getElementById('meta-total-obj').textContent='0';document.getElementById('lastUpdate').textContent='';}
+  if(!user)return;
+  db.ref('centralApps/usuarios/'+user.uid).once('value').then(function(snap){
+    if(version!==authVersion)return;
+    var perfil=snap.val();
+    var permitido=perfil&&(perfil.admin===true||(Array.isArray(perfil.grupos)&&perfil.grupos.includes(GRUPO_PERMITIDO)));
+    if(!permitido){document.getElementById('loginError').textContent='Sua conta não tem acesso a este app.';return auth.signOut();}
+    document.getElementById('loginError').textContent='';
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('appScreen').classList.remove('hidden');
+    document.getElementById('appScreen').classList.add('app-loading');
     escutarPedidos();
-  });
+  }).catch(function(){if(version===authVersion)document.getElementById('loginError').textContent='Não foi possível verificar seu acesso. Verifique a conexão e tente entrar novamente.';});
 });
 
 // -------- Atualizar agora --------
@@ -1296,20 +1434,26 @@ document.getElementById("atualizarAgoraBtn").addEventListener("click", async fun
   var totalPendentesInicial = null; // tamanho do lote pendente na 1ª rodada, pra saber quando já deu a volta completa
   var rodada = 0;
   var dados = null;
-
+  var requestVersion=authVersion;
+  rastroUpdates.operation('loading','Consultando rastreios…');
   try {
-    var idToken = await auth.currentUser.getIdToken();
+    var usuario=auth.currentUser;
+    if(!usuario)throw new Error('Entre novamente para atualizar.');
+    var sessionVersion=authVersion;
+    var idToken = await usuario.getIdToken();
     do {
+      if(sessionVersion!==authVersion)throw new Error('A sessão mudou. Entre novamente para atualizar.');
       rodada++;
       btn.textContent = rodada === 1 ? "Atualizando..." : "Atualizando... (rodada " + rodada + ")";
-      var resposta = await fetch("https://central-de-apps.vercel.app/api/atualizar-rastreio", {
-        headers: { Authorization: "Bearer " + idToken }
-      });
-      dados = await resposta.json();
+      var resultado=await buscarAtualizacao(idToken);
+      if(sessionVersion!==authVersion)throw new Error('A sessão mudou. Atualização interrompida.');
+      var resposta=resultado.resposta;
+      dados=resultado.dados;
       window._ultimaRespostaAtualizar = dados;
       document.getElementById('btn-ver-tecnico').style.display = 'inline-block';
 
       if (!resposta.ok) {
+        rastroUpdates.operation('error','Falha na consulta. Tente novamente.');
         document.getElementById("errorMsg").textContent = "Erro ao atualizar: " + (dados.error || resposta.status);
         break;
       }
@@ -1322,14 +1466,15 @@ document.getElementById("atualizarAgoraBtn").addEventListener("click", async fun
       rodada < MAX_RODADAS_AUTOMATICAS
     );
 
-    if (dados) {
+    if (dados && resposta && resposta.ok) {
       var totalErros = (dados.erros ? dados.erros.length : 0) + (dados.semEventoOuErro || 0);
+      rastroUpdates.operation(totalErros?'warning':'success',totalErros?'Consulta concluída com ocorrências. Veja os detalhes.':(dados.restantes>0&&totalTocadosNaSessao<totalPendentesInicial?'Consulta encerrada; ainda há pedidos pendentes.':'Consulta concluída.'));
       if (totalErros > 0) {
         var aviso = document.getElementById("avisoErroAtualizacao");
         aviso.textContent = "A última atualização teve " + (dados.semEventoOuErro || 0) + " pedido(s) com erro ou sem informação disponível. Clica em \"Ver detalhes técnicos\" pra ver quais.";
         aviso.classList.remove("hidden");
       }
-      var voltaCompleta = totalTocadosNaSessao >= totalPendentesInicial; // guardado pra referência técnica, se precisar no futuro
+      var voltaCompleta = totalPendentesInicial !== null && totalTocadosNaSessao >= totalPendentesInicial; // guardado pra referência técnica, se precisar no futuro
       window._resumoAtualizacao = {
         rodadas: rodada,
         totalPendentesInicial: totalPendentesInicial,
@@ -1342,7 +1487,10 @@ document.getElementById("atualizarAgoraBtn").addEventListener("click", async fun
       // toda vez que atualiza (a atualização já é automática mesmo).
     }
   } catch (err) {
-    document.getElementById("errorMsg").textContent = "Erro ao atualizar: " + err.message;
+    if(requestVersion===authVersion){
+      rastroUpdates.operation('error','Falha na consulta. '+err.message);
+      document.getElementById("errorMsg").textContent = "Erro ao atualizar: " + err.message;
+    }
   } finally {
     btn.disabled = false;
     btn.classList.remove("is-loading");
@@ -1365,14 +1513,18 @@ function checarDesatualizado(maisRecente) {
 // -------- Escuta o Firebase em tempo real --------
 function dataValidaOuNula(valor){
   if (!valor) return null;
-  var d = new Date(valor);
+  var d = new Date(typeof valor === "string" && /^\d{4}-\d{2}-\d{2}$/.test(valor) ? valor + "T00:00:00" : valor);
   return isNaN(d.getTime()) ? null : d; // data corrompida vira "sem data" em vez de quebrar o painel
 }
 function escutarPedidos() {
-  db.ref(CAMINHO_PEDIDOS).on("value", function (snapshot) {
+  pararEscutaPedidos();
+  var version=authVersion;
+  pedidosRef=db.ref(CAMINHO_PEDIDOS);
+  pedidosCallback=function(snapshot){
+    if(version!==authVersion)return;
     var dados = snapshot.val() || {};
     var agoraTs = Date.now();
-    allRows = Object.keys(dados).map(function (chave) {
+    allRows = Object.keys(dados).filter(function(chave){return dados[chave] && typeof dados[chave] === "object";}).map(function (chave) {
       var r = dados[chave];
       var bucket = bucketFor(r.status);
       var dataPostagem = dataValidaOuNula(r.dataPostagem);
@@ -1400,17 +1552,17 @@ function escutarPedidos() {
         }
       }
       return {
-        codigo: r.codigo || "",
-        destinatario: r.destinatario || "",
-        cidade: r.cidade || "",
-        uf: r.uf || "",
-        status: r.status || "",
-        servico: r.servico || "",
-        nf: r.nf || "",
-        remetente: r.remetente || "",
-        cep: r.cep || "",
-        empresa: r.empresa || "Stin Pharma",
-        valorPostagem: Number(r.valorPostagem) || 0,
+        codigo: String(r.codigo == null ? "" : r.codigo),
+        destinatario: String(r.destinatario == null ? "" : r.destinatario),
+        cidade: String(r.cidade == null ? "" : r.cidade),
+        uf: String(r.uf == null ? "" : r.uf),
+        status: String(r.status == null ? "" : r.status),
+        servico: String(r.servico == null ? "" : r.servico),
+        nf: String(r.nf == null ? "" : r.nf),
+        remetente: String(r.remetente == null ? "" : r.remetente),
+        cep: String(r.cep == null ? "" : r.cep),
+        empresa: String(r.empresa || "Stin Pharma"),
+        valorPostagem: Number.isFinite(Number(r.valorPostagem)) ? Number(r.valorPostagem) : 0,
         dataPostagem: dataPostagem,
         dataEvento: dataEvento,
         prazoDias: prazoDias,
@@ -1425,11 +1577,18 @@ function escutarPedidos() {
     if (maisRecente) {
       document.getElementById("lastUpdate").textContent = "Última verificação: " + new Date(maisRecente).toLocaleString("pt-BR");
     }
+    if(!maisRecente)document.getElementById('lastUpdate').textContent='Nenhuma verificação disponível';
     checarDesatualizado(maisRecente);
-    refreshCidadeOptions();
     fillStaticOptions();
+    refreshCidadeOptions();
+    rastroUpdates.receive(allRows);
     render();
     document.getElementById("appScreen").classList.remove("app-loading");
+  };
+  pedidosRef.on('value',pedidosCallback,function(){
+    if(version!==authVersion)return;
+    document.getElementById('appScreen').classList.remove('app-loading');
+    document.getElementById('errorMsg').textContent='Não foi possível carregar os pedidos. Verifique sua conexão e permissão de acesso.';
   });
 }
 
@@ -1439,7 +1598,7 @@ function escutarPedidos() {
 // então o resto do código nem precisa saber qual veio.
 function primeiroValor() {
   for (var i = 0; i < arguments.length; i++) {
-    if (arguments[i] !== undefined && arguments[i] !== "") return arguments[i];
+    if (arguments[i] != null && arguments[i] !== "") return arguments[i];
   }
   return "";
 }
@@ -1488,10 +1647,22 @@ document.getElementById("fileInput").addEventListener("change", function (e) {
       // só a função parseDataVipp, sempre do nosso jeito.
       var workbook = XLSX.read(data, { type: "array", raw: true });
       var sheet = workbook.Sheets[workbook.SheetNames[0]];
-      var json = XLSX.utils.sheet_to_json(sheet, { defval: "", range: 1 });
+      var rows = XLSX.utils.sheet_to_json(sheet, {header:1,defval:""});
+      var header=rows.slice(0,20).findIndex(function(row){return row.some(function(cell){return ['Registro','Reg. Correios'].includes(String(cell).trim());});});
+      if(header<0)throw new Error('Cabeçalho de rastreio não encontrado');
+      var json = XLSX.utils.sheet_to_json(sheet, { defval: "", range: header });
       var linhas = json.map(normalizarLinhaVipp).filter(function (r) { return r.Registro && String(r.Registro).indexOf('http') === -1; });
       // Empresa: detecta sozinho pelo remetente. Só pergunta se alguma linha não
       // tiver remetente reconhecível (alguns formatos de relatório não trazem).
+      if(!linhas.length)throw new Error('Nenhum pedido válido encontrado');
+      // Validate all rows before the first write; do not silently convert invalid amounts to zero.
+      linhas.forEach(function(r){
+        if(!/^[a-zA-Z0-9_-]+$/.test(String(r.Registro).trim()))throw new Error('Registro inválido');
+        r.Registro=String(r.Registro).trim();
+        r.ValorPostagem=numeroVipp(r.ValorPostagem);
+        if(r.Prazo!==''&&r.Prazo!=null)r.Prazo=numeroVipp(r.Prazo);
+        ['DataPostagem','DataDoEvento'].forEach(function(key){if(r[key]!==''&&r[key]!=null&&!parseDataVipp(r[key]))throw new Error('Data inválida em '+key);});
+      });
       var precisaPerguntar = linhas.some(function (r) { return !detectarEmpresa(r.Remetente, null); });
       if (precisaPerguntar) {
         document.getElementById("fileInfo").textContent = "";
@@ -1503,10 +1674,11 @@ document.getElementById("fileInput").addEventListener("change", function (e) {
         salvarNoRealtimeDb(linhas, file.name, null);
       }
     } catch (err) {
-      document.getElementById("errorMsg").textContent = "Não consegui ler esse arquivo. Confirma se é o Excel exportado do VIPP.";
+      document.getElementById("errorMsg").textContent = "Não consegui importar: " + err.message;
       document.getElementById("fileInfo").textContent = "";
     }
   };
+  reader.onerror=function(){document.getElementById('fileInfo').textContent='';document.getElementById('errorMsg').textContent='Falha ao ler o arquivo. Tente selecioná-lo novamente.';};
   reader.readAsArrayBuffer(file);
   e.target.value = ""; // permite escolher o mesmo arquivo de novo, se precisar reimportar
 });
@@ -1524,41 +1696,44 @@ function perguntarEmpresa(nomeArquivo) {
   });
 }
 
-function excelSerialParaData(serial){
-  // Excel (sistema de datas 1900): o dia 0 é 30/12/1899. Usado quando a
-  // planilha vem como .xlsx de verdade (data nativa), não como texto.
-  var epoch = Date.UTC(1899, 11, 30);
-  var ms = Math.round(serial * 86400000);
-  return new Date(epoch + ms);
+function diaLocal(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
-
+function numeroVipp(valor){
+  if (valor == null || valor === '') return 0;
+  var text=String(valor).trim().replace(/^R\$\s*/, '').replace(/\s/g,'');
+  if(text.indexOf(',')!==-1) text=text.replace(/\./g,'').replace(',','.');
+  var n=Number(text);
+  if(!Number.isFinite(n))throw new Error('Valor numérico inválido: '+String(valor));
+  return n;
+}
+function excelSerialParaData(serial){
+  if(!Number.isFinite(serial))return new Date(NaN);
+  var parts=new Date(Date.UTC(1899,11,30)+Math.round(serial*86400000));
+  return new Date(parts.getUTCFullYear(),parts.getUTCMonth(),parts.getUTCDate(),parts.getUTCHours(),parts.getUTCMinutes(),parts.getUTCSeconds(),parts.getUTCMilliseconds());
+}
 function parseDataVipp(valor){
-  if (!valor && valor !== 0) return "";
-  if (valor instanceof Date) {
-    return isNaN(valor.getTime()) ? "" : valor.toISOString();
+  if(valor==null||valor==='')return '';
+  if(valor instanceof Date)return Number.isNaN(valor.getTime())?'':valor.toISOString();
+  if(typeof valor==='number'){var serial=excelSerialParaData(valor);return Number.isNaN(serial.getTime())?'':serial.toISOString();}
+  var text=String(valor).trim();
+  var br=text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+  var iso=text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(br||iso){
+    var y=Number(br?br[3]:iso[1]),m=Number((br||iso)[2]),d=Number(br?br[1]:iso[3]);
+    var h=Number(br&&br[4]||0),min=Number(br&&br[5]||0),s=Number(br&&br[6]||0);
+    var date=new Date(y,m-1,d,h,min,s);
+    if(date.getFullYear()!==y||date.getMonth()!==m-1||date.getDate()!==d||date.getHours()!==h||date.getMinutes()!==min||date.getSeconds()!==s)return '';
+    return date.toISOString();
   }
-  if (typeof valor === "number") {
-    var dSerial = excelSerialParaData(valor);
-    return isNaN(dSerial.getTime()) ? "" : dSerial.toISOString();
-  }
-  var texto = String(valor).trim();
-  // Formato brasileiro DD/MM/AAAA (com ou sem hora) — o jeito que o VIPP escreve
-  // quando a coluna vem como texto (relatório em HTML disfarçado de .xls). O
-  // JavaScript sozinho leria isso como MM/DD (formato americano) e trocaria
-  // dia com mês, bagunçando tudo — por isso interpretamos na mão aqui.
-  var m = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
-  if (m) {
-    var dia = parseInt(m[1],10), mes = parseInt(m[2],10), ano = parseInt(m[3],10);
-    var hora = m[4]?parseInt(m[4],10):0, min = m[5]?parseInt(m[5],10):0, seg = m[6]?parseInt(m[6],10):0;
-    var d = new Date(ano, mes-1, dia, hora, min, seg);
-    if (!isNaN(d.getTime())) return d.toISOString();
-  }
-  // último recurso: deixa o JS tentar sozinho (ex: formato ISO, sem ambiguidade)
-  var d2 = new Date(texto);
-  return isNaN(d2.getTime()) ? "" : d2.toISOString();
+  if(!/^\d{4}-\d{2}-\d{2}T/.test(text))return '';
+  var parsed=new Date(text);return Number.isNaN(parsed.getTime())?'':parsed.toISOString();
 }
 
 function salvarNoRealtimeDb(linhas, nomeArquivo, empresaFallback) {
+  if(!linhas.length || linhas.some(function(r){return !/^[a-zA-Z0-9_-]+$/.test(String(r.Registro).trim());})){
+    document.getElementById('errorMsg').textContent='Importação interrompida: registro vazio ou inválido.';return;
+  }
   document.getElementById("fileInfo").textContent = "Salvando " + linhas.length + " pedidos...";
   var empresaSelecionada = empresaFallback || 'Stin Pharma';
   // pedidos que já existem na base não têm o status sobrescrito pela reimportação —
@@ -1570,7 +1745,7 @@ function salvarNoRealtimeDb(linhas, nomeArquivo, empresaFallback) {
     var fim = Math.min(i + 500, linhas.length);
     for (; i < fim; i++) {
       var r = linhas[i];
-      var chave = chaveSegura(r.Registro);
+      var chave = chaveSegura(String(r.Registro).trim());
       // O VIPP exporta relatórios com nomes de coluna diferentes dependendo do tipo
       // escolhido. Aceita os dois formatos que já vimos: o de "postagem" (Status,
       // Servico) e o de "eventos" (DescricaoEvento, CodigoServicoCorreios, DataDoEvento).
@@ -1647,12 +1822,6 @@ document.getElementById('f-registro').addEventListener('input', debounce(functio
 document.getElementById('f-nf').addEventListener('input', debounce(function(e){ state.nf = e.target.value; render(); }, 250));
 
 // -------- Painel de filtros: abre/fecha + contador de filtros ativos --------
-document.getElementById('btn-toggle-filtros').addEventListener('click', function(){
-  var painel = document.getElementById('filterbar');
-  var aberto = painel.style.display !== 'none';
-  painel.style.display = aberto ? 'none' : 'grid';
-  this.setAttribute('aria-expanded', String(!aberto));
-});
 function atualizarBadgeFiltros(){
   var ativos = ['status','statusDetalhado','uf','cidade','destinatario','registro','nf']
     .filter(function(k){ return !!state[k]; }).length;
@@ -1672,7 +1841,7 @@ function applyDateFilter(){
     document.getElementById('f-date-end').value = endVal;
   }
   state.dateStart = startVal ? new Date(startVal + 'T00:00:00') : null;
-  state.dateEnd = endVal ? new Date(endVal + 'T23:59:59') : null;
+  state.dateEnd = endVal ? new Date(endVal + 'T23:59:59.999') : null;
   render();
 }
 ['f-date-start','f-date-end'].forEach(function(id){
@@ -1705,6 +1874,7 @@ function fillStaticOptions(){
     var opt = document.createElement('option'); opt.value = v; opt.textContent = v; ufSel.appendChild(opt);
   });
   if (current) ufSel.value = current;
+  state.uf=ufSel.value;
 
   // Status detalhado: lista todo texto original que existe de verdade na base agora,
   // ordenado por quantidade (o mais comum primeiro), mostrando a versão curta.
@@ -1721,6 +1891,7 @@ function fillStaticOptions(){
     statusSel.appendChild(opt);
   });
   if (currentStatus) statusSel.value = currentStatus;
+  state.statusDetalhado=statusSel.value;
 }
 
 function refreshCidadeOptions(){
@@ -1731,10 +1902,12 @@ function refreshCidadeOptions(){
   var cidades = uniqueSorted(allRows.filter(function(o){return !ufFilter || o.uf === ufFilter;}).map(function(o){return o.cidade;}));
   cidades.forEach(function(c){ var opt = document.createElement('option'); opt.value = c; opt.textContent = c; sel.appendChild(opt); });
   if (cidades.indexOf(current) !== -1) sel.value = current;
+  state.cidade=sel.value;
 }
 
 function applyFilters(){
   return allRows.filter(function(o){
+    if ((state.dateStart || state.dateEnd) && !o.dataPostagem) return false;
     if (state.dateStart && o.dataPostagem && o.dataPostagem < state.dateStart) return false;
     if (state.dateEnd && o.dataPostagem && o.dataPostagem > state.dateEnd) return false;
     if (state.status && o._bucket !== state.status) return false;
@@ -1742,9 +1915,9 @@ function applyFilters(){
     if (state.empresa && o.empresa !== state.empresa) return false;
     if (state.uf && o.uf !== state.uf) return false;
     if (state.cidade && o.cidade !== state.cidade) return false;
-    if (state.destinatario && o.destinatario.toLowerCase().indexOf(state.destinatario.toLowerCase()) === -1) return false;
-    if (state.registro && o.codigo.toLowerCase().indexOf(state.registro.toLowerCase()) === -1) return false;
-    if (state.nf && (o.nf || '').indexOf(state.nf) === -1) return false;
+    if (state.destinatario && String(o.destinatario == null ? '' : o.destinatario).toLowerCase().indexOf(state.destinatario.toLowerCase()) === -1) return false;
+    if (state.registro && String(o.codigo == null ? '' : o.codigo).toLowerCase().indexOf(state.registro.toLowerCase()) === -1) return false;
+    if (state.nf && String(o.nf == null ? '' : o.nf).indexOf(state.nf) === -1) return false;
     return true;
   });
 }
@@ -1754,15 +1927,16 @@ function applyFilters(){
 // botão Stin Pharma/Mayderma do topo selecionado numa só.
 function applyFiltersSemEmpresa(){
   return allRows.filter(function(o){
+    if ((state.dateStart || state.dateEnd) && !o.dataPostagem) return false;
     if (state.dateStart && o.dataPostagem && o.dataPostagem < state.dateStart) return false;
     if (state.dateEnd && o.dataPostagem && o.dataPostagem > state.dateEnd) return false;
     if (state.status && o._bucket !== state.status) return false;
     if (state.statusDetalhado && (o.status || '(vazio)') !== state.statusDetalhado) return false;
     if (state.uf && o.uf !== state.uf) return false;
     if (state.cidade && o.cidade !== state.cidade) return false;
-    if (state.destinatario && o.destinatario.toLowerCase().indexOf(state.destinatario.toLowerCase()) === -1) return false;
-    if (state.registro && o.codigo.toLowerCase().indexOf(state.registro.toLowerCase()) === -1) return false;
-    if (state.nf && (o.nf || '').indexOf(state.nf) === -1) return false;
+    if (state.destinatario && String(o.destinatario == null ? '' : o.destinatario).toLowerCase().indexOf(state.destinatario.toLowerCase()) === -1) return false;
+    if (state.registro && String(o.codigo == null ? '' : o.codigo).toLowerCase().indexOf(state.registro.toLowerCase()) === -1) return false;
+    if (state.nf && String(o.nf == null ? '' : o.nf).indexOf(state.nf) === -1) return false;
     return true;
   });
 }
@@ -1782,7 +1956,10 @@ function groupSum(arr, keyFn, valFn){
 // -------- Visual dos gráficos: deixa com a cara do site, não o padrão do Chart.js --------
 Chart.defaults.font.family = "'Inter', sans-serif";
 Chart.defaults.color = '#6B7280';
-Chart.defaults.animation.duration = 500;
+var motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+var motionEnabled = !motionPreference.matches;
+try { motionEnabled = motionEnabled && localStorage.getItem('rastro-motion') !== 'off'; } catch(e){}
+Chart.defaults.animation.duration = motionEnabled ? 280 : 0;
 Chart.defaults.animation.easing = 'easeOutQuart';
 Chart.defaults.plugins.tooltip.backgroundColor = '#111827';
 Chart.defaults.plugins.tooltip.titleFont = { family:"'Inter',sans-serif", size:12, weight:'600' };
@@ -1992,7 +2169,7 @@ function render(){
   }
 
   // Postagens por dia
-  var porDia = groupSum(filtered, function(o){ return o.dataPostagem ? o.dataPostagem.toISOString().slice(0,10) : 'sem-data'; }, function(){return 1;});
+  var porDia = groupSum(filtered, function(o){ return o.dataPostagem ? diaLocal(o.dataPostagem) : 'sem-data'; }, function(){return 1;});
   var diasOrdenados = Array.from(porDia.keys()).sort();
   chartPorDia.data.labels = diasOrdenados.map(function(d){ return d==='sem-data' ? 'S/ data' : d.split('-').reverse().join('/'); });
   chartPorDia.data.datasets[0].data = diasOrdenados.map(function(d){ return porDia.get(d); });
@@ -2007,10 +2184,14 @@ function render(){
   chartStatus.update();
 
   var legendEl = document.getElementById('status-legend');
+  var focusedStatus=legendEl.contains(document.activeElement)?document.activeElement.dataset.status:null;
   legendEl.innerHTML = '';
   STATUS_ORDER.forEach(function(s){
     var count = statusCounts.get(s) || 0;
-    var chip = document.createElement('span');
+    var chip = document.createElement('button');
+    chip.type = 'button';
+    chip.dataset.status=s;
+    chip.setAttribute('aria-pressed', String(state.status === s));
     chip.className = 'chip' + (state.status && state.status !== s ? ' dim' : '');
     chip.innerHTML = '<span class="dot" style="background:'+STATUS_COLOR[s]+'"></span>' + STATUS_LABEL[s] + ' (' + count + ')';
     chip.style.cursor = 'pointer';
@@ -2020,6 +2201,7 @@ function render(){
       render();
     };
     legendEl.appendChild(chip);
+    if(focusedStatus===s)chip.focus({preventScroll:true});
   });
 
   // Postagens por UF
@@ -2093,6 +2275,8 @@ function render(){
   atualizarSetasOrdenacao();
 
   renderGestao(filtered);
+  rastroUpdates.show();
+  if(window.rastroMotion)window.rastroMotion.afterRender();
  } catch (erroRender) {
   // Blindagem: se algum dado vier quebrado (ex: data corrompida), não deixa o
   // painel inteiro travar — mostra um aviso claro em vez de ficar tudo em branco.
@@ -2189,6 +2373,11 @@ function renderGestao(filtered){
   document.getElementById('kpiG-semetiqueta-valor').textContent = fmtMoney(semEtiqueta.reduce(function(s,o){return s+o.valorPostagem;},0));
 }
 
+function csvCell(value){
+  var text=String(value==null?'':value);
+  if(/^[\s]*[=+@-]/.test(text)||/^[\t\r\n]/.test(text))text="'"+text;
+  return '"'+text.replace(/"/g,'""')+'"';
+}
 function exportarCSV(){
   var linhas = window._ultimaListaFiltrada || [];
   var cab = ['Data postagem','Empresa','Registro','Destinatario','Cidade','UF','Nota fiscal','Valor','Status','Ultima verificacao'];
@@ -2198,7 +2387,7 @@ function exportarCSV(){
       fmtDateOnly(o.dataPostagem),
       o.empresa,
       o.codigo,
-      '"' + String(o.destinatario||'').replace(/"/g,'""') + '"',
+      o.destinatario,
       o.cidade,
       o.uf,
       o.nf,
@@ -2206,7 +2395,7 @@ function exportarCSV(){
       STATUS_LABEL[o._bucket],
       o.atualizadoEm ? fmtDateTime(new Date(o.atualizadoEm)) : ''
     ];
-    csv.push(campos.join(';'));
+    csv.push(campos.map(csvCell).join(';'));
   });
   var blob = new Blob(['\uFEFF' + csv.join('\n')], {type:'text/csv;charset=utf-8;'});
   var url = URL.createObjectURL(blob);
@@ -2219,6 +2408,139 @@ function exportarCSV(){
   URL.revokeObjectURL(url);
 }
 document.getElementById('btn-exportar-csv').addEventListener('click', exportarCSV);
+
+// -------- Presentation / accessibility: coordinated, interruptible motion --------
+(function(){
+  var charts=[chartPorDia,chartStatus,chartUfQtd,chartUfValor,chartGastoEmpresa,chartPeriodoMensal];
+  var records=new Map(),animations=new Map(),timers=new Set(),cardsSeen=new WeakSet();
+  var ready=false,keyboard=false,frame=0,epoch=0;
+  var control=document.getElementById('motion-toggle'),ease='cubic-bezier(.23,1,.32,1)';
+  function canMove(){return motionEnabled&&!motionPreference.matches&&!keyboard&&!document.hidden;}
+  function inView(el){var r=el.getBoundingClientRect();return !!el.getClientRects().length&&r.width>0&&r.height>0&&r.bottom>0&&r.top<innerHeight;}
+  function animate(el,frames,options){
+    var old=animations.get(el);if(old)old.cancel();
+    var animation=el.animate(frames,options);animations.set(el,animation);
+    function clean(){if(animations.get(el)===animation)animations.delete(el);}
+    animation.onfinish=clean;animation.oncancel=clean;return animation;
+  }
+  function cancelAll(){
+    epoch++;cancelAnimationFrame(frame);frame=0;
+    timers.forEach(clearTimeout);timers.clear();
+    animations.forEach(function(a){a.cancel();});animations.clear();
+    records.forEach(function(r){r.pending=false;r.chart.stop();r.native('none');});
+    settleFilter();
+  }
+  function schedule(){if(!ready||frame)return;frame=requestAnimationFrame(function(){frame=0;introduce();});}
+  function introduce(){
+    if(!ready)return;
+    var slot=0;
+    document.querySelectorAll('.kpi').forEach(function(card){
+      if(cardsSeen.has(card)||!inView(card))return;cardsSeen.add(card);
+      if(canMove())animate(card,[{opacity:.65,transform:'translateY(8px)'},{opacity:1,transform:'translateY(0)'}],{duration:200,delay:40*slot++,easing:ease,fill:'backwards'});
+    });
+    var chartSlot=0;
+    records.forEach(function(r){
+      if(r.seen||!r.chart.data.labels.length||!inView(r.chart.canvas))return;
+      r.seen=true;
+      if(!canMove()){r.native('none');return;}
+      r.chart.reset();r.pending=true;
+      var ownEpoch=epoch;
+      var timer=setTimeout(function(){
+        timers.delete(timer);r.pending=false;
+        if(ownEpoch!==epoch)return;
+        r.native(canMove()&&inView(r.chart.canvas)?undefined:'none');
+      },chartSlot++*60);
+      timers.add(timer);
+    });
+  }
+  function applyPolicy(){
+    motionEnabled=motionEnabled&&!motionPreference.matches;
+    control.checked=motionEnabled;control.disabled=motionPreference.matches;
+    control.title=motionPreference.matches?'Movimento reduzido ativado no sistema':'';
+    document.documentElement.classList.toggle('motion-off',!motionEnabled);
+    charts.forEach(function(c){c.options.animation.duration=motionEnabled?280:0;});
+    cancelAll();schedule();
+  }
+  control.addEventListener('change',function(){motionEnabled=control.checked&&!motionPreference.matches;try{localStorage.setItem('rastro-motion',motionEnabled?'on':'off');}catch(e){}applyPolicy();});
+  motionPreference.addEventListener('change',function(){motionEnabled=!motionPreference.matches;try{motionEnabled=motionEnabled&&localStorage.getItem('rastro-motion')!=='off';}catch(e){}applyPolicy();});
+  document.addEventListener('keydown',function(){if(!keyboard){keyboard=true;document.documentElement.classList.add('keyboard-input');cancelAll();}},true);
+  document.addEventListener('pointerdown',function(){keyboard=false;document.documentElement.classList.remove('keyboard-input');},true);
+  document.addEventListener('visibilitychange',function(){if(document.hidden)cancelAll();else schedule();});
+  charts.forEach(function(chart){
+    var holder=chart.canvas.parentElement,title=holder.parentElement.querySelector('h2').textContent;
+    chart.canvas.setAttribute('role','img');
+    var empty=document.createElement('div');empty.className='chart-empty hidden';
+    empty.innerHTML='<strong>Nenhum dado neste recorte</strong><small>Ajuste os filtros para visualizar os envios.</small>';holder.appendChild(empty);
+    var details=document.createElement('details');details.className='chart-data';
+    var summary=document.createElement('summary');summary.textContent='Consultar valores do gráfico';details.appendChild(summary);
+    var container=document.createElement('div');container.className='table-scroll';details.appendChild(container);holder.after(details);
+    var r={chart:chart,native:chart.update.bind(chart),key:null,seen:false,pending:false};records.set(chart,r);
+    chart.update=function(mode){
+      var key=JSON.stringify([chart.data.labels,chart.data.datasets.map(function(d,i){return [d.label,d.data,chart.isDatasetVisible(i)];}),chart.data.labels.map(function(_,i){return chart.getDataVisibility(i);})]);
+      var changed=key!==r.key;
+      if(changed){
+        r.key=key;
+        empty.classList.toggle('hidden',chart.data.datasets.some(function(d){return d.data.some(function(v){return Number.isFinite(Number(v))&&Number(v)!==0;});}));
+        chart.canvas.setAttribute('aria-label',title+'. '+chart.data.labels.length+' categorias. Valores disponíveis na tabela abaixo.');
+        var table=document.createElement('table'),head=table.createTHead().insertRow();
+        ['Categoria'].concat(chart.data.datasets.map(function(d){return d.label||title;})).forEach(function(label){var th=document.createElement('th');th.textContent=label;th.scope='col';head.appendChild(th);});
+        var body=table.createTBody();
+        chart.data.labels.forEach(function(label,i){var row=body.insertRow();row.insertCell().textContent=label;chart.data.datasets.forEach(function(d){var n=Number(d.data[i]||0);row.insertCell().textContent=(chart===chartUfValor||chart===chartGastoEmpresa||d.label==='Gasto (R$)')?fmtMoney(n):n.toLocaleString('pt-BR',{maximumFractionDigits:2});});});
+        container.replaceChildren(table);
+      }
+      if(!changed&&mode===undefined)return;
+      var result=r.native(!changed||!ready||!r.seen||r.pending||!canMove()||!inView(chart.canvas)?'none':mode);
+      schedule();return result;
+    };
+    if(chart.config.type==='doughnut'){chart.options.cutout='74%';chart.data.datasets[0].borderRadius=4;chart.data.datasets[0].hoverOffset=5;}
+    chart.update('none');
+  });
+  chartPorDia.options.interaction={mode:'index',intersect:false};
+  chartPorDia.options.scales.y.ticks.precision=0;chartUfQtd.options.scales.x.ticks.precision=0;chartPeriodoMensal.options.scales.y1.ticks.precision=0;
+  document.querySelectorAll('.kpi .value').forEach(function(el){
+    var previous=el.textContent,card=el.closest('.kpi');
+    var flash=document.createElement('span');flash.className='kpi-flash';flash.setAttribute('aria-hidden','true');card.appendChild(flash);
+    new MutationObserver(function(){
+      if(el.textContent===previous)return;previous=el.textContent;
+      if(ready&&cardsSeen.has(card)&&canMove()&&inView(card))animate(flash,[{opacity:1},{opacity:0}],{duration:250,easing:ease});
+    }).observe(el,{childList:true,characterData:true,subtree:true});
+  });
+  document.querySelectorAll('.sidebar .nav-item').forEach(function(item){
+    item.tabIndex=0;item.setAttribute('role','button');
+    item.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();item.click();}});
+  });
+  function syncNav(){document.querySelectorAll('.sidebar .nav-item').forEach(function(item){item.setAttribute('aria-pressed',String(item.classList.contains('active')));});}
+  document.querySelectorAll('.sidebar .nav-item,.subtab-btn').forEach(function(item){item.addEventListener('click',function(){
+    syncNav();var panel=item.dataset.tab?document.getElementById('tab-'+item.dataset.tab):document.getElementById('subtab-'+item.dataset.subtab);
+    if(panel&&canMove())animate(panel,[{opacity:.65,transform:'translateY(4px)'},{opacity:1,transform:'translateY(0)'}],{duration:180,easing:ease});
+    charts.forEach(function(c){if(c.canvas.getClientRects().length)c.resize();});schedule();
+  });});
+  var filter=document.getElementById('filterbar'),filterButton=document.getElementById('btn-toggle-filtros');
+  var filterOpen=filterButton.getAttribute('aria-expanded')==='true';
+  filterButton.setAttribute('aria-controls','filterbar');filter.inert=!filterOpen;
+  function settleFilter(){if(!filter)return;filter.style.height='';filter.style.opacity='';filter.style.display=filterOpen?'grid':'none';filter.inert=!filterOpen;}
+  filterButton.addEventListener('click',function(){
+    var height=filter.getBoundingClientRect().height;
+    var opacity=filter.style.display==='none'?0:Number(getComputedStyle(filter).opacity);
+    var old=animations.get(filter);if(old)old.cancel();
+    filterOpen=!filterOpen;filterButton.setAttribute('aria-expanded',String(filterOpen));filter.inert=!filterOpen;
+    if(!canMove()){settleFilter();return;}
+    filter.style.display='grid';filter.style.height='';
+    var target=filterOpen?filter.getBoundingClientRect().height:0;
+    var a=animate(filter,[{height:height+'px',opacity:opacity},{height:target+'px',opacity:filterOpen?1:0}],{duration:200,easing:ease});
+    a.onfinish=function(){if(animations.get(filter)===a){animations.delete(filter);settleFilter();}};
+  });
+  var observer=new IntersectionObserver(function(){schedule();},{threshold:.05});
+  charts.forEach(function(c){observer.observe(c.canvas);});document.querySelectorAll('.kpi').forEach(function(c){observer.observe(c);});
+  window.rastroMotion={
+    dataReady:function(){ready=true;},
+    afterRender:schedule,
+    reset:function(){ready=false;cancelAll();cardsSeen=new WeakSet();records.forEach(function(r){r.seen=false;r.key=null;});},
+    replay:function(){cancelAll();cardsSeen=new WeakSet();records.forEach(function(r){r.seen=false;});schedule();}
+  };
+  syncNav();applyPolicy();
+})();
+
 </script>
 </body>
 </html>
