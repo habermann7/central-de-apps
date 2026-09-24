@@ -613,6 +613,11 @@ body{background:var(--paper);-webkit-font-smoothing:antialiased}
 :focus-visible{outline:3px solid var(--postal-blue);outline-offset:3px}
 .motion-off *, .motion-off *::before, .motion-off *::after{animation:none!important;transition:none!important}
 @media(hover:hover) and (pointer:fine){.kpi{transition:transform 180ms var(--ease-out),box-shadow 180ms ease}.kpi:hover{transform:translateY(-2px);box-shadow:0 6px 20px #1729440b}}
+#kpi-row-status .kpi{cursor:pointer;}
+#kpi-row-status .kpi:hover{border-color:var(--postal-blue)!important;}
+#kpi-row-status .kpi:focus-visible{outline-offset:2px;}
+#kpi-row-status .kpi .clique-dica{font-size:9.5px;color:var(--postal-blue);opacity:0;transition:opacity 150ms ease;margin-top:5px;font-weight:600;}
+#kpi-row-status .kpi:hover .clique-dica,#kpi-row-status .kpi:focus-visible .clique-dica{opacity:1;}
 @media(min-width:901px){.sidebar:not(.collapsed){width:232px}.sidebar .nav-item{font-size:12px}}
 @media(min-width:1400px){#tab-visao-geral>.kpi-row{grid-template-columns:repeat(7,minmax(0,1fr))}}
 @media(max-width:1100px){.grid-2,.grid-2b{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -802,38 +807,38 @@ button,.empresa-btn,.nav-item{transition:transform 120ms var(--ease-out),backgro
     <div class="main-content">
 
       <div class="tab-panel active" id="tab-visao-geral">
-        <div class="kpi-row">
-          <div class="kpi">
+        <div class="kpi-row" id="kpi-row-status">
+          <div class="kpi" data-bucket="">
             <div class="label">Total de postagens</div>
             <div class="value" id="kpi-total">&mdash;</div>
             <div class="sub">objetos no período</div>
           </div>
-          <div class="kpi retirada">
+          <div class="kpi retirada" data-bucket="retirada">
             <div class="label">Aguardando retirada</div>
             <div class="value" id="kpi-retirada">&mdash;</div>
             <div class="sub" id="kpi-pct-retirada">&mdash;</div>
           </div>
-          <div class="kpi naoentregue">
+          <div class="kpi naoentregue" data-bucket="naoentregue">
             <div class="label">Não entregue</div>
             <div class="value" id="kpi-naoentregue">&mdash;</div>
             <div class="sub">falha de entrega</div>
           </div>
-          <div class="kpi problema">
+          <div class="kpi problema" data-bucket="problema">
             <div class="label">Problema</div>
             <div class="value" id="kpi-problema">&mdash;</div>
             <div class="sub">precisa de ação</div>
           </div>
-          <div class="kpi aguardando">
+          <div class="kpi aguardando" data-bucket="aguardando">
             <div class="label">Aguardando ação</div>
             <div class="value" id="kpi-aguardando">&mdash;</div>
             <div class="sub">a processar</div>
           </div>
-          <div class="kpi transferencia">
+          <div class="kpi transferencia" data-bucket="transito">
             <div class="label">Em trânsito</div>
             <div class="value" id="kpi-transito">&mdash;</div>
             <div class="sub">em rota</div>
           </div>
-          <div class="kpi entregue">
+          <div class="kpi entregue" data-bucket="entregue">
             <div class="label">Total entregue</div>
             <div class="value" id="kpi-entregue">&mdash;</div>
             <div class="sub" id="kpi-pct-entregue">&mdash;</div>
@@ -1154,6 +1159,30 @@ function abrevEmpresa(emp){
   return (emp||'—').slice(0,2).toUpperCase();
 }
 var retiradaEmpresaSel = '';
+// -------- KPI clicável: clicar no card já filtra e mostra os pedidos --------
+document.querySelectorAll('#kpi-row-status .kpi').forEach(function(card){
+  var bucket = card.dataset.bucket;
+  var dica = document.createElement('div');
+  dica.className = 'clique-dica';
+  dica.textContent = bucket === 'retirada' ? 'ver lista →' : 'ver pedidos →';
+  card.appendChild(dica);
+  card.tabIndex = 0;
+  card.setAttribute('role', 'button');
+  card.setAttribute('aria-label', card.querySelector('.label').textContent + ' — ver pedidos');
+  function abrir(){
+    var destino = bucket === 'retirada' ? 'retirada' : 'detalhamento';
+    if (destino === 'detalhamento'){
+      state.status = bucket;
+      document.getElementById('f-status').value = bucket;
+      render();
+    }
+    var navItem = document.querySelector('.sidebar .nav-item[data-tab="' + destino + '"]');
+    if (navItem) navItem.click();
+  }
+  card.addEventListener('click', abrir);
+  card.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); abrir(); } });
+});
+
 document.querySelectorAll('#retirada-empresa-switch .empresa-btn').forEach(function(btn){
   btn.addEventListener('click', function(){
     document.querySelectorAll('#retirada-empresa-switch .empresa-btn').forEach(function(b){ b.classList.remove('active'); });
