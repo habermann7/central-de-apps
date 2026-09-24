@@ -809,8 +809,8 @@ button,.empresa-btn,.nav-item{transition:transform 120ms var(--ease-out),backgro
       <input type="text" id="f-registro" placeholder="Ex: AD8...BR">
     </div>
     <div class="field">
-      <label>Nota fiscal</label>
-      <input type="text" id="f-nf" placeholder="Número da NF">
+      <label>Nota fiscal / Pedido</label>
+      <input type="text" id="f-nf" placeholder="NF ou nº do pedido">
     </div>
     <div class="field actions">
       <button class="btn-reset" id="btn-reset" type="button">Limpar filtros</button>
@@ -943,6 +943,7 @@ button,.empresa-btn,.nav-item{transition:transform 120ms var(--ease-out),backgro
                   <th data-field="cidade">Cidade<span class="sort-arrow"></span></th>
                   <th data-field="uf">UF<span class="sort-arrow"></span></th>
                   <th data-field="nf">Nota fiscal<span class="sort-arrow"></span></th>
+                  <th data-field="pedido">Pedido<span class="sort-arrow"></span></th>
                   <th class="num" data-field="valorPostagem">Valor<span class="sort-arrow"></span></th>
                   <th data-field="status">Status atual<span class="sort-arrow"></span></th>
                   <th data-field="atualizadoEm">Última verificação<span class="sort-arrow"></span></th>
@@ -1217,6 +1218,7 @@ function valorOrdenavel(o, campo){
     case 'cidade': return String(o.cidade == null ? '' : o.cidade).toLowerCase();
     case 'uf': return String(o.uf == null ? '' : o.uf).toLowerCase();
     case 'nf': return String(o.nf == null ? '' : o.nf).toLowerCase();
+    case 'pedido': return String(o.pedido == null ? '' : o.pedido).toLowerCase();
     case 'valorPostagem': return o.valorPostagem || 0;
     case 'status': return STATUS_ORDER.indexOf(o._bucket);
     case 'atualizadoEm': return o.atualizadoEm || 0;
@@ -1597,6 +1599,7 @@ function escutarPedidos() {
         status: String(r.status == null ? "" : r.status),
         servico: String(r.servico == null ? "" : r.servico),
         nf: String(r.nf == null ? "" : r.nf),
+        pedido: String(r.pedido == null ? "" : r.pedido),
         remetente: String(r.remetente == null ? "" : r.remetente),
         cep: String(r.cep == null ? "" : r.cep),
         empresa: String(r.empresa || "Stin Pharma"),
@@ -1656,6 +1659,7 @@ function normalizarLinhaVipp(r) {
     DataDoEvento: primeiroValor(r.DataDoEvento, r['Dta Entregat']),
     Prazo: primeiroValor(r.Prazo, r['Prazo Est (dias)']),
     NumeroNotaFiscal: primeiroValor(r.NumeroNotaFiscal, r['Nro NF']),
+    Pedido: primeiroValor(r.Pedido, r['Nr Pedido'], r['Número Pedido'], r['Numero Pedido'], r['Objeto1'], r['Objeto 1'], r['Pedido Protheus'], r['Cod Pedido'], r['Código Pedido']),
     Remetente: primeiroValor(r.Remetente, r['Nome Rem.']),
     ValorPostagem: primeiroValor(r.ValorPostagem, r['Vlr Tarifa (R$)'])
   };
@@ -1801,6 +1805,7 @@ function salvarNoRealtimeDb(linhas, nomeArquivo, empresaFallback) {
         updates[CAMINHO_PEDIDOS + "/" + chave + "/uf"] = r.UFDestinatario || "";
         updates[CAMINHO_PEDIDOS + "/" + chave + "/servico"] = servicoTexto;
         updates[CAMINHO_PEDIDOS + "/" + chave + "/nf"] = r.NumeroNotaFiscal || "";
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/pedido"] = r.Pedido || "";
         updates[CAMINHO_PEDIDOS + "/" + chave + "/remetente"] = r.Remetente || "";
         updates[CAMINHO_PEDIDOS + "/" + chave + "/cep"] = r.CEPDestinatario || "";
         updates[CAMINHO_PEDIDOS + "/" + chave + "/valorPostagem"] = r.ValorPostagem !== "" && r.ValorPostagem != null ? Number(r.ValorPostagem) : 0;
@@ -1819,6 +1824,7 @@ function salvarNoRealtimeDb(linhas, nomeArquivo, empresaFallback) {
           dataPostagem: dataPostagemTexto,
           dataEvento: dataEventoTexto,
           nf: r.NumeroNotaFiscal || "",
+          pedido: r.Pedido || "",
           remetente: r.Remetente || "",
           cep: r.CEPDestinatario || "",
           empresa: empresaDaLinha,
@@ -1956,7 +1962,7 @@ function applyFilters(){
     if (state.cidade && o.cidade !== state.cidade) return false;
     if (state.destinatario && String(o.destinatario == null ? '' : o.destinatario).toLowerCase().indexOf(state.destinatario.toLowerCase()) === -1) return false;
     if (state.registro && String(o.codigo == null ? '' : o.codigo).toLowerCase().indexOf(state.registro.toLowerCase()) === -1) return false;
-    if (state.nf && String(o.nf == null ? '' : o.nf).indexOf(state.nf) === -1) return false;
+    if (state.nf && String(o.nf == null ? '' : o.nf).indexOf(state.nf) === -1 && String(o.pedido == null ? '' : o.pedido).indexOf(state.nf) === -1) return false;
     return true;
   });
 }
@@ -1975,7 +1981,7 @@ function applyFiltersSemEmpresa(){
     if (state.cidade && o.cidade !== state.cidade) return false;
     if (state.destinatario && String(o.destinatario == null ? '' : o.destinatario).toLowerCase().indexOf(state.destinatario.toLowerCase()) === -1) return false;
     if (state.registro && String(o.codigo == null ? '' : o.codigo).toLowerCase().indexOf(state.registro.toLowerCase()) === -1) return false;
-    if (state.nf && String(o.nf == null ? '' : o.nf).indexOf(state.nf) === -1) return false;
+    if (state.nf && String(o.nf == null ? '' : o.nf).indexOf(state.nf) === -1 && String(o.pedido == null ? '' : o.pedido).indexOf(state.nf) === -1) return false;
     return true;
   });
 }
@@ -2324,6 +2330,7 @@ function render(){
       '<td>'+escapeHtml(o.cidade)+'</td>'+
       '<td>'+escapeHtml(o.uf)+'</td>'+
       '<td class="mono">'+(o.nf?escapeHtml(o.nf):'&mdash;')+'</td>'+
+      '<td class="mono">'+(o.pedido?escapeHtml(o.pedido):'&mdash;')+'</td>'+
       '<td class="num">'+fmtMoney(o.valorPostagem)+'</td>'+
       '<td><span class="status-badge '+o._bucket+'" title="'+escapeHtml(o.status || STATUS_LABEL[o._bucket])+'">'+escapeHtml(textoCurtoStatus(o.status))+'</span></td>'+
       '<td class="mono">'+(o.atualizadoEm ? fmtDateTime(new Date(o.atualizadoEm)) : '&mdash;')+'</td>';
@@ -2444,7 +2451,7 @@ function csvCell(value){
 }
 function exportarCSV(){
   var linhas = window._ultimaListaFiltrada || [];
-  var cab = ['Data postagem','Empresa','Registro','Destinatario','Cidade','UF','Nota fiscal','Valor','Status','Ultima verificacao'];
+  var cab = ['Data postagem','Empresa','Registro','Destinatario','Cidade','UF','Nota fiscal','Pedido','Valor','Status','Ultima verificacao'];
   var csv = [cab.join(';')];
   linhas.forEach(function(o){
     var campos = [
@@ -2455,6 +2462,7 @@ function exportarCSV(){
       o.cidade,
       o.uf,
       o.nf,
+      o.pedido,
       String(o.valorPostagem||0).replace('.',','),
       STATUS_LABEL[o._bucket],
       o.atualizadoEm ? fmtDateTime(new Date(o.atualizadoEm)) : ''
