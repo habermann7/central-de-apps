@@ -105,7 +105,8 @@
   .subtab-panel.active{display:block;animation:painelEntra .18s ease-out;}
 
   /* ---------- Login ---------- */
-  #loginScreen{max-width:340px;margin:14vh auto;background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 30px;}
+  #loginScreen{max-width:340px;margin:14vh auto;background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 30px;position:relative;overflow:hidden;}
+  #loginScreen::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--brand-stin) 0%,var(--brand-stin) 50%,var(--brand-mayderma) 50%,var(--brand-mayderma) 100%);}
   #loginScreen h1{font-family:'Inter',sans-serif;font-weight:600;font-size:24px;margin:0 0 4px;}
   #loginScreen .sub{margin:0 0 24px;color:var(--ink-soft);font-size:13px;}
   #loginScreen label{display:block;font-size:11.5px;color:var(--ink-soft);font-weight:600;margin-bottom:5px;}
@@ -516,6 +517,10 @@
   .table-scroll{overflow-x:auto;max-height:460px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;}
   .table-scroll table{min-width:960px;}
   .table-scroll thead th{position:sticky;top:0;background:var(--paper-raised);}
+  .table-scroll thead th[data-field]{cursor:pointer;user-select:none;white-space:nowrap;}
+  .table-scroll thead th[data-field]:hover{color:var(--postal-blue);}
+  .sort-arrow{display:inline-block;width:9px;font-size:9px;margin-left:3px;color:var(--postal-blue);opacity:0;}
+  .table-scroll thead th.sorted .sort-arrow{opacity:1;}
   .row-count{font-size:11.5px;color:var(--ink-soft);margin-top:8px;font-family:'IBM Plex Mono',monospace;}
 
   footer.note{
@@ -534,13 +539,46 @@
   }
   .panel.zona-risco h2{color:#B91C1C;}
   .panel.zona-risco h2::before{content:'⚠ ';}
+
+  /* ---------- Responsividade real ---------- */
+  @media(max-width:900px){
+    .main-area{padding:16px 14px 40px;}
+    .sidebar{width:60px;padding-left:8px;padding-right:8px;}
+    .sidebar .brand-title, .sidebar .nav-group-label, .sidebar .nav-label, .sidebar .sidebar-meta{display:none;}
+    .sidebar .sidebar-brand{justify-content:center;}
+    .sidebar .nav-item{justify-content:center;padding:9px;position:relative;}
+    .sidebar .nav-badge{position:absolute;transform:translate(10px,-10px);padding:0;width:8px;height:8px;font-size:0;min-width:0;border-radius:50%;}
+    .sidebar-collapse-btn{display:none;}
+    .topbar h1{font-size:19px;}
+    .kpi .value{font-size:22px;}
+  }
+  @media(max-width:640px){
+    .app-layout{flex-direction:column;}
+    .sidebar{
+      width:100%;height:auto;position:sticky;top:0;z-index:5;
+      flex-direction:row;align-items:center;padding:8px 10px;overflow-x:auto;
+    }
+    .sidebar .sidebar-brand{display:none;}
+    .sidebar .nav-item{flex-direction:column;gap:3px;padding:6px 10px;font-size:9.5px;}
+    .sidebar .nav-item .nav-label{display:block !important;font-size:9.5px;white-space:nowrap;}
+    .sidebar .nav-icon{width:18px;height:18px;}
+    .sidebar .nav-icon svg{width:18px;height:18px;}
+    .sidebar-footer{
+      margin-top:0;border-top:none;border-left:1px solid var(--line);
+      padding:0 0 0 10px;flex:none;display:flex;align-items:center;
+    }
+    .sidebar-meta{display:none;}
+    #logoutBtn{width:auto;padding:7px 10px;font-size:11px;white-space:nowrap;}
+    .kpi-row{grid-template-columns:repeat(2,1fr);}
+    .kpi{border-right:none;border-bottom:1px solid var(--line);}
+  }
 </style>
 </head>
 <body>
 
 <div id="loginScreen">
   <h1>Rastro</h1>
-  <p class="sub">STIN PHARMA &mdash; Expedição</p>
+  <p class="sub">Stin Pharma &middot; Mayderma &mdash; Expedição</p>
   <label for="loginEmail">E-mail</label>
   <input type="email" id="loginEmail" placeholder="seu.email@stinpharma.com">
   <label for="loginSenha">Senha</label>
@@ -807,16 +845,16 @@
             <table>
               <thead>
                 <tr>
-                  <th>Data postagem</th>
-                  <th>Empresa</th>
-                  <th>Registro</th>
-                  <th>Destinatário</th>
-                  <th>Cidade</th>
-                  <th>UF</th>
-                  <th>Nota fiscal</th>
-                  <th class="num">Valor</th>
-                  <th>Status atual</th>
-                  <th>Última verificação</th>
+                  <th data-field="dataPostagem">Data postagem<span class="sort-arrow"></span></th>
+                  <th data-field="empresa">Empresa<span class="sort-arrow"></span></th>
+                  <th data-field="codigo">Registro<span class="sort-arrow"></span></th>
+                  <th data-field="destinatario">Destinatário<span class="sort-arrow"></span></th>
+                  <th data-field="cidade">Cidade<span class="sort-arrow"></span></th>
+                  <th data-field="uf">UF<span class="sort-arrow"></span></th>
+                  <th data-field="nf">Nota fiscal<span class="sort-arrow"></span></th>
+                  <th class="num" data-field="valorPostagem">Valor<span class="sort-arrow"></span></th>
+                  <th data-field="status">Status atual<span class="sort-arrow"></span></th>
+                  <th data-field="atualizadoEm">Última verificação<span class="sort-arrow"></span></th>
                 </tr>
               </thead>
               <tbody id="detail-body"></tbody>
@@ -856,64 +894,73 @@
           </div>
         </div>
 
-        <div class="grid-2b">
-          <div class="panel">
-            <h2>Gasto por empresa</h2>
-            <p class="hint">Soma do valor de postagem, por empresa, no período &mdash; sempre mostra as duas juntas, mesmo com uma empresa selecionada no topo</p>
-            <div class="chart-holder"><canvas id="chart-gasto-empresa"></canvas></div>
-            <div id="gasto-empresa-lista" class="gasto-empresa-lista"></div>
-          </div>
-          <div class="panel">
-            <h2>Envios e gasto por mês</h2>
-            <p class="hint">Quantidade de envios (linha) e valor gasto (barra), por mês</p>
-            <div class="chart-holder"><canvas id="chart-periodo-mensal"></canvas></div>
-          </div>
+        <div class="subtab-nav" id="subtab-gestao-nav">
+          <button type="button" class="subtab-btn active" data-subtab="gestao-financeiro">Financeiro</button>
+          <button type="button" class="subtab-btn" data-subtab="gestao-risco">Operacional &amp; Risco</button>
         </div>
 
-        <div class="panel" style="margin-bottom:18px;">
-          <h2>Ranking por UF — envios e atrasos</h2>
-          <p class="hint">Quantos foram enviados por estado, e quantos desses estão em atraso</p>
-          <div class="table-scroll" style="max-height:340px;">
-            <table>
-              <thead>
-                <tr><th>UF</th><th class="num">Enviados</th><th class="num">Em atraso</th><th class="num">% atraso</th></tr>
-              </thead>
-              <tbody id="ranking-uf-atraso-body"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="panel" style="margin-bottom:18px;">
-          <h2>Etiquetas sem postagem confirmada</h2>
-          <p class="hint">Expiradas, erro de geração ou sem etiqueta — não entram nos gráficos de período porque não têm data de postagem</p>
-          <div class="kpi-row" style="border:none;background:transparent;">
-            <div class="kpi problema" style="border:1px solid var(--line);">
-              <div class="label">Quantidade</div>
-              <div class="value" id="kpiG-semetiqueta-qtd">&mdash;</div>
-              <div class="sub">objetos</div>
+        <div class="subtab-panel active" id="subtab-gestao-financeiro">
+          <div class="grid-2b">
+            <div class="panel">
+              <h2>Gasto por empresa</h2>
+              <p class="hint">Soma do valor de postagem, por empresa, no período &mdash; sempre mostra as duas juntas, mesmo com uma empresa selecionada no topo</p>
+              <div class="chart-holder"><canvas id="chart-gasto-empresa"></canvas></div>
+              <div id="gasto-empresa-lista" class="gasto-empresa-lista"></div>
             </div>
-            <div class="kpi problema" style="border:1px solid var(--line);">
-              <div class="label">Valor envolvido</div>
-              <div class="value" id="kpiG-semetiqueta-valor">&mdash;</div>
-              <div class="sub">soma</div>
+            <div class="panel">
+              <h2>Envios e gasto por mês</h2>
+              <p class="hint">Quantidade de envios (linha) e valor gasto (barra), por mês</p>
+              <div class="chart-holder"><canvas id="chart-periodo-mensal"></canvas></div>
             </div>
           </div>
         </div>
 
-        <div class="panel zona-risco" style="margin-bottom:18px;">
-          <h2>Zona de risco</h2>
-          <p class="hint">Ações que apagam dados. Use só se for recomeçar a base do zero.</p>
-          <button class="btn-ghost" id="btn-limpar-base" type="button" style="color:var(--problema);border-color:var(--problema);">Limpar base</button>
-          <div style="margin-top:14px;">
-  <div id="limparBaseModal" class="hidden" style="border:1px solid #FCA5A5;border-radius:10px;background:#FEF2F2;padding:16px 20px;margin-bottom:0;">
-    <p style="margin:0 0 4px;font-weight:600;color:#6b201a;">Isso apaga TODOS os pedidos da base (não dá pra desfazer).</p>
-    <p style="margin:0 0 10px;font-size:12.5px;color:#6b201a;">Digite <strong>LIMPAR</strong> abaixo pra confirmar:</p>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <input type="text" id="limparBaseInput" style="padding:7px 8px;border:1px solid var(--problema);font-family:'IBM Plex Mono',monospace;">
-      <button class="btn-accent" id="btn-confirmar-limpar" type="button">Confirmar exclusão</button>
-      <button class="btn-ghost" id="btn-cancelar-limpar" type="button">Cancelar</button>
-    </div>
-  </div>
+        <div class="subtab-panel" id="subtab-gestao-risco">
+          <div class="panel" style="margin-bottom:18px;">
+            <h2>Ranking por UF — envios e atrasos</h2>
+            <p class="hint">Quantos foram enviados por estado, e quantos desses estão em atraso</p>
+            <div class="table-scroll" style="max-height:340px;">
+              <table>
+                <thead>
+                  <tr><th>UF</th><th class="num">Enviados</th><th class="num">Em atraso</th><th class="num">% atraso</th></tr>
+                </thead>
+                <tbody id="ranking-uf-atraso-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-bottom:18px;">
+            <h2>Etiquetas sem postagem confirmada</h2>
+            <p class="hint">Expiradas, erro de geração ou sem etiqueta — não entram nos gráficos de período porque não têm data de postagem</p>
+            <div class="kpi-row" style="border:none;background:transparent;">
+              <div class="kpi problema" style="border:1px solid var(--line);">
+                <div class="label">Quantidade</div>
+                <div class="value" id="kpiG-semetiqueta-qtd">&mdash;</div>
+                <div class="sub">objetos</div>
+              </div>
+              <div class="kpi problema" style="border:1px solid var(--line);">
+                <div class="label">Valor envolvido</div>
+                <div class="value" id="kpiG-semetiqueta-valor">&mdash;</div>
+                <div class="sub">soma</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel zona-risco" style="margin-bottom:18px;">
+            <h2>Zona de risco</h2>
+            <p class="hint">Ações que apagam dados. Use só se for recomeçar a base do zero.</p>
+            <button class="btn-ghost" id="btn-limpar-base" type="button" style="color:var(--problema);border-color:var(--problema);">Limpar base</button>
+            <div style="margin-top:14px;">
+      <div id="limparBaseModal" class="hidden" style="border:1px solid #FCA5A5;border-radius:10px;background:#FEF2F2;padding:16px 20px;margin-bottom:0;">
+        <p style="margin:0 0 4px;font-weight:600;color:#6b201a;">Isso apaga TODOS os pedidos da base (não dá pra desfazer).</p>
+        <p style="margin:0 0 10px;font-size:12.5px;color:#6b201a;">Digite <strong>LIMPAR</strong> abaixo pra confirmar:</p>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" id="limparBaseInput" style="padding:7px 8px;border:1px solid var(--problema);font-family:'IBM Plex Mono',monospace;">
+          <button class="btn-accent" id="btn-confirmar-limpar" type="button">Confirmar exclusão</button>
+          <button class="btn-ghost" id="btn-cancelar-limpar" type="button">Cancelar</button>
+        </div>
+      </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1045,6 +1092,41 @@ document.querySelectorAll('#retirada-empresa-switch .empresa-btn').forEach(funct
   });
 });
 
+var detailSort = { campo: 'dataPostagem', dir: -1 };
+function valorOrdenavel(o, campo){
+  switch(campo){
+    case 'dataPostagem': return o.dataPostagem ? o.dataPostagem.getTime() : 0;
+    case 'empresa': return (o.empresa || '').toLowerCase();
+    case 'codigo': return (o.codigo || '').toLowerCase();
+    case 'destinatario': return (o.destinatario || '').toLowerCase();
+    case 'cidade': return (o.cidade || '').toLowerCase();
+    case 'uf': return (o.uf || '').toLowerCase();
+    case 'nf': return (o.nf || '').toLowerCase();
+    case 'valorPostagem': return o.valorPostagem || 0;
+    case 'status': return STATUS_ORDER.indexOf(o._bucket);
+    case 'atualizadoEm': return o.atualizadoEm || 0;
+    default: return 0;
+  }
+}
+function atualizarSetasOrdenacao(){
+  document.querySelectorAll('#tab-detalhamento thead th[data-field]').forEach(function(th){
+    var ativo = th.dataset.field === detailSort.campo;
+    th.classList.toggle('sorted', ativo);
+    th.querySelector('.sort-arrow').textContent = ativo ? (detailSort.dir === 1 ? '▲' : '▼') : '';
+  });
+}
+document.querySelectorAll('#tab-detalhamento thead th[data-field]').forEach(function(th){
+  th.addEventListener('click', function(){
+    if (detailSort.campo === th.dataset.field){
+      detailSort.dir *= -1;
+    } else {
+      detailSort.campo = th.dataset.field;
+      detailSort.dir = 1;
+    }
+    render();
+  });
+});
+
 function debounce(fn, ms){
   var t;
   return function(){
@@ -1074,6 +1156,20 @@ document.getElementById("logoutBtn").addEventListener("click", function () { aut
 
 // -------- Navegação lateral (abas) --------
 // -------- Sub-abas de Visão Geral (Volume / Geográfico) --------
+// -------- Sub-abas de Gestão (Financeiro / Operacional & Risco) --------
+document.querySelectorAll('#subtab-gestao-nav .subtab-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('#subtab-gestao-nav .subtab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('#tab-gestao .subtab-panel').forEach(function(p){ p.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('subtab-' + btn.dataset.subtab).classList.add('active');
+    if (btn.dataset.subtab === 'gestao-financeiro'){
+      chartGastoEmpresa.resize();
+      chartPeriodoMensal.resize();
+    }
+  });
+});
+
 document.querySelectorAll('#subtab-visao-nav .subtab-btn').forEach(function(btn){
   btn.addEventListener('click', function(){
     document.querySelectorAll('#subtab-visao-nav .subtab-btn').forEach(function(b){ b.classList.remove('active'); });
@@ -1855,7 +1951,11 @@ function render(){
   // Detail table (guarda a lista completa ordenada pro export CSV; renderiza só um limite pra não travar o navegador)
   var detailBody = document.getElementById('detail-body');
   detailBody.innerHTML = '';
-  var sortedDetail = filtered.slice().sort(function(a,b){ return (b.dataPostagem||0) - (a.dataPostagem||0); });
+  var sortedDetail = filtered.slice().sort(function(a,b){
+    var va = valorOrdenavel(a, detailSort.campo), vb = valorOrdenavel(b, detailSort.campo);
+    var c = va < vb ? -1 : (va > vb ? 1 : 0);
+    return c * detailSort.dir;
+  });
   window._ultimaListaFiltrada = sortedDetail;
   if (!sortedDetail.length){
     detailBody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--ink-soft);padding:20px;">Nenhum objeto encontrado para os filtros selecionados</td></tr>';
@@ -1883,6 +1983,7 @@ function render(){
     textoContagem += ' de ' + allRows.length + ' na base';
   }
   document.getElementById('detail-count').textContent = textoContagem;
+  atualizarSetasOrdenacao();
 
   renderGestao(filtered);
  } catch (erroRender) {
