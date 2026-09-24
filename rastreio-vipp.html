@@ -1644,6 +1644,21 @@ function primeiroValor() {
   }
   return "";
 }
+// Acha uma coluna do Excel mesmo que o nome real tenha maiúscula, acento ou
+// espaço diferente do que a gente espera — compara só letras e números.
+function normalizarNomeColuna(s){
+  return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+}
+function valorPorNomeAproximado(r, candidatos){
+  var chaves = Object.keys(r);
+  for (var i = 0; i < candidatos.length; i++) {
+    var alvo = normalizarNomeColuna(candidatos[i]);
+    for (var j = 0; j < chaves.length; j++) {
+      if (normalizarNomeColuna(chaves[j]) === alvo && r[chaves[j]] !== '' && r[chaves[j]] != null) return r[chaves[j]];
+    }
+  }
+  return '';
+}
 function normalizarLinhaVipp(r) {
   return {
     Registro: primeiroValor(r.Registro, r['Reg. Correios']),
@@ -1659,7 +1674,7 @@ function normalizarLinhaVipp(r) {
     DataDoEvento: primeiroValor(r.DataDoEvento, r['Dta Entregat']),
     Prazo: primeiroValor(r.Prazo, r['Prazo Est (dias)']),
     NumeroNotaFiscal: primeiroValor(r.NumeroNotaFiscal, r['Nro NF']),
-    Pedido: primeiroValor(r.Pedido, r['Nr Pedido'], r['Número Pedido'], r['Numero Pedido'], r['Objeto1'], r['Objeto 1'], r['Pedido Protheus'], r['Cod Pedido'], r['Código Pedido']),
+    Pedido: primeiroValor(r.Pedido, valorPorNomeAproximado(r, ['Observação 1','Observação1','Obs 1','Obs1','Objeto 1','Objeto1','Nr Pedido','Número Pedido','Pedido Protheus','Cod Pedido'])),
     Remetente: primeiroValor(r.Remetente, r['Nome Rem.']),
     ValorPostagem: primeiroValor(r.ValorPostagem, r['Vlr Tarifa (R$)'])
   };
