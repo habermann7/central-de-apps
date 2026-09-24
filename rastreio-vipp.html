@@ -1025,7 +1025,7 @@ var STATUS_MAP = {
   "Objeto(s) Comparado(s) entre o VIPP e VisualPost não Divergentes": "transito"
 };
 var STATUS_LABEL = { entregue:"Entregue", retirada:"Aguardando retirada", naoentregue:"Não entregue", transito:"Em trânsito", aguardando:"Aguardando ação", problema:"Problema" };
-var STATUS_COLOR = { entregue:"#2F7A54", retirada:"#B4452F", naoentregue:"#8C5383", transito:"#5C6F8C", aguardando:"#C1841F", problema:"#93493A" };
+var STATUS_COLOR = { entregue:"#0D9488", retirada:"#EA580C", naoentregue:"#9333EA", transito:"#64748B", aguardando:"#D97706", problema:"#DC2626" };
 var STATUS_ORDER = ["retirada","naoentregue","problema","aguardando","transito","entregue"];
 
 // Versão curta e legível pro texto original de cada status — pros que a gente já
@@ -1779,37 +1779,144 @@ function groupSum(arr, keyFn, valFn){
 }
 
 // -------- Charts --------
+// -------- Visual dos gráficos: deixa com a cara do site, não o padrão do Chart.js --------
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.color = '#6B7280';
+Chart.defaults.animation.duration = 500;
+Chart.defaults.animation.easing = 'easeOutQuart';
+Chart.defaults.plugins.tooltip.backgroundColor = '#111827';
+Chart.defaults.plugins.tooltip.titleFont = { family:"'Inter',sans-serif", size:12, weight:'600' };
+Chart.defaults.plugins.tooltip.bodyFont = { family:"'Inter',sans-serif", size:12 };
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+Chart.defaults.plugins.tooltip.displayColors = false;
+
+function hexParaRgb(hex){
+  hex = hex.replace('#','');
+  var n = parseInt(hex, 16);
+  return [(n>>16)&255, (n>>8)&255, n&255];
+}
+// Barra vertical: mais forte em cima, esmaece embaixo — dá profundidade sem
+// perder legibilidade (chartArea só existe depois do 1º layout, por isso o fallback).
+function gradienteVertical(ctx, corHex){
+  var area = ctx.chart.chartArea;
+  if (!area) return corHex;
+  var rgb = hexParaRgb(corHex);
+  var g = ctx.chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+  g.addColorStop(0, 'rgba('+rgb.join(',')+',0.95)');
+  g.addColorStop(1, 'rgba('+rgb.join(',')+',0.5)');
+  return g;
+}
+// Barra horizontal (ranking por UF): mais forte na ponta, some na base da barra.
+function gradienteHorizontal(ctx, corHex){
+  var area = ctx.chart.chartArea;
+  if (!area) return corHex;
+  var rgb = hexParaRgb(corHex);
+  var g = ctx.chart.ctx.createLinearGradient(area.left, 0, area.right, 0);
+  g.addColorStop(0, 'rgba('+rgb.join(',')+',0.45)');
+  g.addColorStop(1, 'rgba('+rgb.join(',')+',0.95)');
+  return g;
+}
+
+// Plugin próprio: escreve o total no buraco do gráfico de rosca — sem isso o
+// centro fica um vazio sem função nenhuma.
+var pluginTextoCentral = {
+  id: 'textoCentral',
+  afterDraw: function(chart){
+    var cfg = chart.config.options.plugins && chart.config.options.plugins.textoCentral;
+    if (!cfg || !chart.chartArea) return;
+    var total = (chart.data.datasets[0].data || []).reduce(function(a,b){ return a+(b||0); }, 0);
+    var texto = cfg.formatar ? cfg.formatar(total) : total.toLocaleString('pt-BR');
+    var ctx = chart.ctx;
+    var x = (chart.chartArea.left + chart.chartArea.right) / 2;
+    var y = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+    ctx.save();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#111827';
+    ctx.font = "700 19px 'Inter', sans-serif";
+    ctx.fillText(texto, x, y - 9);
+    ctx.fillStyle = '#9CA3AF';
+    ctx.font = "600 9.5px 'Inter', sans-serif";
+    ctx.fillText((cfg.legenda || 'total').toUpperCase(), x, y + 11);
+    ctx.restore();
+  }
+};
+
 var chartPorDia = new Chart(document.getElementById('chart-por-dia'), {
-  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:'#2E5EA8'}]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+  type:'bar',
+  data:{labels:[],datasets:[{data:[],backgroundColor:function(c){return gradienteVertical(c,'#2E5EA8');},borderRadius:5,borderSkipped:false,maxBarThickness:32,hoverBackgroundColor:'#2E5EA8'}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.parsed.y.toLocaleString('pt-BR')+' objeto(s)';}}}},
+    scales:{
+      y:{beginAtZero:true,grid:{color:'#F1F2F4'},border:{display:false},ticks:{font:{size:10.5}}},
+      x:{grid:{display:false},border:{display:false},ticks:{font:{size:10.5}}}
+    }
+  }
 });
 var chartStatus = new Chart(document.getElementById('chart-status'), {
-  type:'doughnut', data:{labels:[],datasets:[{data:[],backgroundColor:[]}]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+  type:'doughnut', data:{labels:[],datasets:[{data:[],backgroundColor:[],hoverOffset:8,borderWidth:2,borderColor:'#fff'}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
+    plugins:{
+      legend:{display:false},
+      textoCentral:{legenda:'objetos'},
+      tooltip:{callbacks:{label:function(ctx){
+        var total = ctx.dataset.data.reduce(function(a,b){return a+b;},0);
+        var pct = total ? (ctx.parsed/total*100).toFixed(1) : '0';
+        return ctx.label+': '+ctx.parsed.toLocaleString('pt-BR')+' ('+pct+'%)';
+      }}}
+    }
+  },
+  plugins:[pluginTextoCentral]
 });
 var chartUfQtd = new Chart(document.getElementById('chart-uf-qtd'), {
-  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:'#5C6F8C'}]},
-  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}}}
+  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:function(c){return gradienteHorizontal(c,'#5C6F8C');},borderRadius:5,borderSkipped:false,hoverBackgroundColor:'#5C6F8C'}]},
+  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.parsed.x.toLocaleString('pt-BR')+' objeto(s)';}}}},
+    scales:{
+      x:{beginAtZero:true,grid:{color:'#F1F2F4'},border:{display:false},ticks:{font:{size:10.5}}},
+      y:{grid:{display:false},border:{display:false},ticks:{font:{size:11}}}
+    }
+  }
 });
 var chartUfValor = new Chart(document.getElementById('chart-uf-valor'), {
-  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:'#C1841F'}]},
-  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}}}
+  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:function(c){return gradienteHorizontal(c,'#C1841F');},borderRadius:5,borderSkipped:false,hoverBackgroundColor:'#C1841F'}]},
+  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return fmtMoney(ctx.parsed.x);}}}},
+    scales:{
+      x:{beginAtZero:true,grid:{color:'#F1F2F4'},border:{display:false},ticks:{font:{size:10.5},callback:function(v){return 'R$ '+v.toLocaleString('pt-BR');}}},
+      y:{grid:{display:false},border:{display:false},ticks:{font:{size:11}}}
+    }
+  }
 });
 var chartGastoEmpresa = new Chart(document.getElementById('chart-gasto-empresa'), {
-  type:'doughnut', data:{labels:[],datasets:[{data:[],backgroundColor:['#2E5EA8','#8C5383','#5C6F8C','#C1841F']}]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}}}
+  type:'doughnut', data:{labels:[],datasets:[{data:[],backgroundColor:['#2E5EA8','#8C5383','#5C6F8C','#C1841F'],hoverOffset:8,borderWidth:2,borderColor:'#fff'}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
+    plugins:{
+      legend:{position:'bottom',labels:{boxWidth:10,font:{size:11},padding:14}},
+      textoCentral:{legenda:'gasto total',formatar:fmtMoney},
+      tooltip:{callbacks:{label:function(ctx){return ctx.label+': '+fmtMoney(ctx.parsed);}}}
+    }
+  },
+  plugins:[pluginTextoCentral]
 });
 var chartPeriodoMensal = new Chart(document.getElementById('chart-periodo-mensal'), {
   data:{labels:[],datasets:[
-    {type:'bar',label:'Gasto (R$)',data:[],backgroundColor:'#2F7A54',yAxisID:'y'},
-    {type:'line',label:'Envios',data:[],borderColor:'#B4452F',backgroundColor:'#B4452F',yAxisID:'y1',tension:0.3}
+    {type:'bar',label:'Gasto (R$)',data:[],backgroundColor:function(c){return gradienteVertical(c,'#2F7A54');},borderRadius:5,borderSkipped:false,yAxisID:'y',order:2},
+    {type:'line',label:'Envios',data:[],borderColor:'#B4452F',backgroundColor:'rgba(180,69,47,0.12)',yAxisID:'y1',tension:0.35,fill:true,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:'#fff',pointBorderColor:'#B4452F',pointBorderWidth:2,order:1}
   ]},
   options:{responsive:true,maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
     scales:{
-      y:{beginAtZero:true,position:'left',title:{display:true,text:'R$'}},
-      y1:{beginAtZero:true,position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'envios'}}
+      y:{beginAtZero:true,position:'left',title:{display:true,text:'R$'},grid:{color:'#F1F2F4'},border:{display:false}},
+      y1:{beginAtZero:true,position:'right',grid:{drawOnChartArea:false},border:{display:false},title:{display:true,text:'envios'}},
+      x:{grid:{display:false},border:{display:false}}
     },
-    plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}}
+    plugins:{
+      legend:{position:'bottom',labels:{boxWidth:10,font:{size:11},padding:14}},
+      tooltip:{callbacks:{label:function(ctx){
+        return ctx.dataset.label==='Gasto (R$)' ? ('Gasto: '+fmtMoney(ctx.parsed.y)) : ('Envios: '+ctx.parsed.y.toLocaleString('pt-BR'));
+      }}}
+    }
   }
 });
 
