@@ -360,6 +360,7 @@
   .kpi.transferencia .value{color:var(--transferencia);}
   .kpi.problema .value{color:var(--problema);}
   .kpi.naoentregue .value{color:var(--naoentregue);}
+  .kpi.aguardando .value{color:var(--aguardando);}
   .kpi.valor .value{font-size:22px;}
 
   /* ---------- Panels / charts ---------- */
@@ -643,12 +644,12 @@
       <label>Status</label>
       <select id="f-status">
         <option value="">Todos</option>
-        <option value="entregue">Entregue</option>
         <option value="retirada">Aguardando retirada</option>
-        <option value="transito">Em trânsito</option>
-        <option value="aguardando">Aguardando ação</option>
         <option value="naoentregue">Não entregue</option>
         <option value="problema">Problema</option>
+        <option value="aguardando">Aguardando ação</option>
+        <option value="transito">Em trânsito</option>
+        <option value="entregue">Entregue</option>
       </select>
     </div>
     <div class="field">
@@ -691,20 +692,10 @@
             <div class="value" id="kpi-total">&mdash;</div>
             <div class="sub">objetos no período</div>
           </div>
-          <div class="kpi entregue">
-            <div class="label">Total entregue</div>
-            <div class="value" id="kpi-entregue">&mdash;</div>
-            <div class="sub" id="kpi-pct-entregue">&mdash;</div>
-          </div>
           <div class="kpi retirada">
             <div class="label">Aguardando retirada</div>
             <div class="value" id="kpi-retirada">&mdash;</div>
             <div class="sub" id="kpi-pct-retirada">&mdash;</div>
-          </div>
-          <div class="kpi transferencia">
-            <div class="label">Em trânsito</div>
-            <div class="value" id="kpi-transito">&mdash;</div>
-            <div class="sub">em rota</div>
           </div>
           <div class="kpi naoentregue">
             <div class="label">Não entregue</div>
@@ -715,6 +706,21 @@
             <div class="label">Problema</div>
             <div class="value" id="kpi-problema">&mdash;</div>
             <div class="sub">precisa de ação</div>
+          </div>
+          <div class="kpi aguardando">
+            <div class="label">Aguardando ação</div>
+            <div class="value" id="kpi-aguardando">&mdash;</div>
+            <div class="sub">a processar</div>
+          </div>
+          <div class="kpi transferencia">
+            <div class="label">Em trânsito</div>
+            <div class="value" id="kpi-transito">&mdash;</div>
+            <div class="sub">em rota</div>
+          </div>
+          <div class="kpi entregue">
+            <div class="label">Total entregue</div>
+            <div class="value" id="kpi-entregue">&mdash;</div>
+            <div class="sub" id="kpi-pct-entregue">&mdash;</div>
           </div>
         </div>
 
@@ -1712,6 +1718,7 @@ function render(){
   document.getElementById('kpi-pct-retirada').textContent = pctRetirada.toFixed(1) + '% do total';
   document.getElementById('kpi-transito').textContent = byBucket.transito.toLocaleString('pt-BR');
   document.getElementById('kpi-naoentregue').textContent = byBucket.naoentregue.toLocaleString('pt-BR');
+  document.getElementById('kpi-aguardando').textContent = byBucket.aguardando.toLocaleString('pt-BR');
   document.getElementById('kpi-problema').textContent = byBucket.problema.toLocaleString('pt-BR');
 
   // Priority box — sempre olha a base inteira (não respeita filtros, é radar fixo)
