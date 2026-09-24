@@ -1109,7 +1109,19 @@ document.querySelectorAll('.sidebar .nav-item').forEach(function(item){
   });
 });
 document.getElementById("btn-ver-tecnico").addEventListener("click", function(){
-  document.getElementById("debugConteudo").textContent = JSON.stringify(window._ultimaRespostaAtualizar, null, 2);
+  var r = window._resumoAtualizacao;
+  var resumoTxt = "";
+  if (r){
+    resumoTxt = "Resumo da última atualização\n" +
+      "-----------------------------\n" +
+      "Rodadas executadas: " + r.rodadas + "\n" +
+      "Pedidos pendentes no início: " + r.totalPendentesInicial + "\n" +
+      "Pedidos verificados na sessão: " + r.totalTocadosNaSessao + "\n" +
+      "Pedidos com status atualizado: " + r.totalAtualizadosNaSessao + "\n" +
+      "Passou por todos os pendentes? " + (r.voltaCompleta ? "Sim" : "Não — ainda tem gente a verificar") + "\n\n" +
+      "Resposta técnica crua da última rodada:\n";
+  }
+  document.getElementById("debugConteudo").textContent = resumoTxt + JSON.stringify(window._ultimaRespostaAtualizar, null, 2);
   document.getElementById("debugPanel").classList.remove("hidden");
 });
 document.getElementById("btn-fechar-tecnico").addEventListener("click", function(){
@@ -1201,7 +1213,6 @@ document.getElementById("atualizarAgoraBtn").addEventListener("click", async fun
       if (totalPendentesInicial === null) totalPendentesInicial = dados.totalPendentes || 0;
       totalAtualizadosNaSessao += (dados.atualizados || 0);
       totalTocadosNaSessao += (dados.processadosNessaExecucao || 0);
-      document.getElementById("fileInfo").textContent = totalAtualizadosNaSessao + " pedidos atualizados agora" + (dados.restantes ? " (ainda restam " + dados.restantes + ")" : "");
     } while (
       dados && dados.restantes > 0 &&
       totalTocadosNaSessao < totalPendentesInicial &&
@@ -1215,14 +1226,17 @@ document.getElementById("atualizarAgoraBtn").addEventListener("click", async fun
         aviso.textContent = "A última atualização teve " + (dados.semEventoOuErro || 0) + " pedido(s) com erro ou sem informação disponível. Clica em \"Ver detalhes técnicos\" pra ver quais.";
         aviso.classList.remove("hidden");
       }
-      var voltaCompleta = totalTocadosNaSessao >= totalPendentesInicial;
-      if (dados.restantes > 0 && !voltaCompleta) {
-        document.getElementById("fileInfo").textContent = totalAtualizadosNaSessao + " pedidos atualizados — ainda restam " + dados.restantes + ", clica em \"Atualizar agora\" de novo pra continuar";
-      } else if (dados.restantes > 0 && voltaCompleta) {
-        // Todo mundo já foi consultado nessa sessão; o número que "sobra" é só
-        // pedido que continua em trânsito/aguardando de verdade — não é erro.
-        document.getElementById("fileInfo").textContent = totalAtualizadosNaSessao + " de " + totalPendentesInicial + " pedidos verificados — os demais seguem em trânsito ou aguardando ação (normal, não indica erro)";
-      }
+      var voltaCompleta = totalTocadosNaSessao >= totalPendentesInicial; // guardado pra referência técnica, se precisar no futuro
+      window._resumoAtualizacao = {
+        rodadas: rodada,
+        totalPendentesInicial: totalPendentesInicial,
+        totalTocadosNaSessao: totalTocadosNaSessao,
+        totalAtualizadosNaSessao: totalAtualizadosNaSessao,
+        voltaCompleta: voltaCompleta
+      };
+      // Não mostra mais resumo ao lado do botão — os números completos ficam
+      // só em "Ver detalhes técnicos", pra não poluir a tela com mensagem
+      // toda vez que atualiza (a atualização já é automática mesmo).
     }
   } catch (err) {
     document.getElementById("errorMsg").textContent = "Erro ao atualizar: " + err.message;
