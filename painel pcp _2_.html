@@ -78,6 +78,37 @@
   }
   .brand p{margin:2px 0 0;font-size:13px;color:var(--ink-soft);}
 
+  .topbar-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+
+  .pedido-search{
+    display:flex;align-items:center;gap:8px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    padding:0 12px;border-radius:999px;
+    box-shadow:var(--shadow-sm);
+    height:35px;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .pedido-search:focus-within{
+    border-color:var(--cold);
+    box-shadow:0 0 0 3px var(--cold-soft);
+  }
+  .pedido-search svg{flex-shrink:0;color:var(--ink-faint);}
+  .pedido-search input{
+    border:none;outline:none;background:transparent;
+    font-family:'Inter',sans-serif;font-size:13px;color:var(--ink);
+    width:168px;
+  }
+  .pedido-search input::placeholder{color:var(--ink-faint);}
+  .pedido-search-clear{
+    border:none;background:var(--neutral-soft);color:var(--neutral);
+    width:18px;height:18px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;line-height:1;cursor:pointer;flex-shrink:0;
+    transition:background .15s ease;
+  }
+  .pedido-search-clear:hover{background:var(--border-strong);}
+
   .file-meta{
     display:flex;align-items:center;gap:10px;
     font-size:12.5px;color:var(--ink-soft);
@@ -91,6 +122,7 @@
     border:none;background:var(--neutral-soft);color:var(--neutral);
     font-family:inherit;font-size:12px;font-weight:600;
     padding:5px 10px;border-radius:999px;cursor:pointer;
+    transition:background .15s ease;
   }
   .file-meta button:hover{background:var(--border-strong);}
 
@@ -168,6 +200,11 @@
     color:var(--ink);background:var(--surface);
     border:1px solid var(--border);border-radius:9px;
     padding:9px 12px;cursor:pointer;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .filters select:hover{border-color:var(--border-strong);}
+  .filters select:focus-visible{
+    outline:none;border-color:var(--cold);box-shadow:0 0 0 3px var(--cold-soft);
   }
 
   /* ---------- KPI cards ---------- */
@@ -208,8 +245,10 @@
     background:var(--surface-alt);border:1px solid var(--border);
     font-family:inherit;font-size:12.5px;font-weight:600;color:var(--ink);
     padding:8px 13px;border-radius:8px;cursor:pointer;
+    transition:background .15s ease, border-color .15s ease;
   }
   .export-btn:hover{background:var(--border);}
+  .export-btn:focus-visible{outline:none;border-color:var(--cold);box-shadow:0 0 0 3px var(--cold-soft);}
 
   .table-scroll{overflow:auto;max-height:70vh;}
   table.pivot{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px;}
@@ -310,6 +349,8 @@
     background:var(--danger-soft);color:var(--danger);
     border-radius:999px;padding:1px 8px;
   }
+  .view-tab{transition:color .15s ease, border-color .15s ease;}
+  .view-tab:hover:not(.active){color:var(--ink);}
   .view-tab.active{color:var(--ink);border-bottom-color:var(--ink);}
 
   /* ---------- Atraso report ---------- */
@@ -327,6 +368,11 @@
     color:var(--ink);background:var(--surface);
     border:1px solid var(--border);border-radius:9px;
     padding:8px 11px;cursor:pointer;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .atraso-controls input[type="date"]:hover, .atraso-controls select:hover{border-color:var(--border-strong);}
+  .atraso-controls input[type="date"]:focus-visible, .atraso-controls select:focus-visible{
+    outline:none;border-color:var(--cold);box-shadow:0 0 0 3px var(--cold-soft);
   }
 
   .kpi.kpi-split .value{font-size:19px;display:flex;gap:10px;align-items:baseline;}
@@ -416,10 +462,17 @@
         <p>Contagem de pedidos por status e data, separados por grupo Gelado / Seco</p>
       </div>
     </div>
-    <div class="file-meta" id="fileMeta" style="display:none;">
-      <span class="dot"></span>
-      <span id="fileMetaText">—</span>
-      <button id="changeFileBtn" type="button">Trocar planilha</button>
+    <div class="topbar-actions" id="topbarActions" style="display:none;">
+      <div class="pedido-search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <input type="text" id="pedidoSearchInput" placeholder="Buscar por nº de pedido" autocomplete="off" inputmode="search">
+        <button class="pedido-search-clear" id="pedidoSearchClear" type="button" title="Limpar busca" style="display:none;">✕</button>
+      </div>
+      <div class="file-meta" id="fileMeta">
+        <span class="dot"></span>
+        <span id="fileMetaText">—</span>
+        <button id="changeFileBtn" type="button">Trocar planilha</button>
+      </div>
     </div>
   </div>
 
@@ -452,6 +505,24 @@
     <div class="view-tabs" id="viewTabs">
       <button class="view-tab active" data-v="overview" type="button">Visão geral</button>
       <button class="view-tab" data-v="atraso" type="button">Pedidos em atraso<span class="badge" id="atrasoBadge">0</span></button>
+    </div>
+
+    <!-- ============ Busca por número de pedido (independe da aba/filtros acima) ============ -->
+    <div class="table-card" id="pedidoSearchCard" style="display:none;margin-bottom:16px;">
+      <div class="table-card-head">
+        <div>
+          <h3 id="pedidoSearchTitle">Resultado da busca</h3>
+          <div class="sub" id="pedidoSearchSub"></div>
+        </div>
+        <div class="export-group">
+          <button class="export-btn" id="pedidoSearchExportBtn" type="button">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0-12 4.5 4.5M12 3 7.5 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v2.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Exportar CSV
+          </button>
+          <button class="export-btn pdf-btn" id="pedidoSearchCloseBtn" type="button">Fechar ✕</button>
+        </div>
+      </div>
+      <div class="table-scroll" id="pedidoSearchWrap"></div>
     </div>
 
     <!-- ============ VIEW: overview ============ -->
@@ -569,8 +640,7 @@
 
   // ---------- Fixed classification fallback (used if "grupo" sheet is missing) ----------
   var DEFAULT_GROUP_MAP = {
-    'PA04050001':'GELADO','PA04050002':'GELADO','PA04050003':'GELADO','PA04050004':'GELADO',
-    'PA04030010':'GELADO'
+    'PA04050001':'GELADO','PA04050002':'GELADO','PA04050003':'GELADO','PA04050004':'GELADO'
   };
   var DEFAULT_FALLBACK = 'SECO';
 
@@ -596,9 +666,18 @@
     fileInput: document.getElementById('fileInput'),
     browseBtn: document.getElementById('browseBtn'),
     errBanner: document.getElementById('errBanner'),
+    topbarActions: document.getElementById('topbarActions'),
     fileMeta: document.getElementById('fileMeta'),
     fileMetaText: document.getElementById('fileMetaText'),
     changeFileBtn: document.getElementById('changeFileBtn'),
+    pedidoSearchInput: document.getElementById('pedidoSearchInput'),
+    pedidoSearchClear: document.getElementById('pedidoSearchClear'),
+    pedidoSearchCard: document.getElementById('pedidoSearchCard'),
+    pedidoSearchTitle: document.getElementById('pedidoSearchTitle'),
+    pedidoSearchSub: document.getElementById('pedidoSearchSub'),
+    pedidoSearchWrap: document.getElementById('pedidoSearchWrap'),
+    pedidoSearchExportBtn: document.getElementById('pedidoSearchExportBtn'),
+    pedidoSearchCloseBtn: document.getElementById('pedidoSearchCloseBtn'),
     dashboard: document.getElementById('dashboard'),
     groupTabs: document.getElementById('groupTabs'),
     modalFilter: document.getElementById('modalFilter'),
@@ -703,9 +782,11 @@
   });
   els.changeFileBtn.addEventListener('click', function(){
     els.dashboard.style.display = 'none';
-    els.fileMeta.style.display = 'none';
+    els.topbarActions.style.display = 'none';
     els.dropzone.style.display = 'block';
     els.fileInput.value = '';
+    closePedidoSearch();
+    els.pedidoSearchInput.value = '';
   });
 
   function showError(msg){
@@ -858,8 +939,10 @@
 
     populateFilterOptions();
     switchView('overview');
+    closePedidoSearch();
+    els.pedidoSearchInput.value = '';
     els.dropzone.style.display = 'none';
-    els.fileMeta.style.display = 'flex';
+    els.topbarActions.style.display = 'flex';
     els.fileMetaText.textContent = fileName + ' · ' + dedupedRecords.length.toLocaleString('pt-BR') + ' pedidos (' + records.length.toLocaleString('pt-BR') + ' linhas na planilha)';
     els.dashboard.style.display = 'block';
     els.refDateInput.value = isoFromUTC(state.atraso.refDate);
@@ -1221,6 +1304,106 @@
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   });
+
+  // ---------- Busca por número de pedido (global: olha todo o arquivo, não só a aba/filtro atual) ----------
+  var lastPedidoSearchRows = null;
+  var pedidoSearchRowsTemplate = function(rows){
+    var html = '<table class="atraso"><thead><tr>'+
+      '<th>Pedido</th><th>Produtos</th><th class="desc">Descrição</th><th>Grupo</th>'+
+      '<th>Status</th><th>Modal</th><th>Data prevista</th><th class="num">Itens</th>'+
+      '</tr></thead><tbody>';
+    rows.forEach(function(r){
+      var badgeClass = r.group === 'GELADO' ? 'GELADO' : 'SECO';
+      var produtosLabel = r.produtos.length > 1 ? (r.produtos[0] + ' (+' + (r.produtos.length-1) + ')') : (r.produtos[0]||'');
+      var descLabel = r.descs.length > 1 ? (r.descs[0] + ' (+' + (r.descs.length-1) + ' itens)') : (r.descs[0]||'');
+      html += '<tr>'+
+        '<td>'+escapeHtml(r.pedido)+'</td>'+
+        '<td title="'+escapeHtml(r.produtos.join(', '))+'">'+escapeHtml(produtosLabel)+'</td>'+
+        '<td class="desc" title="'+escapeHtml(r.descs.join('; '))+'">'+escapeHtml(descLabel)+'</td>'+
+        '<td><span class="group-badge '+badgeClass+'">'+badgeClass+'</span></td>'+
+        '<td>'+escapeHtml(r.status)+'</td>'+
+        '<td>'+escapeHtml(r.modal)+'</td>'+
+        '<td>'+escapeHtml(r.dateKey)+'</td>'+
+        '<td class="num">'+(r.itemCount||1)+'</td>'+
+      '</tr>';
+    });
+    html += '</tbody>';
+    return html;
+  };
+
+  function performPedidoSearch(){
+    var raw = els.pedidoSearchInput.value;
+    var query = raw.trim();
+    els.pedidoSearchClear.style.display = query ? 'flex' : 'none';
+
+    if(!query){
+      els.pedidoSearchCard.style.display = 'none';
+      lastPedidoSearchRows = null;
+      return;
+    }
+
+    var q = norm(query);
+    var rows = state.records.filter(function(r){
+      return r.pedido && norm(r.pedido).indexOf(q) !== -1;
+    }).slice().sort(function(a,b){ return (a.dateObj||0) - (b.dateObj||0); });
+
+    lastPedidoSearchRows = rows;
+
+    els.pedidoSearchTitle.textContent = rows.length.toLocaleString('pt-BR') + ' pedido(s) encontrado(s) para "' + query + '"';
+    els.pedidoSearchSub.textContent = 'Busca em todo o arquivo carregado — não considera os filtros de grupo/modal/filial acima.';
+
+    if(rows.length === 0){
+      els.pedidoSearchWrap.innerHTML = '<div class="no-atraso"><div class="big">—</div>Nenhum pedido com esse número na planilha carregada.</div>';
+    } else {
+      els.pedidoSearchWrap.innerHTML = pedidoSearchRowsTemplate(rows);
+    }
+
+    var wasHidden = els.pedidoSearchCard.style.display === 'none' || !els.pedidoSearchCard.style.display;
+    els.pedidoSearchCard.style.display = 'block';
+    if(wasHidden) els.pedidoSearchCard.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+
+  function closePedidoSearch(){
+    els.pedidoSearchCard.style.display = 'none';
+    els.pedidoSearchClear.style.display = 'none';
+    lastPedidoSearchRows = null;
+  }
+
+  els.pedidoSearchInput.addEventListener('input', performPedidoSearch);
+  els.pedidoSearchInput.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){ els.pedidoSearchInput.value=''; closePedidoSearch(); els.pedidoSearchInput.blur(); }
+  });
+  els.pedidoSearchClear.addEventListener('click', function(){
+    els.pedidoSearchInput.value = '';
+    closePedidoSearch();
+    els.pedidoSearchInput.focus();
+  });
+  els.pedidoSearchCloseBtn.addEventListener('click', function(){
+    els.pedidoSearchInput.value = '';
+    closePedidoSearch();
+  });
+  els.pedidoSearchExportBtn.addEventListener('click', function(){
+    if(!lastPedidoSearchRows || !lastPedidoSearchRows.length) return;
+    var rows = lastPedidoSearchRows;
+    var lines = [];
+    var header = ['Pedido','Produtos','Descrição','Grupo','Status','Modal','Data prevista','Itens'];
+    lines.push(header.map(escCsv).join(';'));
+    rows.forEach(function(r){
+      var row = [r.pedido, r.produtos.join(', '), r.descs.join('; '), r.group, r.status, r.modal, r.dateKey, r.itemCount||1];
+      lines.push(row.map(escCsv).join(';'));
+    });
+    var csv = '\uFEFF' + lines.join('\n');
+    var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'busca_pedido.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
   function cssEscape(s){
     return String(s).replace(/["\\]/g,'\\$&');
   }
