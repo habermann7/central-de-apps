@@ -256,8 +256,8 @@
     background:var(--panel); transition:border-color .14s var(--ease), background-color .14s var(--ease), transform .14s var(--ease);}
   .shape-btn:hover{border-color:var(--line); background:var(--paper-2); transform:translateY(-2px);}
   .shape-btn.armed{border-color:var(--accent)!important; background:#FDF3E6!important; animation:pf-armed-pulse 1.5s ease-out infinite;}
-  /* painel de tipos mais largo no modo fluxo */
-  #editorScreen.flow-kind #typesPanel{width:248px; left:14px;}
+  /* painel de tipos mais largo no modo fluxo (mesmo left do padrão, pra não tampar a barra lateral) */
+  #editorScreen.flow-kind #typesPanel{width:248px; left:82px;}
   #typesPanel{overflow-y:auto; scrollbar-width:thin;}
   .node-text-edit{position:fixed; z-index:200; border:2px solid var(--accent); border-radius:8px; padding:6px 8px;
     font-family:var(--sans); font-size:13px; font-weight:600; text-align:center; color:var(--ink);
@@ -1075,7 +1075,7 @@
   let armedShape = null;
   let textTool = false;         /* modo de texto livre */
   let fitRefW = 24;
-  let typesOpen = true;
+  let typesOpen = false;
   let openMenuEl = null;
 
   const canvas2d = document.getElementById("canvas2d");
@@ -1355,6 +1355,7 @@
   /* adapta a interface conforme o tipo de projeto */
   function applyKindUI(){
     textTool=false; if(textToolBtn) textToolBtn.classList.remove("active");
+    setTypesOpen(false); /* painel de formas/tipos começa fechado — mais espaço de canvas livre */
     const flow = isFlow();
     editorScreen.classList.toggle("flow-kind", flow);
     document.getElementById("outlineToggleBtn").style.display = flow ? "none" : "";
