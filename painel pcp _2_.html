@@ -194,7 +194,7 @@
   .group-tab.active[data-g="SECO"]{background:var(--dry);}
   .group-tab.active .swatch{background:#fff;}
 
-  .filters{display:flex;gap:10px;flex-wrap:wrap;}
+  .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
   .filters select{
     font-family:'Inter',sans-serif;font-size:13px;font-weight:500;
     color:var(--ink);background:var(--surface);
@@ -206,6 +206,30 @@
   .filters select:focus-visible{
     outline:none;border-color:var(--cold);box-shadow:0 0 0 3px var(--cold-soft);
   }
+  .date-range{display:flex;align-items:center;gap:7px;}
+  .date-range label{
+    display:flex;align-items:center;gap:6px;
+    font-size:12px;font-weight:600;color:var(--ink-soft);
+  }
+  .date-range input[type="date"]{
+    font-family:'Inter',sans-serif;font-size:13px;font-weight:500;
+    color:var(--ink);background:var(--surface);
+    border:1px solid var(--border);border-radius:9px;
+    padding:8px 10px;cursor:pointer;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .date-range input[type="date"]:hover{border-color:var(--border-strong);}
+  .date-range input[type="date"]:focus-visible{
+    outline:none;border-color:var(--cold);box-shadow:0 0 0 3px var(--cold-soft);
+  }
+  .date-range .clear-dates{
+    border:none;background:var(--neutral-soft);color:var(--neutral);
+    font-family:inherit;font-size:12px;font-weight:600;
+    padding:8px 11px;border-radius:9px;cursor:pointer;
+    transition:background .15s ease;
+    display:none;
+  }
+  .date-range .clear-dates:hover{background:var(--border-strong);}
 
   /* ---------- KPI cards ---------- */
   .kpis{
@@ -534,6 +558,11 @@
           <button class="group-tab" data-g="SECO" type="button"><span class="swatch"></span>Seco<span class="count" id="cnt-SECO">0</span></button>
         </div>
         <div class="filters">
+          <div class="date-range">
+            <label>Prev. fatura de <input type="date" id="dateFromFilter"></label>
+            <label>até <input type="date" id="dateToFilter"></label>
+            <button class="clear-dates" id="clearDatesBtn" type="button">Limpar datas ✕</button>
+          </div>
           <select id="modalFilter"><option value="all">Todos os modais</option></select>
           <select id="filialFilter"><option value="all">Todas as filiais</option></select>
         </div>
@@ -651,6 +680,8 @@
     activeGroup: 'all',
     activeModal: 'all',
     activeFilial: 'all',
+    dateFrom: null,   // Date (UTC) ou null — filtra Prev. Fatura >= dateFrom
+    dateTo: null,     // Date (UTC) ou null — filtra Prev. Fatura <= dateTo
     fileName: '',
     view: 'overview',
     atraso: {
@@ -680,6 +711,9 @@
     pedidoSearchCloseBtn: document.getElementById('pedidoSearchCloseBtn'),
     dashboard: document.getElementById('dashboard'),
     groupTabs: document.getElementById('groupTabs'),
+    dateFromFilter: document.getElementById('dateFromFilter'),
+    dateToFilter: document.getElementById('dateToFilter'),
+    clearDatesBtn: document.getElementById('clearDatesBtn'),
     modalFilter: document.getElementById('modalFilter'),
     filialFilter: document.getElementById('filialFilter'),
     kpis: document.getElementById('kpis'),
@@ -787,6 +821,11 @@
     els.fileInput.value = '';
     closePedidoSearch();
     els.pedidoSearchInput.value = '';
+    state.dateFrom = null;
+    state.dateTo = null;
+    els.dateFromFilter.value = '';
+    els.dateToFilter.value = '';
+    els.clearDatesBtn.style.display = 'none';
   });
 
   function showError(msg){
@@ -932,6 +971,11 @@
     state.activeGroup = 'all';
     state.activeModal = 'all';
     state.activeFilial = 'all';
+    state.dateFrom = null;
+    state.dateTo = null;
+    els.dateFromFilter.value = '';
+    els.dateToFilter.value = '';
+    els.clearDatesBtn.style.display = 'none';
     state.atraso.group = 'all';
     state.atraso.modal = 'all';
     state.atraso.filial = 'all';
@@ -1017,6 +1061,33 @@
   els.modalFilter.addEventListener('change', function(){ state.activeModal = els.modalFilter.value; render(); });
   els.filialFilter.addEventListener('change', function(){ state.activeFilial = els.filialFilter.value; render(); });
 
+  function parseDateInputUTC(value){
+    if(!value) return null;
+    var parts = value.split('-');
+    return new Date(Date.UTC(+parts[0], +parts[1]-1, +parts[2]));
+  }
+  function updateClearDatesBtn(){
+    els.clearDatesBtn.style.display = (state.dateFrom || state.dateTo) ? 'inline-flex' : 'none';
+  }
+  els.dateFromFilter.addEventListener('change', function(){
+    state.dateFrom = parseDateInputUTC(els.dateFromFilter.value);
+    updateClearDatesBtn();
+    render();
+  });
+  els.dateToFilter.addEventListener('change', function(){
+    state.dateTo = parseDateInputUTC(els.dateToFilter.value);
+    updateClearDatesBtn();
+    render();
+  });
+  els.clearDatesBtn.addEventListener('click', function(){
+    state.dateFrom = null;
+    state.dateTo = null;
+    els.dateFromFilter.value = '';
+    els.dateToFilter.value = '';
+    updateClearDatesBtn();
+    render();
+  });
+
   els.atrasoGroupTabs.addEventListener('click', function(e){
     var btn = e.target.closest('.group-tab');
     if(!btn) return;
@@ -1041,6 +1112,8 @@
       if(state.activeGroup !== 'all' && r.group !== state.activeGroup) return false;
       if(state.activeModal !== 'all' && r.modal !== state.activeModal) return false;
       if(state.activeFilial !== 'all' && r.filial !== state.activeFilial) return false;
+      if(state.dateFrom && (!r.dateObj || r.dateObj < state.dateFrom)) return false;
+      if(state.dateTo && (!r.dateObj || r.dateObj > state.dateTo)) return false;
       return true;
     });
   }
