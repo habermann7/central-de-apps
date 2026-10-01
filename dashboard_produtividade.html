@@ -87,6 +87,24 @@ tbody tr{transition:background .1s ease}tbody tr:hover{background:var(--gr)}
 @media(max-width:800px){.w{padding:18px}.k{grid-template-columns:repeat(2,minmax(0,1fr))}.c2{grid-template-columns:1fr}h1{font-size:23px}.card{padding:18px}.hero .num{font-size:34px}.actions{justify-content:flex-start}.topbar .status{text-align:left}.bar label{flex:1;min-width:100px}}
 @media(max-width:420px){.k{grid-template-columns:1fr}.field-grid{grid-template-columns:1fr}.tabs{gap:0}.tab{padding:12px}.hero{padding:18px}.kp .v{font-size:28px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+/* Campos e navegação com estados de seleção explícitos. */
+:root{--soft:color-mix(in srgb,var(--pr) 8%,var(--card));--control-border:color-mix(in srgb,var(--mu) 48%,var(--bd))}
+.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;border:0;overflow:visible;margin-bottom:26px}
+.tab{display:flex;align-items:center;gap:12px;min-height:88px;padding:18px;text-align:left;white-space:normal;border:1px solid var(--control-border);border-radius:14px;background:var(--card);color:var(--tx);transition:background .15s,border-color .15s,box-shadow .15s}
+.tab:hover{border-color:var(--pr);background:var(--soft)}
+.tab.active{background:var(--pr);color:#fff;border-color:var(--pr);box-shadow:0 5px 15px color-mix(in srgb,var(--pr) 18%,transparent)}
+.tab-icon{display:grid;place-items:center;flex:none;width:40px;height:40px;border-radius:11px;background:var(--soft);color:var(--pr)}.tab-icon svg{width:22px;height:22px}.tab.active .tab-icon{background:rgba(255,255,255,.16);color:#fff}
+.tab-copy{min-width:0;flex:1}.tab-copy strong{display:block;font-size:15px;font-weight:650}.tab-copy small{display:block;font-size:11.5px;line-height:1.5;margin-top:3px;color:var(--mu);font-weight:400}.tab.active small{color:#fff;opacity:.9}.tab-indicator{flex:none;width:7px;height:7px;border-radius:50%;background:transparent}.tab.active .tab-indicator{background:#fff}
+.filters{display:block;padding:24px;border-radius:16px;box-shadow:0 3px 12px rgba(16,24,40,.035)}.filter-heading{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}.filter-heading h2{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:16px;margin:0}.filter-heading p,.field-help{font-size:12.5px;line-height:1.6;color:var(--mu);margin:6px 0 0}.filter-count{font-size:11px;font-weight:600;color:var(--pr);background:var(--soft);border-radius:6px;padding:4px 8px}.clear-filters{min-height:40px;padding:8px 12px;display:flex;align-items:center;gap:10px;color:var(--mu);background:var(--card);border:1px solid var(--bd);border-radius:9px;cursor:pointer;white-space:nowrap}.clear-filters:hover{color:var(--pr);border-color:var(--pr)}.clear-filters span{font-size:20px}
+.quick-periods{display:flex;align-items:center;gap:8px;padding-bottom:20px;margin-bottom:20px;border-bottom:1px solid var(--bd)}.quick-label{font-size:12px;font-weight:600;color:var(--mu);margin-right:6px}.quick-periods .export-btn{border:1px solid var(--control-border);border-radius:9px;padding:9px 15px;font-size:13px;min-height:42px;font-weight:500;background:var(--card)}.quick-periods .export-btn[aria-pressed="true"]{border-color:var(--pr);color:var(--pr);background:var(--soft);box-shadow:inset 0 0 0 1px var(--pr)}.quick-periods .export-btn[aria-pressed="true"]::before{content:'✓';font-weight:700}
+.filter-fields{display:grid;grid-template-columns:.75fr 1fr 1fr 1fr 1.45fr;gap:14px}.bar .select-field{gap:8px;color:var(--tx);font-size:12px;font-weight:650;min-width:0}.select-field>span{display:flex;align-items:center;justify-content:space-between}.select-field.selected>span::after{content:'Selecionado';font-size:9px;letter-spacing:.01em;color:var(--pr);font-weight:650}
+select,input:not([type="checkbox"]):not([type="file"]){border:1px solid var(--control-border);background-color:var(--card);font-size:14px;min-height:46px;border-radius:10px;padding:11px 12px;color:var(--tx)}select{appearance:none;-webkit-appearance:none;padding-right:38px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23748096' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;cursor:pointer;width:100%}select option{background:var(--card);color:var(--tx)}.select-field.selected select{border-color:var(--pr);background-color:var(--soft);font-weight:600}.select-field:focus-within>span{color:var(--pr)}select:hover,input:not([type="checkbox"]):hover{border-color:var(--pr)}select:focus,input:focus{border-color:var(--pr);box-shadow:0 0 0 4px color-mix(in srgb,var(--pr) 13%,transparent)}
+.active-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:18px;padding-top:16px;border-top:1px solid var(--bd)}.active-label{font-size:12px;color:var(--mu);margin-right:4px}.filter-chip{display:inline-flex;gap:10px;align-items:center;border:1px solid color-mix(in srgb,var(--pr) 35%,var(--bd));background:var(--soft);color:var(--pr);min-height:34px;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer}.filter-chip:hover{border-color:var(--pr)}.filter-chip span{font-size:16px}.comparison-fields{display:grid;grid-template-columns:.7fr 1fr 1fr;background:var(--soft);padding:18px;margin:0 0 18px;border:1px solid var(--bd)}.comparison-fields label{gap:8px;font-weight:600;color:var(--tx);min-width:0}.search-field{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:600;color:var(--mu)}.search-field input{min-width:260px}.ci{width:110px;text-align:center;font-weight:650;border-color:var(--pr)!important;background:var(--soft)!important}
+.field-grid label{padding:12px;background:var(--bg);border:1px solid var(--bd);border-radius:12px;gap:8px;color:var(--tx);font-weight:600;font-size:12px}.field-grid label:focus-within{border-color:var(--pr)}.field-grid.full{margin-top:18px}#dayTotal{background:var(--soft);padding:14px;border-radius:10px;font-weight:650;color:var(--pr)}.addmenu-panel{width:310px;max-width:calc(100vw - 40px);padding:10px}.addmenu-item{padding:14px 10px;min-height:62px}.addmenu-item b{font-size:14px}.addmenu-item span{font-size:12px}.addmenu-check{font-size:12px;line-height:1.5;align-items:center;padding:12px 8px}input[type="checkbox"]{appearance:auto;min-height:0;width:18px;height:18px;margin:0;accent-color:var(--pr);flex:none;cursor:pointer}.hero{border-left:4px solid var(--pr)}.kp{border-top:3px solid color-mix(in srgb,var(--pr) 40%,var(--bd))}.kp:first-child{border-top-color:var(--pr)}.kp .l{font-weight:550}.context{line-height:1.6}details.tables>summary{padding:16px 18px;background:var(--card);border:1px solid var(--control-border);border-radius:10px;justify-content:flex-start;font-size:13px}details.tables[open]>summary{color:var(--pr);border-color:var(--pr);background:var(--soft)}th{padding:12px 10px;background:var(--bg)}.modal-actions .btn{min-height:44px;padding:10px 18px;font-size:14px}
+@media(max-width:1100px){.tabs{gap:10px}.tab{padding:14px;gap:9px}.tab-copy small{font-size:11px}.tab-indicator{display:none}.filter-fields{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.tabs{grid-template-columns:repeat(2,minmax(0,1fr))}.tab{min-height:82px}.filters{padding:18px}.filter-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.filter-fields .select-field:last-child{grid-column:1/-1}.filter-heading{gap:8px}.filter-heading h2{font-size:15px}.filter-heading p{font-size:12px}.clear-filters{font-size:11px;padding:6px 9px}.quick-label{width:100%;margin-bottom:2px}.quick-periods .export-btn{padding:8px 12px}.comparison-fields{grid-template-columns:1fr}.search-field{width:100%}.search-field input{min-width:0;width:100%}.select-field.selected>span::after{font-size:8px}.hero{align-items:flex-start}.field-grid label{padding:10px}}
+@media(max-width:380px){.tab-copy small{display:none}.tab-copy strong{font-size:13px}.tab-icon{width:32px;height:32px}.tab{min-height:64px;padding:10px}.filter-fields{grid-template-columns:1fr}.filter-heading{flex-wrap:wrap}}
 </style></head><body><div class="w">
 
 <div class="topbar">
@@ -102,9 +120,7 @@ tbody tr{transition:background .1s ease}tbody tr:hover{background:var(--gr)}
   </div>
 </div>
 
-<nav class="tabs" aria-label="Seções do painel">
-<button class="tab active" data-tab="overview" aria-current="page">Visão geral</button><button class="tab" data-tab="entries">Lançamentos</button><button class="tab" data-tab="team">Equipe</button><button class="tab" data-tab="reports">Relatórios</button>
-</nav>
+<nav class="tabs" aria-label="Seções do painel"><button type="button" class="tab active" data-tab="overview" aria-current="page"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span class="tab-copy"><strong>Visão geral</strong><small>Indicadores e tendências</small></span><span class="tab-indicator" aria-hidden="true"></span></button><button type="button" class="tab " data-tab="entries"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M15 5l4 4M10 14l1-4 7-7 4 4-7 7-5 1Z"/></svg></span><span class="tab-copy"><strong>Lançamentos</strong><small>Registros da operação</small></span><span class="tab-indicator" aria-hidden="true"></span></button><button type="button" class="tab " data-tab="team"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6M21 21v-3a6 6 0 0 0-4-5"/></svg></span><span class="tab-copy"><strong>Equipe</strong><small>Pessoas e produtividade</small></span><span class="tab-indicator" aria-hidden="true"></span></button><button type="button" class="tab " data-tab="reports"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v18h17M8 16v-4M13 16V7M18 16v-7"/></svg></span><span class="tab-copy"><strong>Relatórios</strong><small>Comparações e exportação</small></span><span class="tab-indicator" aria-hidden="true"></span></button></nav>
 <div class="hero">
   <div>
     <div class="label">Pedidos hoje</div>
@@ -112,7 +128,7 @@ tbody tr{transition:background .1s ease}tbody tr:hover{background:var(--gr)}
     <div class="delta" id="heroDelta"></div>
   </div>
   <div class="addmenu" id="addMenuWrap">
-    <button class="btn" id="addMenuBtn" style="font-size:14px;padding:11px 16px;">
+    <button class="btn" id="addMenuBtn" aria-expanded="false" aria-controls="addMenuPanel" style="font-size:14px;padding:11px 16px;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Adicionar dados
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:2px;"><polyline points="6 9 12 15 18 9"/></svg>
@@ -134,13 +150,15 @@ tbody tr{transition:background .1s ease}tbody tr:hover{background:var(--gr)}
 </div>
 
 <div class="bar filters">
-<div class="quick-periods" aria-label="Atalhos de período"><button class="export-btn" data-period="today">Hoje</button><button class="export-btn" data-period="week">Esta semana</button><button class="export-btn" data-period="month">Este mês</button><button class="export-btn" data-period="all">Todo o histórico</button></div>
-<label>Ano<select id="fA"></select></label><label>Mês<select id="fM"></select></label><label>Semana<select id="fS"></select></label><label>Dia<select id="fD"></select></label><label>Modal<select id="fT"></select></label>
-<button class="btn ghost sm" onclick="reset()">Limpar filtros</button></div>
+<div class="filter-heading"><div><h2>Filtrar visualização <span class="filter-count" id="filterCount">Todos os dados</span></h2><p>Escolha um período e refine os resultados nos campos abaixo.</p></div><button class="clear-filters" type="button" onclick="reset()">Limpar filtros <span aria-hidden="true">↺</span></button></div>
+<div class="quick-periods" aria-label="Atalhos de período"><span class="quick-label">Período rápido</span><button type="button" class="export-btn" data-period="today" aria-pressed="false">Hoje</button><button type="button" class="export-btn" data-period="week" aria-pressed="false">Esta semana</button><button type="button" class="export-btn" data-period="month" aria-pressed="false">Este mês</button><button type="button" class="export-btn" data-period="all" aria-pressed="true">Todo o histórico</button></div>
+<div class="filter-fields">
+<label class="select-field"><span>Ano</span><select id="fA"></select></label><label class="select-field"><span>Mês</span><select id="fM"></select></label><label class="select-field"><span>Semana</span><select id="fS"></select></label><label class="select-field"><span>Dia</span><select id="fD"></select></label><label class="select-field"><span>Modal de transporte</span><select id="fT"></select></label>
+</div><div class="active-filters" id="activeFilters" aria-label="Filtros aplicados" hidden></div></div>
 
 <div class="context" id="periodContext" aria-live="polite"></div><section data-panel="overview"><div class="g k" id="kpis"></div></section>
 
-<section data-panel="entries" hidden><div class="section-head"><h3>Histórico de lançamentos</h3><div class="line"></div></div><div class="card"><div class="th-row"><h2>Registros do período</h2><label>Buscar data ou modal <input id="entrySearch" type="search" placeholder="Ex.: 01/10 ou Motoboy"></label></div><div class="sc"><table id="tUlt"></table></div></div></section>
+<section data-panel="entries" hidden><div class="section-head"><h3>Histórico de lançamentos</h3><div class="line"></div></div><div class="card"><div class="th-row"><h2>Registros do período</h2><label class="search-field">Buscar data ou modal <input id="entrySearch" type="search" placeholder="Ex.: 01/10 ou Motoboy"></label></div><div class="sc"><table id="tUlt"></table></div></div></section>
 <section data-panel="overview">
 <div class="section-head"><h3>Tendência</h3><div class="line"></div></div>
 <div class="g c2"><div class="card"><h2>Pedidos por dia</h2><div class="mini" id="dm"></div><div class="ch"><canvas id="c1"></canvas></div></div>
@@ -150,10 +168,10 @@ tbody tr{transition:background .1s ease}tbody tr:hover{background:var(--gr)}
 </section><section data-panel="team" hidden><div class="section-head"><h3>Equipe</h3><div class="line"></div></div>
 <div class="g c2"><div class="card"><h2>Pedidos × colaboradores por mês</h2><div class="ch"><canvas id="c5"></canvas></div></div>
 <div class="card"><h2>Pedidos por colaborador por mês</h2><div class="ch"><canvas id="c6"></canvas></div></div></div>
-<div class="card sc"><div class="th-row"><h2>Quadro de colaboradores</h2><span class="status" id="colStatus"></span></div><table id="t4"></table></div>
+<div class="card sc"><div class="th-row"><div><h2>Quadro de colaboradores</h2><p class="field-help">Edite a quantidade de pessoas nos campos abaixo. As alterações são salvas automaticamente.</p></div><span class="status" id="colStatus"></span></div><table id="t4"></table></div>
 
 </section><section data-panel="reports" hidden><div class="section-head"><h3>Comparar períodos</h3><div class="line"></div></div>
-<div class="card"><div class="bar" style="margin:0 0 10px;border:0;padding:0">
+<div class="card"><div class="bar comparison-fields">
 <label>Tipo<select id="cT"><option value="m">Mês</option><option value="s">Semana</option></select></label><label>Período atual<select id="cA"></select></label><label>Período anterior<select id="cB"></select></label></div>
 <div class="th-row" style="margin-top:4px;"><span></span><button class="export-btn" id="exportCmpBtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar CSV</button></div>
 <div class="sc"><table id="tc"></table></div></div>
@@ -170,7 +188,7 @@ tbody tr{transition:background .1s ease}tbody tr:hover{background:var(--gr)}
 
 <div class="modal-bg" id="dayModalBg">
   <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="dayTitle">
-    <h3 id="dayTitle">Lançar / editar dia</h3>
+    <h3 id="dayTitle">Lançar / editar dia</h3><p class="field-help">Selecione a data e informe os pedidos de cada modal.</p>
     <div class="field-grid full"><label>Data<input type="date" id="dayDate"></label></div>
     <div class="field-grid" id="dayModalFields"></div>
     <div class="modal-hint" id="dayTotal" aria-live="polite">Total: 0 pedidos</div><div class="modal-actions">
@@ -260,6 +278,7 @@ function mostrarCarregando(msg){
 }
 
 function render(){
+  syncSelectionUI();
   if(!dadosCarregados){ return; }
   if(!D.length){
     mostrarCarregando('Nenhum dado encontrado ainda. Importe uma planilha ou lance um dia pelo botão "Adicionar dados".');
@@ -475,8 +494,8 @@ function openDayModal(data){
 function closeDayModal(){ $("dayModalBg").classList.remove('open'); }
 
 // ---------------- Menu "Adicionar dados": manual ou planilha ----------------
-function closeAddMenu(){ $("addMenuPanel").classList.remove('open'); $("addMenuBtn").classList.remove('open'); }
-function toggleAddMenu(){ $("addMenuPanel").classList.toggle('open'); $("addMenuBtn").classList.toggle('open'); }
+function closeAddMenu(){ $("addMenuBtn").setAttribute("aria-expanded","false"); $("addMenuPanel").classList.remove('open'); $("addMenuBtn").classList.remove('open'); }
+function toggleAddMenu(){ $("addMenuBtn").setAttribute("aria-expanded", String(!$("addMenuPanel").classList.contains("open"))); $("addMenuPanel").classList.toggle('open'); $("addMenuBtn").classList.toggle('open'); }
 $("addMenuBtn").addEventListener('click', (e)=>{ e.stopPropagation(); toggleAddMenu(); });
 $("addManualItem").addEventListener('click', ()=>{ closeAddMenu(); openDayModal(); });
 $("addUploadItem").addEventListener('click', ()=>{ closeAddMenu(); $("fileInput").click(); });
@@ -532,6 +551,27 @@ $("fM").onchange=()=>{updateFilterOptions();render()};
 $("fS").onchange=()=>{updateFilterOptions();render()};
 ["fD","fT"].forEach(i=>$(i).onchange=render);
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
+
+
+function syncSelectionUI(){
+ const fields=[['fA','Ano'],['fM','Mês'],['fS','Semana'],['fD','Dia'],['fT','Modal']];
+ const active=fields.filter(([id])=>$(id).value!=='');
+ fields.forEach(([id])=>$(id).closest('label').classList.toggle('selected',$(id).value!==''));
+ $('filterCount').textContent=active.length?active.length+' filtro'+(active.length>1?'s':'')+' aplicado'+(active.length>1?'s':''):'Todos os dados';
+ const chips=$('activeFilters');chips.replaceChildren();chips.hidden=!active.length;
+ if(active.length){const label=document.createElement('span');label.className='active-label';label.textContent='Em exibição';chips.append(label);}
+ active.forEach(([id,label])=>{const button=document.createElement('button');button.type='button';button.className='filter-chip';
+ const value=$(id).selectedOptions[0]?.textContent||$(id).value;button.textContent=label+': '+value;
+ const close=document.createElement('span');close.textContent='×';close.setAttribute('aria-hidden','true');button.append(close);button.setAttribute('aria-label','Remover filtro '+label+': '+value);
+ button.addEventListener('click',()=>{$(id).value='';updateFilterOptions();render();$(id).focus();});chips.append(button);});
+ const a=$('fA').value,m=$('fM').value,w=$('fS').value,d=$('fD').value,date=todayISO();
+ let selected='';
+ if(!a&&!m&&!w&&!d)selected='all';
+ else if(a===date.slice(0,4)&&m===String(+date.slice(5,7))&&!w&&d===date)selected='today';
+ else if(a===date.slice(0,4)&&!m&&w===String(iso(date))&&!d)selected='week';
+ else if(a===date.slice(0,4)&&m===String(+date.slice(5,7))&&!w&&!d)selected='month';
+ document.querySelectorAll('[data-period]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.period===selected)));
+}
 
 let currentTab='overview';
 document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>{
