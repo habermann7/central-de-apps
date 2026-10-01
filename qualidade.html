@@ -899,7 +899,8 @@ function renderDash(){
   drawBar('chart-avaria', topNFrom(list,'avaria',8), '#A9863F');
   drawBar('chart-ofensor', topNFrom(list,'ofensor',8), '#16171A');
   drawBar('chart-usuario', topNFrom(list,'usuario',8), '#6B7075');
-  drawLine('chart-tempo', monthlyFrom(list));
+  var listTempo = list.filter(function(r){ return (r.data||'') >= '2026-09-01'; });
+  drawLine('chart-tempo', monthlyFrom(listTempo));
 }
 function clearCanvas(ctx, w, h){ ctx.clearRect(0,0,w,h); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0,0,w,h); }
 function truncateToWidth(ctx, text, maxWidth){
