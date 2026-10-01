@@ -2,13 +2,12 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Correção · Ofensor Laboratório → Cliente Stinpharma</title>
+<title>Correção · NC-0021</title>
 </head>
 <body style="font-family:system-ui,sans-serif;max-width:640px;margin:40px auto;padding:0 16px;">
-<h2>Correção de registros — Qualidade (SECO)</h2>
-<p>Uso único: procura todas as NCs com <b>Ofensor = LABORATORIO</b> (qualquer que seja o Cliente atual) e troca o Cliente pra <b>STINPHARMA</b> (o Ofensor continua Laboratório, não mexe nele). Depois de rodar com sucesso, pode apagar esse arquivo do repositório.</p>
-<button id="scanBtn" style="font-size:14px;padding:10px 18px;cursor:pointer;">1. Procurar registros</button>
-<button id="runBtn" style="font-size:14px;padding:10px 18px;cursor:pointer;display:none;margin-left:8px;">2. Aplicar correção</button>
+<h2>Correção pontual — NC-0021</h2>
+<p>Uso único: troca só o registro <b>NC-0021</b> (AMP L LISINA), o Ofensor de <b>PERCURSO</b> pra <b>STINPHARMA</b>. Nenhum outro registro é alterado. Depois de rodar com sucesso, pode apagar esse arquivo do repositório.</p>
+<button id="runBtn" style="font-size:14px;padding:10px 18px;cursor:pointer;">Rodar correção</button>
 <pre id="log" style="background:#111;color:#0f0;padding:14px;border-radius:8px;margin-top:16px;white-space:pre-wrap;min-height:60px;"></pre>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
@@ -27,48 +26,30 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const DB_ROOT = 'qualidade';
+const ID_ALVO = 21;
 
 function log(msg){ document.getElementById('log').textContent += msg + "\n"; }
-function norm(v){ return String(v||'').trim().toUpperCase(); }
 
-let encontrados = [];
-
-document.getElementById('scanBtn').addEventListener('click', ()=>{
-  document.getElementById('scanBtn').disabled = true;
+document.getElementById('runBtn').addEventListener('click', ()=>{
+  document.getElementById('runBtn').disabled = true;
   log('Entrando com a conta da Central de Apps (precisa estar logado nesse navegador)...');
   firebase.auth().onAuthStateChanged(user=>{
     if(!user){ log('ERRO: você precisa abrir este arquivo já logado pela Central de Apps.'); return; }
-    log('Lendo registros...');
-    firebase.database().ref(DB_ROOT + '/registros').once('value').then(snap=>{
-      const regs = snap.val() || {};
-      encontrados = Object.keys(regs).filter(id=>{
-        const r = regs[id];
-        return norm(r.ofensor) === 'LABORATORIO' && norm(r.usuario) !== 'STINPHARMA';
-      });
-      if(!encontrados.length){
-        log('Nenhum registro encontrado com Ofensor=LABORATORIO e Cliente diferente de STINPHARMA. Nada a fazer.');
+    const ref = firebase.database().ref(DB_ROOT + '/registros/' + ID_ALVO);
+    ref.once('value').then(snap=>{
+      const r = snap.val();
+      if(!r){ log('Não encontrei o registro NC-0021 no banco.'); return; }
+      log('Encontrei: ' + r.produto + ' · Ofensor atual: ' + r.ofensor + ' · Cliente: ' + r.usuario);
+      if(String(r.ofensor).trim().toUpperCase() !== 'PERCURSO'){
+        log('O Ofensor não é mais PERCURSO (já está "' + r.ofensor + '"). Não vou mexer, pra não sobrescrever algo que já foi corrigido ou mudado.');
         return;
       }
-      log('Encontrei ' + encontrados.length + ' registro(s):');
-      encontrados.forEach(id=>{
-        const r = regs[id];
-        log('  NC-' + String(r.id).padStart(4,'0') + ' · ' + r.data + ' · ' + r.produto + ' · Cliente atual: ' + r.usuario);
-      });
-      log('\nConfira a lista acima e clica em "Aplicar correção" pra trocar o Cliente desses registros pra STINPHARMA.');
-      document.getElementById('runBtn').style.display = 'inline-block';
+      if(!confirm('Vai trocar o Ofensor da NC-0021 de PERCURSO pra STINPHARMA. Confirma?')) return;
+      ref.update({ ofensor: 'STINPHARMA' }).then(()=>{
+        log('✓ Pronto! NC-0021 agora com Ofensor = STINPHARMA.');
+      }).catch(err=>{ log('ERRO ao salvar: ' + err.message); });
     }).catch(err=>{ log('ERRO ao ler: ' + err.message); });
   });
-});
-
-document.getElementById('runBtn').addEventListener('click', ()=>{
-  if(!encontrados.length) return;
-  if(!confirm('Vai trocar o Cliente de ' + encontrados.length + ' registro(s) (Ofensor=Laboratório) pra STINPHARMA. Confirma?')) return;
-  document.getElementById('runBtn').disabled = true;
-  const updates = {};
-  encontrados.forEach(id=>{ updates[DB_ROOT + '/registros/' + id + '/usuario'] = 'STINPHARMA'; });
-  firebase.database().ref().update(updates).then(()=>{
-    log('\n✓ Pronto! ' + encontrados.length + ' registro(s) corrigido(s) pra Cliente = STINPHARMA.');
-  }).catch(err=>{ log('ERRO ao salvar: ' + err.message); });
 });
 </script>
 </body>
