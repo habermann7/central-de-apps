@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Seed · Dashboard de Produtividade</title>
+</head>
+<body style="font-family:system-ui,sans-serif;max-width:640px;margin:40px auto;padding:0 16px;">
+<h2>Seed — Dashboard de Produtividade</h2>
+<p>Esse arquivo é de uso único: ele sobe pro Firebase os dados que estavam escritos direto no HTML antigo (histórico de jul–set/2026 + colaboradores por mês), pra não perder nada na troca pro banco. Depois de rodar com sucesso, pode apagar esse arquivo do repositório — ele não precisa ficar publicado.</p>
+<button id="runBtn" style="font-size:14px;padding:10px 18px;cursor:pointer;">Rodar seed</button>
+<pre id="log" style="background:#111;color:#0f0;padding:14px;border-radius:8px;margin-top:16px;white-space:pre-wrap;min-height:60px;"></pre>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+  authDomain: "stinpharma-qualidade.firebaseapp.com",
+  databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+  projectId: "stinpharma-qualidade",
+  storageBucket: "stinpharma-qualidade.firebasestorage.app",
+  messagingSenderId: "422803826984",
+  appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+  measurementId: "G-6C0TLHH2VP"
+};
+firebase.initializeApp(firebaseConfig);
+
+const RAW=[["2026-07-01",297,{"Transportadora":283,"Motoboy":13,"Esporádico":1}],["2026-07-02",107,{"Transportadora":89,"Motoboy":15,"Esporádico":3}],["2026-07-03",170,{"Transportadora":158,"Motoboy":12}],["2026-07-06",136,{"Transportadora":100,"Motoboy":32,"Retira":4}],["2026-07-07",170,{"Transportadora":158,"Motoboy":9,"Retira":2,"Esporádico":1}],["2026-07-08",187,{"Transportadora":166,"Motoboy":15,"Retira":6}],["2026-07-13",68,{"Transportadora":39,"Retira":5,"Esporádico":1,"Aéreo":23}],["2026-07-14",168,{"Transportadora":135,"Motoboy":23,"Retira":5,"Aéreo":5}],["2026-07-15",111,{"Transportadora":106,"Motoboy":1,"Retira":3,"Aéreo":1}],["2026-07-16",208,{"Transportadora":175,"Motoboy":30,"Retira":2,"Aéreo":1}],["2026-07-17",199,{"Transportadora":178,"Motoboy":13,"Retira":2,"Aéreo":6}],["2026-07-20",158,{"Transportadora":136,"Motoboy":17,"Retira":1,"Aéreo":4}],["2026-07-21",73,{"Transportadora":67,"Motoboy":2,"Retira":4}],["2026-07-22",241,{"Transportadora":203,"Motoboy":28,"Retira":1,"Aéreo":9}],["2026-07-23",209,{"Transportadora":180,"Motoboy":17,"Retira":1,"Aéreo":11}],["2026-07-24",99,{"Transportadora":91,"Motoboy":3,"Retira":4,"Aéreo":1}],["2026-07-27",10,{"Transportadora":6,"Retira":3,"Aéreo":1}],["2026-07-29",168,{"Transportadora":125,"Motoboy":34,"Aéreo":9}],["2026-07-30",188,{"Transportadora":157,"Retira":3,"Esporádico":1,"Motoboy":21,"Aéreo":6}],["2026-07-31",322,{"Transportadora":300,"Esporádico":1,"Motoboy":17,"Aéreo":4}],["2026-08-03",192,{"Transportadora":172,"Retira":8,"Motoboy":7,"Aéreo":5}],["2026-08-05",267,{"Transportadora":237,"Retira":3,"Motoboy":17,"Aéreo":10}],["2026-08-06",146,{"Transportadora":115,"Retira":9,"Motoboy":18,"Aéreo":4}],["2026-08-10",207,{"Transportadora":185,"Motoboy":19,"Aéreo":3}],["2026-08-11",60,{"Transportadora":57,"Retira":3}],["2026-08-12",240,{"Transportadora":203,"Retira":5,"Motoboy":24,"Aéreo":8}],["2026-08-13",150,{"Transportadora":134,"Retira":1,"Motoboy":11,"Aéreo":4}],["2026-08-14",108,{"Transportadora":104,"Retira":3,"Aéreo":1}],["2026-08-17",103,{"Transportadora":84,"Retira":3,"Motoboy":11,"Aéreo":5}],["2026-08-19",212,{"Transportadora":181,"Motoboy":21,"Aéreo":10}],["2026-08-20",160,{"Transportadora":133,"Retira":9,"Motoboy":17,"Aéreo":1}],["2026-08-21",169,{"Transportadora":150,"Retira":3,"Motoboy":14,"Aéreo":2}],["2026-08-24",178,{"Transportadora":154,"Retira":4,"Motoboy":11,"Aéreo":9}],["2026-08-27",255,{"Transportadora":219,"Retira":1,"Motoboy":26,"Aéreo":9}],["2026-08-28",55,{"Transportadora":48,"Retira":7}],["2026-08-31",266,{"Transportadora":222,"Retira":2,"Motoboy":33,"Aéreo":9}],["2026-09-01",190,{"Transportadora":184,"Retira":6}],["2026-09-03",176,{"Transportadora":152,"Motoboy":14,"Aéreo":10}],["2026-09-04",161,{"Transportadora":130,"Motoboy":24,"Aéreo":7}],["2026-09-08",272,{"Transportadora":219,"Motoboy":36,"Aéreo":8,"Retira":9}],["2026-09-09",264,{"Transportadora":232,"Motoboy":15,"Aéreo":13,"Retira":4}],["2026-09-10",259,{"Transportadora":253,"Retira":6}],["2026-09-11",36,{"Transportadora":11,"Retira":6,"Aéreo":5,"Não detalhado":14}],["2026-09-14",94,{"Transportadora":88,"Retira":2,"Aéreo":4}],["2026-09-15",201,{"Transportadora":173,"Motoboy":23,"Retira":2,"Aéreo":3}],["2026-09-16",185,{"Transportadora":147,"Retira":9,"Aéreo":2,"Motoboy":27}],["2026-09-17",174,{"Transportadora":154,"Motoboy":5,"Retira":13,"Aéreo":2}],["2026-09-18",77,{"Transportadora":68,"Retira":4,"Aéreo":5}],["2026-09-21",132,{"Transportadora":108,"Motoboy":17,"Retira":4,"Aéreo":3}],["2026-09-22",87,{"Transportadora":57,"Motoboy":14,"Retira":10,"Aéreo":6}],["2026-09-23",192,{"Transportadora":160,"Motoboy":10,"Retira":12,"Aéreo":10}],["2026-09-24",177,{"Transportadora":145,"Motoboy":18,"Retira":4,"Aéreo":10}],["2026-09-25",165,{"Transportadora":132,"Motoboy":21,"Retira":5,"Aéreo":7}],["2026-09-28",135,{"Motoboy":3,"Transportadora":117,"Retira":10,"Aéreo":5}],["2026-09-29",143,{"Transportadora":114,"Motoboy":20,"Retira":3,"Aéreo":6}],["2026-09-30",271,{"Transportadora":243,"Motoboy":16,"Retira":7,"Aéreo":5}]];
+const COL={"2026-07":34,"2026-08":32,"2026-09":31};
+
+function log(msg){ document.getElementById('log').textContent += msg + "\n"; }
+
+document.getElementById('runBtn').addEventListener('click', ()=>{
+  document.getElementById('runBtn').disabled = true;
+  log('Entrando com a conta da Central de Apps (precisa estar logado nesse navegador)...');
+  firebase.auth().onAuthStateChanged(user=>{
+    if(!user){ log('ERRO: você precisa abrir este arquivo já logado pela Central de Apps.'); return; }
+    const registrosObj = {};
+    RAW.forEach(([d,t,m])=>{ registrosObj[d] = {t, m}; });
+    log('Enviando ' + Object.keys(registrosObj).length + ' dias de registros...');
+    firebase.database().ref('dashboardProdutividade/registros').set(registrosObj)
+      .then(()=>{
+        log('✓ Registros enviados.');
+        log('Enviando colaboradores por mês...');
+        return firebase.database().ref('dashboardProdutividade/colaboradores').set(COL);
+      })
+      .then(()=>{
+        log('✓ Colaboradores enviados.');
+        log('\nPronto! Pode abrir o dashboard_produtividade.html normalmente agora.');
+      })
+      .catch(err=>{ log('ERRO: ' + err.message); });
+  });
+});
+</script>
+</body>
+</html>
