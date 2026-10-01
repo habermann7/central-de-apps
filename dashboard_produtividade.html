@@ -11,7 +11,7 @@ body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-
 .w{max-width:1280px;margin:0 auto;padding:16px}h1{font-size:21px;margin:0;font-weight:800;letter-spacing:-.01em}.sub{color:var(--mu);font-size:12px;margin-top:3px}
 .topbar{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:2px}
 .actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:end;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin:14px 0;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:end;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin:14px 0}
 .bar label{display:flex;flex-direction:column;font-size:11px;color:var(--mu);gap:3px}
 select,input{background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:7px 8px;font-size:13px;font-family:inherit;transition:border-color .15s ease,box-shadow .15s ease}
 select:hover,input:hover{border-color:color-mix(in srgb,var(--pr) 40%,var(--bd))}
@@ -29,15 +29,27 @@ button{font-family:inherit}
 .status{font-size:11.5px;color:var(--mu);max-width:260px;text-align:right}
 .status.err{color:var(--ng);font-weight:600}
 .g{display:grid;gap:12px;margin-bottom:12px}.k{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.c2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;min-width:0;box-shadow:0 1px 2px rgba(16,24,40,.04)}
-.kp{border-left:3px solid var(--pr)}
-.kp .l{font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.04em}.kp .v{font-size:24px;font-weight:700;margin-top:4px}.kp .s{font-size:11px;color:var(--mu);margin-top:2px}
-h2{font-size:13px;margin:0 0 10px;font-weight:700;letter-spacing:.01em}.ch{position:relative;height:250px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;min-width:0}
+.kp .l{font-size:11px;color:var(--mu)}.kp .v{font-size:22px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}.kp .s{font-size:11px;color:var(--mu);margin-top:2px}
+h2{font-size:13px;margin:0 0 10px;font-weight:700}.ch{position:relative;height:250px}
+.section-head{display:flex;align-items:baseline;gap:10px;margin:26px 0 12px}
+.section-head h3{font-size:15px;margin:0;font-weight:700}
+.section-head .line{flex:1;height:1px;background:var(--bd)}
+.hero{background:linear-gradient(135deg,color-mix(in srgb,var(--pr) 10%,var(--card)),var(--card));border:1px solid var(--bd);border-radius:14px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;box-shadow:0 1px 3px rgba(16,24,40,.06)}
+.hero .num{font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.hero .label{font-size:12px;color:var(--mu);margin-bottom:4px}
+.hero .delta{font-size:13px;font-weight:600;margin-top:6px}
+td,.kp .v{font-variant-numeric:tabular-nums}
+details.tables{margin-top:4px}
+details.tables>summary{cursor:pointer;font-size:13px;color:var(--pr);font-weight:600;list-style:none;padding:6px 0;display:flex;align-items:center;gap:7px}
+details.tables>summary::-webkit-details-marker{display:none}
+details.tables>summary::before{content:'▸';font-size:11px;transition:transform .15s ease}
+details.tables[open]>summary::before{transform:rotate(90deg)}
 .ch-empty{display:flex;align-items:center;justify-content:center;height:100%;color:var(--mu);font-size:12.5px;text-align:center;padding:10px}
 .th-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;flex-wrap:wrap}
 .th-row h2{margin:0}
 .sc{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:12.5px}th,td{padding:7px 8px;border-bottom:1px solid var(--bd);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}
-th{color:var(--mu);font-weight:600;text-transform:uppercase;font-size:10.5px;letter-spacing:.05em;border-bottom:1px solid var(--bd)}
+th{color:var(--mu);font-weight:600;font-size:11.5px;border-bottom:1px solid var(--bd)}
 tbody tr{transition:background .1s ease}tbody tr:hover{background:var(--gr)}
 .up{color:var(--ok)}.dn{color:var(--ng)}.mx td{background:color-mix(in srgb,var(--ok) 14%,transparent)}.mn td{background:color-mix(in srgb,var(--ng) 14%,transparent)}
 .mini{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mu);margin-bottom:8px}.mini b{color:var(--tx)}
@@ -67,7 +79,6 @@ tbody tr{transition:background .1s ease}tbody tr:hover{background:var(--gr)}
   <div class="actions">
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
       <div style="display:flex;gap:8px;align-items:center;">
-        <button class="btn" id="addDayBtn">+ Lançar dia</button>
         <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none;">
         <button class="btn ghost sm" id="uploadBtn">⟲ Planilha</button>
       </div>
@@ -80,29 +91,48 @@ tbody tr{transition:background .1s ease}tbody tr:hover{background:var(--gr)}
   </div>
 </div>
 
+<div class="hero">
+  <div>
+    <div class="label">Pedidos hoje</div>
+    <div class="num" id="heroHoje">—</div>
+    <div class="delta" id="heroDelta"></div>
+  </div>
+  <button class="btn" id="addDayBtn" style="font-size:14px;padding:11px 18px;">+ Lançar dia</button>
+</div>
+
 <div class="bar">
 <label>Ano<select id="fA"></select></label><label>Mês<select id="fM"></select></label><label>Semana<select id="fS"></select></label><label>Dia<select id="fD"></select></label><label>Modal<select id="fT"></select></label>
 <button class="btn ghost sm" onclick="reset()">Limpar filtros</button></div>
+
 <div class="g k" id="kpis"></div>
-<div class="card" style="margin-bottom:12px"><h2>Últimos lançamentos</h2><div class="sc"><table id="tUlt"></table></div></div>
+
+<div class="card"><h2>Últimos lançamentos</h2><div class="sc"><table id="tUlt"></table></div></div>
+
+<div class="section-head"><h3>Tendência</h3><div class="line"></div></div>
 <div class="g c2"><div class="card"><h2>Pedidos por dia</h2><div class="mini" id="dm"></div><div class="ch"><canvas id="c1"></canvas></div></div>
 <div class="card"><h2>Pedidos por semana (com média semanal)</h2><div class="ch"><canvas id="c2"></canvas></div></div></div>
 <div class="g c2"><div class="card"><h2>Oscilação da produção · verde acima da média, vermelho abaixo</h2><div class="ch"><canvas id="c3"></canvas></div></div>
 <div class="card"><h2>Pedidos por modal de transporte</h2><div class="ch"><canvas id="c4"></canvas></div></div></div>
+
+<div class="section-head"><h3>Equipe</h3><div class="line"></div></div>
 <div class="g c2"><div class="card"><h2>Pedidos × colaboradores por mês</h2><div class="ch"><canvas id="c5"></canvas></div></div>
 <div class="card"><h2>Pedidos por colaborador por mês</h2><div class="ch"><canvas id="c6"></canvas></div></div></div>
-<div class="card" style="margin-bottom:12px"><h2>Comparação entre períodos</h2><div class="bar" style="margin:0 0 10px;border:0;padding:0">
+<div class="card sc"><div class="th-row"><h2>Quadro de colaboradores</h2><span class="status" id="colStatus"></span></div><table id="t4"></table></div>
+
+<div class="section-head"><h3>Comparar períodos</h3><div class="line"></div></div>
+<div class="card"><div class="bar" style="margin:0 0 10px;border:0;padding:0">
 <label>Tipo<select id="cT"><option value="m">Mês</option><option value="s">Semana</option></select></label><label>Período atual<select id="cA"></select></label><label>Período anterior<select id="cB"></select></label></div>
 <div class="th-row" style="margin-top:4px;"><span></span><button class="export-btn" id="exportCmpBtn">⭱ Exportar CSV</button></div>
 <div class="sc"><table id="tc"></table></div></div>
-<div class="g c2">
+
+<details class="tables">
+<summary>Tabelas detalhadas</summary>
+<div class="g c2" style="margin-top:14px;">
 <div class="card sc"><div class="th-row"><h2>Resumo mensal</h2><button class="export-btn" id="exportT1Btn">⭱ Exportar CSV</button></div><table id="t1"></table></div>
-<div class="card sc"><div class="th-row"><h2>Quadro de colaboradores</h2><span class="status" id="colStatus"></span></div><table id="t4"></table></div>
-</div>
-<div class="g c2">
 <div class="card sc"><div class="th-row"><h2>Resumo por modal</h2><button class="export-btn" id="exportT2Btn">⭱ Exportar CSV</button></div><table id="t2"></table></div>
-<div class="card sc tall"><div class="th-row"><h2>Resumo diário</h2><button class="export-btn" id="exportT3Btn">⭱ Exportar CSV</button></div><table id="t3"></table></div>
 </div>
+<div class="card sc tall"><div class="th-row"><h2>Resumo diário</h2><button class="export-btn" id="exportT3Btn">⭱ Exportar CSV</button></div><table id="t3"></table></div>
+</details>
 </div>
 
 <div class="modal-bg" id="dayModalBg">
@@ -205,8 +235,17 @@ function render(){
   const mo=monthly(rows),yms=Object.keys(mo).sort();const avgCol=yms.length?yms.reduce((s,k)=>s+colOf(k),0)/yms.length:0;
   const last=rows[rows.length-1],avgD=n?tot/n:0,avgW=W.length?tot/W.length:0;
   const dayV=last?last.v:0,weekV=last?wk[last.y+"-"+last.w].v:0,monV=last?mo[last.ym]:0;
-  const k=[["Pedidos no mês",N(monV),last?MN[last.mo-1]:""],["Pedidos no dia",N(dayV),last?dl(last.d):""],["Pedidos na semana",N(weekV),last?"Semana "+last.w:""],["Média diária",F(avgD),n+" dias com produção"],["Média semanal",F(avgW),W.length+" semanas"],["Colaboradores",avgCol?F(avgCol,yms.length>1?1:0):"—",yms.length>1?"média dos meses":"no mês"],["Pedidos por colaborador",avgCol?F(tot/avgCol):"—","no período filtrado"],["Total no período",N(tot),t||"todos os modais"]];
+  const k=[["Pedidos no mês",N(monV),last?MN[last.mo-1]:""],["Pedidos na semana",N(weekV),last?"Semana "+last.w:""],["Média diária",F(avgD),n+" dias com produção"],["Média semanal",F(avgW),W.length+" semanas"],["Colaboradores",avgCol?F(avgCol,yms.length>1?1:0):"—",yms.length>1?"média dos meses":"no mês"],["Pedidos por colaborador",avgCol?F(tot/avgCol):"—","no período filtrado"],["Total no período",N(tot),t||"todos os modais"]];
   $("kpis").innerHTML=k.map(x=>`<div class="card kp"><div class="l">${x[0]}</div><div class="v">${x[1]}</div><div class="s">${x[2]}</div></div>`).join("");
+  const hojeRec = D.find(r=>r.d===todayISO());
+  if(hojeRec){
+    $("heroHoje").textContent = N(hojeRec.t);
+    const delta = avgD ? (hojeRec.t/avgD-1)*100 : null;
+    $("heroDelta").innerHTML = delta==null ? '' : `<span class="${delta>=0?'up':'dn'}">${delta>=0?'▲':'▼'} ${F(Math.abs(delta),0)}% vs média</span>`;
+  } else {
+    $("heroHoje").textContent = '—';
+    $("heroDelta").innerHTML = '<span style="color:var(--mu);font-weight:400;">ainda sem lançamento hoje</span>';
+  }
   const mx=n?rows.reduce((a,b)=>b.v>a.v?b:a):null,mn=n?rows.reduce((a,b)=>b.v<a.v?b:a):null;
   $("dm").innerHTML=n?`<span>Maior: <b>${N(mx.v)}</b> (${dl(mx.d)})</span><span>Menor: <b>${N(mn.v)}</b> (${dl(mn.d)})</span><span>Média: <b>${F(avgD)}</b></span><span>Total: <b>${N(tot)}</b></span>`:"";
   const lb=rows.map(r=>dl(r.d)),pr=css("--pr"),ok=css("--ok"),ng=css("--ng"),wr=css("--wr");
