@@ -66,6 +66,9 @@ h2{font-size:13px;margin:0 0 10px}.ch{position:relative;height:250px}
         <button class="btn" id="uploadBtn">⟲ Atualizar planilha</button>
         <button class="btn ghost" id="addDayBtn">+ Adicionar / editar dia</button>
       </div>
+      <label style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--mu);cursor:pointer;">
+        <input type="checkbox" id="mergeMode" style="margin:0;cursor:pointer;"> Mesclar com os dados existentes (em vez de substituir tudo)
+      </label>
       <span class="pill" id="sourcePill">Carregando do banco...</span>
       <span class="status" id="uploadStatus"></span>
     </div>
@@ -216,9 +219,17 @@ function render(){
   $("t1").innerHTML="<tr><th>Mês</th><th>Pedidos</th><th>Colaboradores</th><th>Pedidos/colab.</th></tr>"+mr.map(x=>`<tr><td>${x.m}</td><td>${x.p?N(x.p):"—"}</td><td>${x.c||"—"}</td><td>${x.pc?F(x.pc):"—"}</td></tr>`).join("");
   $("t4").innerHTML="<tr><th>Mês</th><th>Colaboradores</th></tr>"+mr.map(x=>`<tr><td>${x.m}</td><td><input class="ci" type="number" min="0" value="${x.c||""}" onchange="updateColaboradores('${x.ym}', this.value)"></td></tr>`).join("");
   $("t2").innerHTML="<tr><th>Modal</th><th>Pedidos</th><th>% do total</th></tr>"+ML.map(m=>`<tr><td>${m}</td><td>${N(md[m])}</td><td>${F(md[m]/tot*100)}%</td></tr>`).join("")+`<tr><th>Total</th><th>${N(tot)}</th><th>100%</th></tr>`;
-  $("t3").innerHTML="<tr><th>Data</th><th>Sem.</th><th>Pedidos</th><th>vs média</th></tr>"+rows.map(r=>`<tr class="${r===mx?"mx":r===mn?"mn":""}"><td>${dl(r.d)}</td><td>${r.w}</td><td>${N(r.v)}</td><td class="${r.v>=avgD?"up":"dn"}">${r.v>=avgD?"▲":"▼"} ${F(Math.abs(r.v/avgD-1)*100,0)}%</td></tr>`).join("");
+  $("t3").innerHTML="<tr><th>Data</th><th>Sem.</th><th>Pedidos</th><th>vs média</th><th></th></tr>"+rows.map(r=>`<tr class="${r===mx?"mx":r===mn?"mn":""}"><td>${dl(r.d)}</td><td>${r.w}</td><td>${N(r.v)}</td><td class="${r.v>=avgD?"up":"dn"}">${r.v>=avgD?"▲":"▼"} ${F(Math.abs(r.v/avgD-1)*100,0)}%</td><td><button class="export-btn" style="color:var(--ng);border-color:var(--ng);" onclick="deleteDia('${r.d}')" title="Apagar este dia">✕</button></td></tr>`).join("");
   LAST.mr=mr; LAST.md=md; LAST.rows=rows; LAST.tot=tot;
   cmp();
+}
+function deleteDia(data){
+  if(!confirm('Apagar o registro do dia ' + dl(data) + '? Isso remove esse dia do banco pra sempre.')) return;
+  fbRef('registros/'+data).remove().then(()=>{
+    loadDataFromFirebase();
+  }).catch(err=>{
+    alert('Não consegui apagar: ' + err.message);
+  });
 }
 function updateColaboradores(ym, value){
   const n = +value || 0;
@@ -309,9 +320,14 @@ $("fileInput").addEventListener('change', (e)=>{
       }
       const n = Object.keys(registrosObj).length;
       if(!n){ showUploadStatus('Não encontrei nenhuma linha válida (confira as colunas: "Data" + uma coluna por modal, com a quantidade de pedidos).', true); return; }
-      if(!confirm('Isso vai SUBSTITUIR os dados do dashboard pra todo mundo que usa esse app (' + n + ' dias' + (ignoradas?', ' + ignoradas + ' linha(s) ignorada(s) por data inválida':'') + '). Confirma?')) return;
-      fbRef('registros').set(registrosObj).then(()=>{
-        showUploadStatus('✓ Planilha enviada (' + n + ' dias). Atualizando...', false);
+      const mesclar = $("mergeMode").checked;
+      const aviso = mesclar
+        ? ('Isso vai ATUALIZAR ' + n + ' dia(s) no banco (os demais dias continuam como estão)' + (ignoradas?', ' + ignoradas + ' linha(s) ignorada(s) por data inválida':'') + '. Confirma?')
+        : ('Isso vai SUBSTITUIR TODOS os dados do dashboard pra todo mundo que usa esse app (ficam só esses ' + n + ' dias)' + (ignoradas?', ' + ignoradas + ' linha(s) ignorada(s) por data inválida':'') + '. Confirma?');
+      if(!confirm(aviso)) return;
+      const op = mesclar ? fbRef('registros').update(registrosObj) : fbRef('registros').set(registrosObj);
+      op.then(()=>{
+        showUploadStatus('✓ Planilha enviada (' + n + ' dias, ' + (mesclar?'mesclado':'substituído') + '). Atualizando...', false);
         loadDataFromFirebase();
       }).catch(err=>{
         showUploadStatus('Não consegui salvar no banco (' + err.message + '). Os dados NÃO foram atualizados.', true);
@@ -396,7 +412,7 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
 <script>
 (function(){
-  var GRUPOS_PERMITIDOS = ["EXPEDIÇÃO"];
+  var GRUPOS_PERMITIDOS = ["PCP"];
   var firebaseConfig = {
     apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
     authDomain: "stinpharma-qualidade.firebaseapp.com",
@@ -429,55 +445,6 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
       var meusGrupos = (dados && dados.grupos) || [];
       var permitido = GRUPOS_PERMITIDOS.some(function(g){ return meusGrupos.indexOf(g) !== -1; });
       if(permitido){ liberar(); loadDataFromFirebase(); } else { negar('Você não tem permissão pra acessar este app.'); }
-    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
-  });
-})();
-</script>
-
-<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
-  <div style="max-width:320px;width:100%;">
-    <div id="__gateMsg" style="font-size:14px;color:#8a93a3;line-height:1.6;">Verificando acesso...</div>
-  </div>
-</div>
-<style id="__gateStyle">body > *:not(#__gateOverlay){ display:none !important; }</style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
-<script>
-(function(){
-  var GRUPOS_PERMITIDOS = ["EXPEDIÇÃO"];
-  var firebaseConfig = {
-    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
-    authDomain: "stinpharma-qualidade.firebaseapp.com",
-    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
-    projectId: "stinpharma-qualidade",
-    storageBucket: "stinpharma-qualidade.firebasestorage.app",
-    messagingSenderId: "422803826984",
-    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
-    measurementId: "G-6C0TLHH2VP"
-  };
-  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  function liberar(){
-    var st = document.getElementById('__gateStyle');
-    var ov = document.getElementById('__gateOverlay');
-    if(st) st.remove();
-    if(ov) ov.remove();
-  }
-  function negar(msg){
-    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Central de Apps</a>';
-  }
-  var jaResolveu = false;
-  setTimeout(function(){
-    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
-  }, 10000);
-  firebase.auth().onAuthStateChanged(function(user){
-    jaResolveu = true;
-    if(!user){ negar('Você precisa entrar pela Central de Apps.'); return; }
-    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
-      var dados = snap.val();
-      var meusGrupos = (dados && dados.grupos) || [];
-      var permitido = GRUPOS_PERMITIDOS.some(function(g){ return meusGrupos.indexOf(g) !== -1; });
-      if(permitido){ liberar(); } else { negar('Você não tem permissão pra acessar este app.'); }
     }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
   });
 })();
