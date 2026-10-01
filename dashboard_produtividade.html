@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Dashboard de Produtividade Operacional</title>
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Produtividade | Operações</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -81,12 +81,18 @@ tbody tr{transition:background .1s ease}tbody tr:hover{background:var(--gr)}
 .modal-hint{font-size:11px;color:var(--mu);margin-top:10px;line-height:1.5}
 .empty-state{padding:40px 20px;text-align:center;color:var(--mu);font-size:13px}
 #__gateOverlay{position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px}
+
+/* Organização e acabamento */
+.w{max-width:1380px;padding:28px 32px}.eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--pr);margin-bottom:7px}h1{font-size:28px;font-weight:700}.sub{font-size:14px;line-height:1.5}.topbar{margin-bottom:22px}.tabs{display:flex;gap:8px;border-bottom:1px solid var(--bd);margin-bottom:24px;overflow:auto}.tab{background:transparent;border:0;color:var(--mu);font-size:14px;padding:14px 18px;white-space:nowrap;cursor:pointer;border-bottom:3px solid transparent}.tab.active{color:var(--pr);border-bottom-color:var(--pr);font-weight:650}.hero{padding:24px;margin-bottom:20px}.hero .label{font-size:14px}.hero .delta{max-width:420px}.bar{padding:18px;gap:14px}.bar label,.kp .l{font-size:13px}.quick-periods{width:100%;display:flex;gap:8px;flex-wrap:wrap}.context{font-size:13px;color:var(--mu);margin:16px 0}.k{grid-template-columns:repeat(4,minmax(0,1fr))}.g{gap:18px;margin-bottom:18px}.card{padding:22px;border-radius:14px;box-shadow:0 2px 5px rgba(16,24,40,.025)}.kp .v{font-size:30px;margin-top:12px}.kp .s{font-size:12px;line-height:1.5;margin-top:8px}h2{font-size:15px}.ch{height:290px}.section-head{margin-top:28px}.section-head h3{font-size:18px}th{font-size:12px}td{font-size:13px;padding:12px 10px}.btn,.export-btn,select,input{min-height:40px}.export-btn{font-size:12px}.footer{font-size:12px;color:var(--mu);border-top:1px solid var(--bd);padding:22px 0;margin-top:30px}.field-grid label{font-size:13px}.field-grid{gap:14px}.modal-box{max-width:500px;padding:26px}.modal-hint{font-size:13px}.status{font-size:12px}button:focus-visible,summary:focus-visible{outline:3px solid var(--pr);outline-offset:3px}[hidden]{display:none!important}
+@media(max-width:800px){.w{padding:18px}.k{grid-template-columns:repeat(2,minmax(0,1fr))}.c2{grid-template-columns:1fr}h1{font-size:23px}.card{padding:18px}.hero .num{font-size:34px}.actions{justify-content:flex-start}.topbar .status{text-align:left}.bar label{flex:1;min-width:100px}}
+@media(max-width:420px){.k{grid-template-columns:1fr}.field-grid{grid-template-columns:1fr}.tabs{gap:0}.tab{padding:12px}.hero{padding:18px}.kp .v{font-size:28px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 </style></head><body><div class="w">
 
 <div class="topbar">
   <div>
-    <h1>Dashboard de Produtividade Operacional</h1>
-    <div class="sub">Pedidos do seco expedidos</div>
+    <div class="eyebrow">OPERAÇÕES · EXPEDIÇÃO</div><h1>Produtividade operacional</h1>
+    <div class="sub">Acompanhe a produção, os canais de transporte e a equipe</div>
   </div>
   <div class="actions">
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
@@ -96,6 +102,9 @@ tbody tr{transition:background .1s ease}tbody tr:hover{background:var(--gr)}
   </div>
 </div>
 
+<nav class="tabs" aria-label="Seções do painel">
+<button class="tab active" data-tab="overview" aria-current="page">Visão geral</button><button class="tab" data-tab="entries">Lançamentos</button><button class="tab" data-tab="team">Equipe</button><button class="tab" data-tab="reports">Relatórios</button>
+</nav>
 <div class="hero">
   <div>
     <div class="label">Pedidos hoje</div>
@@ -116,34 +125,34 @@ tbody tr{transition:background .1s ease}tbody tr:hover{background:var(--gr)}
       <div class="addmenu-sep"></div>
       <button class="addmenu-item" id="addUploadItem">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <div><b>Subir planilha</b><span>.xlsx — carga em massa</span></div>
+        <div><b>Importar planilha</b><span>.xlsx ou .xls — revisar antes de salvar</span></div>
       </button>
-      <label class="addmenu-check"><input type="checkbox" id="mergeMode"> Mesclar em vez de substituir tudo</label>
+      <label class="addmenu-check"><input type="checkbox" id="mergeMode" checked> Mesclar em vez de substituir tudo</label>
     </div>
   </div>
   <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none;">
 </div>
 
-<div class="bar">
+<div class="bar filters">
+<div class="quick-periods" aria-label="Atalhos de período"><button class="export-btn" data-period="today">Hoje</button><button class="export-btn" data-period="week">Esta semana</button><button class="export-btn" data-period="month">Este mês</button><button class="export-btn" data-period="all">Todo o histórico</button></div>
 <label>Ano<select id="fA"></select></label><label>Mês<select id="fM"></select></label><label>Semana<select id="fS"></select></label><label>Dia<select id="fD"></select></label><label>Modal<select id="fT"></select></label>
 <button class="btn ghost sm" onclick="reset()">Limpar filtros</button></div>
 
-<div class="g k" id="kpis"></div>
+<div class="context" id="periodContext" aria-live="polite"></div><section data-panel="overview"><div class="g k" id="kpis"></div></section>
 
-<div class="card"><h2>Últimos lançamentos</h2><div class="sc"><table id="tUlt"></table></div></div>
-
+<section data-panel="entries" hidden><div class="section-head"><h3>Histórico de lançamentos</h3><div class="line"></div></div><div class="card"><div class="th-row"><h2>Registros do período</h2><label>Buscar data ou modal <input id="entrySearch" type="search" placeholder="Ex.: 01/10 ou Motoboy"></label></div><div class="sc"><table id="tUlt"></table></div></div></section>
+<section data-panel="overview">
 <div class="section-head"><h3>Tendência</h3><div class="line"></div></div>
 <div class="g c2"><div class="card"><h2>Pedidos por dia</h2><div class="mini" id="dm"></div><div class="ch"><canvas id="c1"></canvas></div></div>
 <div class="card"><h2>Pedidos por semana (com média semanal)</h2><div class="ch"><canvas id="c2"></canvas></div></div></div>
-<div class="g c2"><div class="card"><h2>Oscilação da produção · verde acima da média, vermelho abaixo</h2><div class="ch"><canvas id="c3"></canvas></div></div>
-<div class="card"><h2>Pedidos por modal de transporte</h2><div class="ch"><canvas id="c4"></canvas></div></div></div>
-
-<div class="section-head"><h3>Equipe</h3><div class="line"></div></div>
+<div class="card"><h2>Pedidos por modal de transporte</h2><div class="ch"><canvas id="c4"></canvas></div></div>
+<details class="tables" style="margin-top:18px"><summary>Analisar desvio em relação à média</summary><div class="card" style="margin-top:12px"><h2>Desvio em relação à média diária</h2><div class="ch"><canvas id="c3"></canvas></div></div></details>
+</section><section data-panel="team" hidden><div class="section-head"><h3>Equipe</h3><div class="line"></div></div>
 <div class="g c2"><div class="card"><h2>Pedidos × colaboradores por mês</h2><div class="ch"><canvas id="c5"></canvas></div></div>
 <div class="card"><h2>Pedidos por colaborador por mês</h2><div class="ch"><canvas id="c6"></canvas></div></div></div>
 <div class="card sc"><div class="th-row"><h2>Quadro de colaboradores</h2><span class="status" id="colStatus"></span></div><table id="t4"></table></div>
 
-<div class="section-head"><h3>Comparar períodos</h3><div class="line"></div></div>
+</section><section data-panel="reports" hidden><div class="section-head"><h3>Comparar períodos</h3><div class="line"></div></div>
 <div class="card"><div class="bar" style="margin:0 0 10px;border:0;padding:0">
 <label>Tipo<select id="cT"><option value="m">Mês</option><option value="s">Semana</option></select></label><label>Período atual<select id="cA"></select></label><label>Período anterior<select id="cB"></select></label></div>
 <div class="th-row" style="margin-top:4px;"><span></span><button class="export-btn" id="exportCmpBtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar CSV</button></div>
@@ -156,15 +165,15 @@ tbody tr{transition:background .1s ease}tbody tr:hover{background:var(--gr)}
 <div class="card sc"><div class="th-row"><h2>Resumo por modal</h2><button class="export-btn" id="exportT2Btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar CSV</button></div><table id="t2"></table></div>
 </div>
 <div class="card sc tall"><div class="th-row"><h2>Resumo diário</h2><button class="export-btn" id="exportT3Btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar CSV</button></div><table id="t3"></table></div>
-</details>
-</div>
+</details></section>
+<div class="footer">Produtividade operacional · Dados compartilhados da Central de Apps</div></div>
 
 <div class="modal-bg" id="dayModalBg">
-  <div class="modal-box">
-    <h3>Lançar / editar dia</h3>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="dayTitle">
+    <h3 id="dayTitle">Lançar / editar dia</h3>
     <div class="field-grid full"><label>Data<input type="date" id="dayDate"></label></div>
     <div class="field-grid" id="dayModalFields"></div>
-    <div class="modal-actions">
+    <div class="modal-hint" id="dayTotal" aria-live="polite">Total: 0 pedidos</div><div class="modal-actions">
       <button class="btn ghost sm" id="dayCancelBtn">Cancelar</button>
       <button class="btn sm" id="daySaveBtn">Salvar</button>
     </div>
@@ -253,7 +262,7 @@ function mostrarCarregando(msg){
 function render(){
   if(!dadosCarregados){ return; }
   if(!D.length){
-    mostrarCarregando('Nenhum dado encontrado ainda. Suba a planilha pelo botão "Atualizar planilha" ou lance um dia manualmente em "Adicionar / editar dia".');
+    mostrarCarregando('Nenhum dado encontrado ainda. Importe uma planilha ou lance um dia pelo botão "Adicionar dados".');
     ['dm','c1','c2','c3','c4','c5','c6','t1','t2','t3','t4','tc'].forEach(id=>{ const el=$(id); if(el) el.innerHTML=''; });
     return;
   }
@@ -262,13 +271,23 @@ function render(){
   const mo=monthly(rows),yms=Object.keys(mo).sort();const avgCol=yms.length?yms.reduce((s,k)=>s+colOf(k),0)/yms.length:0;
   const last=rows[rows.length-1],avgD=n?tot/n:0,avgW=W.length?tot/W.length:0;
   const dayV=last?last.v:0,weekV=last?wk[last.y+"-"+last.w].v:0,monV=last?mo[last.ym]:0;
-  const k=[["Pedidos no mês",N(monV),last?MN[last.mo-1]:""],["Pedidos na semana",N(weekV),last?"Semana "+last.w:""],["Média diária",F(avgD),n+" dias com produção"],["Média semanal",F(avgW),W.length+" semanas"],["Colaboradores",avgCol?F(avgCol,yms.length>1?1:0):"—",yms.length>1?"média dos meses":"no mês"],["Pedidos por colaborador",avgCol?F(tot/avgCol):"—","no período filtrado"],["Total no período",N(tot),t||"todos os modais"]];
+  const latestMonth=yms[yms.length-1], previousMonth=latestMonth ? new Date(+latestMonth.slice(0,4),+latestMonth.slice(5)-2,1) : null;
+  const previousKey=previousMonth ? previousMonth.getFullYear()+'-'+String(previousMonth.getMonth()+1).padStart(2,'0') : '';
+  const comparable=latestMonth && yms.length===1 && !$("fS").value && !$("fD").value;
+  const cutoff=latestMonth===todayISO().slice(0,7)?+todayISO().slice(8):31;
+  const priorRows=D.filter(r=>r.ym===previousKey && +r.d.slice(8)<=cutoff);
+  const priorTotal=priorRows.reduce((sum,r)=>sum+val(r,t),0);
+  const variation=comparable && priorTotal ? (tot/priorTotal-1)*100 : null;
+  const staffKnown=yms.length>0 && yms.every(ym=>colOf(ym)>0);
+  const productivity=staffKnown?yms.reduce((sum,ym)=>sum+mo[ym]/colOf(ym),0):null;
+  const k=[["Pedidos no período",N(tot),t||"Todos os modais"],["Média diária",F(avgD),n+" dias com registro"],["Pedidos por colaborador",productivity===null?"—":F(productivity),staffKnown?"Soma das razões mensais no período":"Informe a equipe de todos os meses"],["Variação mensal",variation===null?"—":(variation>=0?'+':'')+F(variation)+"%",comparable?(cutoff<31?"Mesmo recorte de dias do mês anterior":"Versus mês anterior"):"Selecione um mês sem semana ou dia"]];
+  $("periodContext").textContent=rows.length ? 'Período: '+rows[0].d.split('-').reverse().join('/')+' a '+last.d.split('-').reverse().join('/')+' · '+n+' dias com registro'+(t?' · '+t:'') : 'Nenhum registro para os filtros selecionados';
   $("kpis").innerHTML=k.map(x=>`<div class="card kp"><div class="l">${x[0]}</div><div class="v">${x[1]}</div><div class="s">${x[2]}</div></div>`).join("");
   const hojeRec = D.find(r=>r.d===todayISO());
   if(hojeRec){
-    $("heroHoje").textContent = N(hojeRec.t);
-    const delta = avgD ? (hojeRec.t/avgD-1)*100 : null;
-    $("heroDelta").innerHTML = delta==null ? '' : `<span class="${delta>=0?'up':'dn'}">${delta>=0?'▲':'▼'} ${F(Math.abs(delta),0)}% vs média</span>`;
+    $("heroHoje").textContent = N(val(hojeRec,t));
+    const delta = avgD ? (val(hojeRec,t)/avgD-1)*100 : null;
+    $("heroDelta").innerHTML = delta==null ? '' : `<span class="${delta>=0?'up':'dn'}">${delta>=0?'▲':'▼'} ${F(Math.abs(delta),0)}% vs média do período selecionado</span>`;
   } else {
     $("heroHoje").textContent = '—';
     $("heroDelta").innerHTML = '<span style="color:var(--mu);font-weight:400;">ainda sem lançamento hoje</span>';
@@ -276,18 +295,18 @@ function render(){
   const mx=n?rows.reduce((a,b)=>b.v>a.v?b:a):null,mn=n?rows.reduce((a,b)=>b.v<a.v?b:a):null;
   $("dm").innerHTML=n?`<span>Maior: <b>${N(mx.v)}</b> (${dl(mx.d)})</span><span>Menor: <b>${N(mn.v)}</b> (${dl(mn.d)})</span><span>Média: <b>${F(avgD)}</b></span><span>Total: <b>${N(tot)}</b></span>`:"";
   const lb=rows.map(r=>dl(r.d)),pr=css("--pr"),ok=css("--ok"),ng=css("--ng"),wr=css("--wr");
-  draw("c1",{type:"line",data:{labels:lb,datasets:[{label:"Pedidos",data:rows.map(r=>r.v),borderColor:pr,backgroundColor:pr+"22",fill:true,tension:.25,pointRadius:rows.map(r=>r===mx||r===mn?6:3),pointBackgroundColor:rows.map(r=>r===mx?ok:r===mn?ng:pr)}]}});
+  draw("c1",{type:"line",data:{labels:lb,datasets:[{label:"Pedidos",data:rows.map(r=>r.v),borderColor:pr,backgroundColor:pr+"22",fill:true,tension:.25,pointRadius:rows.map(r=>r===mx||r===mn?6:3),pointBackgroundColor:rows.map(r=>r===mx?ok:r===mn?ng:pr)},{label:"Média diária",data:rows.map(()=>avgD),borderColor:wr,borderDash:[6,4],pointRadius:0}]}});
   draw("c2",{data:{labels:W.map(x=>"S"+x.w),datasets:[{type:"bar",label:"Pedidos",data:W.map(x=>x.v),backgroundColor:pr},{type:"line",label:"Média semanal",data:W.map(()=>avgW),borderColor:wr,borderDash:[6,4],pointRadius:0}]}});
-  draw("c3",{type:"line",data:{labels:lb,datasets:[{label:"Pedidos",data:rows.map(r=>r.v),borderColor:css("--mu"),pointRadius:5,pointBackgroundColor:rows.map(r=>r.v>=avgD?ok:ng),segment:{borderColor:c=>c.p1.parsed.y>=c.p0.parsed.y?ok:ng}},{label:"Média",data:rows.map(()=>avgD),borderColor:wr,borderDash:[6,4],pointRadius:0}]}});
+  draw("c3",{type:"line",data:{labels:lb,datasets:[{label:"Pedidos",data:rows.map(r=>r.v),borderColor:css("--mu"),pointRadius:5,pointBackgroundColor:rows.map(r=>r.v>=avgD?ok:ng),segment:{borderColor:c=>c.p1.parsed.y>=avgD?ok:ng}},{label:"Média",data:rows.map(()=>avgD),borderColor:wr,borderDash:[6,4],pointRadius:0}]}});
   const md={};rows.forEach(r=>MODAIS.forEach(m=>{if(r.m[m]&&(!t||t==m))md[m]=(md[m]||0)+r.m[m]}));const ML=Object.keys(md);
   draw("c4",{type:"bar",data:{labels:ML,datasets:[{label:"Pedidos",data:ML.map(m=>md[m]),backgroundColor:pr}]},options:{indexAxis:"y",scales:{x:{beginAtZero:true,ticks:{color:css("--mu")},grid:{color:css("--gr")}},y:{ticks:{color:css("--mu")},grid:{display:false}}}}});
-  const a=$("fA").value,yr=a?+a:uniq(D.map(r=>r.y)).pop();const allM=monthly(D.filter(r=>r.y==yr).map(r=>({...r,v:val(r,t)})));
+  const a=$("fA").value,yr=a?+a:uniq(D.map(r=>r.y)).pop();const allM=monthly(rows);
   const mr=MN.map((m,i)=>{const ym=yr+"-"+String(i+1).padStart(2,"0"),p=allM[ym]||0,c=colOf(ym);return{m,ym,p,c,pc:c&&p?p/c:0}});
-  const act=mr.filter(x=>x.p);
+  const act=mr.filter(x=>Object.hasOwn(allM,x.ym));
   draw("c5",{data:{labels:act.map(x=>x.m),datasets:[{type:"bar",label:"Pedidos",data:act.map(x=>x.p),backgroundColor:pr,yAxisID:"y"},{type:"line",label:"Colaboradores",data:act.map(x=>x.c),borderColor:wr,yAxisID:"y1"}]},options:{scales:{x:{ticks:{color:css("--mu")}},y:{beginAtZero:true,ticks:{color:css("--mu")}},y1:{position:"right",beginAtZero:true,grid:{display:false},ticks:{color:css("--mu")}}}}});
   draw("c6",{type:"line",data:{labels:act.map(x=>x.m),datasets:[{label:"Pedidos/colaborador",data:act.map(x=>+x.pc.toFixed(1)),borderColor:ok,backgroundColor:ok+"22",fill:true,tension:.2}]}});
-  $("t1").innerHTML="<tr><th>Mês</th><th>Pedidos</th><th>Colaboradores</th><th>Pedidos/colab.</th></tr>"+mr.map(x=>`<tr><td>${x.m}</td><td>${x.p?N(x.p):"—"}</td><td>${x.c||"—"}</td><td>${x.pc?F(x.pc):"—"}</td></tr>`).join("");
-  $("t4").innerHTML="<tr><th>Mês</th><th>Colaboradores</th></tr>"+mr.map(x=>`<tr><td>${x.m}</td><td><input class="ci" type="number" min="0" value="${x.c||""}" onchange="updateColaboradores('${x.ym}', this.value)"></td></tr>`).join("");
+  $("t1").innerHTML="<tr><th>Mês</th><th>Pedidos</th><th>Colaboradores</th><th>Pedidos/colab.</th></tr>"+mr.filter(x=>Object.hasOwn(allM,x.ym)).map(x=>`<tr><td>${x.m}</td><td>${x.p?N(x.p):"—"}</td><td>${x.c||"—"}</td><td>${x.pc?F(x.pc):"—"}</td></tr>`).join("");
+  $("t4").innerHTML="<tr><th>Mês</th><th>Colaboradores</th></tr>"+mr.filter(x=>Object.hasOwn(allM,x.ym)).map(x=>`<tr><td>${x.m}</td><td><input class="ci" type="number" min="0" value="${x.c||""}" onchange="updateColaboradores('${x.ym}', this.value)"></td></tr>`).join("");
   $("t2").innerHTML="<tr><th>Modal</th><th>Pedidos</th><th>% do total</th></tr>"+ML.map(m=>`<tr><td>${m}</td><td>${N(md[m])}</td><td>${F(md[m]/tot*100)}%</td></tr>`).join("")+`<tr><th>Total</th><th>${N(tot)}</th><th>100%</th></tr>`;
   $("t3").innerHTML="<tr><th>Data</th><th>Sem.</th><th>Pedidos</th><th>vs média</th><th></th></tr>"+rows.map(r=>`<tr class="${r===mx?"mx":r===mn?"mn":""}"><td>${dl(r.d)}</td><td>${r.w}</td><td>${N(r.v)}</td><td class="${r.v>=avgD?"up":"dn"}">${r.v>=avgD?"▲":"▼"} ${F(Math.abs(r.v/avgD-1)*100,0)}%</td><td><button class="export-btn" style="color:var(--ng);border-color:var(--ng);" onclick="deleteDia('${r.d}')" title="Apagar este dia">${ICO_X}</button></td></tr>`).join("");
   LAST.mr=mr; LAST.md=md; LAST.rows=rows; LAST.tot=tot;
@@ -295,8 +314,9 @@ function render(){
   cmp();
 }
 function renderUltimos(){
-  const last7 = D.slice().sort((a,b)=> a.d < b.d ? 1 : -1).slice(0,7);
-  if(!last7.length){ $("tUlt").innerHTML = '<tr><td style="color:var(--mu);">Nenhum lançamento ainda — usa o botão "Lançar produção de hoje" acima.</td></tr>'; return; }
+  const query=($("entrySearch").value||'').toLocaleLowerCase('pt-BR');
+  const last7 = filt().rows.slice().sort((a,b)=> a.d < b.d ? 1 : -1).filter(r=>(r.d+' '+r.d.split('-').reverse().join('/')+' '+Object.keys(r.m).join(' ')).toLocaleLowerCase('pt-BR').includes(query));
+  if(!last7.length){ $("tUlt").innerHTML = '<tr><td style="color:var(--mu);">Nenhum registro encontrado. Ajuste os filtros ou adicione dados.</td></tr>'; return; }
   $("tUlt").innerHTML = "<tr><th>Data</th><th>Pedidos</th><th>Modais</th><th></th></tr>" + last7.map(r=>{
     const resumo = Object.keys(r.m).map(m=>m+': '+r.m[m]).join(', ');
     return `<tr>
@@ -320,11 +340,11 @@ function deleteDia(data){
 }
 function updateColaboradores(ym, value){
   const n = +value || 0;
-  COL[ym] = n;
+  if(!Number.isInteger(n)||n<0){ alert("Informe uma quantidade inteira, maior ou igual a zero."); return; }
   const st = $("colStatus");
   st.textContent = 'Salvando…';
   fbRef('colaboradores/'+ym).set(n)
-    .then(()=>{ st.textContent='✓ Salvo'; setTimeout(()=>st.textContent='',2000); })
+    .then(()=>{ COL[ym]=n; render(); st.textContent='✓ Salvo'; setTimeout(()=>st.textContent='',2000); })
     .catch(err=>{ st.textContent='Não salvou (' + err.message + ')'; st.className='status err'; });
   render();
 }
@@ -388,21 +408,26 @@ $("fileInput").addEventListener('change', (e)=>{
       const header = rows[0].map(h=>String(h).trim());
       const dateCol = header.findIndex(h=>/data/i.test(h));
       if(dateCol === -1){ showUploadStatus('Não encontrei uma coluna "Data" no cabeçalho da planilha.', true); return; }
-      const modalCols = header.map((h,i)=>({h,i})).filter(x=>x.i!==dateCol && x.h);
+      const normalize=v=>v.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+      const modalCols = header.map((h,i)=>({h:MODAIS.find(m=>normalize(m)===normalize(h)),original:h,i})).filter(x=>x.i!==dateCol && x.original);
+      if(modalCols.some(c=>!c.h)) throw new Error('Colunas não reconhecidas: '+modalCols.filter(c=>!c.h).map(c=>c.original).join(', ')+'. Use: '+MODAIS.join(', '));
+      if(new Set(modalCols.map(c=>c.h)).size!==modalCols.length) throw new Error('Existem colunas de modal duplicadas.');
       const registrosObj = {};
       let ignoradas = 0;
       for(let r=1;r<rows.length;r++){
         const row = rows[r];
         if(!row || row.every(c=>c==='' || c==null)) continue;
         const iso = excelDateToISO(row[dateCol]);
-        if(!iso){ ignoradas++; continue; }
+        if(!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso) || new Date(iso+'T12:00:00Z').toISOString().slice(0,10)!==iso){ ignoradas++; continue; }
+        if(registrosObj[iso]) throw new Error('Data duplicada na planilha: '+iso);
+        if(modalCols.some(c=>row[c.i]!=='' && (!Number.isInteger(Number(row[c.i])) || Number(row[c.i])<0))) throw new Error('Quantidade inválida na linha '+(r+1)+'. Use números inteiros não negativos.');
         const m = {};
         let t = 0;
         modalCols.forEach(c=>{
           const n = Number(row[c.i]);
           if(n>0){ m[c.h] = n; t += n; }
         });
-        if(t>0) registrosObj[iso] = {t, m};
+        registrosObj[iso] = {t, m};
       }
       const n = Object.keys(registrosObj).length;
       if(!n){ showUploadStatus('Não encontrei nenhuma linha válida (confira as colunas: "Data" + uma coluna por modal, com a quantidade de pedidos).', true); return; }
@@ -410,7 +435,9 @@ $("fileInput").addEventListener('change', (e)=>{
       const aviso = mesclar
         ? ('Isso vai ATUALIZAR ' + n + ' dia(s) no banco (os demais dias continuam como estão)' + (ignoradas?', ' + ignoradas + ' linha(s) ignorada(s) por data inválida':'') + '. Confirma?')
         : ('Isso vai SUBSTITUIR TODOS os dados do dashboard pra todo mundo que usa esse app (ficam só esses ' + n + ' dias)' + (ignoradas?', ' + ignoradas + ' linha(s) ignorada(s) por data inválida':'') + '. Confirma?');
-      if(!confirm(aviso)) return;
+      const existing=Object.keys(registrosObj).filter(d=>D.some(r=>r.d===d)).length;
+      const preview='REVISÃO DA IMPORTAÇÃO\n'+(n-existing)+' dias novos · '+existing+' dias existentes\n'+ignoradas+' linhas ignoradas\nTotal: '+N(Object.values(registrosObj).reduce((sum,r)=>sum+r.t,0))+' pedidos\n\n';
+      if(!confirm(preview+aviso)) return;
       const op = mesclar ? fbRef('registros').update(registrosObj) : fbRef('registros').set(registrosObj);
       op.then(()=>{
         showUploadStatus('✓ Planilha enviada (' + n + ' dias, ' + (mesclar?'mesclado':'substituído') + '). Atualizando...', false);
@@ -441,7 +468,9 @@ function openDayModal(data){
   const date = data || todayISO();
   $("dayDate").value = date;
   preencherSeExistir();
+  updateDayTotal();
   $("dayModalBg").classList.add('open');
+  $("dayDate").focus();
 }
 function closeDayModal(){ $("dayModalBg").classList.remove('open'); }
 
@@ -459,13 +488,15 @@ $("dayModalBg").addEventListener('click', (e)=>{ if(e.target.id==='dayModalBg') 
 $("daySaveBtn").addEventListener('click', ()=>{
   const date = $("dayDate").value;
   if(!date){ alert('Escolhe uma data.'); return; }
+  const inputs=[...document.querySelectorAll('#dayModalFields input')];
+  if(inputs.some(inp=>!Number.isInteger(Number(inp.value))||Number(inp.value)<0)){alert('Use quantidades inteiras, maiores ou iguais a zero.');return;}
   const m = {};
   let t = 0;
   document.querySelectorAll('#dayModalFields input').forEach(inp=>{
     const n = Number(inp.value);
     if(n>0){ m[inp.dataset.modal] = n; t += n; }
   });
-  if(!t){ alert('Preenche pelo menos um modal com quantidade maior que zero.'); return; }
+  if(!t && !confirm('Salvar este dia com produção zero?')) return;
   fbRef('registros/'+date).set({t, m}).then(()=>{
     closeDayModal();
     loadDataFromFirebase();
@@ -501,6 +532,31 @@ $("fM").onchange=()=>{updateFilterOptions();render()};
 $("fS").onchange=()=>{updateFilterOptions();render()};
 ["fD","fT"].forEach(i=>$(i).onchange=render);
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
+
+let currentTab='overview';
+document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>{
+ currentTab=button.dataset.tab;
+ document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b===button);if(b===button)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+ document.querySelectorAll('[data-panel]').forEach(panel=>panel.hidden=panel.dataset.panel!==currentTab);
+ requestAnimationFrame(()=>Object.values(ch).forEach(chart=>chart.resize()));
+}));
+document.querySelectorAll('[data-period]').forEach(button=>button.addEventListener('click',()=>{
+ reset(); const date=todayISO(),kind=button.dataset.period;
+ if(kind!=='all'){
+  $('fA').value=date.slice(0,4);updateFilterOptions();
+  if(kind==='week'){$('fS').value=String(iso(date));updateFilterOptions();}
+  else {$('fM').value=String(+date.slice(5,7));updateFilterOptions();if(kind==='today')$('fD').value=date;}
+  if((kind==='today'&&$('fD').value!==date)||(kind==='month'&&$('fM').value!==String(+date.slice(5,7)))|| (kind==='week'&&$('fS').value!==String(iso(date)))){reset();alert('Não existem registros para este período. O histórico foi mantido.');return;}
+  render();
+ }
+}));
+$('entrySearch').addEventListener('input',renderUltimos);
+function updateDayTotal(){ $('dayTotal').textContent='Total: '+N([...document.querySelectorAll('#dayModalFields input')].reduce((sum,input)=>sum+Math.max(0,Number(input.value)||0),0))+' pedidos'; }
+$('dayModalFields').addEventListener('input',updateDayTotal);
+$('dayDate').addEventListener('change',updateDayTotal);
+document.querySelectorAll('details').forEach(detail=>detail.addEventListener('toggle',()=>requestAnimationFrame(()=>Object.values(ch).forEach(chart=>chart.resize()))));
+document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeAddMenu();closeDayModal();}});
+
 </script>
 
 <div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
