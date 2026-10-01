@@ -71,9 +71,14 @@
     display:inline-flex;
     align-items:center;
     gap:7px;
-    transition:.15s;
+    box-shadow:0 1px 2px rgba(16,24,40,.08);
+    transition:background .15s ease, box-shadow .15s ease, transform .1s ease;
   }
-  .upload-btn:hover{background:var(--navy-2);}
+  .upload-btn:hover{background:var(--navy-2);box-shadow:0 3px 8px rgba(27,43,68,.22);transform:translateY(-1px);}
+  .upload-btn:active{transform:translateY(0);box-shadow:0 1px 2px rgba(16,24,40,.1);}
+  .upload-btn:focus-visible, .chip-btn:focus-visible, .export-btn:focus-visible, .view-tab:focus-visible{
+    outline:2px solid var(--navy-2);outline-offset:2px;
+  }
   #restoreBtn{display:none;}
   .upload-status{
     font-size:11.5px;
@@ -139,12 +144,12 @@
     padding:7px 13px;
     border-radius:20px;
     cursor:pointer;
-    transition:.15s;
+    transition:background .15s ease, border-color .15s ease, color .15s ease;
   }
-  .chip-btn:hover{background:#F0F2F5;}
+  .chip-btn:hover{background:#F0F2F5;border-color:#D3D7DD;}
   .chip-btn.active{background:var(--navy);color:#fff;border-color:var(--navy);}
   #resetBtn{margin-left:auto;color:var(--red);border-color:#F0C9C6;}
-  #resetBtn:hover{background:var(--red-bg);}
+  #resetBtn:hover{background:var(--red-bg);border-color:#E3A7A2;}
   .countLabel{font-size:12.5px;color:var(--gray);white-space:nowrap;}
   .countLabel b{color:var(--navy);}
 
@@ -313,10 +318,12 @@
   .export-btn{
     font-family:'Inter',Arial,sans-serif;font-size:12.5px;font-weight:600;
     border:1px solid var(--line);background:#fff;color:var(--navy-2);
-    padding:7px 13px;border-radius:8px;cursor:pointer;transition:.15s;
+    padding:7px 13px;border-radius:8px;cursor:pointer;
+    transition:background .15s ease, border-color .15s ease;
     display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
   }
-  .export-btn:hover{background:#F0F2F5;}
+  .export-btn:hover{background:#F0F2F5;border-color:#D3D7DD;}
+  #closeDrillBtn:hover{background:var(--red-bg);border-color:#E3A7A2;}
   #gargaloDrilldown{display:none;margin-top:16px;border-top:1px solid var(--line);padding-top:14px;}
 
   .sla-select{
@@ -325,6 +332,34 @@
     border:1px solid var(--line);background:#fff;color:var(--navy-2);
     padding:7px 10px;border-radius:8px;cursor:pointer;max-width:200px;
   }
+
+  /* Abas de indicador */
+  .view-tabs{display:flex;gap:8px;margin:0 0 16px;flex-wrap:wrap;}
+  .view-tab{
+    font-family:'Inter',Arial,sans-serif;font-size:13.5px;font-weight:700;
+    border:1px solid var(--line);background:#fff;color:var(--navy-2);
+    padding:11px 18px;border-radius:10px;cursor:pointer;text-align:left;
+    transition:background .15s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+  .view-tab small{display:block;font-weight:500;font-size:11.5px;color:var(--gray);margin-top:2px;}
+  .view-tab:hover{background:#F0F2F5;border-color:#D3D7DD;}
+  .view-tab.active{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:0 2px 6px rgba(27,43,68,.2);}
+  .view-tab.active small{color:#C9D3E0;}
+  #justPanel{display:none;}
+  .motivo-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .motivo-chip{
+    display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;
+    border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;
+    background:#fff;color:var(--navy-2);user-select:none;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .motivo-chip:hover{background:#F0F2F5;border-color:#D3D7DD;}
+  .motivo-chip input{margin:0;cursor:pointer;accent-color:#B7791F;}
+  .motivo-chip.on{background:var(--amber-bg);border-color:#E9C98F;color:#7A4F0E;}
+  .motivo-chip .n{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--gray);}
+  .just-summary{font-size:12.5px;color:var(--navy-2);margin:12px 0 0;}
+  .just-summary b{color:#7A4F0E;}
+  .save-msg{font-size:12px;color:var(--gray);margin-left:8px;}
 </style>
 </head>
 <body>
@@ -357,6 +392,26 @@
     <button class="chip-btn active" data-range="all">Todo o período</button>
     <span class="countLabel">Mostrando <b id="countShown">–</b> de <b id="countTotal">–</b> remessas</span>
     <button class="chip-btn" id="resetBtn">Limpar filtro</button>
+  </div>
+
+  <div class="view-tabs">
+    <button class="view-tab active" data-view="real">📊 Indicador real<small>Tudo o que foi e não foi entregue</small></button>
+    <button class="view-tab" data-view="transp">🚚 Indicador da transportadora<small>Desconsidera motivos fora do controle da ATIVA</small></button>
+  </div>
+
+  <div class="panel" id="justPanel" style="margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+      <div>
+        <h3>Motivos desconsiderados no indicador da transportadora</h3>
+        <p class="phint" style="margin-bottom:0;">Marque as ocorrências (coluna N · ULTIMA OCORRENC) das remessas não entregues que não são responsabilidade da transportadora. Remessas com esses motivos saem da base de cálculo desta aba. A escolha fica salva no banco para todos.</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="export-btn" id="exportJustBtn">⭱ Exportar desconsideradas</button>
+        <span class="save-msg" id="justSaveMsg"></span>
+      </div>
+    </div>
+    <div class="motivo-list" id="motivoList"></div>
+    <p class="just-summary" id="justSummary"></p>
   </div>
 
   <div class="kpi-row" id="kpiRow"></div>
@@ -462,6 +517,94 @@ let SLA_DATA = []; // {praca, total, onTime, slaPct} — todas as praças com vo
 let TOP_DELAYS_ALL = [];
 let dadosCarregados = false;
 
+// ---------------- Indicador real x Indicador da transportadora ----------------
+let VIEW_MODE = 'real';          // 'real' | 'transp'
+let MOTIVOS_CFG = null;          // {justificados:[...], naoJustificados:[...]} salvo no banco
+// Sugestão automática para ocorrências ainda não classificadas (só vale para remessas NÃO entregues)
+const JUST_DEFAULT_RE = /AUSENTE|ENDERE[CÇ]O|FISCALIZ|SEFAZ|NF RETIDA|RETID[OA] (PELA|NA|NO) FISC|RECUS|FECHADO|MUDOU|DESCONHECID|N[AÃ]O LOCALIZ|[AÁ]REA DE RISCO|DIVERG|AGUARDANDO (O )?CLIENTE|AGENDAMENTO/;
+
+function isMotivoJustificado(ocor){
+  if(!ocor) return false;
+  if(MOTIVOS_CFG){
+    if((MOTIVOS_CFG.justificados||[]).includes(ocor)) return true;
+    if((MOTIVOS_CFG.naoJustificados||[]).includes(ocor)) return false;
+  }
+  return JUST_DEFAULT_RE.test(ocor);
+}
+// Só remessas não entregues podem ser desconsideradas
+function isJustificado(r){ return !r.ent && isMotivoJustificado(r.ocor); }
+
+function loadMotivosCfg(){
+  return fbRef('config/motivos').once('value')
+    .then(snap=>{ MOTIVOS_CFG = snap.val() || null; })
+    .catch(()=>{ MOTIVOS_CFG = null; });
+}
+
+function saveMotivosCfg(){
+  const ocorrs = [...new Set(ALL.filter(r=>!r.ent && r.ocor).map(r=>r.ocor))];
+  const just = ocorrs.filter(isMotivoJustificado);
+  const nao = ocorrs.filter(o=>!isMotivoJustificado(o));
+  // preserva escolhas de ocorrências que não estão na planilha atual
+  const prevJ = (MOTIVOS_CFG&&MOTIVOS_CFG.justificados)||[];
+  const prevN = (MOTIVOS_CFG&&MOTIVOS_CFG.naoJustificados)||[];
+  MOTIVOS_CFG = {
+    justificados: [...new Set([...prevJ.filter(o=>!ocorrs.includes(o)), ...just])],
+    naoJustificados: [...new Set([...prevN.filter(o=>!ocorrs.includes(o)), ...nao])]
+  };
+  const msg = document.getElementById('justSaveMsg');
+  msg.textContent = 'Salvando…';
+  fbRef('config/motivos').set(MOTIVOS_CFG)
+    .then(()=>{ msg.textContent = '✓ Salvo'; setTimeout(()=>msg.textContent='',2500); })
+    .catch(err=>{ msg.textContent = 'Não salvou no banco (' + err.message + ')'; });
+}
+
+function renderJustPanel(dateFiltered){
+  const naoEnt = dateFiltered.filter(r=>!r.ent);
+  const counts = {};
+  naoEnt.forEach(r=>{ const o = r.ocor || '(sem ocorrência)'; counts[o]=(counts[o]||0)+1; });
+  const ocorrs = Object.keys(counts).filter(o=>o!=='(sem ocorrência)')
+    .sort((a,b)=> (isMotivoJustificado(b)-isMotivoJustificado(a)) || counts[b]-counts[a] || a.localeCompare(b));
+  document.getElementById('motivoList').innerHTML = ocorrs.length ? ocorrs.map(o=>{
+    const on = isMotivoJustificado(o);
+    return `<label class="motivo-chip ${on?'on':''}"><input type="checkbox" data-ocor="${escapeAttr(o)}" ${on?'checked':''}>${o} <span class="n">${counts[o]}</span></label>`;
+  }).join('') : '<span class="phint">Nenhuma remessa não entregue no período filtrado.</span>';
+
+  const excl = dateFiltered.filter(isJustificado);
+  const atrasadasExcl = excl.filter(r=>r.status==='Atrasado (em aberto)').length;
+  document.getElementById('justSummary').innerHTML = excl.length
+    ? `<b>${fmtNum(excl.length)}</b> remessa(s) desconsiderada(s) neste período (${fmtNum(atrasadasExcl)} delas atrasadas). Base da transportadora: <b>${fmtNum(dateFiltered.length-excl.length)}</b> de ${fmtNum(dateFiltered.length)} remessas.`
+    : 'Nenhuma remessa desconsiderada no período filtrado — os números desta aba são iguais aos do indicador real.';
+}
+
+document.addEventListener('change', (e)=>{
+  const cb = e.target.closest && e.target.closest('#motivoList input[type=checkbox]');
+  if(!cb) return;
+  const o = cb.dataset.ocor;
+  MOTIVOS_CFG = MOTIVOS_CFG || {justificados:[], naoJustificados:[]};
+  MOTIVOS_CFG.justificados = (MOTIVOS_CFG.justificados||[]).filter(x=>x!==o);
+  MOTIVOS_CFG.naoJustificados = (MOTIVOS_CFG.naoJustificados||[]).filter(x=>x!==o);
+  (cb.checked ? MOTIVOS_CFG.justificados : MOTIVOS_CFG.naoJustificados).push(o);
+  saveMotivosCfg();
+  applyFilters();
+});
+
+document.addEventListener('click', (e)=>{
+  const tab = e.target.closest && e.target.closest('.view-tab');
+  if(tab){
+    VIEW_MODE = tab.dataset.view;
+    document.querySelectorAll('.view-tab').forEach(t=>t.classList.toggle('active', t===tab));
+    document.getElementById('justPanel').style.display = VIEW_MODE==='transp' ? 'block' : 'none';
+    applyFilters();
+    return;
+  }
+  if(e.target.closest && e.target.closest('#exportJustBtn')){
+    const excl = getDateFiltered().filter(isJustificado);
+    const header = ['Nota Fiscal','CTRC','Destinatário','Praça','Modal','Data prevista','Última ocorrência','Situação','Dias'];
+    const body = excl.map(r=>[r.nf, r.ctrc, r.dest, r.praca, r.tipo, r.prev, r.ocor, r.status, r.dias]);
+    downloadCSV('remessas_desconsideradas.csv', [header, ...body]);
+  }
+});
+
 function mostrarCarregando(msg){
   document.getElementById('kpiRow').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6B7280;font-size:13.5px;">${msg}</div>`;
 }
@@ -469,7 +612,7 @@ function mostrarCarregando(msg){
 function loadDataFromFirebase(){
   mostrarCarregando('⏳ Carregando dados do banco...');
   document.getElementById('sourcePill').textContent = 'Carregando do banco...';
-  fbRef('registros').once('value').then((snap)=>{
+  Promise.all([fbRef('registros').once('value'), loadMotivosCfg()]).then(([snap])=>{
     const val = snap.val();
     DEFAULT_DATA = val || [];
     ALL = DEFAULT_DATA;
@@ -531,7 +674,7 @@ function computeAndRender(rows){
 
 function renderKPIs({total, entregues, naoEntregues, problemas, noPrazo, atrasoMedio}){
   const kpis = [
-    {label:'Total de remessas', value: fmtNum(total), sub:'no período filtrado', cls:''},
+    {label:'Total de remessas', value: fmtNum(total), sub: VIEW_MODE==='transp' ? 'base da transportadora (sem justificadas)' : 'no período filtrado', cls:''},
     {label:'Entregues', value: fmtNum(entregues.length), sub: total? fmtPct(entregues.length/total*100)+' do total':'—', cls:'good'},
     {label:'Não entregues', value: fmtNum(naoEntregues.length), sub: total? fmtPct(naoEntregues.length/total*100)+' do total':'—', cls:'danger'},
     {label:'Com atraso', value: fmtNum(problemas.length), sub: total? fmtPct(problemas.length/total*100)+' do total (entreg. + aberto)':'—', cls:'danger'},
@@ -988,17 +1131,28 @@ function drawTopDelays(){
 // ---------------- Filtering ----------------
 function parseDate(s){ return s ? new Date(s+'T00:00:00') : null; }
 
-function applyFilters(){
+function getDateFiltered(){
   const from = document.getElementById('dateFrom').value;
   const to = document.getElementById('dateTo').value;
   const fromD = parseDate(from), toD = parseDate(to);
-  const filtered = ALL.filter(r=>{
+  return ALL.filter(r=>{
     const d = parseDate(r.prev);
     if(fromD && d < fromD) return false;
     if(toD && d > toD) return false;
     return true;
   });
-  computeAndRender(filtered);
+}
+
+function applyFilters(){
+  const dateFiltered = getDateFiltered();
+  if(VIEW_MODE === 'transp'){
+    renderJustPanel(dateFiltered);
+    computeAndRender(dateFiltered.filter(r=>!isJustificado(r)));
+    const nExcl = dateFiltered.filter(isJustificado).length;
+    document.getElementById('countTotal').textContent = fmtNum(ALL.length) + (nExcl ? ` · ${fmtNum(nExcl)} desconsideradas` : '');
+  } else {
+    computeAndRender(dateFiltered);
+  }
 }
 
 function setActiveChip(el){
