@@ -168,7 +168,7 @@ input:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 
   </section>
 
   <section id="tab-lista" class="tabpanel" style="display:none;">
-    <input type="text" id="busca" placeholder="Buscar por ID, produto, usuário, ofensor ou avaria..." style="margin-bottom:10px;">
+    <input type="text" id="busca" placeholder="Buscar por ID, produto, cliente, ofensor ou avaria..." style="margin-bottom:10px;">
     <div class="filters">
       <select id="filt-status"><option value="">Todos status</option><option value="aberta">Aberta</option><option value="fechada">Fechada</option></select>
       <select id="filt-ofensor"><option value="">Todos ofensores</option></select>
@@ -194,7 +194,7 @@ input:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 
     <div class="card"><h2>Ranking de produtos</h2><div class="chart-wrap"><canvas id="chart-produto" width="600" height="240"></canvas></div></div>
     <div class="card"><h2>Ranking de avarias</h2><div class="chart-wrap"><canvas id="chart-avaria" width="600" height="240"></canvas></div></div>
     <div class="card"><h2>Ranking de ofensores</h2><div class="chart-wrap"><canvas id="chart-ofensor" width="600" height="240"></canvas></div></div>
-    <div class="card"><h2>Perdas por usuário</h2><div class="chart-wrap"><canvas id="chart-usuario" width="600" height="240"></canvas></div></div>
+    <div class="card"><h2>Perdas por cliente</h2><div class="chart-wrap"><canvas id="chart-usuario" width="600" height="240"></canvas></div></div>
     <div class="card"><h2>Evolução mensal (peças)</h2><div class="chart-wrap"><canvas id="chart-tempo" width="600" height="240"></canvas></div></div>
   </section>
 
@@ -664,7 +664,7 @@ function renderLista(){
       '<span class="pill '+(r.status==='aberta'?'pill-open':'pill-closed')+'">'+(r.status==='aberta'?'Aberta':'Fechada')+'</span></div>'+
       '<div class="meta"><b>Data:</b> '+fmtDate(r.data)+' &nbsp;·&nbsp; <b>Qtd:</b> '+r.quantidade+'<br>'+
       '<b>Avaria:</b> '+esc(r.avaria)+'<br>'+
-      '<b>Ofensor:</b> '+esc(r.ofensor)+' &nbsp;·&nbsp; <b>Usuário:</b> '+esc(r.usuario)+'<br>'+
+      '<b>Ofensor:</b> '+esc(r.ofensor)+' &nbsp;·&nbsp; <b>Cliente:</b> '+esc(r.usuario)+'<br>'+
       '<b>Fotos:</b> '+(r.fotoCount||0)+
       (r.status==='fechada' && r.fechadoPor ? '<br><b>Fechado por:</b> '+esc(r.fechadoPor)+' em '+fmtDateTime(r.fechadoEm) : '')+
       '</div>'+
@@ -1022,10 +1022,10 @@ async function gerarRelatorio(){
   html += tabelaTop('Top produtos com mais defeitos', topNFrom(list,'produto',10));
   html += tabelaTop('Top ofensores', topNFrom(list,'ofensor',10));
   html += tabelaTop('Top avarias mais frequentes', topNFrom(list,'avaria',10));
-  html += tabelaTop('Perdas por usuário', topNFrom(list,'usuario',10));
+  html += tabelaTop('Perdas por cliente', topNFrom(list,'usuario',10));
 
   html += '<h3 style="margin-top:18px;font-size:14px;">Detalhamento dos registros</h3>';
-  html += '<table class="pr-table"><tr><th>ID</th><th>Data</th><th>Produto</th><th>Qtd</th><th>Avaria</th><th>Ofensor</th><th>Usuário</th><th>Status</th></tr>';
+  html += '<table class="pr-table"><tr><th>ID</th><th>Data</th><th>Produto</th><th>Qtd</th><th>Avaria</th><th>Ofensor</th><th>Cliente</th><th>Status</th></tr>';
   list.forEach(function(r){
     html += '<tr><td>NC-'+String(r.id).padStart(4,'0')+'</td><td>'+fmtDate(r.data)+'</td><td>'+esc(truncate(r.produto,30))+'</td><td>'+r.quantidade+'</td><td>'+esc(truncate(r.avaria,25))+'</td><td>'+esc(truncate(r.ofensor,18))+'</td><td>'+esc(truncate(r.usuario,18))+'</td><td>'+(r.status==='aberta'?'Aberta':'Fechada')+'</td></tr>';
   });
