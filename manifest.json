@@ -119,5 +119,16 @@
     "grupos": [
       "EXPEDIÇÃO"
     ]
+  },
+  {
+    "title": "DashBoard Produtividade",
+    "category": "",
+    "description": "",
+    "file": "dashboard_produtividade.html",
+    "icon": "🧩",
+    "color": "#ffd54d",
+    "grupos": [
+      "EXPEDIÇÃO"
+    ]
   }
 ]
