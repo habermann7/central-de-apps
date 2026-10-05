@@ -295,6 +295,33 @@ function clearStage(stage){
   } else { s[stage]={daily:{},pedidos:{},headcount:s[stage].headcount||{}}; }
   saveStore(); useDept(ACTIVE_DEPT); fill(); render(); renderUploadZone(); renderFunnel(); renderPhaseEvolution(); renderStaffing();
 }
+// Move um pedido de sep/conf de um setor pra outro (ajusta pedidos{} e daily{} dos dois lados).
+function movePedidoDept(fromDept,toDept,stage,ped,info){
+  const fromS=STORE[fromDept][stage], toS=STORE[toDept][stage];
+  delete fromS.pedidos[ped];
+  fromS.daily[info.date]=(fromS.daily[info.date]||0)-1;
+  if(fromS.daily[info.date]<=0) delete fromS.daily[info.date];
+  toS.pedidos[ped]=info;
+  toS.daily[info.date]=(toS.daily[info.date]||0)+1;
+}
+// Depois que a Base de Usuários é (re)carregada, revê todo pedido de Separação/Conferência
+// que já tinha ID do User guardado e corrige o setor (SECO×GELADO) se a base mudou o resultado —
+// sem precisar reimportar o arquivo original. Retorna quantos pedidos mudaram de setor.
+function reclassifyPedidos(){
+  let moved=0;
+  ["sep","conf"].forEach(stage=>{
+    ["seco","gelado"].forEach(fromDept=>{
+      Object.entries(STORE[fromDept][stage].pedidos).forEach(([ped,info])=>{
+        if(!info || !info.idUser) return;
+        const cl=classifyUser(info.idUser);
+        if(!cl.dept || cl.dept===fromDept) return;
+        movePedidoDept(fromDept,cl.dept,stage,ped,info);
+        moved++;
+      });
+    });
+  });
+  return moved;
+}
 function handleUsersUpload(e){
   const file=e.target.files[0]; if(!file) return;
   const reader=new FileReader();
@@ -316,9 +343,12 @@ function handleUsersUpload(e){
         STORE.users[id]={nome:nomeCol?String(r[nomeCol]??"").trim():"",local};
         count++;
       });
-      saveStore();
-      renderUploadZone(); render(); renderFunnel(); renderPhaseEvolution(); renderStaffing();
-      alert(`Base de usu\u00e1rios atualizada: ${count} usu\u00e1rio(s) cadastrados/atualizados.`);
+      const moved=reclassifyPedidos();
+      saveStore(); useDept(ACTIVE_DEPT);
+      renderDeptTabs(); renderUploadZone(); fill(); render(); renderFunnel(); renderPhaseEvolution(); renderStaffing();
+      let msg=`Base de usu\u00e1rios atualizada: ${count} usu\u00e1rio(s) cadastrados/atualizados.`;
+      if(moved) msg+=`\n\u2705 ${moved} pedido(s) de Separa\u00e7\u00e3o/Confer\u00eancia que estavam em SECO foram movidos pra GELADO automaticamente, agora que a base confirma o setor deles.`;
+      alert(msg);
     }catch(err){ alert("Erro ao ler o arquivo: "+err.message); }
   };
   reader.readAsArrayBuffer(file);
