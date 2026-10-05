@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Produtividade | Operações</title>
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Dashboard de Produtividade Operacional</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -8,281 +8,529 @@
 :root[data-theme="dark"]{--bg:#0e131c;--card:#171e2b;--tx:#e8edf6;--mu:#93a0b8;--bd:#273146;--pr:#5aa0ff;--ok:#3ecf8e;--ng:#ff7a70;--wr:#f2b84b;--gr:#2a3447}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px}
-.w{max-width:1280px;margin:0 auto;padding:16px}h1{font-size:21px;margin:0;font-weight:800;letter-spacing:-.01em}.sub{color:var(--mu);font-size:12px;margin-top:3px}
-.topbar{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:2px}
-.actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.w{max-width:1320px;margin:0 auto;padding:16px}h1{font-size:20px;margin:0}.sub{color:var(--mu);font-size:12px;margin-top:2px}
 .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:end;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin:14px 0}
 .bar label{display:flex;flex-direction:column;font-size:11px;color:var(--mu);gap:3px}
-select,input{background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:7px 8px;font-size:13px;font-family:inherit;transition:border-color .15s ease,box-shadow .15s ease}
-select:hover,input:hover{border-color:color-mix(in srgb,var(--pr) 40%,var(--bd))}
-select:focus,input:focus{outline:none;border-color:var(--pr);box-shadow:0 0 0 3px color-mix(in srgb,var(--pr) 18%,transparent)}
-button{font-family:inherit}
-.btn{background:var(--pr);color:#fff;border:0;border-radius:8px;padding:8px 13px;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:6px;transition:filter .15s,transform .1s}
-.btn:hover{filter:brightness(1.12)}
-.btn:active{transform:translateY(1px)}
-.btn.ghost{background:transparent;color:var(--pr);border:1px solid var(--pr)}
-.btn.ghost:hover{background:var(--pr);color:#fff}
-.btn.danger{background:var(--ng)}
-.btn.sm{padding:6px 10px;font-size:12px;border-radius:7px}
-.pill{font-size:11px;padding:5px 11px;border-radius:20px;border:1px solid var(--bd);color:var(--mu);background:var(--card);white-space:nowrap}
-.pill.ok{color:var(--ok);border-color:var(--ok)}
-.status{font-size:11.5px;color:var(--mu);max-width:260px;text-align:right}
-.status.err{color:var(--ng);font-weight:600}
-.g{display:grid;gap:12px;margin-bottom:12px}.k{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.c2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+select,input{background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:7px 8px;font-size:13px}
+input[type=file]{padding:5px 4px;max-width:230px}
+button{background:var(--pr);color:#fff;border:0;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:13px}
+button.ghost{background:transparent;color:var(--mu);border:1px solid var(--bd)}
+button.sm{padding:5px 9px;font-size:11.5px}
+.g{display:grid;gap:12px;margin-bottom:12px}.k{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.c2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}.c3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;min-width:0}
-.kp .l{font-size:11px;color:var(--mu)}.kp .v{font-size:22px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}.kp .s{font-size:11px;color:var(--mu);margin-top:2px}
-h2{font-size:13px;margin:0 0 10px;font-weight:700}.ch{position:relative;height:250px}
-.section-head{display:flex;align-items:baseline;gap:10px;margin:26px 0 12px}
-.section-head h3{font-size:15px;margin:0;font-weight:700}
-.section-head .line{flex:1;height:1px;background:var(--bd)}
-.hero{background:linear-gradient(135deg,color-mix(in srgb,var(--pr) 10%,var(--card)),var(--card));border:1px solid var(--bd);border-radius:14px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;box-shadow:0 1px 3px rgba(16,24,40,.06)}
-.hero .num{font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
-.hero .label{font-size:12px;color:var(--mu);margin-bottom:4px}
-.hero .delta{font-size:13px;font-weight:600;margin-top:6px}
-.addmenu{position:relative}
-.addmenu-panel{display:none;position:absolute;right:0;top:calc(100% + 8px);background:var(--card);border:1px solid var(--bd);border-radius:12px;box-shadow:0 12px 32px rgba(10,13,18,.18);padding:8px;width:260px;z-index:20}
-.addmenu-panel.open{display:block}
-.addmenu-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:0;border-radius:8px;padding:9px 8px;cursor:pointer;color:var(--tx);transition:background .12s ease}
-.addmenu-item:hover{background:var(--gr)}
-.addmenu-item svg{flex:none;color:var(--pr)}
-.addmenu-item b{display:block;font-size:12.5px;font-weight:600}
-.addmenu-item span{display:block;font-size:11px;color:var(--mu);margin-top:1px}
-.addmenu-sep{height:1px;background:var(--bd);margin:6px 4px}
-.addmenu-check{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--mu);padding:8px 8px 4px;cursor:pointer}
-#addMenuBtn svg{flex:none}
-#addMenuBtn.open svg:last-child{transform:rotate(180deg)}
-td,.kp .v{font-variant-numeric:tabular-nums}
-details.tables{margin-top:4px}
-details.tables>summary{cursor:pointer;font-size:13px;color:var(--pr);font-weight:600;list-style:none;padding:6px 0;display:flex;align-items:center;gap:7px}
-details.tables>summary::-webkit-details-marker{display:none}
-details.tables>summary::before{content:'▸';font-size:11px;transition:transform .15s ease}
-details.tables[open]>summary::before{transform:rotate(90deg)}
-.ch-empty{display:flex;align-items:center;justify-content:center;height:100%;color:var(--mu);font-size:12.5px;text-align:center;padding:10px}
-.th-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;flex-wrap:wrap}
-.th-row h2{margin:0}
-.sc{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:12.5px}th,td{padding:7px 8px;border-bottom:1px solid var(--bd);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}
-th{color:var(--mu);font-weight:600;font-size:11.5px;border-bottom:1px solid var(--bd)}
-tbody tr{transition:background .1s ease}tbody tr:hover{background:var(--gr)}
+.kp .l{font-size:11px;color:var(--mu)}.kp .v{font-size:24px;font-weight:700;margin-top:4px}.kp .s{font-size:11px;color:var(--mu);margin-top:2px}
+h2{font-size:13px;margin:0 0 10px}h3{font-size:12px;margin:0 0 6px;color:var(--mu)}.ch{position:relative;height:250px}
+.sc{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:12.5px}th,td{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{color:var(--mu);font-weight:600}
 .up{color:var(--ok)}.dn{color:var(--ng)}.mx td{background:color-mix(in srgb,var(--ok) 14%,transparent)}.mn td{background:color-mix(in srgb,var(--ng) 14%,transparent)}
 .mini{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mu);margin-bottom:8px}.mini b{color:var(--tx)}
 .ci{width:64px}.tall{max-height:300px;overflow:auto}
-.export-btn{background:transparent;border:1px solid var(--bd);color:var(--tx);border-radius:7px;padding:5px 10px;font-size:11.5px;cursor:pointer;display:inline-flex;gap:5px;align-items:center;white-space:nowrap;transition:background .15s ease,border-color .15s ease}
-.export-btn:hover{background:var(--gr);border-color:color-mix(in srgb,var(--pr) 30%,var(--bd))}
-.modal-bg{position:fixed;inset:0;background:rgba(10,13,18,.55);display:none;align-items:center;justify-content:center;z-index:999;padding:16px}
-.modal-bg.open{display:flex}
-.modal-box{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:20px;max-width:440px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 20px 50px rgba(10,13,18,.35)}
-.modal-box h3{margin:0 0 4px;font-size:15px}
-.modal-box .sub{margin-bottom:14px}
-.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:4px}
-.field-grid label{display:flex;flex-direction:column;font-size:11px;color:var(--mu);gap:3px}
-.field-grid input{width:100%}
-.field-grid.full{grid-template-columns:1fr}
-.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
-.modal-hint{font-size:11px;color:var(--mu);margin-top:10px;line-height:1.5}
-.empty-state{padding:40px 20px;text-align:center;color:var(--mu);font-size:13px}
-#__gateOverlay{position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px}
-
-/* Organização e acabamento */
-.w{max-width:1380px;padding:28px 32px}.eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--pr);margin-bottom:7px}h1{font-size:28px;font-weight:700}.sub{font-size:14px;line-height:1.5}.topbar{margin-bottom:22px}.tabs{display:flex;gap:8px;border-bottom:1px solid var(--bd);margin-bottom:24px;overflow:auto}.tab{background:transparent;border:0;color:var(--mu);font-size:14px;padding:14px 18px;white-space:nowrap;cursor:pointer;border-bottom:3px solid transparent}.tab.active{color:var(--pr);border-bottom-color:var(--pr);font-weight:650}.hero{padding:24px;margin-bottom:20px}.hero .label{font-size:14px}.hero .delta{max-width:420px}.bar{padding:18px;gap:14px}.bar label,.kp .l{font-size:13px}.quick-periods{width:100%;display:flex;gap:8px;flex-wrap:wrap}.context{font-size:13px;color:var(--mu);margin:16px 0}.k{grid-template-columns:repeat(4,minmax(0,1fr))}.g{gap:18px;margin-bottom:18px}.card{padding:22px;border-radius:14px;box-shadow:0 2px 5px rgba(16,24,40,.025)}.kp .v{font-size:30px;margin-top:12px}.kp .s{font-size:12px;line-height:1.5;margin-top:8px}h2{font-size:15px}.ch{height:290px}.section-head{margin-top:28px}.section-head h3{font-size:18px}th{font-size:12px}td{font-size:13px;padding:12px 10px}.btn,.export-btn,select,input{min-height:40px}.export-btn{font-size:12px}.footer{font-size:12px;color:var(--mu);border-top:1px solid var(--bd);padding:22px 0;margin-top:30px}.field-grid label{font-size:13px}.field-grid{gap:14px}.modal-box{max-width:500px;padding:26px}.modal-hint{font-size:13px}.status{font-size:12px}button:focus-visible,summary:focus-visible{outline:3px solid var(--pr);outline-offset:3px}[hidden]{display:none!important}
-@media(max-width:800px){.w{padding:18px}.k{grid-template-columns:repeat(2,minmax(0,1fr))}.c2{grid-template-columns:1fr}h1{font-size:23px}.card{padding:18px}.hero .num{font-size:34px}.actions{justify-content:flex-start}.topbar .status{text-align:left}.bar label{flex:1;min-width:100px}}
-@media(max-width:420px){.k{grid-template-columns:1fr}.field-grid{grid-template-columns:1fr}.tabs{gap:0}.tab{padding:12px}.hero{padding:18px}.kp .v{font-size:28px}}
-@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
-
-/* Campos e navegação com estados de seleção explícitos. */
-:root{--soft:color-mix(in srgb,var(--pr) 8%,var(--card));--control-border:color-mix(in srgb,var(--mu) 48%,var(--bd))}
-.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;border:0;overflow:visible;margin-bottom:26px}
-.tab{display:flex;align-items:center;gap:12px;min-height:88px;padding:18px;text-align:left;white-space:normal;border:1px solid var(--control-border);border-radius:14px;background:var(--card);color:var(--tx);transition:background .15s,border-color .15s,box-shadow .15s}
-.tab:hover{border-color:var(--pr);background:var(--soft)}
-.tab.active{background:var(--pr);color:#fff;border-color:var(--pr);box-shadow:0 5px 15px color-mix(in srgb,var(--pr) 18%,transparent)}
-.tab-icon{display:grid;place-items:center;flex:none;width:40px;height:40px;border-radius:11px;background:var(--soft);color:var(--pr)}.tab-icon svg{width:22px;height:22px}.tab.active .tab-icon{background:rgba(255,255,255,.16);color:#fff}
-.tab-copy{min-width:0;flex:1}.tab-copy strong{display:block;font-size:15px;font-weight:650}.tab-copy small{display:block;font-size:11.5px;line-height:1.5;margin-top:3px;color:var(--mu);font-weight:400}.tab.active small{color:#fff;opacity:.9}.tab-indicator{flex:none;width:7px;height:7px;border-radius:50%;background:transparent}.tab.active .tab-indicator{background:#fff}
-.filters{display:block;padding:24px;border-radius:16px;box-shadow:0 3px 12px rgba(16,24,40,.035)}.filter-heading{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}.filter-heading h2{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:16px;margin:0}.filter-heading p,.field-help{font-size:12.5px;line-height:1.6;color:var(--mu);margin:6px 0 0}.filter-count{font-size:11px;font-weight:600;color:var(--pr);background:var(--soft);border-radius:6px;padding:4px 8px}.clear-filters{min-height:40px;padding:8px 12px;display:flex;align-items:center;gap:10px;color:var(--mu);background:var(--card);border:1px solid var(--bd);border-radius:9px;cursor:pointer;white-space:nowrap}.clear-filters:hover{color:var(--pr);border-color:var(--pr)}.clear-filters span{font-size:20px}
-.quick-periods{display:flex;align-items:center;gap:8px;padding-bottom:20px;margin-bottom:20px;border-bottom:1px solid var(--bd)}.quick-label{font-size:12px;font-weight:600;color:var(--mu);margin-right:6px}.quick-periods .export-btn{border:1px solid var(--control-border);border-radius:9px;padding:9px 15px;font-size:13px;min-height:42px;font-weight:500;background:var(--card)}.quick-periods .export-btn[aria-pressed="true"]{border-color:var(--pr);color:var(--pr);background:var(--soft);box-shadow:inset 0 0 0 1px var(--pr)}.quick-periods .export-btn[aria-pressed="true"]::before{content:'✓';font-weight:700}
-.filter-fields{display:grid;grid-template-columns:.75fr 1fr 1fr 1fr 1.45fr;gap:14px}.bar .select-field{gap:8px;color:var(--tx);font-size:12px;font-weight:650;min-width:0}.select-field>span{display:flex;align-items:center;justify-content:space-between}.select-field.selected>span::after{content:'Selecionado';font-size:9px;letter-spacing:.01em;color:var(--pr);font-weight:650}
-select,input:not([type="checkbox"]):not([type="file"]){border:1px solid var(--control-border);background-color:var(--card);font-size:14px;min-height:46px;border-radius:10px;padding:11px 12px;color:var(--tx)}select{appearance:none;-webkit-appearance:none;padding-right:38px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23748096' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;cursor:pointer;width:100%}select option{background:var(--card);color:var(--tx)}.select-field.selected select{border-color:var(--pr);background-color:var(--soft);font-weight:600}.select-field:focus-within>span{color:var(--pr)}select:hover,input:not([type="checkbox"]):hover{border-color:var(--pr)}select:focus,input:focus{border-color:var(--pr);box-shadow:0 0 0 4px color-mix(in srgb,var(--pr) 13%,transparent)}
-.active-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:18px;padding-top:16px;border-top:1px solid var(--bd)}.active-label{font-size:12px;color:var(--mu);margin-right:4px}.filter-chip{display:inline-flex;gap:10px;align-items:center;border:1px solid color-mix(in srgb,var(--pr) 35%,var(--bd));background:var(--soft);color:var(--pr);min-height:34px;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer}.filter-chip:hover{border-color:var(--pr)}.filter-chip span{font-size:16px}.comparison-fields{display:grid;grid-template-columns:.7fr 1fr 1fr;background:var(--soft);padding:18px;margin:0 0 18px;border:1px solid var(--bd)}.comparison-fields label{gap:8px;font-weight:600;color:var(--tx);min-width:0}.search-field{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:600;color:var(--mu)}.search-field input{min-width:260px}.ci{width:110px;text-align:center;font-weight:650;border-color:var(--pr)!important;background:var(--soft)!important}
-.field-grid label{padding:12px;background:var(--bg);border:1px solid var(--bd);border-radius:12px;gap:8px;color:var(--tx);font-weight:600;font-size:12px}.field-grid label:focus-within{border-color:var(--pr)}.field-grid.full{margin-top:18px}#dayTotal{background:var(--soft);padding:14px;border-radius:10px;font-weight:650;color:var(--pr)}.addmenu-panel{width:310px;max-width:calc(100vw - 40px);padding:10px}.addmenu-item{padding:14px 10px;min-height:62px}.addmenu-item b{font-size:14px}.addmenu-item span{font-size:12px}.addmenu-check{font-size:12px;line-height:1.5;align-items:center;padding:12px 8px}input[type="checkbox"]{appearance:auto;min-height:0;width:18px;height:18px;margin:0;accent-color:var(--pr);flex:none;cursor:pointer}.hero{border-left:4px solid var(--pr)}.kp{border-top:3px solid color-mix(in srgb,var(--pr) 40%,var(--bd))}.kp:first-child{border-top-color:var(--pr)}.kp .l{font-weight:550}.context{line-height:1.6}details.tables>summary{padding:16px 18px;background:var(--card);border:1px solid var(--control-border);border-radius:10px;justify-content:flex-start;font-size:13px}details.tables[open]>summary{color:var(--pr);border-color:var(--pr);background:var(--soft)}th{padding:12px 10px;background:var(--bg)}.modal-actions .btn{min-height:44px;padding:10px 18px;font-size:14px}
-@media(max-width:1100px){.tabs{gap:10px}.tab{padding:14px;gap:9px}.tab-copy small{font-size:11px}.tab-indicator{display:none}.filter-fields{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:700px){.tabs{grid-template-columns:repeat(2,minmax(0,1fr))}.tab{min-height:82px}.filters{padding:18px}.filter-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.filter-fields .select-field:last-child{grid-column:1/-1}.filter-heading{gap:8px}.filter-heading h2{font-size:15px}.filter-heading p{font-size:12px}.clear-filters{font-size:11px;padding:6px 9px}.quick-label{width:100%;margin-bottom:2px}.quick-periods .export-btn{padding:8px 12px}.comparison-fields{grid-template-columns:1fr}.search-field{width:100%}.search-field input{min-width:0;width:100%}.select-field.selected>span::after{font-size:8px}.hero{align-items:flex-start}.field-grid label{padding:10px}}
-@media(max-width:380px){.tab-copy small{display:none}.tab-copy strong{font-size:13px}.tab-icon{width:32px;height:32px}.tab{min-height:64px;padding:10px}.filter-fields{grid-template-columns:1fr}.filter-heading{flex-wrap:wrap}}
+.tabs{display:flex;gap:8px;margin:14px 0 0}
+.tab{background:var(--card);border:1px solid var(--bd);border-radius:10px 10px 0 0;padding:9px 18px;cursor:pointer;font-weight:600;color:var(--mu);border-bottom:0;position:relative;top:1px}
+.tab.on{color:var(--pr);border-bottom:1px solid var(--card)}
+.tabwrap{border-bottom:1px solid var(--bd)}
+.badge{display:inline-block;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:700}
+.badge.ok{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.badge.bad{background:color-mix(in srgb,var(--ng) 18%,transparent);color:var(--ng)}
+.badge.warn{background:color-mix(in srgb,var(--wr) 20%,transparent);color:var(--wr)}
+.alert{border:1px solid var(--bd);border-left:4px solid var(--wr);border-radius:10px;padding:10px 14px;margin:0 0 12px;background:var(--card);font-size:12.5px}
+.alert.bad{border-left-color:var(--ng)}.alert.ok{border-left-color:var(--ok)}
+.alert b{display:block;margin-bottom:2px;font-size:13px}
+.empty{color:var(--mu);font-size:12.5px;padding:14px;text-align:center;border:1px dashed var(--bd);border-radius:10px}
+.upinfo{font-size:11.5px;color:var(--mu);margin:8px 0}
+.flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{font-size:10.5px;color:var(--mu);background:var(--gr);border-radius:100px;padding:2px 8px}
 </style></head><body><div class="w">
+<h1>Dashboard de Produtividade Operacional</h1><div class="sub">Separação &rarr; Confer&ecirc;ncia &rarr; Notas Fiscais &middot; produtividade mensal por setor &middot; dados salvos neste navegador</div>
 
-<div class="topbar">
-  <div>
-    <div class="eyebrow">OPERAÇÕES · EXPEDIÇÃO</div><h1>Produtividade operacional</h1>
-    <div class="sub">Acompanhe a produção, os canais de transporte e a equipe</div>
-  </div>
-  <div class="actions">
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
-      <span class="pill" id="sourcePill">Carregando do banco...</span>
-      <span class="status" id="uploadStatus"></span>
-    </div>
-  </div>
+<div class="tabwrap"><div class="tabs" id="deptTabs"></div></div>
+
+<div id="funnelAlerts"></div>
+<div class="g c3" id="funnelKpis"></div>
+
+<div class="card" style="margin-bottom:12px"><h2>Evolu&ccedil;&atilde;o das 3 fases &mdash; Separa&ccedil;&atilde;o &times; Confer&ecirc;ncia &times; Faturamento</h2><div class="ch" style="height:280px"><canvas id="cPhase"></canvas><div class="empty" id="cPhaseEmpty" style="display:none;position:absolute;inset:0">Sem dados em nenhuma das 3 fases ainda para gerar a evolu&ccedil;&atilde;o.</div></div></div>
+
+<div class="card" style="margin-bottom:0"><h2>Painel gerencial de equipe &mdash; <span id="deptLabelStaff"></span></h2><div class="sub" style="margin:-6px 0 10px">Preencha a previs&atilde;o de pedidos do m&ecirc;s para o sistema avisar se vai faltar ou sobrar gente.</div>
+<div class="g c2"><div class="sc"><h3>Previs&atilde;o de pedidos por m&ecirc;s (edit&aacute;vel)</h3><table id="t5"></table></div>
+<div class="sc"><h3>Dimensionamento de equipe</h3><table id="t6"></table></div></div>
 </div>
 
-<nav class="tabs" aria-label="Seções do painel"><button type="button" class="tab active" data-tab="overview" aria-current="page"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span class="tab-copy"><strong>Visão geral</strong><small>Indicadores e tendências</small></span><span class="tab-indicator" aria-hidden="true"></span></button><button type="button" class="tab " data-tab="entries"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M15 5l4 4M10 14l1-4 7-7 4 4-7 7-5 1Z"/></svg></span><span class="tab-copy"><strong>Lançamentos</strong><small>Registros da operação</small></span><span class="tab-indicator" aria-hidden="true"></span></button><button type="button" class="tab " data-tab="team"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6M21 21v-3a6 6 0 0 0-4-5"/></svg></span><span class="tab-copy"><strong>Equipe</strong><small>Pessoas e produtividade</small></span><span class="tab-indicator" aria-hidden="true"></span></button><button type="button" class="tab " data-tab="reports"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v18h17M8 16v-4M13 16V7M18 16v-7"/></svg></span><span class="tab-copy"><strong>Relatórios</strong><small>Comparações e exportação</small></span><span class="tab-indicator" aria-hidden="true"></span></button></nav>
-<div class="hero">
-  <div>
-    <div class="label">Pedidos hoje</div>
-    <div class="num" id="heroHoje">—</div>
-    <div class="delta" id="heroDelta"></div>
-  </div>
-  <div class="addmenu" id="addMenuWrap">
-    <button class="btn" id="addMenuBtn" aria-expanded="false" aria-controls="addMenuPanel" style="font-size:14px;padding:11px 16px;">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Adicionar dados
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:2px;"><polyline points="6 9 12 15 18 9"/></svg>
-    </button>
-    <div class="addmenu-panel" id="addMenuPanel">
-      <button class="addmenu-item" id="addManualItem">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-        <div><b>Lançar manualmente</b><span>Um dia por vez, direto aqui</span></div>
-      </button>
-      <div class="addmenu-sep"></div>
-      <button class="addmenu-item" id="addUploadItem">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <div><b>Importar planilha</b><span>.xlsx ou .xls — revisar antes de salvar</span></div>
-      </button>
-      <label class="addmenu-check"><input type="checkbox" id="mergeMode" checked> Mesclar em vez de substituir tudo</label>
-    </div>
-  </div>
-  <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none;">
+<div class="card" style="margin:12px 0"><h2>Fontes de dados &mdash; suba os arquivos de cada fase (coluna <b>PEDIDO</b> ou <b>N&Uacute;MERO DO PEDIDO</b>)</h2>
+<div class="sub" style="margin:-6px 0 10px">Se um pedido tiver v&aacute;rios itens/linhas no arquivo, ele &eacute; contado <b>uma &uacute;nica vez</b> (aglutinado por PEDIDO).</div>
+<div class="g c3" id="uploadZone"></div>
 </div>
 
-<div class="bar filters">
-<div class="filter-heading"><div><h2>Filtrar visualização <span class="filter-count" id="filterCount">Todos os dados</span></h2><p>Escolha um período e refine os resultados nos campos abaixo.</p></div><button class="clear-filters" type="button" onclick="reset()">Limpar filtros <span aria-hidden="true">↺</span></button></div>
-<div class="quick-periods" aria-label="Atalhos de período"><span class="quick-label">Período rápido</span><button type="button" class="export-btn" data-period="today" aria-pressed="false">Hoje</button><button type="button" class="export-btn" data-period="week" aria-pressed="false">Esta semana</button><button type="button" class="export-btn" data-period="month" aria-pressed="false">Este mês</button><button type="button" class="export-btn" data-period="all" aria-pressed="true">Todo o histórico</button></div>
-<div class="filter-fields">
-<label class="select-field"><span>Ano</span><select id="fA"></select></label><label class="select-field"><span>Mês</span><select id="fM"></select></label><label class="select-field"><span>Semana</span><select id="fS"></select></label><label class="select-field"><span>Dia</span><select id="fD"></select></label><label class="select-field"><span>Modal de transporte</span><select id="fT"></select></label>
-</div><div class="active-filters" id="activeFilters" aria-label="Filtros aplicados" hidden></div></div>
-
-<div class="context" id="periodContext" aria-live="polite"></div><section data-panel="overview"><div class="g k" id="kpis"></div></section>
-
-<section data-panel="entries" hidden><div class="section-head"><h3>Histórico de lançamentos</h3><div class="line"></div></div><div class="card"><div class="th-row"><h2>Registros do período</h2><label class="search-field">Buscar data ou modal <input id="entrySearch" type="search" placeholder="Ex.: 01/10 ou Motoboy"></label></div><div class="sc"><table id="tUlt"></table></div></div></section>
-<section data-panel="overview">
-<div class="section-head"><h3>Tendência</h3><div class="line"></div></div>
+<div class="bar">
+<label>Ano<select id="fA"></select></label><label>M&ecirc;s<select id="fM"></select></label><label>Semana<select id="fS"></select></label><label>Dia<select id="fD"></select></label><label>Modal<select id="fT"></select></label>
+<button onclick="reset()">Limpar filtros</button></div>
+<div class="sub" style="margin:-8px 0 10px">Indicadores abaixo referem-se &agrave; fase <b>Notas Fiscais</b> (faturamento/expedi&ccedil;&atilde;o) &mdash; a mais consolidada hist&oacute;ricamente.</div>
+<div class="g k" id="kpis"></div>
 <div class="g c2"><div class="card"><h2>Pedidos por dia</h2><div class="mini" id="dm"></div><div class="ch"><canvas id="c1"></canvas></div></div>
-<div class="card"><h2>Pedidos por semana (com média semanal)</h2><div class="ch"><canvas id="c2"></canvas></div></div></div>
-<div class="card"><h2>Pedidos por modal de transporte</h2><div class="ch"><canvas id="c4"></canvas></div></div>
-<details class="tables" style="margin-top:18px"><summary>Analisar desvio em relação à média</summary><div class="card" style="margin-top:12px"><h2>Desvio em relação à média diária</h2><div class="ch"><canvas id="c3"></canvas></div></div></details>
-</section><section data-panel="team" hidden><div class="section-head"><h3>Equipe</h3><div class="line"></div></div>
-<div class="g c2"><div class="card"><h2>Pedidos × colaboradores por mês</h2><div class="ch"><canvas id="c5"></canvas></div></div>
-<div class="card"><h2>Pedidos por colaborador por mês</h2><div class="ch"><canvas id="c6"></canvas></div></div></div>
-<div class="card sc"><div class="th-row"><div><h2>Quadro de colaboradores</h2><p class="field-help">Edite a quantidade de pessoas nos campos abaixo. As alterações são salvas automaticamente.</p></div><span class="status" id="colStatus"></span></div><table id="t4"></table></div>
-
-</section><section data-panel="reports" hidden><div class="section-head"><h3>Comparar períodos</h3><div class="line"></div></div>
-<div class="card"><div class="bar comparison-fields">
-<label>Tipo<select id="cT"><option value="m">Mês</option><option value="s">Semana</option></select></label><label>Período atual<select id="cA"></select></label><label>Período anterior<select id="cB"></select></label></div>
-<div class="th-row" style="margin-top:4px;"><span></span><button class="export-btn" id="exportCmpBtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar CSV</button></div>
-<div class="sc"><table id="tc"></table></div></div>
-
-<details class="tables">
-<summary>Tabelas detalhadas</summary>
-<div class="g c2" style="margin-top:14px;">
-<div class="card sc"><div class="th-row"><h2>Resumo mensal</h2><button class="export-btn" id="exportT1Btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar CSV</button></div><table id="t1"></table></div>
-<div class="card sc"><div class="th-row"><h2>Resumo por modal</h2><button class="export-btn" id="exportT2Btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar CSV</button></div><table id="t2"></table></div>
-</div>
-<div class="card sc tall"><div class="th-row"><h2>Resumo diário</h2><button class="export-btn" id="exportT3Btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar CSV</button></div><table id="t3"></table></div>
-</details></section>
-<div class="footer">Produtividade operacional · Dados compartilhados da Central de Apps</div></div>
-
-<div class="modal-bg" id="dayModalBg">
-  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="dayTitle">
-    <h3 id="dayTitle">Lançar / editar dia</h3><p class="field-help">Selecione a data e informe os pedidos de cada modal.</p>
-    <div class="field-grid full"><label>Data<input type="date" id="dayDate"></label></div>
-    <div class="field-grid" id="dayModalFields"></div>
-    <div class="modal-hint" id="dayTotal" aria-live="polite">Total: 0 pedidos</div><div class="modal-actions">
-      <button class="btn ghost sm" id="dayCancelBtn">Cancelar</button>
-      <button class="btn sm" id="daySaveBtn">Salvar</button>
-    </div>
-  </div>
+<div class="card"><h2>Pedidos por semana (com m&eacute;dia semanal)</h2><div class="ch"><canvas id="c2"></canvas></div></div></div>
+<div class="g c2"><div class="card"><h2>Oscila&ccedil;&atilde;o da produ&ccedil;&atilde;o &middot; verde acima da m&eacute;dia, vermelho abaixo</h2><div class="ch"><canvas id="c3"></canvas></div></div>
+<div class="card"><h2>Pedidos por modal de transporte</h2><div class="ch"><canvas id="c4"></canvas></div></div></div>
+<div class="g c2"><div class="card"><h2>Pedidos &times; colaboradores por m&ecirc;s</h2><div class="ch"><canvas id="c5"></canvas></div></div>
+<div class="card"><h2>Pedidos por colaborador por m&ecirc;s</h2><div class="ch"><canvas id="c6"></canvas></div></div></div>
+<div class="card" style="margin-bottom:12px"><h2>Compara&ccedil;&atilde;o entre per&iacute;odos</h2><div class="bar" style="margin:0 0 10px;border:0;padding:0">
+<label>Tipo<select id="cT"><option value="m">M&ecirc;s</option><option value="s">Semana</option></select></label><label>Per&iacute;odo atual<select id="cA"></select></label><label>Per&iacute;odo anterior<select id="cB"></select></label></div><div class="sc"><table id="tc"></table></div></div>
+<div class="g c2"><div class="card sc"><h2>Resumo mensal (Notas Fiscais)</h2><table id="t1"></table></div>
+<div class="card sc"><h2>Quadro de colaboradores (edit&aacute;vel)</h2><table id="t4"></table></div></div>
+<div class="g c2"><div class="card sc"><h2>Resumo por modal</h2><table id="t2"></table></div>
+<div class="card sc tall"><h2>Resumo di&aacute;rio (Notas Fiscais)</h2><table id="t3"></table></div></div>
+<div class="g c2"><div class="card"><h2 id="cTeamSepTitle">Separa&ccedil;&atilde;o — Colaboradores</h2><div class="ch" style="height:220px"><canvas id="cTeamSep"></canvas><div class="empty" id="cTeamSepEmpty" style="display:none">Sem meses cadastrados ainda.</div></div></div>
+<div class="card"><h2 id="cTeamConfTitle">Confer&ecirc;ncia — Colaboradores</h2><div class="ch" style="height:220px"><canvas id="cTeamConf"></canvas><div class="empty" id="cTeamConfEmpty" style="display:none">Sem meses cadastrados ainda.</div></div></div></div>
+<div class="g c2"><div class="card sc"><h2 id="t9Title">Separa&ccedil;&atilde;o — Colaboradores</h2><table id="t9"></table></div>
+<div class="card sc"><h2 id="t10Title">Confer&ecirc;ncia — Colaboradores</h2><table id="t10"></table></div></div>
+<div class="g c2"><div class="card sc tall"><h2>Resumo di&aacute;rio &mdash; Separa&ccedil;&atilde;o</h2><table id="t7"></table></div>
+<div class="card sc tall"><h2>Resumo di&aacute;rio &mdash; Confer&ecirc;ncia</h2><table id="t8"></table></div></div>
 </div>
 
+<script id="seed-data" type="application/json">
+{"seco": {"nf": {"raw": [["2026-07-01", 297, {"Transportadora": 283, "Motoboy": 13, "Esporádico": 1}], ["2026-07-02", 107, {"Transportadora": 89, "Motoboy": 15, "Esporádico": 3}], ["2026-07-03", 170, {"Transportadora": 158, "Motoboy": 12}], ["2026-07-06", 136, {"Transportadora": 100, "Motoboy": 32, "Retira": 4}], ["2026-07-07", 170, {"Transportadora": 158, "Motoboy": 9, "Retira": 2, "Esporádico": 1}], ["2026-07-08", 187, {"Transportadora": 166, "Motoboy": 15, "Retira": 6}], ["2026-07-13", 68, {"Transportadora": 39, "Retira": 5, "Esporádico": 1, "Aéreo": 23}], ["2026-07-14", 168, {"Transportadora": 135, "Motoboy": 23, "Retira": 5, "Aéreo": 5}], ["2026-07-15", 111, {"Transportadora": 106, "Motoboy": 1, "Retira": 3, "Aéreo": 1}], ["2026-07-16", 208, {"Transportadora": 175, "Motoboy": 30, "Retira": 2, "Aéreo": 1}], ["2026-07-17", 199, {"Transportadora": 178, "Motoboy": 13, "Retira": 2, "Aéreo": 6}], ["2026-07-20", 158, {"Transportadora": 136, "Motoboy": 17, "Retira": 1, "Aéreo": 4}], ["2026-07-21", 73, {"Transportadora": 67, "Motoboy": 2, "Retira": 4}], ["2026-07-22", 241, {"Transportadora": 203, "Motoboy": 28, "Retira": 1, "Aéreo": 9}], ["2026-07-23", 209, {"Transportadora": 180, "Motoboy": 17, "Retira": 1, "Aéreo": 11}], ["2026-07-24", 99, {"Transportadora": 91, "Motoboy": 3, "Retira": 4, "Aéreo": 1}], ["2026-07-27", 10, {"Transportadora": 6, "Retira": 3, "Aéreo": 1}], ["2026-07-29", 168, {"Transportadora": 125, "Motoboy": 34, "Aéreo": 9}], ["2026-07-30", 188, {"Transportadora": 157, "Retira": 3, "Esporádico": 1, "Motoboy": 21, "Aéreo": 6}], ["2026-07-31", 322, {"Transportadora": 300, "Esporádico": 1, "Motoboy": 17, "Aéreo": 4}], ["2026-08-03", 192, {"Transportadora": 172, "Retira": 8, "Motoboy": 7, "Aéreo": 5}], ["2026-08-05", 267, {"Transportadora": 237, "Retira": 3, "Motoboy": 17, "Aéreo": 10}], ["2026-08-06", 146, {"Transportadora": 115, "Retira": 9, "Motoboy": 18, "Aéreo": 4}], ["2026-08-10", 207, {"Transportadora": 185, "Motoboy": 19, "Aéreo": 3}], ["2026-08-11", 60, {"Transportadora": 57, "Retira": 3}], ["2026-08-12", 240, {"Transportadora": 203, "Retira": 5, "Motoboy": 24, "Aéreo": 8}], ["2026-08-13", 150, {"Transportadora": 134, "Retira": 1, "Motoboy": 11, "Aéreo": 4}], ["2026-08-14", 108, {"Transportadora": 104, "Retira": 3, "Aéreo": 1}], ["2026-08-17", 103, {"Transportadora": 84, "Retira": 3, "Motoboy": 11, "Aéreo": 5}], ["2026-08-19", 212, {"Transportadora": 181, "Motoboy": 21, "Aéreo": 10}], ["2026-08-20", 160, {"Transportadora": 133, "Retira": 9, "Motoboy": 17, "Aéreo": 1}], ["2026-08-21", 169, {"Transportadora": 150, "Retira": 3, "Motoboy": 14, "Aéreo": 2}], ["2026-08-24", 178, {"Transportadora": 154, "Retira": 4, "Motoboy": 11, "Aéreo": 9}], ["2026-08-27", 255, {"Transportadora": 219, "Retira": 1, "Motoboy": 26, "Aéreo": 9}], ["2026-08-28", 55, {"Transportadora": 48, "Retira": 7}], ["2026-08-31", 266, {"Transportadora": 222, "Retira": 2, "Motoboy": 33, "Aéreo": 9}], ["2026-09-01", 190, {"Transportadora": 184, "Retira": 6}], ["2026-09-03", 176, {"Transportadora": 152, "Motoboy": 14, "Aéreo": 10}], ["2026-09-04", 161, {"Transportadora": 130, "Motoboy": 24, "Aéreo": 7}], ["2026-09-08", 272, {"Transportadora": 219, "Motoboy": 36, "Aéreo": 8, "Retira": 9}], ["2026-09-09", 264, {"Transportadora": 232, "Motoboy": 15, "Aéreo": 13, "Retira": 4}], ["2026-09-10", 259, {"Transportadora": 253, "Retira": 6}], ["2026-09-11", 36, {"Transportadora": 11, "Retira": 6, "Aéreo": 5, "Não detalhado": 14}], ["2026-09-14", 94, {"Transportadora": 88, "Retira": 2, "Aéreo": 4}], ["2026-09-15", 201, {"Transportadora": 173, "Motoboy": 23, "Retira": 2, "Aéreo": 3}], ["2026-09-16", 185, {"Transportadora": 147, "Retira": 9, "Aéreo": 2, "Motoboy": 27}], ["2026-09-17", 174, {"Transportadora": 154, "Motoboy": 5, "Retira": 13, "Aéreo": 2}], ["2026-09-18", 77, {"Transportadora": 68, "Retira": 4, "Aéreo": 5}], ["2026-09-21", 132, {"Transportadora": 108, "Motoboy": 17, "Retira": 4, "Aéreo": 3}], ["2026-09-22", 87, {"Transportadora": 57, "Motoboy": 14, "Retira": 10, "Aéreo": 6}], ["2026-09-23", 192, {"Transportadora": 160, "Motoboy": 10, "Retira": 12, "Aéreo": 10}], ["2026-09-24", 177, {"Transportadora": 145, "Motoboy": 18, "Retira": 4, "Aéreo": 10}], ["2026-09-25", 165, {"Transportadora": 132, "Motoboy": 21, "Retira": 5, "Aéreo": 7}], ["2026-09-28", 135, {"Motoboy": 3, "Transportadora": 117, "Retira": 10, "Aéreo": 5}], ["2026-09-29", 143, {"Transportadora": 114, "Motoboy": 20, "Retira": 3, "Aéreo": 6}], ["2026-09-30", 271, {"Transportadora": 243, "Motoboy": 16, "Retira": 7, "Aéreo": 5}]], "pedidos": {}}, "sep": {"daily": {}, "pedidos": {}}, "conf": {"daily": {}, "pedidos": {}}, "headcount": {"2026-07": 34, "2026-08": 32, "2026-09": 31}, "forecast": {}}, "gelado": {"nf": {"raw": [], "pedidos": {}}, "sep": {"daily": {}, "pedidos": {}}, "conf": {"daily": {}, "pedidos": {}}, "headcount": {}, "forecast": {}}}
+</script>
 <script>
-// Dados agora vêm do Firebase (node dashboardProdutividade). Nada fica embutido aqui.
-const DB_ROOT = 'dashboardProdutividade';
-function fbRef(path){ return firebase.database().ref(DB_ROOT + (path ? '/' + path : '')); }
-
-const ICO_EDIT = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
-const ICO_X = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-
-let RAW = [];      // [[data, total, {modal:qtd}], ...]
-let COL = {};       // {"2026-07": 34, ...}
-let D = [];
-let dadosCarregados = false;
-
-const MN=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-const MODAIS=["Transportadora","Motoboy","Retira","Aéreo","Esporádico","Não detalhado"];
-function iso(d){const t=new Date(Date.UTC(+d.slice(0,4),+d.slice(5,7)-1,+d.slice(8)));const n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y)/864e5+1)/7)}
-function rebuildD(){ D = RAW.map(([d,t,m])=>({d,y:+d.slice(0,4),mo:+d.slice(5,7),ym:d.slice(0,7),w:iso(d),t,m})); }
-const $=id=>document.getElementById(id),N=v=>Math.round(v).toLocaleString("pt-BR"),F=(v,n=1)=>v.toLocaleString("pt-BR",{minimumFractionDigits:n,maximumFractionDigits:n}),dl=d=>d.slice(8)+"/"+d.slice(5,7);
+// ============================================================================
+// Helpers base (mesmos do arquivo original)
+// ============================================================================
+const $=id=>document.getElementById(id);
+const N=v=>Math.round(v).toLocaleString("pt-BR");
+const F=(v,n=1)=>v.toLocaleString("pt-BR",{minimumFractionDigits:n,maximumFractionDigits:n});
+const dl=d=>d.slice(8)+"/"+d.slice(5,7);
 const uniq=a=>[...new Set(a)].sort((a,b)=>a-b);
-let ch={};
-function opts(el,arr,all,fmt){const prev=el.value;el.innerHTML=(all?`<option value="">${all}</option>`:"")+arr.map(v=>`<option value="${v}">${fmt?fmt(v):v}</option>`).join("");if(arr.map(String).includes(prev))el.value=prev;}
-
-// ---- filtros em cascata: cada select só mostra opções que existem dado o que já foi escolhido antes dele ----
-function rowsUpTo(level){
-  const a=$("fA").value,m=$("fM").value,s=$("fS").value,d=$("fD").value;
-  return D.filter(r=>
-    (level<1 || !a || r.y==a) &&
-    (level<2 || !m || r.mo==m) &&
-    (level<3 || !s || r.w==s) &&
-    (level<4 || !d || r.d==d)
-  );
-}
-function fill(){
-  opts($("fA"),uniq(D.map(r=>r.y)),"Todos");
-  updateFilterOptions();
-}
-function updateFilterOptions(){
-  opts($("fM"),uniq(rowsUpTo(1).map(r=>r.mo)),"Todos",v=>MN[v-1]);
-  opts($("fS"),uniq(rowsUpTo(2).map(r=>r.w)),"Todas",v=>"Semana "+v);
-  opts($("fD"),rowsUpTo(3).map(r=>r.d).sort(),"Todos",dl);
-  const rowsForModal=rowsUpTo(4);
-  opts($("fT"),MODAIS.filter(m=>rowsForModal.some(r=>r.m[m])),"Todos");
-}
-function reset(){["fA","fM","fS","fD","fT"].forEach(i=>$(i).value="");updateFilterOptions();render()}
-function val(r,mod){return mod?(r.m[mod]||0):r.t}
-function filt(){const a=$("fA").value,m=$("fM").value,s=$("fS").value,d=$("fD").value,t=$("fT").value;
-return{t,rows:D.filter(r=>(!a||r.y==a)&&(!m||r.mo==m)&&(!s||r.w==s)&&(!d||r.d==d)).map(r=>({...r,v:val(r,t)})).filter(r=>!t||r.v>0)}}
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-function chartsReady(){ return typeof Chart !== 'undefined'; }
-function draw(id,cfg){
-  const canvas=$(id);
-  if(!chartsReady()){
-    canvas.closest('.ch').innerHTML='<div class="ch-empty">Não consegui carregar a biblioteca de gráficos (Chart.js). Verifique sua conexão e recarregue a página.</div>';
+function opts(el,arr,all,fmt){el.innerHTML=(all?`<option value="">${all}</option>`:"")+arr.map(v=>`<option value="${v}">${fmt?fmt(v):v}</option>`).join("")}
+function iso(d){const t=new Date(Date.UTC(+d.slice(0,4),+d.slice(5,7)-1,+d.slice(8)));const n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y)/864e5+1)/7)}
+const MN=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const MODAIS=["Transportadora","Motoboy","Retira","Aéreo","Esporádico","Importado","Não detalhado"];
+let ch={};
+
+// ============================================================================
+// Normalização de texto / datas (para os uploads)
+// ============================================================================
+function normTxt(s){return String(s??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toUpperCase().replace(/\s+/g," ")}
+function toISO(d){return d.toISOString().slice(0,10)}
+function parseAnyDate(v){
+  if(v instanceof Date && !isNaN(v)) return toISO(v);
+  if(typeof v==="number" && isFinite(v)){const d=new Date(Math.round((v-25569)*86400000));if(!isNaN(d))return toISO(d)}
+  if(typeof v==="string"){
+    const s=v.trim();
+    let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m) return m[0];
+    m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); if(m) return m[3]+"-"+m[1].padStart(2,"0")+"-"+m[2].padStart(2,"0");
+  }
+  return null;
+}
+const PEDIDO_HEADERS=["PEDIDO","NUMERO DO PEDIDO","NUMERO PEDIDO","N PEDIDO","NO PEDIDO","N° PEDIDO","Nº PEDIDO"].map(normTxt);
+function detectPedidoCol(headers){
+  for(const h of headers) if(PEDIDO_HEADERS.includes(normTxt(h))) return h;
+  for(const h of headers) if(normTxt(h).includes("PEDIDO")) return h;
+  return null;
+}
+const AC_HEADERS=["AC"].map(normTxt);
+function detectAcCol(headers){ for(const h of headers) if(AC_HEADERS.includes(normTxt(h))) return h; return null; }
+function classifyAC(v){
+  const n=normTxt(v);
+  if(!n) return null;
+  if(n.includes("NAO REFRIGERADO")) return "seco";
+  if(n.includes("REFRIGERADO")) return "gelado";
+  return null;
+}
+function detectDateCol(headers, rows){
+  for(const h of headers) if(normTxt(h).includes("DATA")) return h;
+  let best=null,bestScore=0;
+  headers.forEach(h=>{
+    let ok=0,n=0;
+    rows.slice(0,40).forEach(r=>{n++; if(parseAnyDate(r[h])) ok++;});
+    if(n && ok/n>0.6 && ok/n>bestScore){bestScore=ok/n; best=h;}
+  });
+  return best;
+}
+const IDUSER_HEADERS=["ID DO USER","ID USER","ID USUARIO","USERID","ID DO USUARIO"].map(normTxt);
+function detectIdUserCol(headers){
+  for(const h of headers) if(IDUSER_HEADERS.includes(normTxt(h))) return h;
+  for(const h of headers) if(normTxt(h).includes("ID") && (normTxt(h).includes("USER")||normTxt(h).includes("USUARIO"))) return h;
+  return null;
+}
+const LOCAL_HEADERS=["LOCAL"].map(normTxt);
+function detectLocalCol(headers){
+  for(const h of headers) if(LOCAL_HEADERS.includes(normTxt(h))) return h; // "LOCAL" exato (evita confundir com "LOCAIS", lista solta na planilha de usuários)
+  for(const h of headers) if(normTxt(h).includes("LOCAL") && normTxt(h)!=="LOCAIS") return h; // fallback mais largo, mas nunca cai na coluna "LOCAIS" (plural)
+  return null;
+}
+const NOME_HEADERS=["NOME USER","NOME USUARIO","NOME"].map(normTxt);
+function detectNomeCol(headers){
+  for(const h of headers) if(NOME_HEADERS.includes(normTxt(h))) return h;
+  for(const h of headers) if(normTxt(h).includes("NOME")) return h;
+  return null;
+}
+// Classifica um usuário (pela base de usuários carregada) em departamento + subequipe.
+// UNILOG/CONECTAR -> SECO (com subequipe); GELADO -> GELADO; qualquer outro valor -> não classificado.
+function classifyUser(idUser){
+  const u=STORE.users && STORE.users[String(idUser)];
+  if(!u) return {dept:null,sub:null,nome:null};
+  const loc=normTxt(u.local);
+  if(loc==="GELADO") return {dept:"gelado",sub:null,nome:u.nome};
+  if(loc==="UNILOG") return {dept:"seco",sub:"unilog",nome:u.nome};
+  if(loc==="CONECTAR") return {dept:"seco",sub:"conectar",nome:u.nome};
+  return {dept:null,sub:null,nome:u.nome};
+}
+
+// ============================================================================
+// STORE: persistência local (localStorage) com seed inicial embutido
+// ============================================================================
+const LS_KEY="prodDashboardV1";
+function loadStore(){
+  let s=null;
+  try{const raw=localStorage.getItem(LS_KEY); if(raw) s=JSON.parse(raw);}catch(e){}
+  if(!s){ try{s=JSON.parse(document.getElementById("seed-data").textContent);}catch(e){} }
+  if(!s) s={seco:emptyDept(),gelado:emptyDept()};
+  return normalizeStore(s);
+}
+function emptyDept(){return {nf:{raw:[],pedidos:{}},sep:{daily:{},pedidos:{},headcount:{}},conf:{daily:{},pedidos:{},headcount:{}},headcount:{},forecast:{}}}
+// Garante que lojas salvas em versões anteriores ganhem os novos campos sem perder nada que já existia,
+// e migra pedidos de "data em texto" para {date, idUser} (necessário para o cruzamento Unilog×Conectar).
+function normalizePedidos(obj){
+  const out={};
+  Object.entries(obj||{}).forEach(([ped,v])=>{ out[ped]=(typeof v==="string")?{date:v,idUser:null}:v; });
+  return out;
+}
+function normalizeDept(d){
+  d=d||{};
+  d.nf=d.nf||{raw:[],pedidos:{}}; d.nf.raw=d.nf.raw||[]; d.nf.pedidos=normalizePedidos(d.nf.pedidos);
+  d.sep=d.sep||{daily:{},pedidos:{}}; d.sep.daily=d.sep.daily||{}; d.sep.pedidos=normalizePedidos(d.sep.pedidos); d.sep.headcount=d.sep.headcount||{};
+  d.conf=d.conf||{daily:{},pedidos:{}}; d.conf.daily=d.conf.daily||{}; d.conf.pedidos=normalizePedidos(d.conf.pedidos); d.conf.headcount=d.conf.headcount||{};
+  d.headcount=d.headcount||{}; d.forecast=d.forecast||{};
+  return d;
+}
+function normalizeStore(s){ s.seco=normalizeDept(s.seco); s.gelado=normalizeDept(s.gelado); s.users=s.users||{}; return s; }
+function saveStore(){try{localStorage.setItem(LS_KEY,JSON.stringify(STORE));}catch(e){}}
+let STORE=loadStore();
+
+let ACTIVE_DEPT="seco";
+let D=[],COL={};
+function useDept(dept){
+  ACTIVE_DEPT=dept;
+  const s=STORE[dept];
+  COL=s.headcount;
+  D=s.nf.raw.map(([d,t,m])=>({d,y:+d.slice(0,4),mo:+d.slice(5,7),ym:d.slice(0,7),w:iso(d),t,m})).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
+}
+
+// ============================================================================
+// Abas de setor (SECO / GELADO)
+// ============================================================================
+function renderDeptTabs(){
+  const labels={seco:"SECO (Conectar / Unilog)",gelado:"GELADO"};
+  $("deptTabs").innerHTML=Object.keys(labels).map(k=>`<div class="tab ${k===ACTIVE_DEPT?"on":""}" data-dept="${k}">${labels[k]}</div>`).join("");
+  [...document.querySelectorAll(".tab")].forEach(t=>t.addEventListener("click",()=>switchDept(t.dataset.dept)));
+}
+function switchDept(dept){
+  useDept(dept);
+  renderDeptTabs();
+  renderUploadZone();
+  fill(); cmpOpts();
+  render();
+  renderFunnel();
+  renderPhaseEvolution();
+  renderStaffing();
+  $("deptLabelStaff").textContent=dept.toUpperCase();
+}
+
+// ============================================================================
+// Upload das 3 fases
+// ============================================================================
+const STAGE_META={
+  sep:{label:"Local 1 &mdash; Controle de Separa&ccedil;&atilde;o Finalizado",short:"separados"},
+  conf:{label:"Local 2 &mdash; Controle de Confer&ecirc;ncia",short:"conferidos"},
+  nf:{label:"Local 3 &mdash; Notas Fiscais",short:"faturados"},
+};
+const NF_HINT="Divide sozinho pela coluna <b>AC</b>: REFRIGERADO &rarr; GELADO, N&Atilde;O REFRIGERADO &rarr; SECO. Pode subir de qualquer aba.";
+const STAGE_HINT="Divide sozinho pelo <b>ID do User</b>, cruzando com a Base de Usu&aacute;rios: UNILOG/CONECTAR &rarr; SECO, GELADO &rarr; GELADO. Pode subir de qualquer aba.";
+function renderUploadZone(){
+  const s=STORE[ACTIVE_DEPT];
+  const nUsers=Object.keys(STORE.users||{}).length;
+  const userCard=`<div class="card" style="background:var(--bg)">
+      <h3>Base de Usu&aacute;rios (ID &rarr; Local)</h3>
+      <div class="pill" style="display:block;margin-bottom:8px;white-space:normal">Usada para cruzar o <b>ID do User</b> dos Locais 1 e 2 e descobrir se ele &eacute; UNILOG, CONECTAR ou GELADO. Suba 1 vez, atualize quando mudar.</div>
+      <input type="file" accept=".xlsx,.xls,.csv" id="upUsers">
+      <div class="upinfo">${nUsers? `${N(nUsers)} usu&aacute;rio(s) cadastrado(s)` : "Nenhum usu&aacute;rio cadastrado ainda."}</div>
+      <button class="ghost sm" id="clearUsers">Limpar base de usu&aacute;rios</button>
+    </div>`;
+  const stageCards=Object.keys(STAGE_META).map(stage=>{
+    const meta=STAGE_META[stage];
+    const info=stageInfo(s,stage);
+    const hint=stage==="nf"?NF_HINT:STAGE_HINT;
+    return `<div class="card" style="background:var(--bg)">
+      <h3>${meta.label}</h3>
+      <div class="pill" style="display:block;margin-bottom:8px;white-space:normal">${hint}</div>
+      <input type="file" accept=".xlsx,.xls,.csv" data-stage="${stage}" class="upInput">
+      <div class="upinfo">${info}</div>
+      <button class="ghost sm" data-clear="${stage}">Limpar dados importados</button>
+    </div>`;
+  }).join("");
+  $("uploadZone").innerHTML=userCard+stageCards;
+  $("upUsers").addEventListener("change",handleUsersUpload);
+  $("clearUsers").addEventListener("click",()=>{
+    if(!confirm("Limpar a base de usuários (ID → Local)? Isso não apaga pedidos já importados, mas eles deixam de ser classificados até você subir a base de novo.")) return;
+    STORE.users={}; saveStore(); renderUploadZone(); render(); renderFunnel(); renderPhaseEvolution(); renderStaffing();
+  });
+  [...document.querySelectorAll(".upInput")].forEach(inp=>inp.addEventListener("change",e=>handleUpload(e,inp.dataset.stage)));
+  [...document.querySelectorAll("[data-clear]")].forEach(b=>b.addEventListener("click",()=>clearStage(b.dataset.clear)));
+}
+function stageInfo(s,stage){
+  if(stage==="nf"){
+    const n=s.nf.raw.reduce((a,r)=>a+r[1],0);
+    const nPed=Object.keys(s.nf.pedidos).length;
+    return n? `${N(n)} pedido(s) na base (${s.nf.raw.length} dia(s))${nPed?` &middot; ${N(nPed)} com n&uacute;mero de pedido rastre&aacute;vel`:""}` : "Nenhum dado ainda.";
+  }
+  const st=s[stage];
+  const nPed=Object.keys(st.pedidos).length;
+  const dias=Object.keys(st.daily).length;
+  return nPed? `${N(nPed)} pedido(s) importado(s) em ${dias} dia(s)` : "Nenhum dado importado ainda.";
+}
+function clearStage(stage){
+  if(!confirm("Limpar todos os dados importados desta fase para o setor atual?")) return;
+  const s=STORE[ACTIVE_DEPT];
+  if(stage==="nf"){
+    // remove somente entradas cujo modal é "Importado" (preserva a base histórica original)
+    s.nf.raw=s.nf.raw.filter(r=>!(r[2] && Object.keys(r[2]).length===1 && r[2]["Importado"]));
+    s.nf.pedidos={};
+  } else { s[stage]={daily:{},pedidos:{},headcount:s[stage].headcount||{}}; }
+  saveStore(); useDept(ACTIVE_DEPT); fill(); render(); renderUploadZone(); renderFunnel(); renderPhaseEvolution(); renderStaffing();
+}
+function handleUsersUpload(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const wb=XLSX.read(ev.target.result,{type:"array",cellDates:true});
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:null});
+      if(!rows.length){alert("Planilha vazia.");return;}
+      const headers=Object.keys(rows[0]);
+      const idCol=detectIdUserCol(headers);
+      const localCol=detectLocalCol(headers);
+      const nomeCol=detectNomeCol(headers);
+      if(!idCol||!localCol){alert("N\u00e3o encontrei as colunas \"ID do User\" e/ou \"LOCAL\" nesta planilha.");return;}
+      let count=0;
+      STORE.users=STORE.users||{};
+      rows.forEach(r=>{
+        const id=String(r[idCol]??"").trim(); if(!id || normTxt(id).startsWith("TOTAL")) return;
+        const local=String(r[localCol]??"").trim(); if(!local) return;
+        STORE.users[id]={nome:nomeCol?String(r[nomeCol]??"").trim():"",local};
+        count++;
+      });
+      saveStore();
+      renderUploadZone(); render(); renderFunnel(); renderPhaseEvolution(); renderStaffing();
+      alert(`Base de usu\u00e1rios atualizada: ${count} usu\u00e1rio(s) cadastrados/atualizados.`);
+    }catch(err){ alert("Erro ao ler o arquivo: "+err.message); }
+  };
+  reader.readAsArrayBuffer(file);
+  e.target.value="";
+}
+function handleUpload(e,stage){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const wb=XLSX.read(ev.target.result,{type:"array",cellDates:true});
+      const sheet=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(sheet,{defval:null});
+      if(!rows.length){alert("Planilha vazia.");return;}
+      const headers=Object.keys(rows[0]);
+      const pedidoCol=detectPedidoCol(headers);
+      const dateCol=detectDateCol(headers,rows);
+      if(!pedidoCol){alert("N\u00e3o encontrei uma coluna PEDIDO ou N\u00daMERO DO PEDIDO nesta planilha.");return;}
+      const today=toISO(new Date());
+
+      if(stage==="nf"){
+        // Notas Fiscais não pertence a uma aba só: a coluna AC diz se o pedido é
+        // REFRIGERADO (GELADO) ou NÃO REFRIGERADO (SECO), então dividimos aqui.
+        const acCol=detectAcCol(headers);
+        const mapSeco={}, mapGelado={}; let semClass=0;
+        rows.forEach(r=>{
+          const ped=String(r[pedidoCol]??"").trim(); if(!ped) return;
+          const d=(dateCol? parseAnyDate(r[dateCol]) : null) || today;
+          const dept = acCol ? classifyAC(r[acCol]) : null;
+          if(dept==="gelado"){ if(!(ped in mapGelado)) mapGelado[ped]=d; }
+          else { if(dept!=="seco") semClass++; if(!(ped in mapSeco)) mapSeco[ped]=d; }
+        });
+        const rSeco=mergeStageData("seco","nf",mapSeco);
+        const rGelado=mergeStageData("gelado","nf",mapGelado);
+        useDept(ACTIVE_DEPT); renderDeptTabs(); renderUploadZone(); fill(); render(); renderFunnel(); renderPhaseEvolution(); renderStaffing();
+        let msg=`Notas Fiscais lidas: ${rows.length} linha(s).`;
+        msg+=acCol? `\nDivididas pela coluna "${acCol}":` : `\n\u26a0 Coluna "AC" n\u00e3o encontrada — tudo foi direcionado para SECO.`;
+        msg+=`\n\u2022 GELADO (Refrigerado): ${rGelado.added} pedido(s) novo(s)${rGelado.skipped?`, ${rGelado.skipped} j\u00e1 cadastrado(s)`:""}`;
+        msg+=`\n\u2022 SECO (N\u00e3o Refrigerado): ${rSeco.added} pedido(s) novo(s)${rSeco.skipped?`, ${rSeco.skipped} j\u00e1 cadastrado(s)`:""}`;
+        if(acCol && semClass) msg+=`\n\u26a0 ${semClass} pedido(s) com valor de AC n\u00e3o reconhecido — direcionados para SECO por padr\u00e3o.`;
+        alert(msg);
+        return;
+      }
+
+      // Separação / Conferência: aglutina por PEDIDO (um pedido pode ter várias linhas/itens,
+      // às vezes até de usuários diferentes) e cruza o ID do User com a Base de Usuários
+      // para descobrir sozinho se o pedido é SECO (Unilog/Conectar) ou GELADO.
+      const idCol=detectIdUserCol(headers);
+      const nUsers=Object.keys(STORE.users||{}).length;
+      if(!idCol){
+        // Coluna de usuário realmente não existe nesta planilha: aglutina normalmente, tudo na aba ativa.
+        const pedidosMap={};
+        rows.forEach(r=>{
+          const ped=String(r[pedidoCol]??"").trim(); if(!ped) return;
+          if(ped in pedidosMap) return;
+          const d=(dateCol? parseAnyDate(r[dateCol]) : null) || today;
+          pedidosMap[ped]={date:d,idUser:null};
+        });
+        const totalNoArquivo=Object.keys(pedidosMap).length;
+        const {added,skipped}=mergeStageData(ACTIVE_DEPT,stage,pedidosMap);
+        renderUploadZone(); fill(); render(); renderFunnel(); renderPhaseEvolution(); renderStaffing();
+        let msg=`Arquivo lido: ${totalNoArquivo} pedido(s) único(s) (de ${rows.length} linha(s)).\nNovos adicionados: ${added}.`;
+        if(skipped) msg+=` Já cadastrados: ${skipped}.`;
+        msg+=`\n\u26a0 N\u00e3o encontrei a coluna "ID do User" — tudo foi importado para a aba ${ACTIVE_DEPT.toUpperCase()} sem dividir por setor.`;
+        alert(msg);
+        return;
+      }
+      // A coluna de usuário existe: sempre guardamos o ID do User, mesmo que a Base de
+      // Usuários ainda não tenha sido carregada. Assim, assim que a base for subida (antes
+      // ou depois deste arquivo), o cruzamento Unilog × Conectar passa a funcionar sozinho,
+      // sem precisar reimportar o arquivo grande de novo.
+      const mapSeco={}, mapGelado={}; let semUser=0, semLocal=0;
+      rows.forEach(r=>{
+        const ped=String(r[pedidoCol]??"").trim(); if(!ped) return;
+        if(ped in mapSeco || ped in mapGelado) return; // já aglutinado por outra linha deste mesmo pedido
+        const d=(dateCol? parseAnyDate(r[dateCol]) : null) || today;
+        const idUser=String(r[idCol]??"").trim();
+        if(!idUser){ semUser++; mapSeco[ped]={date:d,idUser:null}; return; }
+        const cl=classifyUser(idUser);
+        if(cl.dept==="gelado") mapGelado[ped]={date:d,idUser};
+        else if(cl.dept==="seco") mapSeco[ped]={date:d,idUser};
+        else { semLocal++; mapSeco[ped]={date:d,idUser}; }
+      });
+      const rSeco=mergeStageData("seco",stage,mapSeco);
+      const rGelado=mergeStageData("gelado",stage,mapGelado);
+      useDept(ACTIVE_DEPT); renderDeptTabs(); renderUploadZone(); fill(); render(); renderFunnel(); renderPhaseEvolution(); renderStaffing();
+      let msg=`${STAGE_META[stage].label.replace(/&[a-z]+;/g," ")} lido: ${rows.length} linha(s).`;
+      if(!nUsers){
+        msg+=`\n\u26a0 A Base de Usu\u00e1rios ainda n\u00e3o foi carregada — por enquanto, todos os pedidos foram colocados em SECO. Suba a Base de Usu\u00e1rios e os colaboradores Unilog/Conectar v\u00e3o aparecer sozinhos, sem precisar reimportar este arquivo.`;
+      } else {
+        msg+=`\nDividido pelo usu\u00e1rio (cruzando com a Base de Usu\u00e1rios):`;
+        msg+=`\n\u2022 GELADO: ${rGelado.added} pedido(s) novo(s)${rGelado.skipped?`, ${rGelado.skipped} j\u00e1 cadastrado(s)`:""}`;
+        msg+=`\n\u2022 SECO (Unilog/Conectar): ${rSeco.added} pedido(s) novo(s)${rSeco.skipped?`, ${rSeco.skipped} j\u00e1 cadastrado(s)`:""}`;
+        const totalBackfill=(rSeco.backfilled||0)+(rGelado.backfilled||0);
+        if(totalBackfill) msg+=`\n\u2705 ${totalBackfill} pedido(s) que j\u00e1 estavam importados sem ID do User identificado foram corrigidos agora.`;
+        if(semUser) msg+=`\n\u26a0 ${semUser} pedido(s) sem ID do User preenchido — direcionados para SECO por padr\u00e3o.`;
+        if(semLocal) msg+=`\n\u26a0 ${semLocal} pedido(s) com usu\u00e1rio n\u00e3o encontrado na Base de Usu\u00e1rios — direcionados para SECO por padr\u00e3o.`;
+      }
+      alert(msg);
+    }catch(err){ alert("Erro ao ler o arquivo: "+err.message); }
+  };
+  reader.readAsArrayBuffer(file);
+  e.target.value="";
+}
+function mergeStageData(dept,stage,pedidosMap){
+  const s=STORE[dept];
+  const target = stage==="nf" ? s.nf.pedidos : s[stage].pedidos;
+  let added=0, skipped=0, backfilled=0;
+  const newByDate={};
+  Object.entries(pedidosMap).forEach(([ped,val])=>{
+    const entry = (typeof val==="string") ? {date:val,idUser:null} : val;
+    if(ped in target){
+      // Já importado antes nesta fase: não conta de novo no total, mas se antes não
+      // sabíamos o ID do User e agora sabemos, completamos — sem duplicar o dia.
+      if(!target[ped].idUser && entry.idUser){ target[ped].idUser=entry.idUser; backfilled++; }
+      skipped++; return;
+    }
+    target[ped]=entry; added++;
+    newByDate[entry.date]=(newByDate[entry.date]||0)+1;
+  });
+  if(stage==="nf"){
+    Object.keys(newByDate).forEach(d=>{
+      const idx=s.nf.raw.findIndex(r=>r[0]===d);
+      if(idx>=0){ s.nf.raw[idx][1]+=newByDate[d]; s.nf.raw[idx][2]=s.nf.raw[idx][2]||{}; s.nf.raw[idx][2]["Importado"]=(s.nf.raw[idx][2]["Importado"]||0)+newByDate[d]; }
+      else { s.nf.raw.push([d,newByDate[d],{"Importado":newByDate[d]}]); }
+    });
+  } else {
+    Object.keys(newByDate).forEach(d=>{ s[stage].daily[d]=(s[stage].daily[d]||0)+newByDate[d]; });
+  }
+  saveStore(); if(dept===ACTIVE_DEPT) useDept(dept);
+  return {added,skipped,backfilled};
+}
+
+// ============================================================================
+// Funil operacional (3 fases) + alertas de backlog
+// ============================================================================
+function stageDailyArray(st){
+  return Object.keys(st.daily).sort().map(d=>({d,t:st.daily[d],y:+d.slice(0,4),mo:+d.slice(5,7),ym:d.slice(0,7),w:iso(d)}));
+}
+function renderFunnel(){
+  const s=STORE[ACTIVE_DEPT];
+  const totalNF=s.nf.raw.reduce((a,r)=>a+r[1],0);
+  const totalSep=Object.keys(s.sep.pedidos).length || Object.values(s.sep.daily).reduce((a,b)=>a+b,0);
+  const totalConf=Object.keys(s.conf.pedidos).length || Object.values(s.conf.daily).reduce((a,b)=>a+b,0);
+  const pedSep=Object.keys(s.sep.pedidos), pedConf=Object.keys(s.conf.pedidos), pedNF=Object.keys(s.nf.pedidos);
+  const backSC=pedSep.filter(p=>!(p in s.conf.pedidos)).length;
+  const backCF=pedConf.filter(p=>!(p in s.nf.pedidos)).length;
+
+  const cards=[
+    ["Pedidos Separados",totalSep,"Controle de Separação Finalizado"],
+    ["Pedidos Conferidos",totalConf,"Controle de Conferência"],
+    ["Pedidos Faturados (NF)",totalNF,"Notas Fiscais emitidas"],
+  ];
+  $("funnelKpis").innerHTML=cards.map(c=>`<div class="card kp"><div class="l">${c[0]}</div><div class="v">${N(c[1])}</div><div class="s">${c[2]}</div></div>`).join("");
+
+  const alerts=[];
+  if(pedSep.length){
+    if(backSC>0) alerts.push({cls:"bad",title:`${N(backSC)} pedido(s) separados aguardando confer\u00eancia`,txt:"Esses pedidos t\u00eam registro de separa\u00e7\u00e3o mas ainda n\u00e3o aparecem na Confer\u00eancia."});
+    else alerts.push({cls:"ok",title:"Nenhum backlog entre Separa\u00e7\u00e3o e Confer\u00eancia",txt:"Todos os pedidos separados j\u00e1 constam como conferidos."});
+  }
+  if(pedConf.length){
+    if(backCF>0) alerts.push({cls:"bad",title:`${N(backCF)} pedido(s) conferidos aguardando faturamento`,txt:"Esses pedidos t\u00eam registro de confer\u00eancia mas ainda n\u00e3o aparecem nas Notas Fiscais importadas com n\u00famero de pedido."});
+    else alerts.push({cls:"ok",title:"Nenhum backlog entre Confer\u00eancia e Faturamento",txt:"Todos os pedidos conferidos j\u00e1 constam como faturados."});
+  }
+  $("funnelAlerts").innerHTML=alerts.map(a=>`<div class="alert ${a.cls}"><b>${a.title}</b>${a.txt}</div>`).join("");
+}
+
+// ============================================================================
+// Gráfico gerencial: evolução semanal das 3 fases
+// ============================================================================
+function renderPhaseEvolution(){
+  const s=STORE[ACTIVE_DEPT];
+  function byWeek(arr){ const o={}; arr.forEach(r=>{ const k=r.y+"-"+String(r.w).padStart(2,"0"); o[k]=(o[k]||0)+r.t; }); return o; }
+  const wSep=byWeek(stageDailyArray(s.sep));
+  const wConf=byWeek(stageDailyArray(s.conf));
+  const wNf=byWeek(D);
+  const allWeeks=uniq0(Object.keys(wSep).concat(Object.keys(wConf)).concat(Object.keys(wNf)));
+  if(!allWeeks.length){
+    if(ch.cPhase){ch.cPhase.destroy();delete ch.cPhase;}
+    $("cPhase").style.display="none"; $("cPhaseEmpty").style.display="block";
     return;
   }
-  if(ch[id])ch[id].destroy();const tx=css("--mu"),gr=css("--gr");cfg.options=Object.assign({responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{labels:{color:tx,boxWidth:12}}},scales:{x:{ticks:{color:tx},grid:{color:gr}},y:{ticks:{color:tx},grid:{color:gr},beginAtZero:true}}},cfg.options||{});ch[id]=new Chart(canvas,cfg)}
+  $("cPhase").style.display=""; $("cPhaseEmpty").style.display="none";
+  const labels=allWeeks.map(k=>"Sem "+(+k.slice(5))+"/"+k.slice(0,4));
+  draw("cPhase",{type:"line",data:{labels,datasets:[
+    {label:"Separação",data:allWeeks.map(k=>wSep[k]||0),borderColor:css("--pr"),backgroundColor:css("--pr")+"22",tension:.25},
+    {label:"Conferência",data:allWeeks.map(k=>wConf[k]||0),borderColor:css("--wr"),backgroundColor:css("--wr")+"22",tension:.25},
+    {label:"Faturamento (NF)",data:allWeeks.map(k=>wNf[k]||0),borderColor:css("--ok"),backgroundColor:css("--ok")+"22",tension:.25},
+  ]}});
+}
+
+// ============================================================================
+// Filtros e render principal (fase Notas Fiscais) — igual à lógica original
+// ============================================================================
+function fill(){opts($("fA"),uniq(D.map(r=>r.y)),"Todos");opts($("fM"),uniq(D.map(r=>r.mo)),"Todos",v=>MN[v-1]);opts($("fS"),uniq(D.map(r=>r.w)),"Todas",v=>"Semana "+v);opts($("fD"),D.map(r=>r.d),"Todos",dl);opts($("fT"),MODAIS.filter(m=>D.some(r=>r.m&&r.m[m])),"Todos")}
+function reset(){["fA","fM","fS","fD","fT"].forEach(i=>$(i).value="");render()}
+function val(r,mod){return mod?((r.m&&r.m[mod])||0):r.t}
+function filt(){const a=$("fA").value,m=$("fM").value,s=$("fS").value,d=$("fD").value,t=$("fT").value;
+return{t,rows:D.filter(r=>(!a||r.y==a)&&(!m||r.mo==m)&&(!s||r.w==s)&&(!d||r.d==d)).map(r=>({...r,v:val(r,t)})).filter(r=>!t||r.v>0)}}
+function draw(id,cfg){if(!window.Chart) return; if(ch[id])ch[id].destroy();const tx=css("--mu"),gr=css("--gr");cfg.options=Object.assign({responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{labels:{color:tx,boxWidth:12}}},scales:{x:{ticks:{color:tx},grid:{color:gr}},y:{ticks:{color:tx},grid:{color:gr},beginAtZero:true}}},cfg.options||{});ch[id]=new Chart($(id),cfg)}
 function colOf(ym){return COL[ym]||0}
 function monthly(rows){const o={};rows.forEach(r=>{o[r.ym]=(o[r.ym]||0)+r.v});return o}
 
-// guarda os últimos dados renderizados pra exportação CSV
-let LAST={mr:[],md:{},rows:[],tot:0,cmpRows:null};
-
-function downloadCSV(filename, rows){
-  const csv = rows.map(r=>r.map(v=>{
-    const s = (v==null?'':String(v)).replace(/"/g,'""');
-    return /[;"\n]/.test(s) ? `"${s}"` : s;
-  }).join(';')).join('\r\n');
-  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8;'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
-}
-
-function mostrarCarregando(msg){
-  $("kpis").innerHTML = `<div class="card empty-state" style="grid-column:1/-1;">${msg}</div>`;
-}
-
 function render(){
-  syncSelectionUI();
-  if(!dadosCarregados){ return; }
   if(!D.length){
-    mostrarCarregando('Nenhum dado encontrado ainda. Importe uma planilha ou lance um dia pelo botão "Adicionar dados".');
-    ['dm','c1','c2','c3','c4','c5','c6','t1','t2','t3','t4','tc'].forEach(id=>{ const el=$(id); if(el) el.innerHTML=''; });
+    $("kpis").innerHTML=`<div class="empty" style="grid-column:1/-1">Nenhum dado de Notas Fiscais para o setor <b>${ACTIVE_DEPT.toUpperCase()}</b> ainda. Use o upload acima (Local 3) para come&ccedil;ar.</div>`;
+    ["c1","c2","c3","c4","c5","c6"].forEach(id=>{if(ch[id]){ch[id].destroy();delete ch[id];}});
+    $("dm").innerHTML=""; $("t1").innerHTML=""; $("t2").innerHTML=""; $("t3").innerHTML="";
+    $("t4").innerHTML=headcountTable([]);
+    cmp();
+    renderStageSummaryTables();
+  renderStageHeadcount();
     return;
   }
   const {t,rows}=filt();const tot=rows.reduce((s,r)=>s+r.v,0),n=rows.length;
@@ -290,361 +538,213 @@ function render(){
   const mo=monthly(rows),yms=Object.keys(mo).sort();const avgCol=yms.length?yms.reduce((s,k)=>s+colOf(k),0)/yms.length:0;
   const last=rows[rows.length-1],avgD=n?tot/n:0,avgW=W.length?tot/W.length:0;
   const dayV=last?last.v:0,weekV=last?wk[last.y+"-"+last.w].v:0,monV=last?mo[last.ym]:0;
-  const latestMonth=yms[yms.length-1], previousMonth=latestMonth ? new Date(+latestMonth.slice(0,4),+latestMonth.slice(5)-2,1) : null;
-  const previousKey=previousMonth ? previousMonth.getFullYear()+'-'+String(previousMonth.getMonth()+1).padStart(2,'0') : '';
-  const comparable=latestMonth && yms.length===1 && !$("fS").value && !$("fD").value;
-  const cutoff=latestMonth===todayISO().slice(0,7)?+todayISO().slice(8):31;
-  const priorRows=D.filter(r=>r.ym===previousKey && +r.d.slice(8)<=cutoff);
-  const priorTotal=priorRows.reduce((sum,r)=>sum+val(r,t),0);
-  const variation=comparable && priorTotal ? (tot/priorTotal-1)*100 : null;
-  const staffKnown=yms.length>0 && yms.every(ym=>colOf(ym)>0);
-  const productivity=staffKnown?yms.reduce((sum,ym)=>sum+mo[ym]/colOf(ym),0):null;
-  const k=[["Pedidos no período",N(tot),t||"Todos os modais"],["Média diária",F(avgD),n+" dias com registro"],["Pedidos por colaborador",productivity===null?"—":F(productivity),staffKnown?"Soma das razões mensais no período":"Informe a equipe de todos os meses"],["Variação mensal",variation===null?"—":(variation>=0?'+':'')+F(variation)+"%",comparable?(cutoff<31?"Mesmo recorte de dias do mês anterior":"Versus mês anterior"):"Selecione um mês sem semana ou dia"]];
-  $("periodContext").textContent=rows.length ? 'Período: '+rows[0].d.split('-').reverse().join('/')+' a '+last.d.split('-').reverse().join('/')+' · '+n+' dias com registro'+(t?' · '+t:'') : 'Nenhum registro para os filtros selecionados';
+  const k=[["Pedidos no mês",N(monV),last?MN[last.mo-1]:""],["Pedidos no dia",N(dayV),last?dl(last.d):""],["Pedidos na semana",N(weekV),last?"Semana "+last.w:""],["Média diária",F(avgD),n+" dias com produção"],["Média semanal",F(avgW),W.length+" semanas"],["Colaboradores",avgCol?F(avgCol,yms.length>1?1:0):"—",yms.length>1?"média dos meses":"no mês"],["Pedidos por colaborador",avgCol?F(tot/avgCol):"—","no período filtrado"],["Total no período",N(tot),t||"todos os modais"]];
   $("kpis").innerHTML=k.map(x=>`<div class="card kp"><div class="l">${x[0]}</div><div class="v">${x[1]}</div><div class="s">${x[2]}</div></div>`).join("");
-  const hojeRec = D.find(r=>r.d===todayISO());
-  if(hojeRec){
-    $("heroHoje").textContent = N(val(hojeRec,t));
-    const delta = avgD ? (val(hojeRec,t)/avgD-1)*100 : null;
-    $("heroDelta").innerHTML = delta==null ? '' : `<span class="${delta>=0?'up':'dn'}">${delta>=0?'▲':'▼'} ${F(Math.abs(delta),0)}% vs média do período selecionado</span>`;
-  } else {
-    $("heroHoje").textContent = '—';
-    $("heroDelta").innerHTML = '<span style="color:var(--mu);font-weight:400;">ainda sem lançamento hoje</span>';
-  }
   const mx=n?rows.reduce((a,b)=>b.v>a.v?b:a):null,mn=n?rows.reduce((a,b)=>b.v<a.v?b:a):null;
   $("dm").innerHTML=n?`<span>Maior: <b>${N(mx.v)}</b> (${dl(mx.d)})</span><span>Menor: <b>${N(mn.v)}</b> (${dl(mn.d)})</span><span>Média: <b>${F(avgD)}</b></span><span>Total: <b>${N(tot)}</b></span>`:"";
   const lb=rows.map(r=>dl(r.d)),pr=css("--pr"),ok=css("--ok"),ng=css("--ng"),wr=css("--wr");
-  draw("c1",{type:"line",data:{labels:lb,datasets:[{label:"Pedidos",data:rows.map(r=>r.v),borderColor:pr,backgroundColor:pr+"22",fill:true,tension:.25,pointRadius:rows.map(r=>r===mx||r===mn?6:3),pointBackgroundColor:rows.map(r=>r===mx?ok:r===mn?ng:pr)},{label:"Média diária",data:rows.map(()=>avgD),borderColor:wr,borderDash:[6,4],pointRadius:0}]}});
+  draw("c1",{type:"line",data:{labels:lb,datasets:[{label:"Pedidos",data:rows.map(r=>r.v),borderColor:pr,backgroundColor:pr+"22",fill:true,tension:.25,pointRadius:rows.map(r=>r===mx||r===mn?6:3),pointBackgroundColor:rows.map(r=>r===mx?ok:r===mn?ng:pr)}]}});
   draw("c2",{data:{labels:W.map(x=>"S"+x.w),datasets:[{type:"bar",label:"Pedidos",data:W.map(x=>x.v),backgroundColor:pr},{type:"line",label:"Média semanal",data:W.map(()=>avgW),borderColor:wr,borderDash:[6,4],pointRadius:0}]}});
-  draw("c3",{type:"line",data:{labels:lb,datasets:[{label:"Pedidos",data:rows.map(r=>r.v),borderColor:css("--mu"),pointRadius:5,pointBackgroundColor:rows.map(r=>r.v>=avgD?ok:ng),segment:{borderColor:c=>c.p1.parsed.y>=avgD?ok:ng}},{label:"Média",data:rows.map(()=>avgD),borderColor:wr,borderDash:[6,4],pointRadius:0}]}});
-  const md={};rows.forEach(r=>MODAIS.forEach(m=>{if(r.m[m]&&(!t||t==m))md[m]=(md[m]||0)+r.m[m]}));const ML=Object.keys(md);
+  draw("c3",{type:"line",data:{labels:lb,datasets:[{label:"Pedidos",data:rows.map(r=>r.v),borderColor:css("--mu"),pointRadius:5,pointBackgroundColor:rows.map(r=>r.v>=avgD?ok:ng),segment:{borderColor:c=>c.p1.parsed.y>=c.p0.parsed.y?ok:ng}},{label:"Média",data:rows.map(()=>avgD),borderColor:wr,borderDash:[6,4],pointRadius:0}]}});
+  const md={};rows.forEach(r=>MODAIS.forEach(m=>{if(r.m&&r.m[m]&&(!t||t==m))md[m]=(md[m]||0)+r.m[m]}));const ML=Object.keys(md);
   draw("c4",{type:"bar",data:{labels:ML,datasets:[{label:"Pedidos",data:ML.map(m=>md[m]),backgroundColor:pr}]},options:{indexAxis:"y",scales:{x:{beginAtZero:true,ticks:{color:css("--mu")},grid:{color:css("--gr")}},y:{ticks:{color:css("--mu")},grid:{display:false}}}}});
-  const a=$("fA").value,yr=a?+a:uniq(D.map(r=>r.y)).pop();const allM=monthly(rows);
+  const a=$("fA").value,yr=a?+a:uniq(D.map(r=>r.y)).pop();const allM=monthly(D.filter(r=>r.y==yr).map(r=>({...r,v:val(r,t)})));
   const mr=MN.map((m,i)=>{const ym=yr+"-"+String(i+1).padStart(2,"0"),p=allM[ym]||0,c=colOf(ym);return{m,ym,p,c,pc:c&&p?p/c:0}});
-  const act=mr.filter(x=>Object.hasOwn(allM,x.ym));
+  const act=mr.filter(x=>x.p);
   draw("c5",{data:{labels:act.map(x=>x.m),datasets:[{type:"bar",label:"Pedidos",data:act.map(x=>x.p),backgroundColor:pr,yAxisID:"y"},{type:"line",label:"Colaboradores",data:act.map(x=>x.c),borderColor:wr,yAxisID:"y1"}]},options:{scales:{x:{ticks:{color:css("--mu")}},y:{beginAtZero:true,ticks:{color:css("--mu")}},y1:{position:"right",beginAtZero:true,grid:{display:false},ticks:{color:css("--mu")}}}}});
   draw("c6",{type:"line",data:{labels:act.map(x=>x.m),datasets:[{label:"Pedidos/colaborador",data:act.map(x=>+x.pc.toFixed(1)),borderColor:ok,backgroundColor:ok+"22",fill:true,tension:.2}]}});
-  $("t1").innerHTML="<tr><th>Mês</th><th>Pedidos</th><th>Colaboradores</th><th>Pedidos/colab.</th></tr>"+mr.filter(x=>Object.hasOwn(allM,x.ym)).map(x=>`<tr><td>${x.m}</td><td>${x.p?N(x.p):"—"}</td><td>${x.c||"—"}</td><td>${x.pc?F(x.pc):"—"}</td></tr>`).join("");
-  $("t4").innerHTML="<tr><th>Mês</th><th>Colaboradores</th></tr>"+mr.filter(x=>Object.hasOwn(allM,x.ym)).map(x=>`<tr><td>${x.m}</td><td><input class="ci" type="number" min="0" value="${x.c||""}" onchange="updateColaboradores('${x.ym}', this.value)"></td></tr>`).join("");
+  $("t1").innerHTML="<tr><th>Mês</th><th>Pedidos</th><th>Colaboradores</th><th>Pedidos/colab.</th></tr>"+mr.map(x=>`<tr><td>${x.m}</td><td>${x.p?N(x.p):"—"}</td><td>${x.c||"—"}</td><td>${x.pc?F(x.pc):"—"}</td></tr>`).join("");
+  $("t4").innerHTML=headcountTable(mr);
   $("t2").innerHTML="<tr><th>Modal</th><th>Pedidos</th><th>% do total</th></tr>"+ML.map(m=>`<tr><td>${m}</td><td>${N(md[m])}</td><td>${F(md[m]/tot*100)}%</td></tr>`).join("")+`<tr><th>Total</th><th>${N(tot)}</th><th>100%</th></tr>`;
-  $("t3").innerHTML="<tr><th>Data</th><th>Sem.</th><th>Pedidos</th><th>vs média</th><th></th></tr>"+rows.map(r=>`<tr class="${r===mx?"mx":r===mn?"mn":""}"><td>${dl(r.d)}</td><td>${r.w}</td><td>${N(r.v)}</td><td class="${r.v>=avgD?"up":"dn"}">${r.v>=avgD?"▲":"▼"} ${F(Math.abs(r.v/avgD-1)*100,0)}%</td><td><button class="export-btn" style="color:var(--ng);border-color:var(--ng);" onclick="deleteDia('${r.d}')" title="Apagar este dia">${ICO_X}</button></td></tr>`).join("");
-  LAST.mr=mr; LAST.md=md; LAST.rows=rows; LAST.tot=tot;
-  renderUltimos();
+  $("t3").innerHTML="<tr><th>Data</th><th>Sem.</th><th>Pedidos</th><th>vs média</th></tr>"+rows.map(r=>`<tr class="${r===mx?"mx":r===mn?"mn":""}"><td>${dl(r.d)}</td><td>${r.w}</td><td>${N(r.v)}</td><td class="${r.v>=avgD?"up":"dn"}">${r.v>=avgD?"▲":"▼"} ${F(Math.abs(r.v/avgD-1)*100,0)}%</td></tr>`).join("");
   cmp();
+  renderStageSummaryTables();
+  renderStageHeadcount();
 }
-function renderUltimos(){
-  const query=($("entrySearch").value||'').toLocaleLowerCase('pt-BR');
-  const last7 = filt().rows.slice().sort((a,b)=> a.d < b.d ? 1 : -1).filter(r=>(r.d+' '+r.d.split('-').reverse().join('/')+' '+Object.keys(r.m).join(' ')).toLocaleLowerCase('pt-BR').includes(query));
-  if(!last7.length){ $("tUlt").innerHTML = '<tr><td style="color:var(--mu);">Nenhum registro encontrado. Ajuste os filtros ou adicione dados.</td></tr>'; return; }
-  $("tUlt").innerHTML = "<tr><th>Data</th><th>Pedidos</th><th>Modais</th><th></th></tr>" + last7.map(r=>{
-    const resumo = Object.keys(r.m).map(m=>m+': '+r.m[m]).join(', ');
-    return `<tr>
-      <td>${dl(r.d)}</td>
-      <td>${N(r.t)}</td>
-      <td style="text-align:left;color:var(--mu);font-weight:400;">${resumo}</td>
-      <td style="display:flex;gap:6px;justify-content:flex-end;">
-        <button class="export-btn" onclick="openDayModal('${r.d}')">${ICO_EDIT} Editar</button>
-        <button class="export-btn" style="color:var(--ng);border-color:var(--ng);" onclick="deleteDia('${r.d}')">${ICO_X}</button>
-      </td>
-    </tr>`;
-  }).join("");
-}
-function deleteDia(data){
-  if(!confirm('Apagar o registro do dia ' + dl(data) + '? Isso remove esse dia do banco pra sempre.')) return;
-  fbRef('registros/'+data).remove().then(()=>{
-    loadDataFromFirebase();
-  }).catch(err=>{
-    alert('Não consegui apagar: ' + err.message);
-  });
-}
-function updateColaboradores(ym, value){
-  const n = +value || 0;
-  if(!Number.isInteger(n)||n<0){ alert("Informe uma quantidade inteira, maior ou igual a zero."); return; }
-  const st = $("colStatus");
-  st.textContent = 'Salvando…';
-  fbRef('colaboradores/'+ym).set(n)
-    .then(()=>{ COL[ym]=n; render(); st.textContent='✓ Salvo'; setTimeout(()=>st.textContent='',2000); })
-    .catch(err=>{ st.textContent='Não salvou (' + err.message + ')'; st.className='status err'; });
-  render();
+function headcountTable(mr){
+  const yms=mr.length?mr.map(x=>x.ym):Object.keys(COL).sort();
+  const labelFor=ym=>mr.length? (mr.find(x=>x.ym===ym)?.m || ym) : (MN[+ym.slice(5)-1]+"/"+ym.slice(0,4));
+  if(!yms.length) return "<tr><th>Mês</th><th>Colaboradores</th></tr><tr><td colspan=2 style='text-align:center;color:var(--mu)'>Sem meses cadastrados ainda</td></tr>";
+  return "<tr><th>Mês</th><th>Colaboradores</th></tr>"+yms.map(ym=>`<tr><td>${labelFor(ym)}</td><td><input class="ci colInput" type="number" min="0" value="${COL[ym]||""}" data-ym="${ym}"></td></tr>`).join("");
 }
 function cmpOpts(){const m=$("cT").value=="m";const l=m?[...new Set(D.map(r=>r.ym))].sort():[...new Set(D.map(r=>r.y+"-"+String(r.w).padStart(2,"0")))].sort();const f=v=>m?MN[+v.slice(5)-1]+"/"+v.slice(0,4):"Semana "+(+v.slice(5))+" / "+v.slice(0,4);
-[["cA",l.length-1],["cB",Math.max(l.length-2,0)]].forEach(([id,i])=>{$(id).innerHTML=l.map(v=>`<option value="${v}">${f(v)}</option>`).join("");$(id).value=l[i]})}
+[["cA",l.length-1],["cB",Math.max(l.length-2,0)]].forEach(([id,i])=>{$(id).innerHTML=l.map(v=>`<option value="${v}">${f(v)}</option>`).join("");$(id).value=l[i]||""})}
 function cmp(){const t=$("fT").value,m=$("cT").value=="m";const get=k=>{const rs=D.filter(r=>m?r.ym==k:(r.y+"-"+String(r.w).padStart(2,"0"))==k);const p=rs.reduce((s,r)=>s+val(r,t),0);const ym=rs.length?rs[rs.length-1].ym:"";const c=colOf(ym);return{p,c,pc:c?p/c:0,d:rs.length}};
+if(!$("cA").value||!$("cB").value){$("tc").innerHTML="";return;}
 const A=get($("cA").value),B=get($("cB").value);const pct=(a,b)=>b?(a-b)/b*100:null;const cl=v=>v==null?"":v>=0?"up":"dn";const sg=v=>(v>=0?"+":"")+F(v);
 const row=(n,a,b,fm)=>{const d=a-b,p=pct(a,b);return`<tr><td>${n}</td><td>${fm(a)}</td><td>${fm(b)}</td><td class="${cl(d)}">${sg(d)}</td><td class="${cl(p)}">${p==null?"—":sg(p)+"%"}</td></tr>`};
-$("tc").innerHTML="<tr><th>Indicador</th><th>Atual</th><th>Anterior</th><th>Variação abs.</th><th>Variação %</th></tr>"+row("Pedidos produzidos",A.p,B.p,N)+row("Média por dia",A.d?A.p/A.d:0,B.d?B.p/B.d:0,v=>F(v))+row("Pedidos por colaborador",A.pc,B.pc,v=>F(v));
-LAST.cmpRows=[["Indicador","Atual","Anterior","Variação abs.","Variação %"],
-  ["Pedidos produzidos",N(A.p),N(B.p),sg(A.p-B.p),pct(A.p,B.p)==null?"—":sg(pct(A.p,B.p))+"%"],
-  ["Média por dia",F(A.d?A.p/A.d:0),F(B.d?B.p/B.d:0),sg((A.d?A.p/A.d:0)-(B.d?B.p/B.d:0)),pct(A.d?A.p/A.d:0,B.d?B.p/B.d:0)==null?"—":sg(pct(A.d?A.p/A.d:0,B.d?B.p/B.d:0))+"%"],
-  ["Pedidos por colaborador",F(A.pc),F(B.pc),sg(A.pc-B.pc),pct(A.pc,B.pc)==null?"—":sg(pct(A.pc,B.pc))+"%"]];
-}
+$("tc").innerHTML="<tr><th>Indicador</th><th>Atual</th><th>Anterior</th><th>Variação abs.</th><th>Variação %</th></tr>"+row("Pedidos produzidos",A.p,B.p,N)+row("Média por dia",A.d?A.p/A.d:0,B.d?B.p/B.d:0,v=>F(v))+row("Pedidos por colaborador",A.pc,B.pc,v=>F(v))}
 
-// ---------------- Firebase: carregar / enviar dados ----------------
-function loadDataFromFirebase(){
-  mostrarCarregando('⏳ Carregando dados do banco...');
-  $("sourcePill").textContent = 'Carregando do banco...';
-  Promise.all([fbRef('registros').once('value'), fbRef('colaboradores').once('value')]).then(([snapR, snapC])=>{
-    const regObj = snapR.val() || {};
-    RAW = Object.keys(regObj).sort().map(d=>[d, regObj[d].t, regObj[d].m||{}]);
-    COL = snapC.val() || {};
-    dadosCarregados = true;
-    rebuildD();
-    fill();
-    cmpOpts();
-    render();
-    $("sourcePill").textContent = RAW.length ? ('Banco · ' + RAW.length + ' dias registrados') : 'Sem dados no banco ainda';
-    $("sourcePill").className = RAW.length ? 'pill ok' : 'pill';
-  }).catch(err=>{
-    $("sourcePill").textContent = 'Erro ao carregar do banco';
-    $("uploadStatus").textContent = err.message;
-    $("uploadStatus").className = 'status err';
+// ============================================================================
+// Tabelas diárias de Separação e Conferência
+// ============================================================================
+function renderStageSummaryTables(){
+  const s=STORE[ACTIVE_DEPT];
+  ["sep","conf"].forEach((stage,i)=>{
+    const tbl=$(i===0?"t7":"t8");
+    const arr=stageDailyArray(s[stage]);
+    if(!arr.length){ tbl.innerHTML=`<tr><th>Data</th><th>Pedidos</th></tr><tr><td colspan=2 style="text-align:center;color:var(--mu)">Sem dados importados ainda</td></tr>`; return; }
+    tbl.innerHTML="<tr><th>Data</th><th>Pedidos</th></tr>"+arr.slice().reverse().map(r=>`<tr><td>${dl(r.d)}</td><td>${N(r.t)}</td></tr>`).join("");
   });
 }
 
-// ---------------- Upload de planilha (substitui tudo) ----------------
-function showUploadStatus(msg, err){ const el=$("uploadStatus"); el.textContent=msg; el.className = err ? 'status err' : 'status'; }
-function excelDateToISO(v){
-  if(v instanceof Date) return v.toISOString().slice(0,10);
-  if(typeof v === 'number'){ const d = XLSX.SSF.parse_date_code(v); return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`; }
-  const s = String(v).trim();
-  let mm = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-  if(mm){ let [,dd,mo,yy]=mm; if(yy.length===2) yy = '20'+yy; return `${yy}-${mo.padStart(2,'0')}-${dd.padStart(2,'0')}`; }
-  mm = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-  if(mm){ const [,yy,mo,dd]=mm; return `${yy}-${mo.padStart(2,'0')}-${dd.padStart(2,'0')}`; }
-  return null;
+// ============================================================================
+// Colaboradores por subequipe (Unilog × Conectar no SECO / equipe única no GELADO)
+// — específico das fases Separação e Conferência.
+// ============================================================================
+const SUBTEAMS={ seco:[{key:"unilog",label:"Unilog"},{key:"conectar",label:"Conectar"}], gelado:[{key:"equipe",label:"Colaboradores"}] };
+const STAGE_TITLE={sep:"Separação",conf:"Conferência"};
+function stageMonthlyTotal(st,ym){ let t=0; Object.keys(st.daily).forEach(d=>{ if(d.slice(0,7)===ym) t+=st.daily[d]; }); return t; }
+// Conta, a partir dos próprios pedidos importados (com ID do User), quantos colaboradores
+// distintos de cada subequipe apareceram naquele mês — isso vira o "detectado automaticamente".
+function autoHeadcount(dept,stage,ym){
+  const fields=SUBTEAMS[dept];
+  const sets={}; fields.forEach(f=>sets[f.key]=new Set());
+  const pedidos=STORE[dept][stage].pedidos;
+  Object.values(pedidos).forEach(info=>{
+    if(!info || !info.idUser) return;
+    if(!info.date || info.date.slice(0,7)!==ym) return;
+    if(dept==="gelado"){ sets.equipe.add(info.idUser); return; }
+    const cl=classifyUser(info.idUser);
+    if(cl.sub && sets[cl.sub]) sets[cl.sub].add(info.idUser);
+  });
+  const out={}; fields.forEach(f=>out[f.key]=sets[f.key].size);
+  return out;
 }
-$("fileInput").addEventListener('change', (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  showUploadStatus('Lendo planilha...', false);
-  const reader = new FileReader();
-  reader.onload = (ev)=>{
-    try{
-      const wb = XLSX.read(ev.target.result, {type:'array', cellDates:true});
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
-      if(!rows.length){ showUploadStatus('Planilha vazia.', true); return; }
-      const header = rows[0].map(h=>String(h).trim());
-      const dateCol = header.findIndex(h=>/data/i.test(h));
-      if(dateCol === -1){ showUploadStatus('Não encontrei uma coluna "Data" no cabeçalho da planilha.', true); return; }
-      const normalize=v=>v.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
-      const modalCols = header.map((h,i)=>({h:MODAIS.find(m=>normalize(m)===normalize(h)),original:h,i})).filter(x=>x.i!==dateCol && x.original);
-      if(modalCols.some(c=>!c.h)) throw new Error('Colunas não reconhecidas: '+modalCols.filter(c=>!c.h).map(c=>c.original).join(', ')+'. Use: '+MODAIS.join(', '));
-      if(new Set(modalCols.map(c=>c.h)).size!==modalCols.length) throw new Error('Existem colunas de modal duplicadas.');
-      const registrosObj = {};
-      let ignoradas = 0;
-      for(let r=1;r<rows.length;r++){
-        const row = rows[r];
-        if(!row || row.every(c=>c==='' || c==null)) continue;
-        const iso = excelDateToISO(row[dateCol]);
-        if(!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso) || new Date(iso+'T12:00:00Z').toISOString().slice(0,10)!==iso){ ignoradas++; continue; }
-        if(registrosObj[iso]) throw new Error('Data duplicada na planilha: '+iso);
-        if(modalCols.some(c=>row[c.i]!=='' && (!Number.isInteger(Number(row[c.i])) || Number(row[c.i])<0))) throw new Error('Quantidade inválida na linha '+(r+1)+'. Use números inteiros não negativos.');
-        const m = {};
-        let t = 0;
-        modalCols.forEach(c=>{
-          const n = Number(row[c.i]);
-          if(n>0){ m[c.h] = n; t += n; }
-        });
-        registrosObj[iso] = {t, m};
-      }
-      const n = Object.keys(registrosObj).length;
-      if(!n){ showUploadStatus('Não encontrei nenhuma linha válida (confira as colunas: "Data" + uma coluna por modal, com a quantidade de pedidos).', true); return; }
-      const mesclar = $("mergeMode").checked;
-      const aviso = mesclar
-        ? ('Isso vai ATUALIZAR ' + n + ' dia(s) no banco (os demais dias continuam como estão)' + (ignoradas?', ' + ignoradas + ' linha(s) ignorada(s) por data inválida':'') + '. Confirma?')
-        : ('Isso vai SUBSTITUIR TODOS os dados do dashboard pra todo mundo que usa esse app (ficam só esses ' + n + ' dias)' + (ignoradas?', ' + ignoradas + ' linha(s) ignorada(s) por data inválida':'') + '. Confirma?');
-      const existing=Object.keys(registrosObj).filter(d=>D.some(r=>r.d===d)).length;
-      const preview='REVISÃO DA IMPORTAÇÃO\n'+(n-existing)+' dias novos · '+existing+' dias existentes\n'+ignoradas+' linhas ignoradas\nTotal: '+N(Object.values(registrosObj).reduce((sum,r)=>sum+r.t,0))+' pedidos\n\n';
-      if(!confirm(preview+aviso)) return;
-      const op = mesclar ? fbRef('registros').update(registrosObj) : fbRef('registros').set(registrosObj);
-      op.then(()=>{
-        showUploadStatus('✓ Planilha enviada (' + n + ' dias, ' + (mesclar?'mesclado':'substituído') + '). Atualizando...', false);
-        loadDataFromFirebase();
-      }).catch(err=>{
-        showUploadStatus('Não consegui salvar no banco (' + err.message + '). Os dados NÃO foram atualizados.', true);
-      });
-    }catch(err){
-      showUploadStatus('Erro ao ler a planilha: ' + err.message, true);
+function renderStageHeadcount(){
+  const s=STORE[ACTIVE_DEPT];
+  const fields=SUBTEAMS[ACTIVE_DEPT];
+  const subtitle=fields.length>1?" (Unilog × Conectar)":"";
+  ["sep","conf"].forEach((stage,i)=>{
+    const tableId=i===0?"t9":"t10";
+    const chartId=i===0?"cTeamSep":"cTeamConf";
+    const titleEl=$(i===0?"t9Title":"t10Title");
+    const chartTitleEl=$(i===0?"cTeamSepTitle":"cTeamConfTitle");
+    titleEl.textContent=STAGE_TITLE[stage]+" — Colaboradores"+subtitle;
+    chartTitleEl.textContent=STAGE_TITLE[stage]+" — Colaboradores"+subtitle;
+    const st=s[stage];
+    const yms=uniq0(Object.keys(st.daily).map(d=>d.slice(0,7)).concat(Object.keys(st.headcount))).sort();
+
+    // Tabela — valor mostrado é o detectado automaticamente pelos uploads (ID do User);
+    // se a pessoa digitar algo manualmente, esse valor manual passa a valer (ajuste/override).
+    const head="<tr><th>Mês</th>"+fields.map(f=>`<th>${f.label}</th>`).join("")+(fields.length>1?"<th>Total</th>":"")+"<th>Pedidos</th><th>Ped./colab.</th></tr>";
+    if(!yms.length){ $(tableId).innerHTML=head+`<tr><td colspan="${2+fields.length+(fields.length>1?1:0)}" style="text-align:center;color:var(--mu)">Sem meses cadastrados ainda</td></tr>`; }
+    else {
+      const rows=yms.map(ym=>{
+        const hcManual=st.headcount[ym]||{};
+        const hcAuto=autoHeadcount(ACTIVE_DEPT,stage,ym);
+        const eff={}; fields.forEach(f=>{ eff[f.key]=(hcManual[f.key]!=null && hcManual[f.key]!=="")? +hcManual[f.key] : (hcAuto[f.key]||0); });
+        const total=fields.reduce((a,f)=>a+(+eff[f.key]||0),0);
+        const vol=stageMonthlyTotal(st,ym);
+        const pc=total?vol/total:0;
+        const inputs=fields.map(f=>{
+          const isManual=hcManual[f.key]!=null && hcManual[f.key]!=="";
+          const hint=(!isManual && hcAuto[f.key])? `<div class="pill" style="margin-top:3px">detectado</div>` : (isManual? `<div class="pill" style="margin-top:3px">ajuste manual</div>`:"");
+          return `<td><input class="ci stageHcInput" type="number" min="0" placeholder="${hcAuto[f.key]||0}" value="${isManual?hcManual[f.key]:""}" data-ym="${ym}" data-field="${f.key}" data-stage="${stage}">${hint}</td>`;
+        }).join("");
+        return `<tr><td>${ymLabel(ym)}</td>${inputs}${fields.length>1?`<td>${total||"—"}</td>`:""}<td>${vol?N(vol):"—"}</td><td>${pc?F(pc):"—"}</td></tr>`;
+      }).join("");
+      $(tableId).innerHTML=head+rows;
     }
-  };
-  reader.onerror = ()=> showUploadStatus('Não foi possível ler o arquivo.', true);
-  reader.readAsArrayBuffer(file);
-  e.target.value = '';
+
+    // Gráfico comparativo (colaboradores detectados/ajustados por subequipe, mês a mês)
+    const effByMonth=yms.map(ym=>{
+      const hcManual=st.headcount[ym]||{}; const hcAuto=autoHeadcount(ACTIVE_DEPT,stage,ym);
+      const eff={}; fields.forEach(f=>{ eff[f.key]=(hcManual[f.key]!=null && hcManual[f.key]!=="")? +hcManual[f.key] : (hcAuto[f.key]||0); });
+      return eff;
+    });
+    const hasAny=effByMonth.some(eff=>fields.some(f=>eff[f.key]>0));
+    if(!hasAny){
+      if(ch[chartId]){ch[chartId].destroy();delete ch[chartId];}
+      $(chartId).style.display="none"; $(chartId+"Empty").style.display="block";
+    } else {
+      $(chartId).style.display=""; $(chartId+"Empty").style.display="none";
+      const palette=[css("--pr"),css("--wr"),css("--ok")];
+      draw(chartId,{type:"bar",data:{labels:yms.map(ymLabel),datasets:fields.map((f,fi)=>({label:f.label,data:effByMonth.map(eff=>eff[f.key]||0),backgroundColor:palette[fi%palette.length]}))}});
+    }
+  });
+}
+
+// ============================================================================
+// Previsão de pedidos + Dimensionamento de equipe
+// ============================================================================
+function renderStaffing(){
+  const s=STORE[ACTIVE_DEPT];
+  const nfMonthly=monthly(D.map(r=>({ym:r.ym,v:r.t})));
+  const allYms=uniq0(Object.keys(nfMonthly).concat(Object.keys(s.headcount)).concat(Object.keys(s.forecast)));
+  // produtividade histórica média (pedidos por colaborador por mês)
+  const rates=allYms.filter(ym=>nfMonthly[ym] && colOf(ym)).map(ym=>nfMonthly[ym]/colOf(ym));
+  const avgPC=rates.length? rates.reduce((a,b)=>a+b,0)/rates.length : 0;
+
+  $("t5").innerHTML = !allYms.length ? "<tr><th>Mês</th><th>Previsão de pedidos</th></tr><tr><td colspan=2 style='text-align:center;color:var(--mu)'>Sem meses cadastrados ainda</td></tr>" :
+    "<tr><th>Mês</th><th>Previsão de pedidos</th></tr>"+allYms.map(ym=>`<tr><td>${ymLabel(ym)}</td><td><input class="ci fcInput" type="number" min="0" value="${s.forecast[ym]||""}" data-ym="${ym}"></td></tr>`).join("");
+
+  let rowsHtml="", topAlert=null;
+  if(!allYms.length){
+    rowsHtml="<tr><td colspan=6 style='text-align:center;color:var(--mu)'>Sem meses cadastrados ainda</td></tr>";
+  } else {
+    rowsHtml=allYms.map(ym=>{
+      const fc=s.forecast[ym]||0, headc=COL[ym]||0;
+      const needed=fc&&avgPC? Math.ceil(fc/avgPC) : null;
+      let badge="—";
+      if(needed!=null && headc){
+        const diff=headc-needed;
+        if(diff>0) badge=`<span class="badge ok">sobram ~${diff}</span>`;
+        else if(diff<0) badge=`<span class="badge bad">faltam ~${Math.abs(diff)}</span>`;
+        else badge=`<span class="badge ok">equilibrado</span>`;
+        if(!topAlert || Math.abs(diff)>Math.abs(topAlert.diff)) topAlert={ym,diff,needed,headc};
+      } else if(needed!=null){ badge=`<span class="badge warn">defina colaboradores</span>`; }
+      return `<tr><td>${ymLabel(ym)}</td><td>${fc?N(fc):"—"}</td><td>${avgPC?F(avgPC):"—"}</td><td>${needed!=null?N(needed):"—"}</td><td>${headc||"—"}</td><td>${badge}</td></tr>`;
+    }).join("");
+  }
+  $("t6").innerHTML="<tr><th>Mês</th><th>Previsão</th><th>Produt. hist. (ped/colab)</th><th>Pessoas necessárias</th><th>Pessoas configuradas</th><th>Status</th></tr>"+rowsHtml;
+
+  if(topAlert && topAlert.diff!==0){
+    const cls=topAlert.diff<0?"bad":"ok";
+    const txt=topAlert.diff<0? `Faltam aproximadamente <b>${Math.abs(topAlert.diff)}</b> pessoa(s) em ${ymLabel(topAlert.ym)} para dar conta da previsão de pedidos.` : `Sobram aproximadamente <b>${topAlert.diff}</b> pessoa(s) em ${ymLabel(topAlert.ym)} frente à previsão de pedidos.`;
+    $("funnelAlerts").insertAdjacentHTML("beforeend",`<div class="alert ${cls}"><b>Dimensionamento de equipe — ${ACTIVE_DEPT.toUpperCase()}</b>${txt}</div>`);
+  }
+}
+function uniq0(arr){return [...new Set(arr)].sort()}
+function ymLabel(ym){return MN[+ym.slice(5)-1]+"/"+ym.slice(0,4)}
+
+// ============================================================================
+// Listeners globais (delegados, pois tabelas são recriadas a cada render)
+// ============================================================================
+document.addEventListener("change",e=>{
+  if(e.target.classList.contains("colInput")){
+    COL[e.target.dataset.ym]=+e.target.value||0;
+    saveStore(); render(); renderStaffing();
+  }
+  if(e.target.classList.contains("fcInput")){
+    STORE[ACTIVE_DEPT].forecast[e.target.dataset.ym]=+e.target.value||0;
+    saveStore(); renderStaffing();
+  }
+  if(e.target.classList.contains("stageHcInput")){
+    const {ym,field,stage}=e.target.dataset;
+    const s=STORE[ACTIVE_DEPT];
+    s[stage].headcount[ym]=s[stage].headcount[ym]||{};
+    if(e.target.value===""){ delete s[stage].headcount[ym][field]; } // campo vazio = volta a usar o valor detectado automaticamente
+    else { s[stage].headcount[ym][field]=+e.target.value; }
+    saveStore(); renderStageHeadcount();
+  }
 });
 
-// ---------------- Adicionar / editar um dia (formulário manual) ----------------
-function buildDayModalFields(valores){
-  $("dayModalFields").innerHTML = MODAIS.map(m=>`<label>${m}<input type="number" min="0" data-modal="${m}" placeholder="0" value="${valores && valores[m] ? valores[m] : ''}"></label>`).join("");
-}
-function todayISO(){ const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function preencherSeExistir(){
-  const date = $("dayDate").value;
-  const existente = D.find(r=>r.d===date);
-  buildDayModalFields(existente ? existente.m : null);
-}
-function openDayModal(data){
-  const date = data || todayISO();
-  $("dayDate").value = date;
-  preencherSeExistir();
-  updateDayTotal();
-  $("dayModalBg").classList.add('open');
-  $("dayDate").focus();
-}
-function closeDayModal(){ $("dayModalBg").classList.remove('open'); }
-
-// ---------------- Menu "Adicionar dados": manual ou planilha ----------------
-function closeAddMenu(){ $("addMenuBtn").setAttribute("aria-expanded","false"); $("addMenuPanel").classList.remove('open'); $("addMenuBtn").classList.remove('open'); }
-function toggleAddMenu(){ $("addMenuBtn").setAttribute("aria-expanded", String(!$("addMenuPanel").classList.contains("open"))); $("addMenuPanel").classList.toggle('open'); $("addMenuBtn").classList.toggle('open'); }
-$("addMenuBtn").addEventListener('click', (e)=>{ e.stopPropagation(); toggleAddMenu(); });
-$("addManualItem").addEventListener('click', ()=>{ closeAddMenu(); openDayModal(); });
-$("addUploadItem").addEventListener('click', ()=>{ closeAddMenu(); $("fileInput").click(); });
-document.addEventListener('click', (e)=>{ if(!$("addMenuWrap").contains(e.target)) closeAddMenu(); });
-
-$("dayDate").addEventListener('change', preencherSeExistir);
-$("dayCancelBtn").addEventListener('click', closeDayModal);
-$("dayModalBg").addEventListener('click', (e)=>{ if(e.target.id==='dayModalBg') closeDayModal(); });
-$("daySaveBtn").addEventListener('click', ()=>{
-  const date = $("dayDate").value;
-  if(!date){ alert('Escolhe uma data.'); return; }
-  const inputs=[...document.querySelectorAll('#dayModalFields input')];
-  if(inputs.some(inp=>!Number.isInteger(Number(inp.value))||Number(inp.value)<0)){alert('Use quantidades inteiras, maiores ou iguais a zero.');return;}
-  const m = {};
-  let t = 0;
-  document.querySelectorAll('#dayModalFields input').forEach(inp=>{
-    const n = Number(inp.value);
-    if(n>0){ m[inp.dataset.modal] = n; t += n; }
-  });
-  if(!t && !confirm('Salvar este dia com produção zero?')) return;
-  fbRef('registros/'+date).set({t, m}).then(()=>{
-    closeDayModal();
-    loadDataFromFirebase();
-  }).catch(err=>{
-    alert('Não consegui salvar: ' + err.message);
-  });
-});
-
-// ---------------- Exportação CSV ----------------
-$("exportT1Btn").onclick = ()=>{
-  const header = ['Mês','Pedidos','Colaboradores','Pedidos/colab.'];
-  const body = LAST.mr.map(x=>[x.m, x.p||0, x.c||'', x.pc?F(x.pc):'']);
-  downloadCSV('resumo_mensal.csv', [header, ...body]);
-};
-$("exportT2Btn").onclick = ()=>{
-  const header = ['Modal','Pedidos','% do total'];
-  const body = Object.keys(LAST.md).map(m=>[m, LAST.md[m], F(LAST.md[m]/LAST.tot*100)+'%']);
-  downloadCSV('resumo_por_modal.csv', [header, ...body]);
-};
-$("exportT3Btn").onclick = ()=>{
-  const header = ['Data','Semana','Pedidos'];
-  const body = LAST.rows.map(r=>[dl(r.d), r.w, r.v]);
-  downloadCSV('resumo_diario.csv', [header, ...body]);
-};
-$("exportCmpBtn").onclick = ()=>{
-  if(LAST.cmpRows) downloadCSV('comparacao_periodos.csv', LAST.cmpRows);
-};
-
+// ============================================================================
+// Boot
+// ============================================================================
+useDept("seco");
+renderDeptTabs();
+renderUploadZone();
+fill(); cmpOpts();
 $("cT").onchange=()=>{cmpOpts();cmp()};
 ["cA","cB"].forEach(i=>$(i).onchange=cmp);
-$("fA").onchange=()=>{updateFilterOptions();render()};
-$("fM").onchange=()=>{updateFilterOptions();render()};
-$("fS").onchange=()=>{updateFilterOptions();render()};
-["fD","fT"].forEach(i=>$(i).onchange=render);
+["fA","fM","fS","fD","fT"].forEach(i=>$(i).onchange=render);
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
-
-
-function syncSelectionUI(){
- const fields=[['fA','Ano'],['fM','Mês'],['fS','Semana'],['fD','Dia'],['fT','Modal']];
- const active=fields.filter(([id])=>$(id).value!=='');
- fields.forEach(([id])=>$(id).closest('label').classList.toggle('selected',$(id).value!==''));
- $('filterCount').textContent=active.length?active.length+' filtro'+(active.length>1?'s':'')+' aplicado'+(active.length>1?'s':''):'Todos os dados';
- const chips=$('activeFilters');chips.replaceChildren();chips.hidden=!active.length;
- if(active.length){const label=document.createElement('span');label.className='active-label';label.textContent='Em exibição';chips.append(label);}
- active.forEach(([id,label])=>{const button=document.createElement('button');button.type='button';button.className='filter-chip';
- const value=$(id).selectedOptions[0]?.textContent||$(id).value;button.textContent=label+': '+value;
- const close=document.createElement('span');close.textContent='×';close.setAttribute('aria-hidden','true');button.append(close);button.setAttribute('aria-label','Remover filtro '+label+': '+value);
- button.addEventListener('click',()=>{$(id).value='';updateFilterOptions();render();$(id).focus();});chips.append(button);});
- const a=$('fA').value,m=$('fM').value,w=$('fS').value,d=$('fD').value,date=todayISO();
- let selected='';
- if(!a&&!m&&!w&&!d)selected='all';
- else if(a===date.slice(0,4)&&m===String(+date.slice(5,7))&&!w&&d===date)selected='today';
- else if(a===date.slice(0,4)&&!m&&w===String(iso(date))&&!d)selected='week';
- else if(a===date.slice(0,4)&&m===String(+date.slice(5,7))&&!w&&!d)selected='month';
- document.querySelectorAll('[data-period]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.period===selected)));
-}
-
-let currentTab='overview';
-document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>{
- currentTab=button.dataset.tab;
- document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b===button);if(b===button)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
- document.querySelectorAll('[data-panel]').forEach(panel=>panel.hidden=panel.dataset.panel!==currentTab);
- requestAnimationFrame(()=>Object.values(ch).forEach(chart=>chart.resize()));
-}));
-document.querySelectorAll('[data-period]').forEach(button=>button.addEventListener('click',()=>{
- reset(); const date=todayISO(),kind=button.dataset.period;
- if(kind!=='all'){
-  $('fA').value=date.slice(0,4);updateFilterOptions();
-  if(kind==='week'){$('fS').value=String(iso(date));updateFilterOptions();}
-  else {$('fM').value=String(+date.slice(5,7));updateFilterOptions();if(kind==='today')$('fD').value=date;}
-  if((kind==='today'&&$('fD').value!==date)||(kind==='month'&&$('fM').value!==String(+date.slice(5,7)))|| (kind==='week'&&$('fS').value!==String(iso(date)))){reset();alert('Não existem registros para este período. O histórico foi mantido.');return;}
-  render();
- }
-}));
-$('entrySearch').addEventListener('input',renderUltimos);
-function updateDayTotal(){ $('dayTotal').textContent='Total: '+N([...document.querySelectorAll('#dayModalFields input')].reduce((sum,input)=>sum+Math.max(0,Number(input.value)||0),0))+' pedidos'; }
-$('dayModalFields').addEventListener('input',updateDayTotal);
-$('dayDate').addEventListener('change',updateDayTotal);
-document.querySelectorAll('details').forEach(detail=>detail.addEventListener('toggle',()=>requestAnimationFrame(()=>Object.values(ch).forEach(chart=>chart.resize()))));
-document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeAddMenu();closeDayModal();}});
-
-</script>
-
-<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
-  <div style="max-width:320px;width:100%;">
-    <div id="__gateMsg" style="font-size:14px;color:#8a93a3;line-height:1.6;">Verificando acesso...</div>
-  </div>
-</div>
-<style id="__gateStyle">body > *:not(#__gateOverlay){ display:none !important; }</style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
-<script>
-(function(){
-  var GRUPOS_PERMITIDOS = ["PCP"];
-  var firebaseConfig = {
-    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
-    authDomain: "stinpharma-qualidade.firebaseapp.com",
-    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
-    projectId: "stinpharma-qualidade",
-    storageBucket: "stinpharma-qualidade.firebasestorage.app",
-    messagingSenderId: "422803826984",
-    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
-    measurementId: "G-6C0TLHH2VP"
-  };
-  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  function liberar(){
-    var st = document.getElementById('__gateStyle');
-    var ov = document.getElementById('__gateOverlay');
-    if(st) st.remove();
-    if(ov) ov.remove();
-  }
-  function negar(msg){
-    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Central de Apps</a>';
-  }
-  var jaResolveu = false;
-  setTimeout(function(){
-    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
-  }, 10000);
-  firebase.auth().onAuthStateChanged(function(user){
-    jaResolveu = true;
-    if(!user){ negar('Você precisa entrar pela Central de Apps.'); return; }
-    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
-      var dados = snap.val();
-      var meusGrupos = (dados && dados.grupos) || [];
-      var permitido = GRUPOS_PERMITIDOS.some(function(g){ return meusGrupos.indexOf(g) !== -1; });
-      if(permitido){ liberar(); loadDataFromFirebase(); } else { negar('Você não tem permissão pra acessar este app.'); }
-    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
-  });
-})();
+$("deptLabelStaff").textContent=ACTIVE_DEPT.toUpperCase();
+render();
+renderFunnel();
+renderPhaseEvolution();
+renderStaffing();
 </script>
 </body></html>
