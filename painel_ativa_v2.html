@@ -360,6 +360,36 @@
   .just-summary{font-size:12.5px;color:var(--navy-2);margin:12px 0 0;}
   .just-summary b{color:#7A4F0E;}
   .save-msg{font-size:12px;color:var(--gray);margin-left:8px;}
+
+  /* Abas de transportadora */
+  .carrier-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+  .carrier-tab{
+    font-family:'Inter',Arial,sans-serif;font-size:12.5px;font-weight:700;
+    border:1px solid var(--line);background:#fff;color:var(--navy-2);
+    padding:7px 14px;border-radius:20px;cursor:pointer;
+    transition:background .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .carrier-tab:hover{background:#F0F2F5;border-color:#D3D7DD;}
+  .carrier-tab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+  .carrier-tab.add{color:var(--green);border-color:#BFE2CC;border-style:dashed;background:var(--green-bg);}
+  .carrier-tab.add:hover{background:#DCF0E4;}
+
+  /* Modal de mapeamento de colunas */
+  #colMapOverlay{
+    display:none;position:fixed;inset:0;background:rgba(10,13,18,.55);
+    z-index:9999;align-items:center;justify-content:center;padding:20px;
+  }
+  #colMapOverlay .panel{max-width:540px;width:100%;max-height:86vh;overflow:auto;}
+  .cmrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #F0F1F3;}
+  .cmrow:last-child{border-bottom:none;}
+  .cmrow label{font-size:13px;font-weight:600;color:var(--navy);}
+  .cmrow label .req{color:var(--red);}
+  .cmrow label small{display:block;font-weight:500;font-size:11px;color:var(--gray);margin-top:1px;}
+  .cmrow select{
+    font-family:'Inter',Arial,sans-serif;font-size:12.5px;max-width:220px;
+    border:1px solid var(--line);border-radius:8px;padding:7px 9px;color:var(--navy);background:#fff;
+  }
+  .cm-err{font-size:12px;color:var(--red);font-weight:600;margin-top:10px;display:none;}
 </style>
 </head>
 <body>
@@ -374,6 +404,7 @@
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
       <div style="display:flex;align-items:center;gap:10px;">
         <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none;">
+        <button class="chip-btn" id="remapBtn" title="Mapear de novo as colunas da planilha dessa transportadora">🔧 Remapear colunas</button>
         <button class="upload-btn" id="uploadBtn">⟲ Atualizar planilha</button>
         <button class="chip-btn" id="restoreBtn" style="display:inline-block;">🔄 Recarregar do banco</button>
       </div>
@@ -381,6 +412,8 @@
       <span class="upload-status" id="uploadStatus"></span>
     </div>
   </header>
+
+  <div class="carrier-tabs" id="carrierTabs"></div>
 
   <div class="filterbar">
     <span class="flabel">Data prevista de entrega</span>
@@ -504,18 +537,100 @@
     </div>
   </div>
 
-  <footer>Painel gerado a partir da base de remessas ATIVA · atraso calculado em relação à data de previsão de entrega · referência de "hoje": 10/08/2026 para remessas em aberto</footer>
+  <footer id="footerText">Painel gerado a partir da base de remessas ATIVA · atraso calculado em relação à data de previsão de entrega</footer>
+</div>
+
+<!-- Modal de mapeamento de colunas -->
+<div id="colMapOverlay">
+  <div class="panel">
+    <h3>Mapear colunas — <span id="colMapCarrierName"></span></h3>
+    <p class="phint">Diz pra gente qual coluna da planilha dessa transportadora corresponde a cada informação. Fica salvo — só precisa refazer se o layout da planilha mudar.</p>
+    <div id="colMapFields"></div>
+    <p class="cm-err" id="colMapErr"></p>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+      <button class="chip-btn" id="colMapCancelBtn" type="button">Cancelar</button>
+      <button class="upload-btn" id="colMapConfirmBtn" type="button">Confirmar e enviar</button>
+    </div>
+  </div>
 </div>
 
 <script>
-var DB_ROOT = 'painelAtiva';
-function fbRef(path){ return firebase.database().ref(DB_ROOT + (path ? '/' + path : '')); }
+// ---------------- Transportadoras ----------------
+// Cada transportadora tem seu próprio nó no banco: transportadoras/{chave}/registros,
+// transportadoras/{chave}/config/motivos, transportadoras/{chave}/config/colMap.
+// A lista de transportadoras existentes fica em transportadoras/_meta/{chave} = {nome}.
+let CARRIERS = {};              // chave -> {nome}
+let ACTIVE_CARRIER = 'ativa';   // chave da transportadora selecionada
+let CARRIER_COLMAP = null;      // mapeamento de colunas salvo da transportadora ativa
+
+function carrierRoot(key){ return 'transportadoras/' + (key || ACTIVE_CARRIER); }
+function fbRef(path){ return firebase.database().ref(carrierRoot() + (path ? '/' + path : '')); }
+
+function slugify(s){
+  return String(s).trim().toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') || ('t' + Date.now());
+}
+
+function escapeHtmlText(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function loadCarriersMeta(){
+  return firebase.database().ref('transportadoras/_meta').once('value').then(snap=>{
+    CARRIERS = snap.val() || {};
+    if(!CARRIERS[ACTIVE_CARRIER]) CARRIERS[ACTIVE_CARRIER] = {nome:'ATIVA'}; // garante a aba da ATIVA mesmo antes da migração
+  });
+}
+
+function renderCarrierTabs(){
+  const keys = Object.keys(CARRIERS).sort((a,b)=> (CARRIERS[a].nome||a).localeCompare(CARRIERS[b].nome||b,'pt-BR'));
+  document.getElementById('carrierTabs').innerHTML = keys.map(k=>
+    `<button class="carrier-tab ${k===ACTIVE_CARRIER?'active':''}" data-carrier="${escapeAttr(k)}" type="button">${escapeHtmlText(CARRIERS[k].nome||k)}</button>`
+  ).join('') + `<button class="carrier-tab add" id="addCarrierBtn" type="button">+ Nova transportadora</button>`;
+}
+
+function updateHeaderForCarrier(){
+  const nome = (CARRIERS[ACTIVE_CARRIER]||{}).nome || ACTIVE_CARRIER;
+  document.querySelector('h1').textContent = 'Painel de Entregas — Transportadora ' + nome;
+  const transpSmall = document.querySelector('.view-tab[data-view="transp"] small');
+  if(transpSmall) transpSmall.textContent = 'Desconsidera motivos fora do controle da ' + nome;
+}
+
+function switchCarrier(key){
+  ACTIVE_CARRIER = key;
+  CARRIER_COLMAP = null;
+  renderCarrierTabs();
+  updateHeaderForCarrier();
+  loadDataFromFirebase();
+}
+
+function addNewCarrier(){
+  const nome = prompt('Nome da nova transportadora (ex: Braspress, Jadlog...):');
+  if(!nome || !nome.trim()) return;
+  const key = slugify(nome);
+  if(CARRIERS[key]){ switchCarrier(key); return; }
+  CARRIERS[key] = {nome: nome.trim()};
+  firebase.database().ref('transportadoras/_meta/' + key).set({nome: nome.trim()}).then(()=>{
+    switchCarrier(key);
+  }).catch(err=>{
+    alert('Não consegui salvar a nova transportadora no banco: ' + err.message);
+  });
+}
+
+document.getElementById('carrierTabs').addEventListener('click', (e)=>{
+  const addBtn = e.target.closest('#addCarrierBtn');
+  if(addBtn){ addNewCarrier(); return; }
+  const tab = e.target.closest('.carrier-tab:not(.add)');
+  if(tab && tab.dataset.carrier !== ACTIVE_CARRIER) switchCarrier(tab.dataset.carrier);
+});
 
 let DEFAULT_DATA = [];
 let ALL = [];
 let SLA_DATA = []; // {praca, total, onTime, slaPct} — todas as praças com volume mín. (ordenado por SLA asc)
 let TOP_DELAYS_ALL = [];
 let dadosCarregados = false;
+let REF_DATE = null; // data de "hoje" usada no último upload dessa transportadora, pra legenda do rodapé
 
 // ---------------- Indicador real x Indicador da transportadora ----------------
 let VIEW_MODE = 'real';          // 'real' | 'transp'
@@ -612,13 +727,22 @@ function mostrarCarregando(msg){
 function loadDataFromFirebase(){
   mostrarCarregando('⏳ Carregando dados do banco...');
   document.getElementById('sourcePill').textContent = 'Carregando do banco...';
-  Promise.all([fbRef('registros').once('value'), loadMotivosCfg()]).then(([snap])=>{
+  const nomeAtual = (CARRIERS[ACTIVE_CARRIER]||{}).nome || ACTIVE_CARRIER;
+  Promise.all([
+    fbRef('registros').once('value'),
+    loadMotivosCfg(),
+    fbRef('config/colMap').once('value'),
+    fbRef('config/refDate').once('value')
+  ]).then(([snap, _motivos, colMapSnap, refDateSnap])=>{
     const val = snap.val();
     DEFAULT_DATA = val || [];
     ALL = DEFAULT_DATA;
+    CARRIER_COLMAP = colMapSnap.val() || null;
+    REF_DATE = refDateSnap.val() || null;
     dadosCarregados = true;
+    updateFooter();
     if(!ALL.length){
-      mostrarCarregando('Nenhum dado encontrado em painelAtiva/registros. Suba uma planilha pelo botão "Atualizar planilha", ou rode o seed uma vez.');
+      mostrarCarregando(`Nenhum dado encontrado ainda pra ${escapeHtmlText(nomeAtual)}. Suba uma planilha pelo botão "Atualizar planilha".`);
       document.getElementById('sourcePill').textContent = 'Sem dados no banco ainda';
       return;
     }
@@ -628,9 +752,17 @@ function loadDataFromFirebase(){
     document.getElementById('sourcePill').textContent = `Dados do banco (${ALL.length} registros)`;
     document.getElementById('sourcePill').classList.remove('custom');
   }).catch((err)=>{
-    mostrarCarregando('❌ Não consegui carregar os dados do banco (' + err.message + '). Confere as Regras do Firebase pro nó "painelAtiva".');
+    mostrarCarregando('❌ Não consegui carregar os dados do banco (' + err.message + '). Confere as Regras do Firebase pro nó "transportadoras".');
     document.getElementById('sourcePill').textContent = 'Erro ao carregar';
   });
+}
+
+function updateFooter(){
+  const nome = (CARRIERS[ACTIVE_CARRIER]||{}).nome || ACTIVE_CARRIER;
+  const refTxt = REF_DATE ? (()=>{ const [y,m,d]=REF_DATE.split('-'); return `${d}/${m}/${y}`; })() : null;
+  document.getElementById('footerText').textContent =
+    `Painel gerado a partir da base de remessas ${nome} · atraso calculado em relação à data de previsão de entrega` +
+    (refTxt ? ` · referência de "hoje" nesta base: ${refTxt}, para remessas em aberto` : '');
 }
 
 const COLORS = {
@@ -1202,7 +1334,18 @@ document.getElementById('resetBtn').addEventListener('click', ()=>{
 });
 
 // ---------------- Upload de nova planilha ----------------
-const REQUIRED_COLS = ['CTRC/SUBCON','TIPO','NOME DESTINATARIO','PRACA','NFISCAL','ULTIMA OCORRENC','DATA PREV ENTREGA','DATA DA ENTREGA'];
+// Campos lógicos que o painel entende, e dicas de nomes de coluna pra pré-selecionar no mapeamento.
+const FIELD_DEFS = [
+  {key:'prev', label:'Data prevista de entrega', required:true,  hints:['DATA PREV ENTREGA','PREVISAO ENTREGA','DATA PREVISTA','PREV ENTREGA','DATA PREV. ENTREGA']},
+  {key:'ent',  label:'Data da entrega',          required:false, hints:['DATA DA ENTREGA','DATA ENTREGA','DT ENTREGA','ENTREGUE EM']},
+  {key:'ocor', label:'Última ocorrência (motivo/status)', required:false, hints:['ULTIMA OCORRENC','ULTIMA OCORRENCIA','OCORRENCIA','STATUS']},
+  {key:'praca', label:'Praça',                   required:false, hints:['PRACA','PRAÇA','CIDADE']},
+  {key:'nf',   label:'Nota fiscal',              required:false, hints:['NFISCAL','NOTA FISCAL','NF']},
+  {key:'dest', label:'Nome do destinatário',     required:false, hints:['NOME DESTINATARIO','DESTINATARIO','CLIENTE']},
+  {key:'tipo', label:'Tipo / modal',             required:false, hints:['TIPO','MODAL']},
+  {key:'ctrc', label:'CTRC / nº de conhecimento', required:false, hints:['CTRC/SUBCON','CTRC','CONHECIMENTO']},
+  {key:'uf',   label:'UF de destino',            required:false, hints:['UF DESTINO','UF']},
+];
 const OCOR_FIXES = {'AGUARDANDO EMABRQUE':'AGUARDANDO EMBARQUE','RETIDADO NA CIA':'RETIRADO NA CIA','AGUARDANDO RETIRAR NO AEROPORTO':'AGUARDANDO RETIRADA NO AEROPORTO'};
 
 function excelSerialToDate(n){
@@ -1260,20 +1403,51 @@ function normOcor(x){
   return OCOR_FIXES[u] || u;
 }
 
-function parseWorkbookToRecords(wb){
+function readWorkbookHeader(wb){
   const sheetName = wb.SheetNames[0];
   const ws = wb.Sheets[sheetName];
   const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
   if(!rows.length) throw new Error('Planilha vazia.');
+  const header = rows[0].map(h => String(h||'').trim().toUpperCase()).filter(h => h !== '');
+  return {rows, header};
+}
 
-  const header = rows[0].map(h => String(h||'').trim().toUpperCase());
+function normHeaderTxt(s){
+  return String(s||'').trim().toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+}
+
+// Pra cada campo lógico, tenta achar automaticamente a coluna mais parecida no cabeçalho da planilha —
+// usado só pra pré-selecionar o mapeamento, o usuário sempre confere e confirma.
+function guessColMap(header){
+  const normHeader = header.map(normHeaderTxt);
+  const map = {};
+  FIELD_DEFS.forEach(f=>{
+    let found = null;
+    for(const hint of f.hints){
+      const hn = normHeaderTxt(hint);
+      const i = normHeader.indexOf(hn);
+      if(i>-1){ found = header[i]; break; }
+    }
+    map[f.key] = found;
+  });
+  return map;
+}
+
+function parseWorkbookToRecords(wb, colMap){
+  const {rows, header} = readWorkbookHeader(wb);
   const idx = {};
   header.forEach((h,i)=>{ idx[h] = i; });
 
-  const missing = REQUIRED_COLS.filter(c => !(c in idx));
-  if(missing.length){
-    throw new Error('Colunas não encontradas na planilha: ' + missing.join(', '));
+  function colIndex(field){
+    const h = colMap[field];
+    return (h && (h in idx)) ? idx[h] : -1;
   }
+  const iPrev = colIndex('prev');
+  if(iPrev === -1){
+    throw new Error('A coluna mapeada pra "Data prevista de entrega" não existe nessa planilha. Clique em "Remapear colunas" e confere.');
+  }
+  const F = {};
+  ['ent','ocor','praca','nf','dest','tipo','ctrc','uf'].forEach(k=>{ F[k] = colIndex(k); });
 
   const today = (()=>{ const t = new Date(); return new Date(t.getFullYear(), t.getMonth(), t.getDate()); })();
 
@@ -1281,24 +1455,24 @@ function parseWorkbookToRecords(wb){
   for(let i=1; i<rows.length; i++){
     const r = rows[i];
     if(!r || r.every(c => c===null || c==='')) continue;
-    const prevD = toDateOrNull(r[idx['DATA PREV ENTREGA']]);
+    const prevD = toDateOrNull(r[iPrev]);
     if(!prevD) continue; // sem data prevista não dá para classificar
-    const entD = toDateOrNull(r[idx['DATA DA ENTREGA']]);
+    const entD = F.ent>-1 ? toDateOrNull(r[F.ent]) : null;
     const [status, dias] = classifyRow(prevD, entD, today);
     records.push({
-      ctrc: r[idx['CTRC/SUBCON']],
-      nf: idx['NFISCAL']!==undefined ? r[idx['NFISCAL']] : null,
-      tipo: r[idx['TIPO']],
-      dest: r[idx['NOME DESTINATARIO']],
-      uf: idx['UF DESTINO']!==undefined ? r[idx['UF DESTINO']] : null,
-      praca: r[idx['PRACA']],
+      ctrc: F.ctrc>-1 ? r[F.ctrc] : null,
+      nf: F.nf>-1 ? r[F.nf] : null,
+      tipo: F.tipo>-1 ? r[F.tipo] : null,
+      dest: F.dest>-1 ? r[F.dest] : null,
+      uf: F.uf>-1 ? r[F.uf] : null,
+      praca: F.praca>-1 ? r[F.praca] : null,
       prev: isoDate(prevD),
       ent: entD ? isoDate(entD) : null,
       status, dias,
-      ocor: normOcor(r[idx['ULTIMA OCORRENC']]),
+      ocor: normOcor(F.ocor>-1 ? r[F.ocor] : null),
     });
   }
-  if(!records.length) throw new Error('Nenhuma linha válida encontrada (verifique a coluna DATA PREV ENTREGA).');
+  if(!records.length) throw new Error('Nenhuma linha válida encontrada (verifique a coluna mapeada pra "Data prevista de entrega").');
   return records;
 }
 
@@ -1308,7 +1482,17 @@ function showUploadStatus(msg, isErr){
   el.classList.toggle('err', !!isErr);
 }
 
-document.getElementById('uploadBtn').addEventListener('click', ()=> document.getElementById('fileInput').click());
+document.getElementById('uploadBtn').addEventListener('click', ()=>{
+  pendingForceRemap = false;
+  document.getElementById('fileInput').click();
+});
+document.getElementById('remapBtn').addEventListener('click', ()=>{
+  pendingForceRemap = true;
+  document.getElementById('fileInput').click();
+});
+
+let pendingForceRemap = false;
+let pendingUpload = null; // {file, wb, header}
 
 document.getElementById('fileInput').addEventListener('change', (e)=>{
   const file = e.target.files[0];
@@ -1319,27 +1503,15 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
     try{
       const data = new Uint8Array(ev.target.result);
       const wb = XLSX.read(data, {type:'array', cellDates:true});
-      const records = parseWorkbookToRecords(wb);
-      if(!confirm('Isso vai SUBSTITUIR os dados do painel pra todo mundo que usa esse app (' + records.length + ' registros). Confirma?')){
-        e.target.value = '';
-        showUploadStatus('', false);
-        return;
+      const {header} = readWorkbookHeader(wb);
+      pendingUpload = {file, wb, header};
+
+      const mapaValido = CARRIER_COLMAP && CARRIER_COLMAP.prev && header.includes(CARRIER_COLMAP.prev);
+      if(pendingForceRemap || !mapaValido){
+        openColMapModal(header, CARRIER_COLMAP || guessColMap(header));
+      } else {
+        finishUpload(CARRIER_COLMAP);
       }
-      showUploadStatus('Salvando no banco...', false);
-      fbRef('registros').set(records).then(()=>{
-        ALL = records;
-        DEFAULT_DATA = records;
-        refreshDateBounds();
-        setActiveChip(document.querySelector('.chip-btn[data-range="all"]'));
-        applyFilters();
-        const now = new Date();
-        const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
-        document.getElementById('sourcePill').textContent = `${file.name} · atualizado às ${hh}:${mm} (${records.length} registros)`;
-        document.getElementById('sourcePill').classList.add('custom');
-        showUploadStatus('Planilha carregada e salva no banco — todo mundo que abrir o painel já vê os dados novos.', false);
-      }).catch((err)=>{
-        showUploadStatus('Não consegui salvar no banco (' + err.message + '). Os dados NÃO foram atualizados.', true);
-      });
     }catch(err){
       showUploadStatus('Erro ao ler a planilha: ' + err.message, true);
     }
@@ -1348,6 +1520,89 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
   reader.readAsArrayBuffer(file);
   e.target.value = '';
 });
+
+function openColMapModal(header, prefill){
+  document.getElementById('colMapCarrierName').textContent = (CARRIERS[ACTIVE_CARRIER]||{}).nome || ACTIVE_CARRIER;
+  document.getElementById('colMapErr').style.display = 'none';
+  const optsHtml = '<option value="">— não tem essa coluna —</option>' +
+    header.map(h=>`<option value="${escapeAttr(h)}">${escapeHtmlText(h)}</option>`).join('');
+  document.getElementById('colMapFields').innerHTML = FIELD_DEFS.map(f=>{
+    const sel = (prefill && prefill[f.key]) || '';
+    return `<div class="cmrow">
+      <label>${escapeHtmlText(f.label)}${f.required?' <span class="req">*</span>':''}</label>
+      <select data-field="${f.key}">${optsHtml}</select>
+    </div>`;
+  }).join('');
+  // aplica o valor pré-selecionado em cada select
+  FIELD_DEFS.forEach(f=>{
+    const val = (prefill && prefill[f.key]) || '';
+    const sel = document.querySelector('#colMapFields select[data-field="'+f.key+'"]');
+    if(sel && val && header.includes(val)) sel.value = val;
+  });
+  document.getElementById('colMapOverlay').style.display = 'flex';
+}
+
+document.getElementById('colMapCancelBtn').addEventListener('click', ()=>{
+  document.getElementById('colMapOverlay').style.display = 'none';
+  pendingUpload = null;
+  showUploadStatus('', false);
+});
+
+document.getElementById('colMapConfirmBtn').addEventListener('click', ()=>{
+  const map = {};
+  FIELD_DEFS.forEach(f=>{
+    const sel = document.querySelector('#colMapFields select[data-field="'+f.key+'"]');
+    map[f.key] = sel.value || null;
+  });
+  const faltando = FIELD_DEFS.filter(f=>f.required && !map[f.key]);
+  if(faltando.length){
+    const errEl = document.getElementById('colMapErr');
+    errEl.textContent = 'Preencha: ' + faltando.map(f=>f.label).join(', ');
+    errEl.style.display = 'block';
+    return;
+  }
+  document.getElementById('colMapOverlay').style.display = 'none';
+  fbRef('config/colMap').set(map).catch(()=>{}); // salva já; se o upload falhar o mapeamento continua útil pra próxima tentativa
+  CARRIER_COLMAP = map;
+  finishUpload(map);
+});
+
+function finishUpload(colMap){
+  if(!pendingUpload) return;
+  const {file, wb} = pendingUpload;
+  try{
+    const records = parseWorkbookToRecords(wb, colMap);
+    if(!confirm('Isso vai SUBSTITUIR os dados de ' + ((CARRIERS[ACTIVE_CARRIER]||{}).nome||ACTIVE_CARRIER) + ' pra todo mundo que usa esse app (' + records.length + ' registros). Confirma?')){
+      showUploadStatus('', false);
+      pendingUpload = null;
+      return;
+    }
+    showUploadStatus('Salvando no banco...', false);
+    const todayIso = isoDate(new Date());
+    Promise.all([
+      fbRef('registros').set(records),
+      fbRef('config/refDate').set(todayIso)
+    ]).then(()=>{
+      ALL = records;
+      DEFAULT_DATA = records;
+      REF_DATE = todayIso;
+      updateFooter();
+      refreshDateBounds();
+      setActiveChip(document.querySelector('.chip-btn[data-range="all"]'));
+      applyFilters();
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
+      document.getElementById('sourcePill').textContent = `${file.name} · atualizado às ${hh}:${mm} (${records.length} registros)`;
+      document.getElementById('sourcePill').classList.add('custom');
+      showUploadStatus('Planilha carregada e salva no banco — todo mundo que abrir o painel já vê os dados novos.', false);
+    }).catch((err)=>{
+      showUploadStatus('Não consegui salvar no banco (' + err.message + '). Os dados NÃO foram atualizados.', true);
+    });
+  }catch(err){
+    showUploadStatus('Erro ao ler a planilha: ' + err.message, true);
+  }
+  pendingUpload = null;
+}
 
 document.getElementById('restoreBtn').addEventListener('click', ()=>{
   showUploadStatus('', false);
@@ -1398,7 +1653,14 @@ document.getElementById('restoreBtn').addEventListener('click', ()=>{
       var dados = snap.val();
       var meusGrupos = (dados && dados.grupos) || [];
       var permitido = GRUPOS_PERMITIDOS.some(function(g){ return meusGrupos.indexOf(g) !== -1; });
-      if(permitido){ liberar(); loadDataFromFirebase(); } else { negar('Você não tem permissão pra acessar este app.'); }
+      if(permitido){
+        liberar();
+        loadCarriersMeta().then(()=>{
+          renderCarrierTabs();
+          updateHeaderForCarrier();
+          loadDataFromFirebase();
+        });
+      } else { negar('Você não tem permissão pra acessar este app.'); }
     }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
   });
 })();
