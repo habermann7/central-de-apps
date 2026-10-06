@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>STIN Pharma · SLA TV</title>
+<style>:root{color-scheme:dark;--bg:#080f1c;--panel:#111e30;--ink:#f2f6fc;--muted:#a8b8cd;--line:#293d57;--ok:#51e0aa;--warn:#ffcb67;--crit:#ff7c89;--none:#a8b8cd;--correios:#ff9967;--azul:#65b2ff;--ativa:#51e0aa}
+*{box-sizing:border-box}html{min-height:100%;background:var(--bg)}body{margin:0;min-height:100svh;display:flex;flex-direction:column;color:var(--ink);font-family:'Segoe UI',Arial,sans-serif;font-variant-numeric:tabular-nums}button,select,input{font:inherit;color:inherit;background:#192b42;border:1px solid #39506b;border-radius:8px;padding:8px 11px;min-height:36px}button,select{cursor:pointer}button:hover{background:#274362}button:disabled{opacity:.45;cursor:default}:focus-visible{outline:3px solid #8bc6ff;outline-offset:2px}[hidden]{display:none!important}header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px 2.5vw 12px;border-bottom:1px solid var(--line)}.brand{font-size:11px;letter-spacing:.18em;color:var(--muted)}h1{font-size:clamp(24px,2.4vw,42px);margin:4px 0 0;font-weight:650}#clock{text-align:right}#clock b{font-size:clamp(24px,2.4vw,42px);font-weight:600}#clock small{display:block;font-size:12px;color:var(--muted)}.toolbar{display:flex;gap:10px;align-items:end;flex-wrap:wrap;padding:10px 2.5vw;font-size:13px}.field{display:flex;flex-direction:column;gap:3px}.field label{font-size:11px;color:var(--muted)}.period-field select{min-width:190px}.tools{display:flex;gap:8px;margin-left:auto}#custom{display:flex;gap:10px;align-items:end;flex-wrap:wrap;width:100%;padding:10px 0 4px;border-top:1px solid var(--line)}#filterError{color:var(--crit);align-self:center}#nav{display:flex;gap:6px;padding:0 2.5vw 10px}#nav button{background:transparent;border-color:transparent;color:var(--muted);min-height:32px;padding:6px 14px;font-size:13px}#nav button[aria-current="page"]{background:#203955;border-color:#496786;color:white}main{flex:1;display:flex;flex-direction:column;gap:14px;padding:0 2.5vw 16px;min-width:0}.intro{display:flex;align-items:center;justify-content:space-between;gap:16px}.intro h2{margin:0;font-size:clamp(22px,2vw,36px);font-weight:650}.intro p{color:var(--muted);font-size:13px;margin:5px 0 0}.target{border:1px solid #39506b;border-radius:10px;padding:9px 16px;white-space:nowrap;color:var(--muted);font-size:12px}.target b{color:white;font-size:26px;margin-left:8px}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;flex:1}.card{min-width:0;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--carrier);border-radius:14px;padding:clamp(16px,1.6vw,30px);display:flex;flex-direction:column}.card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.name{font-size:clamp(22px,1.8vw,34px);font-weight:650;color:var(--ink);margin:0}.status{font-size:11px;border:1px solid currentColor;padding:4px 8px;border-radius:30px;white-space:nowrap}.pct{font-size:clamp(60px,6vw,112px);font-weight:750;letter-spacing:-.055em;line-height:1.05;margin-top:12px}.pct small{font-size:.42em;letter-spacing:0;margin-left:3px}.muted{color:var(--muted);font-size:12px}.track{height:7px;background:#293d56;margin:14px 0 10px;border-radius:8px;position:relative}.track i{display:block;height:100%;border-radius:8px;background:currentColor}.track:after{content:'';position:absolute;left:95%;top:-4px;height:15px;width:2px;background:#fff}.gap{font-size:12px;margin-bottom:14px}.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;border-top:1px solid var(--line);padding-top:12px}.metrics b{display:block;font-size:clamp(22px,1.8vw,34px);font-weight:650}.metrics span{display:block;color:var(--muted);font-size:11px}.ref{font-size:11px;color:var(--muted);margin-top:12px;line-height:1.6}.summary{display:flex;gap:20px;align-items:center;padding:11px 20px;background:#132339;border:1px solid var(--line);border-radius:12px;flex-wrap:wrap;font-size:13px;color:var(--muted)}.summary strong{font-size:28px}.detail{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.8fr);gap:18px;flex:1}.detail .pct{font-size:clamp(70px,8vw,150px)}.detail .card{justify-content:center}.trend{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:clamp(16px,1.6vw,30px);display:flex;flex-direction:column;justify-content:center;min-width:0}.trend h3{margin:0;font-size:20px}.chart-head{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--muted);font-size:11px}.chart-head h3{font-size:12px;font-weight:500;margin:0}.chart-block{margin-top:auto;padding-top:14px}.plot{height:clamp(95px,12vh,155px);margin-top:27px;position:relative;border-bottom:1px solid #53677f;display:grid;gap:6px;grid-template-columns:repeat(var(--columns),minmax(0,1fr))}.plot:before{content:'';position:absolute;left:0;right:0;bottom:95%;border-top:1px dashed #a7b7ca;z-index:2;pointer-events:none}.bar{position:relative;min-width:0;height:100%}.bar-fill{position:absolute;bottom:0;left:18%;width:64%;height:calc(var(--pct)*1%);background:currentColor;border-radius:4px 4px 0 0}.bar-value{position:absolute;bottom:calc(var(--pct)*1%);margin-bottom:6px;left:50%;transform:translateX(-50%);font-size:11px;line-height:1;white-space:nowrap;z-index:3}.bar.zero .bar-fill{height:2px}.bar.none .bar-fill{height:0}.date-row{display:grid;grid-template-columns:repeat(var(--columns),minmax(0,1fr));gap:6px;text-align:center;color:var(--muted);font-size:11px;margin-top:9px}.date-row small{display:block;font-size:10px;opacity:.85}.detail .plot{height:clamp(180px,33vh,390px);margin-top:40px}.detail .bar-value{font-size:clamp(10px,1vw,17px)}.detail .chart-block{margin-top:20px;padding:0}.detail .date-row{font-size:12px}.detail .chart-head{font-size:12px}.empty{padding:45px 10px;text-align:center;color:var(--muted);font-size:14px}.empty small{display:block;margin-top:8px;font-size:12px}footer{padding:0 2.5vw 12px;display:flex;gap:16px;align-items:center;justify-content:space-between;color:var(--muted);font-size:11px}.paging{display:flex;gap:12px;align-items:center}.paging button{font-size:11px;padding:4px 9px;min-height:28px}#counter{white-space:nowrap}#progress{position:fixed;bottom:0;left:0;height:3px;background:#65b2ff;width:0;z-index:10}#message{position:fixed;bottom:42px;left:50%;transform:translateX(-50%);padding:12px 18px;border:1px solid #6685a9;border-radius:10px;background:#203750;color:white;max-width:min(700px,90vw);z-index:20;font-size:14px;box-shadow:0 5px 20px #0007}#message.error{border-color:var(--crit)}
+@media(min-width:1000px) and (max-height:800px){header{padding-top:10px;padding-bottom:8px}h1{font-size:25px}#clock b{font-size:26px}.toolbar{padding-block:7px}#nav{padding-bottom:6px}main{gap:10px;padding-bottom:10px}.intro h2{font-size:23px}.intro p{font-size:11px}.card{padding:14px 17px}.pct{font-size:64px;margin-top:8px}.name{font-size:23px}.track{margin:10px 0 8px}.gap{margin-bottom:10px}.metrics{padding-top:9px}.metrics b{font-size:25px}.ref{margin-top:8px;font-size:10px}.plot{height:85px;margin-top:23px}.chart-block{padding-top:9px}.summary{padding:7px 17px}.summary strong{font-size:25px}.target{padding:6px 12px}.target b{font-size:23px}.detail .plot{height:220px}footer{padding-bottom:8px}.tools{gap:5px}}
+@media(max-width:1050px){.tools{margin-left:0}.cards,.detail{gap:12px}.status{font-size:10px}.card-head{flex-wrap:wrap}.bar-value,.date-row{font-size:10px}}
+@media(max-width:760px){header{padding:16px 5vw}.toolbar{padding:12px 5vw}#nav{padding:0 5vw 12px;overflow:auto}#nav button{white-space:nowrap;padding:6px 10px}main{padding-inline:5vw}.cards,.detail{grid-template-columns:1fr}.card{padding:20px}.pct,.detail .pct{font-size:80px}.card-head{flex-wrap:nowrap}.plot{height:130px}.detail .plot{height:220px}.date-row small{font-size:9px}.summary{gap:10px 18px}footer{padding:0 5vw 16px;flex-wrap:wrap}.intro p{font-size:11px}.target{padding:8px}.target b{font-size:24px}.period-field select{min-width:175px}.tools{flex-wrap:wrap}.detail .bar-value{font-size:10px}.detail .date-row{font-size:10px}.paging{margin-left:auto}.status{font-size:11px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+/* Compact overview keeps all three carriers and their charts on the TV screen. */
+.cards .track,.cards .gap{display:none}.cards .metrics{margin-top:14px}.cards .plot{height:clamp(70px,10vh,120px)}
+@media(min-width:1000px) and (max-height:800px){.cards .metrics{margin-top:10px}.cards .plot{height:65px}.cards .ref{margin-top:6px}.cards .date-row{font-size:10px}.cards .date-row small{font-size:9px}.cards .chart-block{padding-top:7px}.cards .pct{font-size:60px}.cards .muted{font-size:11px}}
+@media(max-width:760px){.cards .plot{height:130px}.cards .metrics{margin-top:18px}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
+</head>
+<body>
+<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
+  <div style="max-width:320px;width:100%;">
+    <div id="__gateMsg" style="font-size:14px;color:#8a93a3;line-height:1.6;">Verificando acesso...</div>
+  </div>
+</div>
+<style id="__gateStyle">body > *:not(#__gateOverlay){ display:none !important; }</style>
+<header><div><div class="brand"><a href="./index.html" style="color:inherit;text-decoration:none">&larr; Central de Apps</a> · STIN PHARMA / TRANSPORTES</div><h1>Monitor de SLA</h1></div><div id="clock"><b>--:--</b><small></small></div></header>
+<section class="toolbar" aria-label="Filtros e controles">
+  <div class="field"><label for="granularity">SLA por</label><select id="granularity"><option value="semana">Semana</option><option value="dia">Dia</option></select></div>
+  <div class="field period-field"><label for="period">Previsão de entrega</label><select id="period"></select></div>
+  <button id="pause" type="button" aria-pressed="false">Pausar rotação</button>
+  <div class="field"><label for="speed">Tempo por tela</label><select id="speed"><option value="20">20 segundos</option><option value="30">30 segundos</option><option value="60">60 segundos</option></select></div>
+  <div class="tools"><button id="full" type="button">Tela cheia</button><button id="update" type="button">Atualizar dados</button></div>
+  <form id="custom" hidden><div class="field"><label for="from">De</label><input id="from" type="date" required></div><div class="field"><label for="to">Até</label><input id="to" type="date" required></div><button type="submit">Aplicar</button><button type="button" id="cancel">Cancelar</button><span id="filterError" role="alert"></span></form>
+</section>
+<nav id="nav" aria-label="Transportadoras"><button type="button" data-page="0">Visão geral</button><button type="button" data-page="1">Correios</button><button type="button" data-page="2">Azul</button><button type="button" data-page="3">Ativa</button></nav>
+<main id="view"><div class="empty">Carregando as bases…</div></main>
+<footer><span id="foot"></span><div class="paging"><button id="previous" type="button" aria-label="Tela anterior">← Anterior</button><span id="counter"></span><button id="next" type="button" aria-label="Próxima tela">Próxima →</button></div></footer>
+<div id="message" role="status" hidden></div>
+<div id="progress" aria-hidden="true"></div>
+<script>(function(root){
+'use strict';
+const DAY=86400000, META=95, ORDER=['correios','azul','ativa'];
+const NAMES={correios:'Correios',azul:'Azul',ativa:'Ativa'};
+const pad=n=>String(n).padStart(2,'0');
+function dateDay(s){
+  if(typeof s!=='string')return null;
+  const m=s.match(/^(\d{4})-?(\d{2})-?(\d{2})$/);if(!m)return null;
+  const y=+m[1],mo=+m[2],d=+m[3];if(y<1900||y>2200)return null;
+  const t=Date.UTC(y,mo-1,d),v=new Date(t);
+  return v.getUTCFullYear()===y&&v.getUTCMonth()===mo-1&&v.getUTCDate()===d?t/DAY:null;
+}
+function iso(d){return new Date(d*DAY).toISOString().slice(0,10)}
+function fmt(d,year=true){if(d==null||!Number.isFinite(d))return '—';const s=iso(d);return s.slice(8)+'/'+s.slice(5,7)+(year?'/'+s.slice(0,4):'')}
+function today(){const p=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const get=k=>p.find(x=>x.type===k).value;return dateDay(get('year')+get('month')+get('day'))}
+const monday=d=>d-((new Date(d*DAY).getUTCDay()+6)%7);
+function easter(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=(h+l-7*m+114)%31+1;return Date.UTC(y,mo-1,da)/DAY}
+const calendars=new Map(),bdCache=new Map();
+function businessDay(d){const t=new Date(d*DAY),w=t.getUTCDay(),y=t.getUTCFullYear();if(w===0||w===6)return false;
+  if(!calendars.has(y)){const h=new Set([[1,1],[4,21],[5,1],[9,7],[10,12],[11,2],[11,15],[11,20],[12,25]].map(([m,n])=>Date.UTC(y,m-1,n)/DAY));h.add(easter(y)-2);calendars.set(y,h)}
+  return !calendars.get(y).has(d);
+}
+function addBD(d,n){const key=d+':'+n;if(bdCache.has(key))return bdCache.get(key);let x=d,k=n;while(k>0){x++;if(businessDay(x))k--}bdCache.set(key,x);return x}
+function normalize(input){
+  if(!input||typeof input!=='object')throw Error('Arquivo sem base de SLA válida.');
+  const modern=input.schema==='stin-sla-tv-v2', source=modern?input.carriers:input,carriers={};
+  for(const car of ORDER){
+    const original=source&&source[car];
+    if(!original||!(modern?Array.isArray(original):Array.isArray(original.R)&&Array.isArray(original.ST)))throw Error('Base '+NAMES[car]+' ausente ou inválida.');
+    const rows=modern?original:original.R,unique=new Map();
+    rows.forEach((row,i)=>{
+      if(!row||(modern?typeof row!=='object':!Array.isArray(row)||row.length<11))throw Error(NAMES[car]+': registro '+(i+1)+' inválido.');
+      const r=modern?row:{id:String(row[0]??''),base:row[6]||null,prazo:row[7]||0,prev:row[8]||null,ent:row[9]||null,st:original.ST[row[10]]};
+      if(typeof r.id!=='string'||!r.id.trim()||r.id.length>150||typeof r.st!=='string')throw Error(NAMES[car]+': identificador ou situação inválida no registro '+(i+1)+'.');
+      for(const key of ['base','prev','ent'])if(r[key]!=null&&r[key]!==''&&dateDay(r[key])==null)throw Error(NAMES[car]+': data inválida no registro '+(i+1)+'.');
+      if(car==='correios'&&(dateDay(r.base)==null||!Number.isInteger(r.prazo)||r.prazo<0||r.prazo>3650))throw Error('Correios: postagem ou prazo inválido no registro '+(i+1)+'.');
+      if(car!=='correios'&&dateDay(r.prev)==null)throw Error(NAMES[car]+': previsão inválida no registro '+(i+1)+'.');
+      const clean={id:r.id,base:r.base||null,prazo:car==='correios'?r.prazo:0,prev:r.prev||null,ent:r.ent||null,st:r.st.slice(0,250)};
+      unique.set(clean.id,clean);
+    });carriers[car]=[...unique.values()];
+  }
+  return {schema:'stin-sla-tv-v2',carriers};
+}
+function derive(dataset,T=today()){
+  const result={};
+  for(const car of ORDER){const rows=dataset.carriers[car];let until=null;
+    rows.forEach(r=>{for(const val of [r.base,r.ent]){const d=dateDay(val);if(d!=null&&(until==null||d>until))until=d}});
+    const ref=until==null?null:Math.min(T,until);
+    const items=rows.map(r=>{const base=dateDay(r.base),ent=dateDay(r.ent),prev=car==='correios'?addBD(base,r.prazo):dateDay(r.prev);
+      const excluded=car==='correios'&&/entregue ao remetente|estornad|cancelad|devolvid/i.test(r.st);
+      const delivered=ent!=null&&(car!=='correios'||/entregue ao destinat|caixa de correios inteligente/i.test(r.st));
+      const cls=excluded?'excl':delivered?(ent<=prev?'ok':'late_deliv'):ref!=null&&prev<ref?'late_open':'open';
+      return {prev,cls};
+    });result[car]={ref,items};
+  }return result;
+}
+function stats(items){const s={ok:0,late_deliv:0,late_open:0,open:0,excl:0};items.forEach(d=>s[d.cls]++);s.base=s.ok+s.late_deliv+s.late_open;s.pct=s.base?s.ok/s.base*100:null;return s}
+const level=p=>p==null?'none':p>=90?'ok':p>=80?'warn':'crit';
+const status=p=>p==null?'Sem SLA':p>=META?'Meta atingida':p>=90?'Abaixo da meta':p>=80?'Atenção':'Crítico';
+function range(value,T,custom){
+  const n=new Date(T*DAY),y=n.getUTCFullYear(),m=n.getUTCMonth();
+  if(value==='all')return [-Infinity,Infinity];
+  if(value==='custom'){if(!custom||custom.length!==2||!custom.every(Number.isInteger)||custom[0]>custom[1])throw Error('Informe um intervalo válido.');return [...custom]}
+  if(value==='today')return [T,T];if(value==='yesterday')return [T-1,T-1];
+  if(/^u\d+s$/.test(value))return [T-(+value.slice(1,-1)*7)+1,T];
+  if(/^u\d+$/.test(value))return [T-(+value.slice(1))+1,T];
+  if(value==='current')return [Date.UTC(y,m,1)/DAY,T];
+  if(value==='previous')return [Date.UTC(y,m-1,1)/DAY,Date.UTC(y,m,1)/DAY-1];
+  if(value==='year')return [Date.UTC(y,0,1)/DAY,T];
+  if(/^\d{4}-\d{2}$/.test(value)){const [yy,mm]=value.split('-').map(Number);if(mm>=1&&mm<=12)return [Date.UTC(yy,mm-1,1)/DAY,Date.UTC(yy,mm,1)/DAY-1]}
+  throw Error('Período inválido.');
+}
+function filter(items,rg){return items.filter(d=>d.prev>=rg[0]&&d.prev<=rg[1])}
+function buckets(items,rg,grain){
+  const visible=filter(items,rg);if(!visible.length)return [];
+  let first=Infinity,last=-Infinity;visible.forEach(d=>{first=Math.min(first,d.prev);last=Math.max(last,d.prev)});let a=Number.isFinite(rg[0])?rg[0]:first,b=Number.isFinite(rg[1])?rg[1]:last;
+  // Keep empty days visible so gaps are never shown as 0% SLA.
+  const step=grain==='dia'?1:7,key=d=>grain==='dia'?d:monday(d),groups=new Map();
+  visible.forEach(d=>{const k=key(d.prev);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(d)});
+  const out=[];for(let k=key(a);k<=b;k+=step)out.push({day:k,from:Math.max(a,k),to:Math.min(b,k+step-1),...stats(groups.get(k)||[])});
+  return out;
+}
+function extract(text){
+  const embedded=text.match(/<script\b(?=[^>]*\bid=["']sla-data["'])[^>]*>([\s\S]*?)<\/script\s*>/i);
+  if(embedded)return normalize(JSON.parse(embedded[1]));
+  const start=/\b(?:const|let)\s+SEED\s*=\s*/g.exec(text);if(!start)throw Error('Não encontrei a base no HTML. Use o relatório original ou um HTML salvo por este painel.');
+  let i=start.index+start[0].length;while(/\s/.test(text[i]||'')&&i<text.length)i++;
+  if(text[i]!=='{')throw Error('Base de dados inválida.');const first=i;let depth=0,inString=false,escape=false;
+  for(;i<text.length;i++){const c=text[i];if(inString){if(escape)escape=false;else if(c==='\\')escape=true;else if(c==='"')inString=false;continue}if(c==='"')inString=true;else if(c==='{')depth++;else if(c==='}'&&--depth===0)return normalize(JSON.parse(text.slice(first,i+1)))}
+  throw Error('Base de dados incompleta.');
+}
+const api={DAY,META,ORDER,NAMES,dateDay,iso,fmt,today,monday,addBD,normalize,derive,stats,level,status,range,filter,buckets,extract};
+if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.SLACore=api;
+})(typeof globalThis!=='undefined'?globalThis:this);
+</script>
+<script>(function(){
+'use strict';
+const C=SLACore,$=s=>document.querySelector(s),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const count=n=>n.toLocaleString('pt-BR'),pct=p=>p==null?'—':p.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});
+const PERIODS=[['u4s','Últimas 4 semanas'],['today','Hoje'],['yesterday','Ontem'],['u7','Últimos 7 dias'],['u14','Últimos 14 dias'],['u30','Últimos 30 dias'],['u8s','Últimas 8 semanas'],['u13s','Últimas 13 semanas'],['current','Mês atual'],['previous','Mês anterior'],['year','Ano atual'],['all','Todo o período'],['custom','Período personalizado']];
+const state={period:'u4s',grain:'semana',custom:null,today:C.today(),playing:true,seconds:20,position:0,elapsed:0,lastTick:performance.now(),busy:false};
+let dataset,derived,cache,deck=[],wake=null,messageTimer,clockMinute='';
+function notice(text,error=false){const n=$('#message');n.textContent=text;n.className=error?'error':'';n.hidden=false;clearTimeout(messageTimer);messageTimer=setTimeout(()=>{n.hidden=true},error?9000:6500)}
+function buildPeriods(){const months=new Set();C.ORDER.forEach(c=>derived[c].items.forEach(d=>months.add(C.iso(d.prev).slice(0,7))));$('#period').innerHTML=PERIODS.map(([v,l])=>'<option value="'+v+'">'+l+'</option>').join('')+'<optgroup label="Meses da base">'+[...months].sort().reverse().map(m=>'<option value="'+m+'">'+m.slice(5)+'/'+m.slice(0,4)+'</option>').join('')+'</optgroup>';$('#period').value=state.period}
+function resetClock(){state.elapsed=0;state.lastTick=performance.now();$('#progress').style.width='0%'}
+function chosenPage(){return deck[state.position]?.page||0}
+function rebuild(page=chosenPage()){
+  const rg=C.range(state.period,state.today,state.custom),lists={},totals={},buckets={};
+  for(const c of C.ORDER){lists[c]=C.filter(derived[c].items,rg);totals[c]=C.stats(lists[c]);buckets[c]=new Map(C.buckets(lists[c],rg,state.grain).map(d=>[d.day,d]))}
+  const all=C.ORDER.flatMap(c=>lists[c]),timeline=C.buckets(all,rg,state.grain);
+  cache={rg,lists,totals,buckets,timeline,total:C.stats(all)};
+  deck=[];
+  for(let p=0;p<4;p++){
+    const capacity=p===0?(state.grain==='dia'?7:8):(state.grain==='dia'?14:12),groups=[];
+    const displayTimeline=state.grain==='dia'?timeline.filter(r=>p===0?r.base>0:(buckets[C.ORDER[p-1]].get(r.day)?.base||0)>0):timeline;
+    // Newest group first, retaining chronological order within each group.
+    for(let end=displayTimeline.length;end>0;end-=capacity)groups.push(displayTimeline.slice(Math.max(0,end-capacity),end));
+    if(!groups.length)groups.push([]);
+    groups.forEach((rows,i)=>deck.push({page:p,rows,part:i+1,parts:groups.length}));
+  }
+  state.position=Math.max(0,deck.findIndex(d=>d.page===page));resetClock();render();
+}
+function periodCaption(){const label=PERIODS.find(([v])=>v===state.period)?.[1]||state.period.slice(5)+'/'+state.period.slice(0,4);const rg=cache.rg;if(Number.isFinite(rg[0])&&Number.isFinite(rg[1]))return (state.period==='custom'?'':label+' · ')+C.fmt(rg[0])+' a '+C.fmt(rg[1]);if(cache.timeline.length)return label+' · '+C.fmt(cache.timeline[0].from)+' a '+C.fmt(cache.timeline.at(-1).to);return label}
+function card(c,withChart){const s=cache.totals[c],lv=C.level(s.pct),diff=s.pct==null?null:s.pct-C.META;const diffText=diff==null?'Sem pedidos elegíveis':(diff>=0?'+':'')+pct(diff)+' p.p. da meta';return '<article class="card" style="--carrier:var(--'+c+');color:var(--'+lv+')"><div class="card-head"><h3 class="name">'+C.NAMES[c]+'</h3><span class="status">'+C.status(s.pct)+'</span></div><div class="pct">'+pct(s.pct)+(s.pct==null?'':'<small>%</small>')+'</div><div class="muted">SLA no período</div><div class="track" aria-hidden="true"><i style="width:'+(s.pct||0)+'%"></i></div><div class="gap">'+diffText+'</div><div class="metrics"><div><b>'+count(s.ok)+'</b><span>No prazo</span></div><div><b>'+count(s.late_deliv)+'</b><span>Entregues com atraso</span></div><div><b>'+count(s.late_open)+'</b><span>Vencidos em aberto</span></div></div><div class="ref">'+count(s.base)+' no SLA · '+count(s.open)+' em andamento<br>Base até '+C.fmt(derived[c].ref)+'</div>'+(withChart?chart(c):'')+'</article>'}
+function chart(c){const screen=deck[state.position],weekly=state.grain==='semana',rows=weekly?screen.rows:screen.rows.filter(r=>(cache.buckets[c].get(r.day)?.base||0)>0);if(!rows.length)return '<div class="empty">'+(cache.totals[c].base?'Sem SLA neste bloco':'Sem SLA no período')+'</div>';
+  const empty=C.stats([]),values=rows.map(r=>({...r,...(cache.buckets[c].get(r.day)||empty)}));
+  const span=C.fmt(rows[0].from,false)+'–'+C.fmt(rows.at(-1).to,false);
+  return '<div class="chart-block" style="--columns:'+rows.length+'"><div class="chart-head"><h3>SLA '+(weekly?'semanal':'diário')+'</h3><span>'+span+' · Meta 95%</span></div><div class="plot" role="img" aria-label="'+C.NAMES[c]+': SLA '+(weekly?'por semana':'por dia')+'. '+values.map(r=>esc(C.fmt(r.from)+(weekly?' a '+C.fmt(r.to):'')+': '+(r.pct==null?'sem SLA':pct(r.pct)+'%'))).join('; ')+'">'+values.map(r=>{const lv=C.level(r.pct),value=r.pct||0,title=C.fmt(r.from)+(weekly?' a '+C.fmt(r.to):'')+' · '+(r.pct==null?'Sem SLA':pct(r.pct)+'%')+' · '+count(r.base)+' no SLA';return '<div class="bar '+(r.pct==null?'none':value===0?'zero':'')+'" style="--pct:'+value+';color:var(--'+lv+')" title="'+esc(title)+'"><i class="bar-fill"></i><span class="bar-value">'+pct(r.pct)+(r.pct==null?'':'%')+'</span></div>'}).join('')+'</div><div class="date-row">'+rows.map(r=>'<span>'+C.fmt(r.from,false)+(weekly?'<small>a '+C.fmt(r.to,false)+'</small>':'')+'</span>').join('')+'</div></div>';
+}
+function render(){const screen=deck[state.position],page=screen.page,name=page===0?'Visão geral':C.NAMES[C.ORDER[page-1]],s=cache.total;$('#view').innerHTML='<div class="intro"><div><h2>'+name+'</h2><p>'+esc(periodCaption())+'</p></div><div class="target">META<b>95%</b></div></div>'+(page===0?'<div class="cards">'+C.ORDER.map(c=>card(c,true)).join('')+'</div><div class="summary"><span>SLA consolidado</span><strong style="color:var(--'+C.level(s.pct)+')">'+pct(s.pct)+(s.pct==null?'':'%')+'</strong><span>'+count(s.ok)+' no prazo / '+count(s.base)+' no SLA</span></div>':'<div class="detail">'+card(C.ORDER[page-1],false)+'<section class="trend" aria-label="Evolução do SLA '+name+'">'+chart(C.ORDER[page-1])+'</section></div>');
+  document.querySelectorAll('#nav [data-page]').forEach(b=>{if(+b.dataset.page===page)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+  $('#counter').textContent=(state.position+1)+' / '+deck.length;
+  $('#foot').textContent=(state.playing?'Rotação automática':'Rotação pausada')+' · '+(state.grain==='dia'?'Diário':'Semanal')+(screen.parts>1?' · Bloco '+screen.part+'/'+screen.parts:'')+baseInfo;
+}
+function move(delta){state.position=(state.position+delta+deck.length)%deck.length;resetClock();render()}
+function jump(page){const pos=deck.findIndex(d=>d.page===page);if(pos>=0){state.position=pos;resetClock();render()}}
+async function syncWake(){const wanted=state.playing&&!!document.fullscreenElement&&!document.hidden;if(!wanted&&wake){const old=wake;wake=null;try{await old.release()}catch{}}else if(wanted&&!wake&&navigator.wakeLock){try{wake=await navigator.wakeLock.request('screen');wake.addEventListener('release',()=>{wake=null},{once:true})}catch{}}}
+function togglePlay(){state.playing=!state.playing;$('#pause').textContent=state.playing?'Pausar rotação':'Retomar rotação';$('#pause').setAttribute('aria-pressed',String(!state.playing));state.lastTick=performance.now();render();syncWake()}
+function tick(){const now=performance.now(),dt=now-state.lastTick;state.lastTick=now;
+  const key=new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit'}).format(new Date());
+  if(key!==clockMinute){clockMinute=key;$('#clock b').textContent=key;$('#clock small').textContent=new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date());const T=C.today();if(T!==state.today){state.today=T;derived=C.derive(dataset,T);rebuild()}}
+  if(state.playing&&!document.hidden&&!state.busy&&$('#custom').hidden&&!(document.activeElement&&document.activeElement.matches('select,input'))){state.elapsed+=Math.min(dt,1500);if(state.elapsed>=state.seconds*1000)move(1)}
+  $('#progress').style.width=Math.min(100,state.elapsed/(state.seconds*10))+'%';
+}
+function installData(next){const fresh=C.derive(next,state.today);dataset=next;derived=fresh;buildPeriods();rebuild()}
+/* ===== dados vêm do Firebase: são os mesmos que o app "SLA Transportadoras" importa (transportadoras/sla/{car}) ===== */
+const FB_ROOT='transportadoras/sla/';
+const fbc=car=>firebase.database().ref(FB_ROOT+car);
+let stamps={},baseInfo='';
+function cleanRows(car,recs){
+  const out=[];
+  recs.forEach(r=>{
+    if(!r||typeof r!=='object')return;
+    const id=String(r.id!=null&&r.id!==''?r.id:(r.k!=null?r.k:''));
+    const x={id:id.slice(0,150),base:r.base||null,prazo:car==='correios'?(parseInt(r.prazo,10)||0):0,prev:r.prev||null,ent:r.ent||null,st:String(r.st==null?'':r.st).slice(0,250)};
+    if(!x.id.trim())return;
+    for(const k of ['base','prev','ent'])if(x[k]!=null&&C.dateDay(x[k])==null)return;
+    if(car==='correios'&&(C.dateDay(x.base)==null||x.prazo<0||x.prazo>3650))return;
+    if(car!=='correios'&&C.dateDay(x.prev)==null)return;
+    out.push(x);
+  });
+  return out;
+}
+async function loadDataset(){
+  const carriers={},imps=[],nextStamps={};
+  await Promise.all(C.ORDER.map(async car=>{
+    const v=(await fbc(car).once('value')).val()||{};
+    let recs=[];Object.keys(v.chunks||{}).sort().forEach(k=>{try{recs=recs.concat(JSON.parse(v.chunks[k]))}catch(e){}});
+    carriers[car]=cleanRows(car,recs);nextStamps[car]=v.updatedAt||0;
+    try{JSON.parse(v.imports||'[]').forEach(i=>imps.push(i))}catch(e){}
+  }));
+  stamps=nextStamps;
+  const last=imps.filter(i=>i.ts).sort((p,q)=>new Date(q.ts)-new Date(p.ts))[0];
+  baseInfo=last?' · Base atualizada em '+new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(last.ts)):' · Base ainda vazia';
+  return {schema:'stin-sla-tv-v2',carriers};
+}
+async function reloadData(manual){
+  if(state.busy)return;state.busy=true;$('#update').disabled=true;
+  try{const next=await loadDataset();installData(next);if(manual)notice('Dados atualizados.')}
+  catch(error){notice('Não foi possível atualizar: '+(error.message||error),true)}
+  finally{state.busy=false;$('#update').disabled=false;resetClock()}
+}
+/* a cada 5 min só olha o carimbo de atualização (leitura minúscula); baixa tudo só se alguém importou algo novo */
+async function checkFresh(){
+  if(state.busy||document.hidden)return;
+  try{const now=await Promise.all(C.ORDER.map(async car=>(await fbc(car).child('updatedAt').once('value')).val()||0));
+    if(C.ORDER.some((car,i)=>now[i]!==(stamps[car]||0)))await reloadData(false);}catch(e){}
+}
+async function init(){
+  dataset=await loadDataset();derived=C.derive(dataset,state.today);buildPeriods();rebuild(0);
+  $('#granularity').onchange=e=>{state.grain=e.target.value;rebuild()};
+  $('#period').onchange=e=>{
+    if(e.target.value==='custom'){const r=state.custom||cache.rg,first=cache.timeline[0]?.from||state.today-27,last=cache.timeline.at(-1)?.to||state.today;$('#from').value=C.iso(Number.isFinite(r[0])?r[0]:first);$('#to').value=C.iso(Number.isFinite(r[1])?r[1]:last);$('#custom').hidden=false;$('#filterError').textContent='';$('#from').focus();return}
+    state.period=e.target.value;$('#custom').hidden=true;rebuild();
+  };
+  $('#custom').onsubmit=e=>{e.preventDefault();const a=C.dateDay($('#from').value),b=C.dateDay($('#to').value);if(a==null||b==null||a>b){$('#filterError').textContent='Confira as datas: o início deve ser anterior ou igual ao fim.';return}state.custom=[a,b];state.period='custom';$('#custom').hidden=true;$('#filterError').textContent='';rebuild()};
+  $('#cancel').onclick=()=>{$('#custom').hidden=true;$('#period').value=state.period;state.lastTick=performance.now()};
+  $('#nav').onclick=e=>{const b=e.target.closest('[data-page]');if(b)jump(+b.dataset.page)};
+  $('#previous').onclick=()=>move(-1);$('#next').onclick=()=>move(1);$('#pause').onclick=togglePlay;
+  $('#speed').onchange=e=>{state.seconds=+e.target.value;resetClock()};
+  $('#full').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();else notice('Use F11 para exibir em tela cheia.')}catch{notice('Use F11 para exibir em tela cheia.')}};
+  document.addEventListener('fullscreenchange',()=>{$('#full').textContent=document.fullscreenElement?'Sair da tela cheia':'Tela cheia';syncWake()});
+  document.addEventListener('visibilitychange',()=>{state.lastTick=performance.now();syncWake()});
+  $('#update').onclick=()=>reloadData(true);
+  document.addEventListener('keydown',e=>{if(e.target.closest('input,select,button,textarea')||!$('#custom').hidden)return;if(e.key==='ArrowRight'){e.preventDefault();move(1)}else if(e.key==='ArrowLeft'){e.preventDefault();move(-1)}else if(e.code==='Space'){e.preventDefault();togglePlay()}});
+  tick();setInterval(tick,250);setInterval(checkFresh,300000);
+}
+function start(){init().catch(error=>{$('#view').innerHTML='<div class="empty">Não foi possível carregar o painel.<small>'+esc(error.message||String(error))+'</small></div>';notice('Não consegui ler os dados do banco. Recarregue a página.',true)})}
+window.__startApp=start;if(window.__gateOk)start();
+})();
+</script>
+<script>
+(function(){
+  var GRUPOS_PERMITIDOS = ["OPERAÇÕES"];
+  function norm(x){ return String(x).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().trim(); }
+  var firebaseConfig = {
+    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+    authDomain: "stinpharma-qualidade.firebaseapp.com",
+    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+    projectId: "stinpharma-qualidade",
+    storageBucket: "stinpharma-qualidade.firebasestorage.app",
+    messagingSenderId: "422803826984",
+    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+    measurementId: "G-6C0TLHH2VP"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  function liberar(){
+    var st = document.getElementById('__gateStyle');
+    var ov = document.getElementById('__gateOverlay');
+    if(st) st.remove();
+    if(ov) ov.remove();
+    window.__gateOk = true;
+    if(window.__startApp) window.__startApp();
+  }
+  function negar(msg){
+    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Central de Apps</a>';
+  }
+  var jaResolveu = false;
+  setTimeout(function(){
+    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
+  }, 10000);
+  firebase.auth().onAuthStateChanged(function(user){
+    jaResolveu = true;
+    if(!user){ negar('Você precisa entrar pela Central de Apps.'); return; }
+    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
+      var dados = snap.val();
+      var meusGrupos = (dados && dados.grupos) || [];
+      var permitidos = GRUPOS_PERMITIDOS.map(norm);
+      var permitido = meusGrupos.some(function(g){ return permitidos.indexOf(norm(g)) !== -1; });
+      if(permitido){ liberar(); }
+      else { negar('Você não tem permissão pra acessar este app.'); }
+    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
+  });
+})();
+</script>
+
+<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
+  <div style="max-width:320px;width:100%;">
+    <div id="__gateMsg" style="font-size:14px;color:#8a93a3;line-height:1.6;">Verificando acesso...</div>
+  </div>
+</div>
+<style id="__gateStyle">body > *:not(#__gateOverlay){ display:none !important; }</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
+<script>
+(function(){
+  var GRUPOS_PERMITIDOS = ["PCP"];
+  var firebaseConfig = {
+    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+    authDomain: "stinpharma-qualidade.firebaseapp.com",
+    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+    projectId: "stinpharma-qualidade",
+    storageBucket: "stinpharma-qualidade.firebasestorage.app",
+    messagingSenderId: "422803826984",
+    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+    measurementId: "G-6C0TLHH2VP"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  function liberar(){
+    var st = document.getElementById('__gateStyle');
+    var ov = document.getElementById('__gateOverlay');
+    if(st) st.remove();
+    if(ov) ov.remove();
+  }
+  function negar(msg){
+    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Central de Apps</a>';
+  }
+  var jaResolveu = false;
+  setTimeout(function(){
+    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
+  }, 10000);
+  firebase.auth().onAuthStateChanged(function(user){
+    jaResolveu = true;
+    if(!user){ negar('Você precisa entrar pela Central de Apps.'); return; }
+    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
+      var dados = snap.val();
+      var meusGrupos = (dados && dados.grupos) || [];
+      var permitido = GRUPOS_PERMITIDOS.some(function(g){ return meusGrupos.indexOf(g) !== -1; });
+      if(permitido){ liberar(); } else { negar('Você não tem permissão pra acessar este app.'); }
+    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
+  });
+})();
+</script>
+</body>
+</html>
