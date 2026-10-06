@@ -724,7 +724,34 @@ function mostrarCarregando(msg){
   document.getElementById('kpiRow').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6B7280;font-size:13.5px;">${msg}</div>`;
 }
 
+// Apaga tudo que veio da transportadora anterior (gráficos, tabelas, callouts) — chamado sempre que
+// troca de aba, pra nunca misturar os dados de uma transportadora com a tela de outra.
+function clearDashboardPanels(){
+  Object.keys(charts).forEach(id=>{ if(charts[id]) charts[id].destroy(); });
+  charts = {};
+  document.getElementById('gargaloTheadRow').innerHTML = '';
+  document.getElementById('gargaloTbody').innerHTML = '';
+  document.getElementById('gargaloTfootRow').innerHTML = '';
+  const topDelaysBody = document.querySelector('#topDelaysTable tbody');
+  if(topDelaysBody) topDelaysBody.innerHTML = '';
+  document.getElementById('slaCallout').innerHTML = '';
+  document.getElementById('slaPracaSelect').innerHTML = '';
+  document.getElementById('gargaloDrilldown').style.display = 'none';
+  document.getElementById('motivoList').innerHTML = '';
+  document.getElementById('justSummary').innerHTML = '';
+  document.getElementById('countShown').textContent = '–';
+  document.getElementById('countTotal').textContent = '–';
+  SLA_DATA = [];
+  TOP_DELAYS_ALL = [];
+  gargaloCellsData = {};
+  gargaloStatusAll = {};
+  gargaloAllRecords = [];
+}
+
 function loadDataFromFirebase(){
+  clearDashboardPanels();
+  ALL = [];
+  DEFAULT_DATA = [];
   mostrarCarregando('⏳ Carregando dados do banco...');
   document.getElementById('sourcePill').textContent = 'Carregando do banco...';
   const nomeAtual = (CARRIERS[ACTIVE_CARRIER]||{}).nome || ACTIVE_CARRIER;
