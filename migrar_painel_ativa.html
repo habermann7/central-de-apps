@@ -2,12 +2,12 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Migração · Painel de Entregas (multi-transportadora)</title>
+<title>Configuração · AZUL e CORREIOS</title>
 </head>
-<body style="font-family:system-ui,sans-serif;max-width:640px;margin:40px auto;padding:0 16px;">
-<h2>Migração — Painel de Entregas (ATIVA → multi-transportadora)</h2>
-<p>Uso único: copia os dados que hoje estão em <code>painelAtiva/*</code> pra dentro da nova estrutura <code>transportadoras/ativa/*</code>, que o painel atualizado já usa. <b>Não apaga nada do original</b> — só copia. Depois de rodar com sucesso e confirmar que o painel novo está mostrando os dados certos, pode apagar esse arquivo do repositório.</p>
-<button id="runBtn" style="font-size:14px;padding:10px 18px;cursor:pointer;">Rodar migração</button>
+<body style="font-family:system-ui,sans-serif;max-width:680px;margin:40px auto;padding:0 16px;">
+<h2>Configuração — Transportadoras AZUL e CORREIOS</h2>
+<p>Uso único: cadastra as transportadoras <b>AZUL</b> e <b>CORREIOS</b> no Painel de Entregas, já com o mapeamento de colunas certo (baseado nas planilhas modelo que você mandou). Depois de rodar, as duas já aparecem como aba pronta no painel — é só escolher a aba e subir a planilha, sem passar pela tela de mapeamento. Depois de rodar com sucesso, pode apagar esse arquivo do repositório.</p>
+<button id="runBtn" style="font-size:14px;padding:10px 18px;cursor:pointer;">Rodar configuração</button>
 <pre id="log" style="background:#111;color:#0f0;padding:14px;border-radius:8px;margin-top:16px;white-space:pre-wrap;min-height:60px;"></pre>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
@@ -26,19 +26,47 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 
-// Mapeamento de colunas original, usado pela planilha da ATIVA até hoje — fica salvo pra
-// o painel novo não pedir remapeamento na primeira vez que você subir uma planilha dela.
-const COLMAP_ATIVA = {
-  prev: 'DATA PREV ENTREGA',
-  ent: 'DATA DA ENTREGA',
-  ocor: 'ULTIMA OCORRENC',
-  praca: 'PRACA',
-  nf: 'NFISCAL',
-  dest: 'NOME DESTINATARIO',
-  tipo: 'TIPO',
-  ctrc: 'CTRC/SUBCON',
-  uf: 'UF DESTINO'
-};
+// Mapeamentos lidos direto das planilhas-modelo que o David enviou (RELATORIO_azul.xlsx e
+// frete_correios.xlsx). As chaves são os campos que o painel entende; os valores são o nome
+// exato da coluna na planilha, já em MAIÚSCULO e sem espaço nas pontas (igual o painel lê).
+const CONFIGS = [
+  {
+    key: 'azul',
+    nome: 'AZUL',
+    colMap: {
+      prevComputed: false,
+      prev: 'PREVISÃO ENTREGA',
+      prevBase: null,
+      prevDias: null,
+      ent: 'DESEMBARQUE/ENTREGA',
+      ocor: 'ULTIMAOCORRENCIA',
+      praca: null,
+      nf: 'NF',
+      dest: 'DESTINATARIO',
+      tipo: null,
+      ctrc: null,
+      uf: 'UF DESTINO'
+    }
+  },
+  {
+    key: 'correios',
+    nome: 'CORREIOS',
+    colMap: {
+      prevComputed: true,
+      prev: null,
+      prevBase: 'DTA POSTAGEM',
+      prevDias: 'PRAZO EST (DIAS)',
+      ent: 'DTA ENTREGAT',
+      ocor: 'STATUS',
+      praca: 'CID DEST',
+      nf: 'NRO NF',
+      dest: 'NOME DEST',
+      tipo: 'DESC SERVIÇO',
+      ctrc: null,
+      uf: 'UF DEST'
+    }
+  }
+];
 
 function log(msg){ document.getElementById('log').textContent += msg + "\n"; }
 
@@ -47,30 +75,16 @@ document.getElementById('runBtn').addEventListener('click', ()=>{
   log('Entrando com a conta da Central de Apps (precisa estar logado nesse navegador)...');
   firebase.auth().onAuthStateChanged(user=>{
     if(!user){ log('ERRO: você precisa abrir este arquivo já logado pela Central de Apps.'); return; }
-    log('Lendo painelAtiva/registros e painelAtiva/config/motivos...');
-    Promise.all([
-      firebase.database().ref('painelAtiva/registros').once('value'),
-      firebase.database().ref('painelAtiva/config/motivos').once('value')
-    ]).then(([regSnap, motSnap])=>{
-      const registros = regSnap.val();
-      const motivos = motSnap.val();
-      if(!registros || !registros.length){
-        log('Não encontrei registros em painelAtiva/registros. Nada pra migrar (talvez já tenha sido migrado, ou o painel nunca recebeu uma planilha).');
-        return;
-      }
-      log('Encontrei ' + registros.length + ' registro(s) e ' + (motivos ? 'uma' : 'nenhuma') + ' configuração de motivos salva.');
-      log('Gravando em transportadoras/ativa/...');
-      const updates = {
-        'transportadoras/_meta/ativa': { nome: 'ATIVA' },
-        'transportadoras/ativa/registros': registros,
-        'transportadoras/ativa/config/colMap': COLMAP_ATIVA
-      };
-      if(motivos) updates['transportadoras/ativa/config/motivos'] = motivos;
-      firebase.database().ref().update(updates).then(()=>{
-        log('\n✓ Pronto! Dados da ATIVA migrados pra transportadoras/ativa/. O painel novo já deve mostrar tudo certinho na aba "ATIVA".');
-        log('O nó antigo painelAtiva/ continua intacto, caso precise conferir ou reverter.');
-      }).catch(err=>{ log('ERRO ao gravar: ' + err.message); });
-    }).catch(err=>{ log('ERRO ao ler: ' + err.message); });
+    log('Gravando configuração de AZUL e CORREIOS...');
+    const updates = {};
+    CONFIGS.forEach(c=>{
+      updates['transportadoras/_meta/' + c.key] = { nome: c.nome };
+      updates['transportadoras/' + c.key + '/config/colMap'] = c.colMap;
+    });
+    firebase.database().ref().update(updates).then(()=>{
+      log('\n✓ Pronto! AZUL e CORREIOS cadastradas. Abre o painel, clica na aba de cada uma e sobe a planilha — não vai pedir mapeamento de coluna.');
+      log('Se o layout de alguma das duas vier diferente do modelo um dia, usa o botão "Remapear colunas" no painel, normalmente.');
+    }).catch(err=>{ log('ERRO ao gravar: ' + err.message); });
   });
 });
 </script>
