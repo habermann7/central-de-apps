@@ -1447,13 +1447,21 @@ function normHeaderTxt(s){
 // usado só pra pré-selecionar o mapeamento, o usuário sempre confere e confirma.
 function guessColMap(header){
   const normHeader = header.map(normHeaderTxt);
+  // versão sem espaço/pontuação, pra pegar casos tipo "UltimaOcorrencia" == "ULTIMA OCORRENCIA"
+  const squash = s => s.replace(/[^A-Z0-9]/g,'');
+  const normHeaderSquashed = normHeader.map(squash);
   const map = {};
   FIELD_DEFS.forEach(f=>{
     let found = null;
     for(const hint of f.hints){
-      const hn = normHeaderTxt(hint);
-      const i = normHeader.indexOf(hn);
+      const i = normHeader.indexOf(normHeaderTxt(hint));
       if(i>-1){ found = header[i]; break; }
+    }
+    if(!found){
+      for(const hint of f.hints){
+        const i = normHeaderSquashed.indexOf(squash(normHeaderTxt(hint)));
+        if(i>-1){ found = header[i]; break; }
+      }
     }
     map[f.key] = found;
   });
