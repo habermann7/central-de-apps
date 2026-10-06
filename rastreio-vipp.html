@@ -675,7 +675,7 @@ body{background:var(--paper)}
 .subtab-nav{padding:4px;background:#e8edf4;gap:4px}.subtab-btn{min-height:38px;font-size:13px;font-weight:500}.subtab-btn.active{font-weight:600}
 .table-scroll{border:1px solid var(--line);border-radius:9px}thead th{background:#f7f9fc;font-size:11px;letter-spacing:0;font-weight:600}tbody td{font-size:12px;line-height:1.5}.status-legend .chip{font-size:11px;padding:7px 10px}.status-badge{font-size:11px}
 .operation-feedback{font-size:12px;line-height:1.5;margin:14px 2px}.chart-data{font-size:12px}.chart-data summary{min-height:30px;display:list-item;padding-top:6px}.motion-control{font-size:12px}
-.kpi-flash{background:#345ee80d}.kpi-click::after{content:'Abrir pedidos ↗';top:auto;bottom:12px;right:14px;font-size:10px;background:#fff;padding:2px 4px;border-radius:4px}
+.kpi-flash{background:#345ee80d}
 #kpiModal{padding:24px;background:#101b2d70;overscroll-behavior:contain}#kpiModal .km-box{border-radius:16px;border:1px solid #e3e9f1;box-shadow:0 24px 80px #0b17242e;max-height:88dvh}
 #kpiModal .km-head{padding:24px;gap:18px}#kpiModal .km-head h3{font-size:22px;letter-spacing:-.6px}#kpiModal .km-sub{margin-top:7px;line-height:1.6}#kpiModal .km-x{width:36px;height:36px;border-radius:9px;background:#f1f4f8;display:grid;place-items:center;flex:none}
 #kpiModal .km-tools{padding:16px 24px;background:#f8fafd;gap:10px}#kpiModal input[type=text]{min-height:40px;background:#fff;flex:1;min-width:200px}#kpiModal .km-chip{padding:7px 11px;font-size:11px}#kpiModal .km-chip.on{background:#eaf0ff;color:#244ac9;border-color:#bed0ff}#kpiModal .km-body{padding:0 24px 16px}#kpiModal th{padding:13px 10px;background:#f8fafd}#kpiModal td{padding:12px 10px}#kpiModal .km-foot{padding:14px 24px;background:#fafbfd}
@@ -848,37 +848,37 @@ body{background:var(--paper)}
 
       <div class="tab-panel active" id="tab-visao-geral">
         <div class="kpi-row">
-          <div class="kpi kpi-click" role="button" tabindex="0" data-kpi-bucket="" data-kpi-titulo="Total de postagens" title="Clique para ver os pedidos">
+          <div class="kpi kpi-click" role="button" tabindex="0" data-kpi-bucket="" data-kpi-titulo="Total de postagens">
             <div class="label">Total de postagens</div>
             <div class="value" id="kpi-total">&mdash;</div>
             <div class="sub">objetos no período</div>
           </div>
-          <div class="kpi retirada kpi-click" role="button" tabindex="0" data-kpi-bucket="retirada" data-kpi-titulo="Aguardando retirada" title="Clique para ver os pedidos">
+          <div class="kpi retirada kpi-click" role="button" tabindex="0" data-kpi-bucket="retirada" data-kpi-titulo="Aguardando retirada">
             <div class="label">Aguardando retirada</div>
             <div class="value" id="kpi-retirada">&mdash;</div>
             <div class="sub" id="kpi-pct-retirada">&mdash;</div>
           </div>
-          <div class="kpi naoentregue kpi-click" role="button" tabindex="0" data-kpi-bucket="naoentregue" data-kpi-titulo="Não entregue" title="Clique para ver os pedidos">
+          <div class="kpi naoentregue kpi-click" role="button" tabindex="0" data-kpi-bucket="naoentregue" data-kpi-titulo="Não entregue">
             <div class="label">Não entregue</div>
             <div class="value" id="kpi-naoentregue">&mdash;</div>
             <div class="sub">falha de entrega</div>
           </div>
-          <div class="kpi problema kpi-click" role="button" tabindex="0" data-kpi-bucket="problema" data-kpi-titulo="Problema" title="Clique para ver os pedidos">
+          <div class="kpi problema kpi-click" role="button" tabindex="0" data-kpi-bucket="problema" data-kpi-titulo="Problema">
             <div class="label">Problema</div>
             <div class="value" id="kpi-problema">&mdash;</div>
             <div class="sub">precisa de ação</div>
           </div>
-          <div class="kpi aguardando kpi-click" role="button" tabindex="0" data-kpi-bucket="aguardando" data-kpi-titulo="Aguardando ação" title="Clique para ver os pedidos">
+          <div class="kpi aguardando kpi-click" role="button" tabindex="0" data-kpi-bucket="aguardando" data-kpi-titulo="Aguardando ação">
             <div class="label">Aguardando ação</div>
             <div class="value" id="kpi-aguardando">&mdash;</div>
             <div class="sub">a processar</div>
           </div>
-          <div class="kpi transferencia kpi-click" role="button" tabindex="0" data-kpi-bucket="transito" data-kpi-titulo="Em trânsito" title="Clique para ver os pedidos">
+          <div class="kpi transferencia kpi-click" role="button" tabindex="0" data-kpi-bucket="transito" data-kpi-titulo="Em trânsito">
             <div class="label">Em trânsito</div>
             <div class="value" id="kpi-transito">&mdash;</div>
             <div class="sub">em rota</div>
           </div>
-          <div class="kpi entregue kpi-click" role="button" tabindex="0" data-kpi-bucket="entregue" data-kpi-titulo="Total entregue" title="Clique para ver os pedidos">
+          <div class="kpi entregue kpi-click" role="button" tabindex="0" data-kpi-bucket="entregue" data-kpi-titulo="Total entregue">
             <div class="label">Total entregue</div>
             <div class="value" id="kpi-entregue">&mdash;</div>
             <div class="sub" id="kpi-pct-entregue">&mdash;</div>
@@ -2599,7 +2599,7 @@ document.getElementById('btn-exportar-csv').addEventListener('click', exportarCS
 <style>
 .kpi-click{cursor:pointer;position:relative}
 .kpi-click:focus-visible{outline:2px solid var(--postal-blue);outline-offset:2px}
-.kpi-click::after{content:'ver pedidos →';position:absolute;right:12px;top:12px;font-size:10px;color:var(--ink-soft);opacity:0;transition:opacity .15s}
+.kpi-click::after{content:'Abrir pedidos ↗';position:absolute;right:14px;top:14px;bottom:auto;left:auto;width:auto;height:auto;font-size:10px;font-weight:600;color:var(--postal-blue);background:transparent;padding:0;opacity:0;pointer-events:none;transition:opacity .15s}
 .kpi-click:hover::after,.kpi-click:focus-visible::after{opacity:1}
 #kpiModal{position:fixed;inset:0;background:rgba(17,24,39,.5);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
 #kpiModal.open{display:flex}
