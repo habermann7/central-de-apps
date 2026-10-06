@@ -130,5 +130,16 @@
     "grupos": [
       "EXPEDIÇÃO"
     ]
+  },
+  {
+    "title": "SLA Transportadoras",
+    "category": "Outros",
+    "description": "",
+    "file": "sla_transportadoras.html",
+    "icon": "🧩",
+    "color": "#4d9fff",
+    "grupos": [
+      "Outros"
+    ]
   }
 ]
