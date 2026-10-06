@@ -1442,9 +1442,25 @@ function parseWorkbookToRecords(wb, colMap){
     const h = colMap[field];
     return (h && (h in idx)) ? idx[h] : -1;
   }
-  const iPrev = colIndex('prev');
-  if(iPrev === -1){
-    throw new Error('A coluna mapeada pra "Data prevista de entrega" não existe nessa planilha. Clique em "Remapear colunas" e confere.');
+  let prevGetter;
+  if(colMap.prevComputed){
+    const iBase = colMap.prevBase && (colMap.prevBase in idx) ? idx[colMap.prevBase] : -1;
+    const iDias = colMap.prevDias && (colMap.prevDias in idx) ? idx[colMap.prevDias] : -1;
+    if(iBase === -1 || iDias === -1){
+      throw new Error('As colunas mapeadas pra calcular a "Data prevista de entrega" (data base + dias de prazo) não existem nessa planilha. Clique em "Remapear colunas" e confere.');
+    }
+    prevGetter = (r)=>{
+      const baseD = toDateOrNull(r[iBase]);
+      const diasNum = Number(r[iDias]);
+      if(!baseD || isNaN(diasNum)) return null;
+      return new Date(baseD.getFullYear(), baseD.getMonth(), baseD.getDate() + Math.round(diasNum));
+    };
+  } else {
+    const iPrev = colIndex('prev');
+    if(iPrev === -1){
+      throw new Error('A coluna mapeada pra "Data prevista de entrega" não existe nessa planilha. Clique em "Remapear colunas" e confere.');
+    }
+    prevGetter = (r)=> toDateOrNull(r[iPrev]);
   }
   const F = {};
   ['ent','ocor','praca','nf','dest','tipo','ctrc','uf'].forEach(k=>{ F[k] = colIndex(k); });
@@ -1455,7 +1471,7 @@ function parseWorkbookToRecords(wb, colMap){
   for(let i=1; i<rows.length; i++){
     const r = rows[i];
     if(!r || r.every(c => c===null || c==='')) continue;
-    const prevD = toDateOrNull(r[iPrev]);
+    const prevD = prevGetter(r);
     if(!prevD) continue; // sem data prevista não dá para classificar
     const entD = F.ent>-1 ? toDateOrNull(r[F.ent]) : null;
     const [status, dias] = classifyRow(prevD, entD, today);
@@ -1506,7 +1522,11 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
       const {header} = readWorkbookHeader(wb);
       pendingUpload = {file, wb, header};
 
-      const mapaValido = CARRIER_COLMAP && CARRIER_COLMAP.prev && header.includes(CARRIER_COLMAP.prev);
+      const mapaValido = CARRIER_COLMAP && (
+        CARRIER_COLMAP.prevComputed
+          ? (CARRIER_COLMAP.prevBase && CARRIER_COLMAP.prevDias && header.includes(CARRIER_COLMAP.prevBase) && header.includes(CARRIER_COLMAP.prevDias))
+          : (CARRIER_COLMAP.prev && header.includes(CARRIER_COLMAP.prev))
+      );
       if(pendingForceRemap || !mapaValido){
         openColMapModal(header, CARRIER_COLMAP || guessColMap(header));
       } else {
@@ -1526,8 +1546,32 @@ function openColMapModal(header, prefill){
   document.getElementById('colMapErr').style.display = 'none';
   const optsHtml = '<option value="">— não tem essa coluna —</option>' +
     header.map(h=>`<option value="${escapeAttr(h)}">${escapeHtmlText(h)}</option>`).join('');
+  const prevComputedPrefill = !!(prefill && prefill.prevComputed);
   document.getElementById('colMapFields').innerHTML = FIELD_DEFS.map(f=>{
-    const sel = (prefill && prefill[f.key]) || '';
+    if(f.key === 'prev'){
+      // Data prevista: ou é uma coluna pronta na planilha, ou calculada (data base + dias de prazo),
+      // pra planilhas (tipo Correios) que só trazem data de postagem + prazo estimado em dias.
+      return `<div class="cmrow" style="flex-direction:column;align-items:stretch;gap:6px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <label>${escapeHtmlText(f.label)} <span class="req">*</span></label>
+          <select data-field="prev" ${prevComputedPrefill?'style="display:none;"':''}>${optsHtml}</select>
+        </div>
+        <label style="font-weight:500;font-size:12px;color:var(--navy-2);display:flex;align-items:center;gap:6px;">
+          <input type="checkbox" id="prevComputedToggle" ${prevComputedPrefill?'checked':''}>
+          Essa planilha não tem data prevista pronta — calcular a partir de (data base) + (dias de prazo)
+        </label>
+        <div id="prevComputedFields" style="display:${prevComputedPrefill?'flex':'none'};gap:10px;flex-wrap:wrap;padding-left:22px;">
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <small style="color:var(--gray);">Data base (ex: data de postagem)</small>
+            <select data-field="prevBase">${optsHtml}</select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <small style="color:var(--gray);">Dias de prazo (número)</small>
+            <select data-field="prevDias">${optsHtml}</select>
+          </div>
+        </div>
+      </div>`;
+    }
     return `<div class="cmrow">
       <label>${escapeHtmlText(f.label)}${f.required?' <span class="req">*</span>':''}</label>
       <select data-field="${f.key}">${optsHtml}</select>
@@ -1538,6 +1582,18 @@ function openColMapModal(header, prefill){
     const val = (prefill && prefill[f.key]) || '';
     const sel = document.querySelector('#colMapFields select[data-field="'+f.key+'"]');
     if(sel && val && header.includes(val)) sel.value = val;
+  });
+  ['prevBase','prevDias'].forEach(k=>{
+    const val = (prefill && prefill[k]) || '';
+    const sel = document.querySelector('#colMapFields select[data-field="'+k+'"]');
+    if(sel && val && header.includes(val)) sel.value = val;
+  });
+  const toggle = document.getElementById('prevComputedToggle');
+  const prevSelect = document.querySelector('#colMapFields select[data-field="prev"]');
+  const computedFields = document.getElementById('prevComputedFields');
+  toggle.addEventListener('change', ()=>{
+    computedFields.style.display = toggle.checked ? 'flex' : 'none';
+    prevSelect.style.display = toggle.checked ? 'none' : '';
   });
   document.getElementById('colMapOverlay').style.display = 'flex';
 }
@@ -1554,9 +1610,31 @@ document.getElementById('colMapConfirmBtn').addEventListener('click', ()=>{
     const sel = document.querySelector('#colMapFields select[data-field="'+f.key+'"]');
     map[f.key] = sel.value || null;
   });
-  const faltando = FIELD_DEFS.filter(f=>f.required && !map[f.key]);
+  const prevComputed = document.getElementById('prevComputedToggle').checked;
+  map.prevComputed = prevComputed;
+  if(prevComputed){
+    map.prev = null;
+    map.prevBase = document.querySelector('#colMapFields select[data-field="prevBase"]').value || null;
+    map.prevDias = document.querySelector('#colMapFields select[data-field="prevDias"]').value || null;
+  } else {
+    map.prevBase = null;
+    map.prevDias = null;
+  }
+
+  const faltando = FIELD_DEFS.filter(f=>f.required && f.key!=='prev' && !map[f.key]);
+  const errEl = document.getElementById('colMapErr');
+  if(prevComputed){
+    if(!map.prevBase || !map.prevDias){
+      errEl.textContent = 'Preencha a "data base" e os "dias de prazo" pra calcular a data prevista.';
+      errEl.style.display = 'block';
+      return;
+    }
+  } else if(!map.prev){
+    errEl.textContent = 'Preencha: Data prevista de entrega';
+    errEl.style.display = 'block';
+    return;
+  }
   if(faltando.length){
-    const errEl = document.getElementById('colMapErr');
     errEl.textContent = 'Preencha: ' + faltando.map(f=>f.label).join(', ');
     errEl.style.display = 'block';
     return;
