@@ -2,6 +2,9 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="description" content="Rastro — painel de rastreamento de envios dos Correios da STIN Pharma e Mayderma">
+<meta name="theme-color" content="#0F1B33">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563EB'/%3E%3Cpath d='M10 22 22 10M13 10h9v9' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rastro &mdash; STIN PHARMA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -815,37 +818,37 @@ button,.empresa-btn,.nav-item{transition:transform 120ms var(--ease-out),backgro
 
       <div class="tab-panel active" id="tab-visao-geral">
         <div class="kpi-row">
-          <div class="kpi">
+          <div class="kpi kpi-click" role="button" tabindex="0" data-kpi-bucket="" data-kpi-titulo="Total de postagens" title="Clique para ver os pedidos">
             <div class="label">Total de postagens</div>
             <div class="value" id="kpi-total">&mdash;</div>
             <div class="sub">objetos no período</div>
           </div>
-          <div class="kpi retirada">
+          <div class="kpi retirada kpi-click" role="button" tabindex="0" data-kpi-bucket="retirada" data-kpi-titulo="Aguardando retirada" title="Clique para ver os pedidos">
             <div class="label">Aguardando retirada</div>
             <div class="value" id="kpi-retirada">&mdash;</div>
             <div class="sub" id="kpi-pct-retirada">&mdash;</div>
           </div>
-          <div class="kpi naoentregue">
+          <div class="kpi naoentregue kpi-click" role="button" tabindex="0" data-kpi-bucket="naoentregue" data-kpi-titulo="Não entregue" title="Clique para ver os pedidos">
             <div class="label">Não entregue</div>
             <div class="value" id="kpi-naoentregue">&mdash;</div>
             <div class="sub">falha de entrega</div>
           </div>
-          <div class="kpi problema">
+          <div class="kpi problema kpi-click" role="button" tabindex="0" data-kpi-bucket="problema" data-kpi-titulo="Problema" title="Clique para ver os pedidos">
             <div class="label">Problema</div>
             <div class="value" id="kpi-problema">&mdash;</div>
             <div class="sub">precisa de ação</div>
           </div>
-          <div class="kpi aguardando">
+          <div class="kpi aguardando kpi-click" role="button" tabindex="0" data-kpi-bucket="aguardando" data-kpi-titulo="Aguardando ação" title="Clique para ver os pedidos">
             <div class="label">Aguardando ação</div>
             <div class="value" id="kpi-aguardando">&mdash;</div>
             <div class="sub">a processar</div>
           </div>
-          <div class="kpi transferencia">
+          <div class="kpi transferencia kpi-click" role="button" tabindex="0" data-kpi-bucket="transito" data-kpi-titulo="Em trânsito" title="Clique para ver os pedidos">
             <div class="label">Em trânsito</div>
             <div class="value" id="kpi-transito">&mdash;</div>
             <div class="sub">em rota</div>
           </div>
-          <div class="kpi entregue">
+          <div class="kpi entregue kpi-click" role="button" tabindex="0" data-kpi-bucket="entregue" data-kpi-titulo="Total entregue" title="Clique para ver os pedidos">
             <div class="label">Total entregue</div>
             <div class="value" id="kpi-entregue">&mdash;</div>
             <div class="sub" id="kpi-pct-entregue">&mdash;</div>
@@ -917,7 +920,7 @@ button,.empresa-btn,.nav-item{transition:transform 120ms var(--ease-out),backgro
 
       <div class="tab-panel" id="tab-detalhamento">
         <div class="table-panel">
-          <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
             <div>
               <h2 style="font-family:'Inter',sans-serif;font-size:16px;margin:0 0 4px;">Detalhamento dos objetos</h2>
               <p class="hint" style="margin:0;">Um objeto por linha &mdash; respeita todos os filtros acima</p>
@@ -1954,6 +1957,7 @@ function groupSum(arr, keyFn, valFn){
 
 // -------- Charts --------
 // -------- Visual dos gráficos: deixa com a cara do site, não o padrão do Chart.js --------
+Chart.defaults.locale = 'pt-BR';
 Chart.defaults.font.family = "'Inter', sans-serif";
 Chart.defaults.color = '#6B7280';
 var motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -2026,7 +2030,7 @@ var chartPorDia = new Chart(document.getElementById('chart-por-dia'), {
     plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.parsed.y.toLocaleString('pt-BR')+' objeto(s)';}}}},
     scales:{
       y:{beginAtZero:true,grid:{color:'#F1F2F4'},border:{display:false},ticks:{font:{size:10.5}}},
-      x:{grid:{display:false},border:{display:false},ticks:{font:{size:10.5}}}
+      x:{grid:{display:false},border:{display:false},ticks:{font:{size:10.5},autoSkip:true,maxTicksLimit:16,maxRotation:0,minRotation:0}}
     }
   }
 });
@@ -2541,6 +2545,95 @@ document.getElementById('btn-exportar-csv').addEventListener('click', exportarCS
   syncNav();applyPolicy();
 })();
 
+</script>
+
+<style>
+.kpi-click{cursor:pointer;position:relative}
+.kpi-click:focus-visible{outline:2px solid var(--postal-blue);outline-offset:2px}
+.kpi-click::after{content:'ver pedidos →';position:absolute;right:12px;top:12px;font-size:10px;color:var(--ink-soft);opacity:0;transition:opacity .15s}
+.kpi-click:hover::after,.kpi-click:focus-visible::after{opacity:1}
+#kpiModal{position:fixed;inset:0;background:rgba(17,24,39,.5);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
+#kpiModal.open{display:flex}
+#kpiModal .km-box{background:#fff;border-radius:14px;width:min(1100px,100%);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden}
+#kpiModal .km-head{padding:18px 22px 12px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
+#kpiModal .km-head h3{margin:0;font-size:18px;color:var(--ink)}
+#kpiModal .km-sub{font-size:12.5px;color:var(--ink-soft);margin-top:3px}
+#kpiModal .km-x{margin-left:auto;border:none;background:none;font-size:22px;cursor:pointer;color:var(--ink-soft);line-height:1}
+#kpiModal .km-tools{padding:10px 22px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-bottom:1px solid var(--line)}
+#kpiModal .km-chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--ink)}
+#kpiModal .km-chip b{margin-left:4px}
+#kpiModal .km-chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+#kpiModal input[type=text]{border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;min-width:300px}
+#kpiModal .km-body{overflow:auto;padding:0 22px 16px}
+#kpiModal table{width:100%;border-collapse:collapse;font-size:12.5px}
+#kpiModal th{position:sticky;top:0;background:#fff;text-align:left;font-size:11px;color:var(--ink-soft);padding:10px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+#kpiModal td{padding:8px;border-bottom:1px solid #f0f1f3;vertical-align:top}
+#kpiModal td.mono{font-family:ui-monospace,monospace;white-space:nowrap}
+#kpiModal .km-atraso{color:var(--problema);font-weight:600}
+#kpiModal .km-foot{padding:10px 22px;font-size:12px;color:var(--ink-soft);border-top:1px solid var(--line)}
+</style>
+<div id="kpiModal" aria-hidden="true"><div class="km-box" role="dialog" aria-modal="true">
+  <div class="km-head"><div><h3 id="kmTitulo"></h3><div class="km-sub" id="kmSub"></div></div><button class="km-x" id="kmFechar" aria-label="Fechar">&times;</button></div>
+  <div class="km-tools"><input type="text" id="kmBusca" placeholder="Buscar código, cliente, NF, cidade..."><span id="kmChips" style="display:contents"></span><button class="btn-ghost" id="kmCsv" type="button" style="margin-left:auto">Baixar CSV</button></div>
+  <div class="km-body"><table><thead><tr><th>Empresa</th><th>Código</th><th>Destinatário</th><th>NF</th><th>Cidade/UF</th><th>Status</th><th>Postagem</th><th>Último evento</th><th>Dias</th><th>Valor</th></tr></thead><tbody id="kmLinhas"></tbody></table></div>
+  <div class="km-foot" id="kmRodape"></div>
+</div></div>
+<script>
+(function(){
+  var modal=document.getElementById('kpiModal'),linhas=document.getElementById('kmLinhas');
+  var base=[],chipSel='',MAX=500;
+  function dias(o){var ref=o._bucket==='entregue'&&o.dataEvento?o.dataEvento:new Date();return o.dataPostagem?Math.max(0,Math.floor((ref-o.dataPostagem)/86400000)):null;}
+  function lista(){
+    var q=document.getElementById('kmBusca').value.trim().toLowerCase();
+    return base.filter(function(o){
+      if(chipSel&&(o.status||'(vazio)')!==chipSel)return false;
+      if(!q)return true;
+      return (o.codigo+' '+o.destinatario+' '+o.nf+' '+o.cidade+' '+o.uf+' '+o.status).toLowerCase().indexOf(q)!==-1;
+    }).sort(function(a,b){var da=dias(a),db=dias(b);return (db==null?-1:db)-(da==null?-1:da);});
+  }
+  function desenhaChips(){
+    var m={};base.forEach(function(o){var k=o.status||'(vazio)';m[k]=(m[k]||0)+1;});
+    var ks=Object.keys(m).sort(function(a,b){return m[b]-m[a];});
+    document.getElementById('kmChips').innerHTML=ks.length>1?ks.map(function(k){return '<button type="button" class="km-chip'+(chipSel===k?' on':'')+'" data-st="'+escapeHtml(k)+'">'+escapeHtml(k)+'<b>'+m[k]+'</b></button>';}).join(''):'';
+  }
+  function desenha(){
+    var l=lista(),tot=l.reduce(function(s,o){return s+o.valorPostagem;},0);
+    linhas.innerHTML=l.slice(0,MAX).map(function(o){
+      var d=dias(o);
+      return '<tr><td><span class="empresa-tag '+(o.empresa==='Mayderma'?'md':'sp')+'">'+escapeHtml(abrevEmpresa(o.empresa))+'</span></td><td class="mono">'+escapeHtml(o.codigo)+'</td><td>'+escapeHtml(o.destinatario)+'</td><td>'+(o.nf?escapeHtml(o.nf):'—')+'</td><td>'+escapeHtml(o.cidade)+'/'+escapeHtml(o.uf)+'</td><td>'+escapeHtml(o.status||'(vazio)')+(o._atrasado&&o._bucket!=='problema'?' <span class="km-atraso">· atrasado</span>':'')+'</td><td>'+(o.dataPostagem?fmtDateOnly(o.dataPostagem):'—')+'</td><td>'+(o.dataEvento?fmtDateOnly(o.dataEvento):'—')+'</td><td>'+(d==null?'—':d+'d')+'</td><td>'+fmtMoney(o.valorPostagem)+'</td></tr>';
+    }).join('')||'<tr><td colspan="10" style="padding:30px;text-align:center;color:var(--ink-soft)">Nenhum pedido aqui.</td></tr>';
+    document.getElementById('kmRodape').textContent=l.length.toLocaleString('pt-BR')+' pedido(s) · '+fmtMoney(tot)+(l.length>MAX?' · mostrando os '+MAX+' mais antigos (use a busca ou baixe o CSV)':'');
+    desenhaChips();
+  }
+  function abre(bucket,titulo){
+    var f=applyFilters();
+    base=bucket?f.filter(function(o){return o._bucket===bucket;}):f;
+    chipSel='';document.getElementById('kmBusca').value='';
+    document.getElementById('kmTitulo').textContent=titulo;
+    document.getElementById('kmSub').textContent='Respeita os filtros e o período que estão ativos no painel. Mais antigos primeiro.';
+    modal.classList.add('open');modal.setAttribute('aria-hidden','false');desenha();
+    document.getElementById('kmBusca').focus();
+  }
+  function fecha(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');}
+  document.querySelectorAll('.kpi-click').forEach(function(el){
+    function go(){abre(el.getAttribute('data-kpi-bucket'),el.getAttribute('data-kpi-titulo'));}
+    el.addEventListener('click',go);
+    el.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('kmFechar').addEventListener('click',fecha);
+  modal.addEventListener('click',function(e){if(e.target===modal)fecha();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')fecha();});
+  document.getElementById('kmBusca').addEventListener('input',desenha);
+  document.getElementById('kmChips').addEventListener('click',function(e){var b=e.target.closest('.km-chip');if(!b)return;var st=b.getAttribute('data-st');chipSel=chipSel===st?'':st;desenha();});
+  document.getElementById('kmCsv').addEventListener('click',function(){
+    var l=lista();
+    var cab=['Empresa','Codigo','Destinatario','NF','Cidade','UF','Status','Postagem','UltimoEvento','Dias','Valor'];
+    var q=function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';};
+    var linhasCsv=[cab.join(';')].concat(l.map(function(o){var d=dias(o);return [o.empresa,o.codigo,o.destinatario,o.nf,o.cidade,o.uf,o.status,o.dataPostagem?fmtDateOnly(o.dataPostagem):'',o.dataEvento?fmtDateOnly(o.dataEvento):'',d==null?'':d,String(o.valorPostagem).replace('.',',')].map(q).join(';');}));
+    var blob=new Blob(['\ufeff'+linhasCsv.join('\n')],{type:'text/csv;charset=utf-8'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='pedidos-'+(document.getElementById('kmTitulo').textContent||'rastro').toLowerCase().replace(/\s+/g,'-')+'.csv';a.click();
+  });
+})();
 </script>
 </body>
 </html>
