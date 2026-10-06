@@ -450,8 +450,8 @@
   <div class="kpi-row" id="kpiRow"></div>
 
   <div class="panel" style="margin-bottom:16px;">
-    <h3>% Dentro do prazo por dia</h3>
-    <p class="phint">Evolução diária do percentual de remessas dentro do prazo, por data prevista de entrega</p>
+    <h3>% Dentro do prazo por semana</h3>
+    <p class="phint">Evolução semanal do percentual de remessas dentro do prazo, por data prevista de entrega (semana começando na segunda-feira)</p>
     <div class="chart-box" style="height:260px;"><canvas id="prazoDiarioChart"></canvas></div>
   </div>
 
@@ -909,63 +909,117 @@ function renderPrazoChart(entregues){
   });
 }
 
+// Segunda-feira da semana em que a data cai, no formato YYYY-MM-DD (dá pra ordenar como texto mesmo).
+function weekStartKey(dateStr){
+  const [y,m,d] = dateStr.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m-1, d));
+  const dow = dt.getUTCDay(); // 0=domingo .. 6=sábado
+  dt.setUTCDate(dt.getUTCDate() + (dow === 0 ? -6 : 1 - dow));
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,'0')}-${String(dt.getUTCDate()).padStart(2,'0')}`;
+}
+function weekEndKey(weekStart){
+  const [y,m,d] = weekStart.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m-1, d+6));
+  return `${String(dt.getUTCDate()).padStart(2,'0')}/${String(dt.getUTCMonth()+1).padStart(2,'0')}`;
+}
+
 function renderPrazoDiarioChart(rows){
   const ON_TIME = ['Antes do prazo','No prazo','Dentro do prazo (em aberto)'];
-  const byDay = {};
+  const byDay = {}; // agrupado por semana (segunda-feira de início), apesar do nome da variável
   rows.forEach(r=>{
     if(!r.prev) return;
-    if(!byDay[r.prev]) byDay[r.prev] = {total:0, ontime:0};
-    byDay[r.prev].total++;
-    if(ON_TIME.includes(r.status)) byDay[r.prev].ontime++;
+    const wk = weekStartKey(r.prev);
+    if(!byDay[wk]) byDay[wk] = {total:0, ontime:0};
+    byDay[wk].total++;
+    if(ON_TIME.includes(r.status)) byDay[wk].ontime++;
   });
   const days = Object.keys(byDay).sort();
   const pct = days.map(d=> byDay[d].total ? byDay[d].ontime/byDay[d].total*100 : 0);
   const labels = days.map(d=>{
     const [y,m,dd] = d.split('-');
-    return `${dd}/${m}`;
+    return `${dd}/${m}–${weekEndKey(d)}`;
   });
-  const colors = pct.map(p=> p>=90 ? '#2F7D4F' : (p>=70 ? '#B7791F' : '#B3261E'));
-  const dataLabelPlugin = {
-    id: 'dataLabelPlugin_prazoDiario',
-    afterDatasetsDraw(chart){
-      const {ctx, data, scales:{x,y}} = chart;
-      ctx.save();
-      ctx.font = '600 11px -apple-system, Segoe UI, Arial, sans-serif';
-      ctx.fillStyle = '#374151';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'bottom';
-      data.datasets[0].data.forEach((v,i)=>{
-        const xPos = x.getPixelForValue(i);
-        const yPos = y.getPixelForValue(v);
-        ctx.fillText(fmtPct(v), xPos, yPos - 4);
-      });
-      ctx.restore();
-    }
+  const colorFor = p => p>=90 ? '#2F7D4F' : (p>=70 ? '#B7791F' : '#B3261E');
+
+  // Mesmo por semana, um histórico muito longo (tipo mais de um ano) ainda pode virar muita barra.
+  // Acima de ~45 semanas troca pra uma linha contínua (lê melhor uma tendência longa) e tira os
+  // rótulos numéricos, deixando só o hover. Com poucas semanas mantém barra + número.
+  const DENSO = days.length > 45;
+
+  const tooltipLabel = c=>{
+    const d=days[c.dataIndex]; const v=byDay[d];
+    const [y,m,dd] = d.split('-');
+    return ` Semana de ${dd}/${m} a ${weekEndKey(d)}: ${fmtPct(c.parsed.y)} dentro do prazo (${v.ontime} de ${v.total} remessas)`;
   };
-  upsertChart('prazoDiarioChart', {
-    type:'bar',
-    data:{
-      labels,
-      datasets:[{
-        data: pct,
-        backgroundColor: colors,
-        borderRadius:6,
-        maxBarThickness:38,
-      }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      layout:{padding:{top:18}},
-      plugins:{legend:{display:false}, tooltip:{callbacks:{
-        label:c=>{ const d=days[c.dataIndex]; const v=byDay[d]; return ` ${fmtPct(c.parsed.y)} dentro do prazo (${v.ontime} de ${v.total} remessas)`; }
-      }}},
-      scales:{
-        y:{beginAtZero:true, max:100, grid:{color:'#F0F1F3'}, ticks:{callback:v=>v+'%', font:{size:11}}},
-        x:{grid:{display:false}, ticks:{font:{size:11}}}
+
+  if(DENSO){
+    upsertChart('prazoDiarioChart', {
+      type:'line',
+      data:{
+        labels,
+        datasets:[{
+          data: pct,
+          borderColor:'#2E5C8A',
+          backgroundColor:'rgba(46,92,138,.08)',
+          fill:true,
+          borderWidth:1.75,
+          pointRadius:0,
+          pointHoverRadius:4,
+          pointHoverBackgroundColor: ctx => colorFor(pct[ctx.dataIndex]),
+          tension:0.15,
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}, tooltip:{callbacks:{label:tooltipLabel}}},
+        scales:{
+          y:{beginAtZero:true, max:100, grid:{color:'#F0F1F3'}, ticks:{callback:v=>v+'%', font:{size:11}}},
+          x:{grid:{display:false}, ticks:{font:{size:10.5}, autoSkip:true, maxTicksLimit:14, maxRotation:0}}
+        }
       }
-    },
-    plugins:[dataLabelPlugin]
-  });
+    });
+  } else {
+    const colors = pct.map(colorFor);
+    const dataLabelPlugin = {
+      id: 'dataLabelPlugin_prazoDiario',
+      afterDatasetsDraw(chart){
+        const {ctx, data, scales:{x,y}} = chart;
+        ctx.save();
+        ctx.font = '600 11px -apple-system, Segoe UI, Arial, sans-serif';
+        ctx.fillStyle = '#374151';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        data.datasets[0].data.forEach((v,i)=>{
+          const xPos = x.getPixelForValue(i);
+          const yPos = y.getPixelForValue(v);
+          ctx.fillText(fmtPct(v), xPos, yPos - 4);
+        });
+        ctx.restore();
+      }
+    };
+    upsertChart('prazoDiarioChart', {
+      type:'bar',
+      data:{
+        labels,
+        datasets:[{
+          data: pct,
+          backgroundColor: colors,
+          borderRadius:6,
+          maxBarThickness:38,
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        layout:{padding:{top:18}},
+        plugins:{legend:{display:false}, tooltip:{callbacks:{label:tooltipLabel}}},
+        scales:{
+          y:{beginAtZero:true, max:100, grid:{color:'#F0F1F3'}, ticks:{callback:v=>v+'%', font:{size:11}}},
+          x:{grid:{display:false}, ticks:{font:{size:11}}}
+        }
+      },
+      plugins:[dataLabelPlugin]
+    });
+  }
 }
 
 function renderPracaCharts(rows){
