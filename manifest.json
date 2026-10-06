@@ -141,5 +141,16 @@
     "grupos": [
       "Operações"
     ]
+  },
+  {
+    "title": "PAINEL SLA",
+    "category": "PCP",
+    "description": "",
+    "file": "painel_sla_tv.html",
+    "icon": "🧩",
+    "color": "#ff8a3d",
+    "grupos": [
+      "PCP"
+    ]
   }
 ]
