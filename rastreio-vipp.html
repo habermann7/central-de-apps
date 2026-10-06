@@ -2,15 +2,10 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<script>
-  if (localStorage.getItem('rastreioVippTema') === 'dark') {
-    document.documentElement.setAttribute('data-theme', 'dark');
-  }
-</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel de Rastreios &mdash; STIN PHARMA</title>
+<title>Rastro &mdash; STIN PHARMA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -18,249 +13,434 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <style>
   :root{
-    --bg:#f3f4f8;
-    --sidebar-bg:#ffffff;
-    --card:#ffffff;
-    --ink:#181a24;
-    --ink-soft:#6b7280;
-    --faint:#9aa0ac;
-    --line:#e7e9f0;
-    --primary:#2e5ea8;
-    --primary-soft:#eaf1fb;
-    --entregue:#1f9d5c; --entregue-soft:#e5f7ee;
-    --aguardando:#c1841f; --aguardando-soft:#fbf1de;
-    --transferencia:#4a6fa8; --transferencia-soft:#eaf0fa;
-    --problema:#c0392b; --problema-soft:#fbeae7;
-    --naoentregue:#8c5383; --naoentregue-soft:#f4eaf3;
-    --retirada:#c0392b; --retirada-soft:#fbeae7;
-    --stamp:#2e5ea8;
-    --radius:14px;
-    --shadow:0 1px 2px rgba(16,24,40,.04), 0 2px 8px rgba(16,24,40,.05);
-  }
-  html[data-theme="dark"]{
-    --bg:#0f1117;
-    --sidebar-bg:#161822;
-    --card:#1a1d29;
-    --ink:#e9eaf0;
-    --ink-soft:#9aa0ac;
-    --faint:#6b7280;
-    --line:#2a2d3a;
-    --primary:#6d9eea;
-    --primary-soft:#1c2a40;
-    --entregue-soft:#123322; --aguardando-soft:#3a2c10; --transferencia-soft:#1c2a40;
-    --problema-soft:#3a1f1a; --naoentregue-soft:#2f2030; --retirada-soft:#3a1f1a;
-    --shadow:0 1px 2px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.35);
+    --ink:#111827;
+    --ink-soft:#6B7280;
+    --paper:#F4F5F7;
+    --paper-raised:#FFFFFF;
+    --line:#E5E7EB;
+    --postal-blue:#2563EB;
+    --entregue:#0D9488;
+    --aguardando:#D97706;
+    --transferencia:#64748B;
+    --problema:#DC2626;
+  --naoentregue:#9333EA;
+    --retirada:#EA580C;
+    --stamp:#EA580C;
+    --brand-stin:#EDA996;
+    --brand-stin-ink:#8A4A30;
+    --brand-mayderma:#1A4773;
+    --radius:10px;
+    --shadow:0 1px 3px rgba(16,24,40,.08), 0 1px 2px rgba(16,24,40,.04);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background:var(--bg);
+    background:var(--paper);
     color:var(--ink);
     font-family:'Inter',sans-serif;
     font-size:14px;
     line-height:1.5;
-    transition:background 150ms ease, color 150ms ease;
   }
+  .wrap{max-width:1320px;margin:0 auto;padding:28px 24px 64px;}
   .hidden{display:none !important;}
 
+  /* ---------- Movimento: transições suaves em vez de trocas secas ---------- */
+  a, button, input, select, .nav-item, .empresa-btn, .status-legend .chip,
+  .btn-primary, .btn-ghost, .btn-accent, .btn-reset, .file-btn,
+  tbody tr, .priority-list tr, .gasto-empresa-item, .status-badge{
+    transition: background-color .15s ease-out, border-color .15s ease-out,
+      color .15s ease-out, opacity .15s ease-out, box-shadow .15s ease-out,
+      transform .1s ease-out;
+  }
+  button:not(:disabled):active, .empresa-btn:active, .nav-item:active{
+    transform:scale(0.97);
+  }
+  .tab-panel.active{ animation: painelEntra .18s ease-out; }
+  @keyframes painelEntra{ from{opacity:0; transform:translateY(3px);} to{opacity:1; transform:translateY(0);} }
+
+  #staleWarning, #avisoErroAtualizacao, #empresaPerguntaBox,
+  .period-banner.show, #debugPanel, #limparBaseModal, #filterbar{
+    animation: painelEntra .2s ease-out;
+  }
+
+  .btn-accent.is-loading, .btn-primary.is-loading{ position:relative; }
+  .btn-accent.is-loading::before, .btn-primary.is-loading::before{
+    content:'';display:inline-block;width:11px;height:11px;margin-right:7px;vertical-align:-1.5px;
+    border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;
+    animation: girar .6s linear infinite;
+  }
+  @keyframes girar{ to{ transform:rotate(360deg); } }
+
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+  }
+
+  /* ---------- Skeleton: enquanto os dados do Firebase ainda não chegaram ---------- */
+  @keyframes shimmer{ 0%{background-position:100% 0;} 100%{background-position:-100% 0;} }
+  .app-loading .kpi .value, .app-loading .kpi .sub{ color:transparent !important; position:relative; }
+  .app-loading .kpi .value::after, .app-loading .kpi .sub::after{
+    content:'';position:absolute;left:0;top:10%;bottom:10%;right:30%;border-radius:4px;
+    background:linear-gradient(90deg,#e5e7eb 25%,#eef0f2 37%,#e5e7eb 63%);
+    background-size:300% 100%;animation:shimmer 1.3s ease-in-out infinite;
+  }
+  .app-loading .kpi .sub::after{right:50%;}
+  .app-loading .chart-holder canvas{ visibility:hidden; }
+  .app-loading .chart-holder::after{
+    content:'';position:absolute;inset:0;border-radius:8px;
+    background:linear-gradient(90deg,#e5e7eb 25%,#eef0f2 37%,#e5e7eb 63%);
+    background-size:300% 100%;animation:shimmer 1.3s ease-in-out infinite;
+  }
+  .chart-holder{ position:relative; }
+
+  /* ---------- Sub-abas dentro de Visão Geral ---------- */
+  .subtab-nav{display:flex;gap:0;margin-bottom:16px;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);width:fit-content;overflow:hidden;}
+  .subtab-btn{
+    font-family:'Inter',sans-serif;font-weight:500;font-size:12.5px;padding:8px 18px;
+    background:var(--paper-raised);color:var(--ink-soft);border:none;border-right:1px solid var(--line);cursor:pointer;
+  }
+  .subtab-btn:last-child{border-right:none;}
+  .subtab-btn:hover{background:var(--paper);color:var(--ink);}
+  .subtab-btn.active{background:var(--ink);color:#fff;}
+  .subtab-panel{display:none;}
+  .subtab-panel.active{display:block;animation:painelEntra .18s ease-out;}
+
   /* ---------- Login ---------- */
-  #loginScreen{max-width:340px;margin:14vh auto;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px 32px;}
-  #loginScreen h1{font-family:'Inter',sans-serif;font-weight:700;font-size:22px;margin:0 0 4px;letter-spacing:-0.01em;}
+  #loginScreen{max-width:340px;margin:14vh auto;background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 30px;position:relative;overflow:hidden;}
+  #loginScreen::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--brand-stin) 0%,var(--brand-stin) 50%,var(--brand-mayderma) 50%,var(--brand-mayderma) 100%);}
+  #loginScreen h1{font-family:'Inter',sans-serif;font-weight:600;font-size:24px;margin:0 0 4px;}
   #loginScreen .sub{margin:0 0 24px;color:var(--ink-soft);font-size:13px;}
   #loginScreen label{display:block;font-size:11.5px;color:var(--ink-soft);font-weight:600;margin-bottom:5px;}
   #loginScreen input{
-    width:100%;padding:10px 12px;margin-bottom:14px;border:1px solid var(--line);border-radius:9px;
-    background:var(--bg);font-family:'Inter',sans-serif;font-size:13.5px;color:var(--ink);
+    width:100%;padding:9px 10px;margin-bottom:14px;border:1px solid var(--line);border-radius:7px;
+    background:#fff;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--ink);
   }
-  #loginScreen input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);}
+  #loginScreen input:focus{outline:2px solid var(--postal-blue);outline-offset:1px;}
   .btn-primary{
-    width:100%;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;padding:11px 14px;border-radius:9px;
-    background:var(--primary);color:#fff;border:none;cursor:pointer;
+    width:100%;font-family:'Inter',sans-serif;font-weight:500;font-size:13px;padding:10px 14px;border-radius:7px;
+    background:var(--ink);color:#fff;border:none;cursor:pointer;
   }
-  .btn-primary:hover{background:#254e8c;}
+  .btn-primary:hover{background:var(--postal-blue);}
   .login-error{font-size:12.5px;color:var(--problema);margin-top:12px;min-height:1em;}
 
-  /* ---------- Shell / Sidebar ---------- */
-  #appScreen.shell{display:flex;align-items:stretch;min-height:100vh;}
-  .sidebar{
-    width:232px;flex-shrink:0;background:var(--sidebar-bg);border-right:1px solid var(--line);
-    padding:22px 16px;display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh;
-  }
-  .sidebar-brand{display:flex;align-items:center;gap:10px;padding:0 6px;}
-  .brand-mark{
-    width:34px;height:34px;border-radius:9px;background:var(--primary);color:#fff;
-    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;
-  }
-  .brand-name{font-weight:700;font-size:14px;line-height:1.2;color:var(--ink);}
-  .brand-sub{font-size:11px;color:var(--faint);}
-  .sidebar-nav{display:flex;flex-direction:column;gap:2px;}
-  .nav-item{
-    display:block;padding:9px 10px;border-radius:8px;font-size:13px;font-weight:500;
-    color:var(--ink-soft);text-decoration:none;transition:background 100ms ease, color 100ms ease;
-  }
-  .nav-item:hover{background:var(--bg);color:var(--ink);}
-  .nav-item.active{background:var(--primary-soft);color:var(--primary);}
-  .sidebar-footer{margin-top:auto;display:flex;flex-direction:column;gap:8px;}
-  .theme-toggle{
-    width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);
-    color:var(--ink-soft);font-family:'Inter',sans-serif;font-size:12.5px;cursor:pointer;text-align:left;
-  }
-  .theme-toggle:hover{border-color:var(--primary);color:var(--primary);}
-
-  .main{flex:1;min-width:0;padding:26px 32px 60px;max-width:1360px;}
-
-  /* ---------- Buttons (shared) ---------- */
-  .btn-ghost{
-    font-family:'Inter',sans-serif;font-weight:500;font-size:12px;padding:8px 13px;border-radius:8px;
-    background:transparent;border:1px solid var(--line);color:var(--ink-soft);cursor:pointer;
-  }
-  .btn-ghost:hover{border-color:var(--primary);color:var(--primary);}
-
-  /* ---------- Header (topbar) ---------- */
+  /* ---------- Header (manifest strip) ---------- */
   header.manifest{
-    background:transparent;border:none;padding:0 0 22px;
-    display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;margin-bottom:4px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    background:var(--paper-raised);
+    padding:22px 26px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:16px;
+    margin-bottom:18px;
   }
   header.manifest .title-block h1{
-    font-family:'Inter',sans-serif;font-weight:700;font-size:24px;margin:0 0 4px;letter-spacing:-0.01em;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:28px;
+    margin:0 0 4px;
+    letter-spacing:0.2px;
   }
-  header.manifest .title-block p{margin:0;color:var(--ink-soft);font-size:13px;}
+  header.manifest .title-block p{
+    margin:0;
+    color:var(--ink-soft);
+    font-size:13px;
+  }
   header.manifest .meta{
-    font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:right;color:var(--ink-soft);
-    border-left:none;padding-left:0;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    text-align:right;
+    color:var(--ink-soft);
+    border-left:1px solid var(--line);
+    padding-left:16px;
   }
   header.manifest .meta strong{color:var(--ink);}
+  .btn-ghost{
+    font-family:'Inter',sans-serif;font-weight:500;font-size:12px;padding:8px 14px;border-radius:7px;
+    background:transparent;border:1px solid var(--line);color:var(--ink-soft);cursor:pointer;
+  }
+  .btn-ghost:hover{border-color:var(--ink);color:var(--ink);}
 
-  /* ---------- Toolbar ---------- */
+  /* ---------- Toolbar (import / atualizar) ---------- */
+  .empresa-switch{display:flex;gap:0;margin-bottom:18px;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);width:fit-content;overflow:hidden;}
+  .empresa-btn{
+    font-family:'Inter',sans-serif;font-weight:500;font-size:13px;padding:10px 20px;
+    background:var(--paper-raised);color:var(--ink-soft);border:none;border-right:1px solid var(--line);cursor:pointer;
+  }
+  .empresa-btn:last-child{border-right:none;}
+  .empresa-btn:hover{background:var(--paper);color:var(--ink);}
+  .empresa-btn.active{background:var(--postal-blue);color:#fff;}
+  .empresa-btn.active[data-empresa="Stin Pharma"]{background:var(--brand-stin);color:var(--brand-stin-ink);}
+  .empresa-btn.active[data-empresa="Mayderma"]{background:var(--brand-mayderma);color:#fff;}
+
   .toolbar{
-    border:1px solid var(--line);background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
-    padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;flex-wrap:wrap;gap:12px;
+    border:1px solid var(--line);background:var(--paper-raised);padding:14px 20px;
+    border-radius:var(--radius);box-shadow:var(--shadow);
+    margin-bottom:18px;display:flex;align-items:center;flex-wrap:wrap;gap:12px;
   }
   .toolbar label.file-btn{
-    font-family:'Inter',sans-serif;font-weight:600;font-size:12px;padding:9px 15px;border-radius:8px;
+    font-family:'Inter',sans-serif;font-weight:500;font-size:12.5px;padding:9px 16px;border-radius:7px;
     background:var(--ink);color:#fff;cursor:pointer;
   }
-  .toolbar label.file-btn:hover{background:var(--primary);}
+  .toolbar label.file-btn:hover{background:var(--postal-blue);}
   .toolbar input[type=file]{display:none;}
   .btn-accent{
-    font-family:'Inter',sans-serif;font-weight:600;font-size:12px;padding:9px 15px;border-radius:8px;
-    background:var(--primary);color:#fff;border:none;cursor:pointer;
+    font-family:'Inter',sans-serif;font-weight:500;font-size:12.5px;padding:9px 16px;border-radius:7px;
+    background:var(--stamp);color:#fff;border:none;cursor:pointer;
   }
-  .btn-accent:hover{background:#254e8c;}
+  .btn-accent:hover{background:#c2410c;}
   .btn-accent:disabled{opacity:0.55;cursor:default;}
-  .toolbar .info{font-size:12px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;}
+  .toolbar .info{font-size:12.5px;color:var(--ink-soft);font-family:'Inter',sans-serif;}
   .toolbar .error-msg{font-size:12px;color:var(--problema);}
 
   #staleWarning{
-    display:none;margin-bottom:18px;padding:12px 16px;border:1px solid var(--problema);border-radius:10px;
-    background:var(--problema-soft);color:var(--problema);font-size:12.5px;font-family:'IBM Plex Mono',monospace;
+    display:none;margin-bottom:18px;padding:10px 16px;border:1px solid var(--problema);
+    border-radius:var(--radius);
+    background:#FEF2F2;color:#991B1B;font-size:12.5px;font-family:'Inter',sans-serif;
   }
 
-  /* ---------- Priority box (radar) ---------- */
+  /* ---------- Priority box (radar aguardando retirada) ---------- */
   .priority-box{
-    border:1px solid var(--line);border-left:4px solid var(--retirada);background:var(--card);
-    border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 22px;margin-bottom:18px;
+    border:1px solid #FED7AA;border-radius:var(--radius);box-shadow:var(--shadow);background:#FFF7ED;padding:16px 20px;margin-bottom:18px;
   }
   .priority-title{
-    font-family:'Inter',sans-serif;font-weight:700;font-size:15px;color:var(--retirada);
+    font-family:'Inter',sans-serif;font-weight:600;font-size:15px;color:#9A3412;
     margin:0 0 10px;display:flex;align-items:center;gap:8px;
   }
   .priority-title .count{
-    font-family:'IBM Plex Mono',monospace;background:var(--retirada);color:#fff;border-radius:6px;
+    font-family:'IBM Plex Mono',monospace;background:var(--retirada);color:#fff;border-radius:5px;
     padding:1px 8px;font-size:11.5px;
   }
   .priority-list{max-height:220px;overflow-y:auto;}
   .priority-list table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:'IBM Plex Mono',monospace;}
-  .priority-list td{padding:7px 8px;vertical-align:middle;}
-  .priority-list tr:hover td{background:var(--retirada-soft);}
+  .priority-list td{padding:6px 8px;vertical-align:middle;}
+  .priority-list tr:hover td{background:#FFEDD5;}
   .priority-list td.dest{font-family:'Inter',sans-serif;color:var(--ink);width:32%;}
   .priority-list td.nf{color:var(--ink-soft);white-space:nowrap;}
   .priority-list td.loc{color:var(--ink-soft);text-align:right;white-space:nowrap;}
   .priority-list td.dias{text-align:right;font-weight:600;white-space:nowrap;}
-  .priority-list td.dias .selo{display:inline-block;min-width:44px;text-align:center;border-radius:6px;}
+  .priority-list td.dias .selo{display:inline-block;min-width:44px;text-align:center;border-radius:5px;}
   .priority-list td.dias.ok .selo{color:var(--ink-soft);font-weight:400;}
   .priority-list td.dias.atencao .selo{color:#9a6b0a;}
-  .priority-list td.dias.urgente .selo{color:#fff;background:var(--retirada);padding:2px 7px;}
+  .priority-list td.dias.urgente .selo{color:#fff;background:var(--retirada);padding:1px 6px;border-radius:5px;}
+  .priority-list td.etag{width:1%;white-space:nowrap;}
+  .empresa-tag{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;padding:2px 6px;border-radius:5px;white-space:nowrap;}
+  .empresa-tag.sp{background:#F7E3DA;color:var(--brand-stin-ink);}
+  .empresa-tag.md{background:#DDE6EF;color:var(--brand-mayderma);}
+
+  /* ---------- Botão que abre/fecha os filtros ---------- */
+  .filterbar-toggle-row{margin-bottom:12px;}
+  .btn-filtros{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:'Inter',sans-serif;font-weight:500;font-size:13px;
+    padding:9px 14px;border-radius:var(--radius);
+    background:var(--paper-raised);border:1px solid var(--line);box-shadow:var(--shadow);
+    color:var(--ink);cursor:pointer;
+  }
+  .btn-filtros:hover{border-color:var(--postal-blue);color:var(--postal-blue);}
+  .btn-filtros .chevron{transition:transform .18s ease-out;color:var(--ink-soft);}
+  .btn-filtros[aria-expanded="true"] .chevron{transform:rotate(180deg);}
+  .btn-filtros[aria-expanded="true"]{border-color:var(--postal-blue);color:var(--postal-blue);}
+  .badge-filtros{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;
+    background:var(--postal-blue);color:#fff;border-radius:20px;
+    min-width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;
+    padding:0 5px;
+  }
 
   /* ---------- Filter bar ---------- */
   .filterbar{
-    border:1px solid var(--line);background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
-    padding:16px 20px;margin-bottom:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
-    gap:12px 16px;align-items:end;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    background:var(--paper-raised);
+    padding:16px 20px;
+    margin-bottom:18px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:12px 16px;
+    align-items:end;
   }
   .filterbar .field{display:flex;flex-direction:column;gap:5px;}
-  .filterbar label{font-size:11px;color:var(--ink-soft);font-weight:600;}
-  .field-hint{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--faint);}
+  .filterbar label{
+    font-size:11px;
+    color:var(--ink-soft);
+    font-weight:600;
+  }
+  .field-hint{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    color:var(--ink-soft);
+  }
   .filterbar select, .filterbar input{
-    font-family:'Inter',sans-serif;font-size:13px;padding:8px 9px;border:1px solid var(--line);border-radius:8px;
-    background:var(--bg);color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    padding:7px 9px;
+    border-radius:7px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--ink);
   }
-  .filterbar select:focus, .filterbar input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);}
-  .filterbar .actions{display:flex;align-items:end;}
+  .filterbar select:focus, .filterbar input:focus{
+    outline:2px solid var(--postal-blue);
+    outline-offset:1px;
+  }
+  .filterbar .actions{
+    display:flex;
+    align-items:end;
+  }
   .btn-reset{
-    font-family:'Inter',sans-serif;font-weight:600;font-size:12px;padding:9px 15px;border-radius:8px;
-    background:var(--ink);color:#fff;border:none;cursor:pointer;
+    font-family:'Inter',sans-serif;
+    font-weight:500;
+    font-size:12px;
+    padding:8px 14px;
+    border-radius:7px;
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    cursor:pointer;
   }
-  .btn-reset:hover{background:var(--primary);}
+  .btn-reset:hover{background:var(--postal-blue);}
 
   /* ---------- Period result banner ---------- */
   .period-banner{
-    display:none;border:1px solid var(--primary);border-radius:10px;background:var(--primary-soft);color:var(--ink);
-    font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:9px 16px;margin-bottom:14px;
+    display:none;
+    border:1px solid #BFDBFE;
+    border-radius:var(--radius);
+    background:#EFF6FF;
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:12.5px;
+    padding:9px 16px;
+    margin-bottom:14px;
   }
   .period-banner.show{display:block;}
-  .period-banner strong{color:var(--primary);}
+  .period-banner strong{color:var(--postal-blue);}
 
-  /* ---------- KPI cards ---------- */
+  /* ---------- KPI stubs ---------- */
   .kpi-row{
-    display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:18px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:0;
+    margin-bottom:18px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    background:var(--paper-raised);
+    overflow:hidden;
   }
   .kpi{
-    padding:16px 18px;border-radius:var(--radius);background:var(--card);border:1px solid var(--line);
-    box-shadow:var(--shadow);position:relative;
+    padding:16px 16px 14px;
+    border-right:1px solid var(--line);
+    position:relative;
   }
-  .kpi .label{font-size:11px;color:var(--ink-soft);margin-bottom:10px;font-weight:500;}
-  .kpi .value{font-family:'Inter',sans-serif;font-size:25px;font-weight:700;line-height:1;letter-spacing:-0.01em;}
-  .kpi .sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--faint);margin-top:7px;}
+  .kpi:last-child{border-right:none;}
+  .kpi .label{
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+  }
+  .kpi .value{
+    font-family:'Inter',sans-serif;
+    font-size:26px;
+    font-weight:700;
+    line-height:1;
+  }
+  .kpi .sub{
+    font-family:'Inter',sans-serif;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:6px;
+  }
   .kpi.entregue .value{color:var(--entregue);}
   .kpi.retirada .value{color:var(--retirada);}
   .kpi.transferencia .value{color:var(--transferencia);}
   .kpi.problema .value{color:var(--problema);}
   .kpi.naoentregue .value{color:var(--naoentregue);}
-  .kpi.valor .value{font-size:21px;}
+  .kpi.aguardando .value{color:var(--aguardando);}
+  .kpi.valor .value{font-size:22px;}
 
   /* ---------- Panels / charts ---------- */
   .grid-2{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-bottom:18px;}
   .grid-2b{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
-  @media(max-width:1000px){.grid-2,.grid-2b{grid-template-columns:1fr;}}
+  @media(max-width:860px){.grid-2,.grid-2b{grid-template-columns:1fr;}}
 
   .panel{
-    border:1px solid var(--line);background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
-    padding:20px 22px 16px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    background:var(--paper-raised);
+    padding:18px 20px 14px;
   }
-  .panel h2{font-family:'Inter',sans-serif;font-size:15px;font-weight:700;margin:0 0 4px;}
-  .panel .hint{font-size:11.5px;color:var(--ink-soft);margin:0 0 14px;}
+  .panel h2{
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    font-weight:600;
+    margin:0 0 4px;
+  }
+  .panel .hint{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin:0 0 12px;
+  }
   .chart-holder{position:relative;height:260px;}
+
+  .gasto-empresa-lista{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+  .gasto-empresa-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;}
+  .gasto-empresa-item .nome{display:flex;align-items:center;gap:8px;font-family:'Inter',sans-serif;font-weight:500;font-size:13px;color:var(--ink);}
+  .gasto-empresa-item .dot{width:10px;height:10px;border-radius:50%;flex:none;}
+  .gasto-empresa-item .valores{text-align:right;}
+  .gasto-empresa-item .valor{font-family:'Inter',sans-serif;font-weight:700;font-size:16px;color:var(--ink);}
+  .gasto-empresa-item .pct{font-family:'Inter',sans-serif;font-size:11.5px;color:var(--ink-soft);}
   .chart-holder.tall{height:320px;}
 
-  .status-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:12px;}
-  .status-legend .chip{display:flex;align-items:center;gap:6px;font-size:11.5px;cursor:pointer;font-family:'IBM Plex Mono',monospace;color:var(--ink-soft);}
+  .status-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:10px;}
+  .status-legend .chip{
+    display:flex;align-items:center;gap:6px;
+    font-size:11.5px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
   .status-legend .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
   .status-legend .chip.dim{opacity:0.4;}
 
   table{width:100%;border-collapse:collapse;font-size:12.5px;}
   thead th{
-    text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--faint);
-    border-bottom:1px solid var(--line);padding:8px;white-space:nowrap;
+    text-align:left;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--ink-soft);
+    border-bottom:1px solid var(--ink);
+    padding:6px 8px;
+    white-space:nowrap;
   }
-  tbody td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top;}
-  tbody tr:hover{background:var(--bg);}
+  tbody td{
+    padding:6px 8px;
+    border-bottom:1px solid var(--line);
+    vertical-align:top;
+  }
+  tbody tr:hover{background:#EFEBDD;}
   td.num, th.num{text-align:right;font-family:'IBM Plex Mono',monospace;}
   td.mono{font-family:'IBM Plex Mono',monospace;font-size:11.5px;}
 
   .status-badge{
-    display:inline-block;padding:3px 9px;border-radius:999px;font-size:10.5px;font-family:'Inter',sans-serif;font-weight:600;
-    color:#fff;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom;
+    display:inline-block;
+    padding:2px 9px;
+    border-radius:20px;
+    font-size:10.5px;
+    font-family:'Inter',sans-serif;
+    font-weight:500;
+    color:#fff;
+    white-space:nowrap;
+    max-width:220px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    vertical-align:bottom;
   }
   .status-badge.entregue{background:var(--entregue);}
   .status-badge.aguardando{background:var(--aguardando);}
@@ -269,30 +449,216 @@
   .status-badge.problema{background:var(--problema);}
   .status-badge.naoentregue{background:var(--naoentregue);}
 
-  .table-panel{border:1px solid var(--line);background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 22px;margin-bottom:18px;}
-  .table-scroll{overflow-x:auto;max-height:460px;overflow-y:auto;border:1px solid var(--line);border-radius:10px;}
-  .table-scroll table{min-width:960px;}
-  .table-scroll thead th{position:sticky;top:0;background:var(--card);}
-  .row-count{font-size:11.5px;color:var(--faint);margin-top:8px;font-family:'IBM Plex Mono',monospace;}
-
-  footer.note{font-size:11px;color:var(--faint);border-top:1px solid var(--line);padding-top:14px;margin-top:6px;}
-
-  ::selection{background:var(--primary);color:#fff;}
-
-  @media(max-width:900px){
-    #appScreen.shell{flex-direction:column;}
-    .sidebar{width:100%;height:auto;position:relative;flex-direction:row;align-items:center;flex-wrap:wrap;}
-    .sidebar-nav{flex-direction:row;flex-wrap:wrap;}
-    .sidebar-footer{margin-top:0;flex-direction:row;}
-    .main{padding:20px;}
+  /* ---------- Esqueleto: menu lateral de altura total + área principal ---------- */
+  .app-layout{display:flex;min-height:100vh;}
+  .sidebar{
+    width:196px;flex:none;position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden;
+    background:var(--paper-raised);border-right:1px solid var(--line);
+    padding:18px 12px;display:flex;flex-direction:column;
+    transition:width .18s ease-out;
   }
+  .sidebar-brand{padding:4px 6px 18px 10px;border-bottom:1px solid var(--line);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+  .brand-title{font-family:'Inter',sans-serif;font-weight:700;font-size:16px;color:var(--ink);white-space:nowrap;overflow:hidden;}
+  .brand-sub{font-family:'Inter',sans-serif;font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+  .sidebar-collapse-btn{
+    flex:none;width:24px;height:24px;display:flex;align-items:center;justify-content:center;
+    background:transparent;border:1px solid var(--line);border-radius:6px;color:var(--ink-soft);cursor:pointer;
+  }
+  .sidebar-collapse-btn:hover{color:var(--ink);border-color:var(--ink);}
+  .sidebar-collapse-btn svg{transition:transform .18s ease-out;}
+  .sidebar .nav-group-label{
+    font-family:'Inter',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
+    color:#9CA3AF;padding:10px;margin-top:10px;border-top:1px solid var(--line);white-space:nowrap;overflow:hidden;
+  }
+  .sidebar .nav-group-label:first-of-type{margin-top:0;border-top:none;}
+  .sidebar .nav-item{
+    display:flex;align-items:center;justify-content:flex-start;gap:9px;
+    padding:8px 10px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;font-size:13.5px;
+    border-radius:7px;color:var(--ink);margin-bottom:2px;white-space:nowrap;overflow:hidden;
+  }
+  .sidebar .nav-item:hover{background:var(--paper);}
+  .sidebar .nav-item.active{background:#EFF6FF;color:var(--postal-blue);font-weight:600;}
+  .sidebar .nav-icon{flex:none;width:16px;height:16px;display:flex;color:var(--ink-soft);}
+  .sidebar .nav-icon svg{width:16px;height:16px;}
+  .sidebar .nav-item.active .nav-icon{color:var(--postal-blue);}
+  .sidebar .nav-item:hover .nav-icon{color:var(--ink);}
+  .sidebar .nav-label{overflow:hidden;text-overflow:ellipsis;flex:1;}
+  .sidebar .nav-badge{
+    flex:none;font-family:'Inter',sans-serif;font-weight:600;font-size:10px;background:var(--retirada);color:#fff;
+    padding:1px 7px;border-radius:20px;
+  }
+  @keyframes badgePulso{0%,100%{box-shadow:0 0 0 0 rgba(234,88,12,.45);}50%{box-shadow:0 0 0 4px rgba(234,88,12,0);}}
+  .sidebar .nav-badge.pulso{animation:badgePulso 2s ease-in-out infinite;}
+  .sidebar-footer{margin-top:auto;padding:14px 10px 0;border-top:1px solid var(--line);}
+  .sidebar-meta{font-family:'Inter',sans-serif;font-size:12px;color:var(--ink-soft);margin-bottom:10px;white-space:nowrap;overflow:hidden;}
+
+  /* ---------- Sidebar recolhida: só ícones ---------- */
+  .sidebar.collapsed{width:56px;padding-left:8px;padding-right:8px;}
+  .sidebar.collapsed .brand-title, .sidebar.collapsed .nav-group-label,
+  .sidebar.collapsed .nav-label, .sidebar.collapsed .sidebar-meta,
+  .sidebar.collapsed .logout-label{display:none;}
+  .sidebar.collapsed .sidebar-brand{justify-content:center;}
+  .sidebar.collapsed .nav-item{justify-content:center;padding:9px;}
+  .sidebar.collapsed .nav-badge{position:absolute;transform:translate(10px,-10px);padding:0;width:8px;height:8px;font-size:0;min-width:0;border-radius:50%;}
+  .sidebar.collapsed .nav-item{position:relative;}
+  .sidebar.collapsed .sidebar-collapse-btn svg{transform:rotate(180deg);}
+  .sidebar.collapsed .sidebar-footer{padding-left:0;padding-right:0;}
+  .sidebar.collapsed #logoutBtn{width:auto;padding:8px;}
+  .main-area{flex:1;min-width:0;padding:24px 28px 48px;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px;}
+  .topbar h1{font-family:'Inter',sans-serif;font-size:22px;font-weight:700;margin:0 0 2px;color:var(--ink);}
+  .topbar-sub{margin:0;font-size:13px;color:var(--ink-soft);}
+  .topbar .empresa-switch{margin-bottom:0;}
+  .main-content{flex:1;min-width:0;}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .table-panel{border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);background:var(--paper-raised);padding:18px 20px;margin-bottom:18px;}
+  .table-scroll{overflow-x:auto;max-height:460px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;}
+  .table-scroll table{min-width:960px;}
+  .table-scroll thead th{position:sticky;top:0;background:var(--paper-raised);}
+  .table-scroll thead th[data-field]{cursor:pointer;user-select:none;white-space:nowrap;}
+  .table-scroll thead th[data-field]:hover{color:var(--postal-blue);}
+  .sort-arrow{display:inline-block;width:9px;font-size:9px;margin-left:3px;color:var(--postal-blue);opacity:0;}
+  .table-scroll thead th.sorted .sort-arrow{opacity:1;}
+  .row-count{font-size:11.5px;color:var(--ink-soft);margin-top:8px;font-family:'IBM Plex Mono',monospace;}
+
+  footer.note{
+    font-size:11px;
+    color:var(--ink-soft);
+    border-top:1px solid var(--line);
+    padding-top:14px;
+    margin-top:6px;
+  }
+
+  ::selection{background:var(--postal-blue);color:#fff;}
+
+  .panel.zona-risco{
+    border-color:#FCA5A5;
+    background:linear-gradient(180deg,#FEF2F2 0%,var(--paper-raised) 90px);
+  }
+  .panel.zona-risco h2{color:#B91C1C;}
+  .panel.zona-risco h2::before{content:'⚠ ';}
+
+  /* ---------- Responsividade real ---------- */
+  @media(max-width:900px){
+    .main-area{padding:16px 14px 40px;}
+    .sidebar{width:60px;padding-left:8px;padding-right:8px;}
+    .sidebar .brand-title, .sidebar .nav-group-label, .sidebar .nav-label, .sidebar .sidebar-meta{display:none;}
+    .sidebar .sidebar-brand{justify-content:center;}
+    .sidebar .nav-item{justify-content:center;padding:9px;position:relative;}
+    .sidebar .nav-badge{position:absolute;transform:translate(10px,-10px);padding:0;width:8px;height:8px;font-size:0;min-width:0;border-radius:50%;}
+    .sidebar-collapse-btn{display:none;}
+    .topbar h1{font-size:19px;}
+    .kpi .value{font-size:22px;}
+  }
+  @media(max-width:640px){
+    .app-layout{flex-direction:column;}
+    .sidebar{
+      width:100%;height:auto;position:sticky;top:0;z-index:5;
+      flex-direction:row;align-items:center;padding:8px 10px;overflow-x:auto;
+    }
+    .sidebar .sidebar-brand{display:none;}
+    .sidebar .nav-item{flex-direction:column;gap:3px;padding:6px 10px;font-size:9.5px;}
+    .sidebar .nav-item .nav-label{display:block !important;font-size:9.5px;white-space:nowrap;}
+    .sidebar .nav-icon{width:18px;height:18px;}
+    .sidebar .nav-icon svg{width:18px;height:18px;}
+    .sidebar-footer{
+      margin-top:0;border-top:none;border-left:1px solid var(--line);
+      padding:0 0 0 10px;flex:none;display:flex;align-items:center;
+    }
+    .sidebar-meta{display:none;}
+    #logoutBtn{width:auto;padding:7px 10px;font-size:11px;white-space:nowrap;}
+    .kpi-row{grid-template-columns:repeat(2,1fr);}
+    .kpi{border-right:none;border-bottom:1px solid var(--line);}
+  }
+
+/* Rastro • camada visual 2026. Regras operacionais preservadas. */
+:root{--paper:#f5f7fb;--ink:#172944;--ink-soft:#64748b;--line:#e3e9f1;--postal-blue:#345ee8;--radius:16px;--shadow:0 3px 16px rgba(23,41,68,.035);--ease-out:cubic-bezier(.23,1,.32,1)}
+body{background:radial-gradient(ellipse at 95% 0%,#eaf0ff 0,transparent 40%),var(--paper);-webkit-font-smoothing:antialiased}
+.main-area{padding:32px clamp(18px,3vw,48px) 48px;max-width:1800px;margin:auto}
+.sidebar{background:#14243d;color:#d5dfef;border:0;transition:none}
+.sidebar .brand-title{color:#fff;font-size:23px;letter-spacing:-1px}
+.brand-title::before{content:'↗';display:inline-grid;place-items:center;width:30px;height:30px;background:#5678f5;border-radius:9px;margin-right:9px;font-size:24px;color:white}
+.sidebar-brand{padding-bottom:25px;border-color:#ffffff18}
+.sidebar .nav-group-label,.sidebar-footer{border-color:#ffffff18}
+.sidebar .nav-group-label{color:#96a8c3;font-size:9px;letter-spacing:.14em}
+.sidebar .nav-item{color:#c6d3e7;padding-top:12px;padding-bottom:12px;margin-bottom:5px;border-radius:10px}
+.sidebar .nav-item.active{background:#ffffff12;color:#fff;box-shadow:inset 3px 0 #8da6ff}
+.sidebar .nav-icon,.sidebar .nav-item.active .nav-icon{color:#9db5ff}
+.sidebar .nav-item:hover{background:#ffffff0d;color:#fff}
+.sidebar .nav-item:hover .nav-icon{color:#fff}
+.sidebar .btn-ghost,.sidebar-collapse-btn{color:#c6d3e7;border-color:#ffffff25}
+.sidebar-meta{color:#96a8c3}.sidebar .nav-badge.pulso{animation:none}
+.topbar{margin-bottom:26px;gap:20px}.topbar h1{font-size:30px;letter-spacing:-1.1px;font-weight:700}
+.eyebrow{font-size:10px;font-weight:700;color:var(--postal-blue);letter-spacing:.16em;text-transform:uppercase;margin-bottom:6px}
+.topbar-sub{font-size:12px;margin-top:6px}
+.empresa-switch{padding:4px;background:#e9edf5;border:0;box-shadow:none;border-radius:12px;gap:3px}
+.empresa-btn{border:0;background:transparent;border-radius:8px;font-size:12px;padding:9px 15px}
+.empresa-btn.active[data-empresa="Stin Pharma"]{background:#fff;color:#8A4A30;box-shadow:0 2px 5px #17294412}
+.empresa-btn.active[data-empresa="Mayderma"]{background:#fff;color:var(--brand-mayderma);box-shadow:0 2px 5px #17294412}
+.toolbar{border-radius:12px;padding:12px 16px;box-shadow:none;gap:10px}
+.btn-accent{background:var(--postal-blue);border-radius:8px}.file-btn,.btn-ghost,.btn-reset,.btn-filtros{border-radius:8px}
+.filterbar-toggle-row{display:flex;align-items:center;gap:12px;margin:16px 0}.filterbar{border-radius:12px}
+.kpi-row{gap:10px;background:none;border:none;box-shadow:none;overflow:visible;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));margin-bottom:24px}
+.kpi{--kpi-accent:var(--postal-blue);background:#fff;border:1px solid var(--line)!important;border-radius:13px;padding:19px 15px 17px;box-shadow:var(--shadow);min-width:0}
+.kpi::before{content:'';display:block;width:22px;height:3px;background:var(--kpi-accent);border-radius:3px;margin-bottom:15px}
+.kpi.retirada{--kpi-accent:var(--retirada)}.kpi.naoentregue{--kpi-accent:var(--naoentregue)}.kpi.problema{--kpi-accent:var(--problema)}.kpi.aguardando{--kpi-accent:var(--aguardando)}.kpi.transferencia{--kpi-accent:var(--transferencia)}.kpi.entregue{--kpi-accent:var(--entregue)}
+.kpi .label{font-size:10px;letter-spacing:.025em;min-height:30px;margin-bottom:8px;color:#57677e;font-weight:600}
+.kpi .value{font-size:30px;letter-spacing:-1px;font-variant-numeric:tabular-nums}.kpi .sub{font-size:10.5px;margin-top:9px}
+.kpi.valor .value{font-size:21px;letter-spacing:-.6px}
+.subtab-nav{border:0;background:#e9edf5;padding:4px;border-radius:10px;box-shadow:none;gap:3px;margin-bottom:18px}
+.subtab-btn{background:transparent;border:0;border-radius:7px;padding:8px 18px;font-size:12px}
+.subtab-btn.active{background:#fff;color:var(--ink);box-shadow:0 1px 4px #17294415}
+.panel,.table-panel{padding:23px;border-radius:16px;box-shadow:var(--shadow);min-width:0}
+.panel h2{font-size:14px;letter-spacing:-.2px}.panel .hint{font-size:11px;margin-bottom:24px;line-height:1.7}
+.chart-holder{height:285px}.chart-holder.tall{height:350px}
+.grid-2{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px}
+.status-legend{gap:7px;margin-top:20px}.status-legend .chip{border:1px solid var(--line);padding:6px 9px;border-radius:7px;font-size:10px;background:#fff;font-family:inherit;color:var(--ink)}
+.status-legend .chip[aria-pressed="true"]{border-color:var(--postal-blue);background:#edf2ff}
+.table-scroll{border-color:#edf0f5;border-radius:10px}thead th{font-size:10px;letter-spacing:.035em;color:#64748b}tbody td{padding-top:13px;padding-bottom:13px}
+.motion-control{font-size:11px;display:flex;gap:7px;align-items:center;margin-left:auto;color:var(--ink-soft);cursor:pointer}.motion-control input{accent-color:var(--postal-blue)}
+.chart-empty{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:var(--ink-soft);font-size:12px;pointer-events:none;background:#ffffffed;border-radius:10px}.chart-empty small{margin-top:5px;color:#79879b}
+.chart-data{margin-top:12px;font-size:11px;color:var(--ink-soft)}.chart-data summary{cursor:pointer;width:fit-content}.chart-data .table-scroll{margin-top:8px;max-height:220px}.chart-data table{min-width:100%;font-variant-numeric:tabular-nums}
+.demo-banner{padding:10px 18px;background:#fff5db;color:#70500d;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12px;border-bottom:1px solid #ead9af}.demo-banner button{background:#fff;border:1px solid #d9c795;border-radius:7px;padding:6px 12px;cursor:pointer;color:#70500d;font:inherit}.demo-banner span{margin-right:auto}
+.tab-panel.active,.subtab-panel.active{animation:painelEntra 200ms var(--ease-out)}
+:focus-visible{outline:3px solid #6b8bff;outline-offset:3px}
+.motion-off *, .motion-off *::before, .motion-off *::after{animation:none!important;transition:none!important}
+@media(hover:hover) and (pointer:fine){.kpi{transition:transform 180ms var(--ease-out),box-shadow 180ms ease}.kpi:hover{transform:translateY(-2px);box-shadow:0 6px 20px #1729440b}}
+@media(min-width:901px){.sidebar:not(.collapsed){width:232px}.sidebar .nav-item{font-size:12px}}
+@media(min-width:1400px){#tab-visao-geral>.kpi-row{grid-template-columns:repeat(7,minmax(0,1fr))}}
+@media(max-width:1100px){.grid-2,.grid-2b{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:640px){.main-area{padding:20px 14px 35px;width:100%}.topbar h1{font-size:26px}.topbar{gap:14px}.topbar-sub{max-width:270px}.kpi-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.kpi{padding:15px}.panel,.table-panel{padding:17px}.sidebar,.sidebar.collapsed{width:100%}.sidebar .nav-item{flex:none;padding:7px 9px}.sidebar-footer{padding-left:7px}.chart-holder{height:260px}.motion-control{margin-left:0}.filterbar-toggle-row{flex-wrap:wrap}.empresa-switch{max-width:100%}.demo-banner{font-size:11px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.kpi:hover{transform:none}}
+#loginScreen{max-width:390px;padding:38px;border-radius:20px;box-shadow:0 20px 70px #17294410}#loginScreen h1{font-size:32px;letter-spacing:-1px}#loginScreen input{padding:12px}#loginScreen .btn-primary{padding:12px;background:var(--postal-blue)}
+
+/* One motion policy for pointer, keyboard, reduced motion and session changes. */
+.tab-panel.active,.subtab-panel.active,#filterbar{animation:none!important}
+button,.empresa-btn,.nav-item{transition:transform 120ms var(--ease-out),background-color 150ms ease,color 150ms ease,border-color 150ms ease}
+.keyboard-input button:active,.keyboard-input .nav-item:active{transform:none}
+.keyboard-input *, .keyboard-input *::before,.keyboard-input *::after{animation:none!important}
+.motion-off .kpi:hover{transform:none}
+.kpi-flash{position:absolute;inset:0;border-radius:inherit;background:linear-gradient(110deg,rgba(52,94,232,.15),rgba(13,148,136,.08));opacity:0;pointer-events:none}
+.operation-feedback{display:flex;align-items:center;justify-content:space-between;gap:8px 20px;flex-wrap:wrap;margin:12px 2px;color:var(--ink-soft);font-size:11px;min-height:20px}
+#operation-state{display:inline-flex;align-items:center;gap:8px;min-width:0;overflow-wrap:anywhere}
+#operation-state::before{content:'';width:6px;height:6px;border-radius:50%;background:#94a3b8;flex:none}
+#operation-state[data-state="loading"]::before{background:var(--postal-blue);animation:consulting 900ms ease-in-out infinite alternate}
+#operation-state[data-state="success"]::before{background:var(--entregue)}
+#operation-state[data-state="warning"]::before{background:var(--aguardando)}
+#operation-state[data-state="error"]::before{background:var(--problema)}
+@keyframes consulting{from{opacity:.3}to{opacity:1}}
+.change-summary{border:1px solid #dbe6fa;border-left:3px solid var(--postal-blue);border-radius:10px;background:#eef4ff;color:#344e79;padding:11px 14px;margin:12px 0 16px;font-size:12px;line-height:1.65;overflow-wrap:anywhere}
+#filterbar{overflow:hidden;box-sizing:border-box}
+#atualizarAgoraBtn{min-width:155px}
+@media(max-width:640px){.operation-feedback{align-items:flex-start;flex-direction:column}.change-summary{font-size:11px}}
+
 </style>
 </head>
 <body>
 
 <div id="loginScreen">
-  <h1>Painel de Rastreios</h1>
-  <p class="sub">STIN PHARMA &mdash; Expedição</p>
+  <h1>Rastro</h1>
+  <p class="sub">Stin Pharma &middot; Mayderma &mdash; Expedição</p>
   <label for="loginEmail">E-mail</label>
   <input type="email" id="loginEmail" placeholder="seu.email@stinpharma.com">
   <label for="loginSenha">Senha</label>
@@ -301,64 +667,75 @@
   <p class="login-error" id="loginError"></p>
 </div>
 
-<div id="appScreen" class="shell hidden">
-<aside class="sidebar">
-  <div class="sidebar-brand">
-    <span class="brand-mark">RV</span>
-    <div>
-      <div class="brand-name">Rastreio VIPP</div>
-      <div class="brand-sub">STIN Pharma &middot; Expedição</div>
+<div id="appScreen" class="app-layout hidden">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-title">Rastro</div>
+      <button class="sidebar-collapse-btn" id="btn-collapse-sidebar" type="button" title="Recolher menu">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+      </button>
     </div>
-  </div>
-  <nav class="sidebar-nav">
-    <a href="#" class="nav-item active" data-view="geral">Visão geral</a>
-    <a href="#" class="nav-item" data-view="radar">Radar de retirada</a>
-    <a href="#" class="nav-item" data-view="graficos">Gráficos</a>
-    <a href="#" class="nav-item" data-view="tabela">Objetos</a>
-    <a href="#" class="nav-item" data-view="testeapi">Teste API (temp.)</a>
-  </nav>
-  <div class="sidebar-footer">
-    <button class="theme-toggle" id="themeToggle" type="button">🌙 Modo escuro</button>
-  </div>
-</aside>
-<main class="main">
-
-  <header class="manifest">
-    <div class="title-block">
-      <h1>Painel de Rastreios</h1>
-      <p>Acompanhamento de postagens, eventos e entregas &mdash; base de rastreamento dos Correios</p>
+    <div class="nav-group-label">Painel</div>
+    <div class="nav-item active" data-tab="visao-geral" data-label="Visão Geral" title="Visão Geral">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+      <span class="nav-label">Visão Geral</span>
     </div>
-    <div class="meta">
-      Remetente base: <strong>STIN PHARMA</strong><br>
-      <span id="meta-total-obj">&mdash;</span> objetos na base &middot;
-      <button class="btn-ghost" id="logoutBtn" style="margin-left:8px;">Sair</button>
+    <div class="nav-item" data-tab="retirada" data-label="Aguardando Retirada" title="Aguardando Retirada">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></span>
+      <span class="nav-label">Aguardando Retirada</span>
+      <span class="nav-badge" id="nav-badge-retirada">0</span>
     </div>
-  </header>
-
-  <div class="toolbar">
-    <label class="file-btn" for="fileInput">Importar Excel do VIPP</label>
-    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
-    <button class="btn-accent" id="atualizarAgoraBtn">Atualizar agora</button>
-    <span class="info" id="fileInfo"></span>
-    <span class="error-msg" id="errorMsg"></span>
-    <span class="info" id="lastUpdate"></span>
-    <button class="btn-ghost" id="btn-ver-tecnico" type="button" style="display:none;">Ver detalhes técnicos</button>
-    <button class="btn-ghost" id="btn-limpar-base" type="button" style="margin-left:auto;color:var(--problema);border-color:var(--problema);">Limpar base</button>
-  </div>
-
-  <div id="limparBaseModal" class="hidden" style="border:1px solid var(--problema);background:#F6E6E3;padding:16px 20px;margin-bottom:18px;">
-    <p style="margin:0 0 4px;font-weight:600;color:#6b201a;">Isso apaga TODOS os pedidos da base (não dá pra desfazer).</p>
-    <p style="margin:0 0 10px;font-size:12.5px;color:#6b201a;">Digite <strong>LIMPAR</strong> abaixo pra confirmar:</p>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <input type="text" id="limparBaseInput" style="padding:7px 8px;border:1px solid var(--problema);font-family:'IBM Plex Mono',monospace;">
-      <button class="btn-accent" id="btn-confirmar-limpar" type="button">Confirmar exclusão</button>
-      <button class="btn-ghost" id="btn-cancelar-limpar" type="button">Cancelar</button>
+    <div class="nav-item" data-tab="detalhamento" data-label="Detalhamento" title="Detalhamento">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>
+      <span class="nav-label">Detalhamento</span>
     </div>
-  </div>
+    <div class="nav-group-label">Administração</div>
+    <div class="nav-item" data-tab="gestao" data-label="Gestão" title="Gestão">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></span>
+      <span class="nav-label">Gestão</span>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-meta"><span id="meta-total-obj">&mdash;</span> objetos na base</div>
+      <button class="btn-ghost" id="logoutBtn" type="button" style="width:100%;">Sair</button>
+    </div>
+  </aside>
 
-  <div id="avisoErroAtualizacao" class="hidden" style="border:1px solid var(--problema);background:#F6E6E3;color:#6b201a;padding:10px 16px;margin-bottom:18px;font-size:12.5px;"></div>
+  <main class="main-area">
 
-  <div id="debugPanel" class="hidden" style="border:1px solid var(--line);background:#fff;padding:12px 14px;margin-bottom:18px;">
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">Central de expedição</div><h1 id="topbar-title">Visão Geral</h1><p class="topbar-sub">Cada envio acompanhado. Cada decisão, mais clara.</p>
+      </div>
+      <div class="empresa-switch" id="empresa-switch">
+        <button type="button" class="empresa-btn active" data-empresa="Stin Pharma">Stin Pharma</button>
+        <button type="button" class="empresa-btn" data-empresa="Mayderma">Mayderma</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <label class="file-btn" for="fileInput">Importar Excel do VIPP</label>
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+      <button class="btn-accent" id="atualizarAgoraBtn">Atualizar agora</button>
+      <span class="info" id="fileInfo"></span>
+      <span class="error-msg" id="errorMsg"></span>
+      <span class="info" id="lastUpdate" style="margin-left:auto;"></span>
+      <button class="btn-ghost" id="btn-ver-tecnico" type="button" style="display:none;">Ver detalhes técnicos</button>
+    </div>
+
+    <div id="empresaPerguntaBox" class="hidden" style="border:1px solid #BFDBFE;border-radius:10px;background:#EFF6FF;padding:16px 20px;margin-bottom:18px;">
+      <p style="margin:0 0 4px;font-weight:600;">Não consegui identificar a empresa desse arquivo.</p>
+      <p style="margin:0 0 12px;font-size:12.5px;color:var(--ink-soft);"><span id="empresaPerguntaArquivo"></span> &mdash; o relatório não traz o nome do remetente. De qual empresa ele é?</p>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-reset" type="button" data-empresa="Stin Pharma">Stin Pharma</button>
+        <button class="btn-reset" type="button" data-empresa="Mayderma">Mayderma</button>
+        <button class="btn-ghost" type="button" id="empresaPerguntaCancelar">Cancelar importação</button>
+      </div>
+    </div>
+
+  <div id="avisoErroAtualizacao" class="hidden" style="border:1px solid #FCA5A5;border-radius:10px;background:#FEF2F2;color:#991B1B;padding:10px 16px;margin-bottom:18px;font-size:12.5px;"></div>
+
+  <div id="debugPanel" class="hidden" style="border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);background:#fff;padding:12px 14px;margin-bottom:18px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
       <strong style="font-size:12px;font-family:'IBM Plex Mono',monospace;">Resposta da última atualização (pra copiar e mandar se algo parecer estranho)</strong>
       <button class="btn-ghost" id="btn-fechar-tecnico" type="button">Fechar</button>
@@ -368,15 +745,19 @@
 
   <div id="staleWarning"></div>
 
-  <div id="view-radar">
-  <div class="priority-box" id="priorityBox" style="display:none">
-    <div class="priority-title">Aguardando retirada — ligar pro cliente <span class="count" id="priorityCount">0</span></div>
-    <p style="margin:-6px 0 10px;font-size:11.5px;color:#8a5540;">Ordenado por quem está esperando há mais tempo &mdash; dias em vermelho = perto do prazo de devolução</p>
-    <div class="priority-list" id="priorityList"></div>
-  </div>
+  <div class="operation-feedback" aria-live="polite" aria-atomic="true"><span id="operation-state" data-state="idle">Pronto para consultar</span><span id="received-at"></span></div>
+  <div id="change-summary" class="change-summary hidden" role="status" aria-atomic="true"></div>
+  <div class="filterbar-toggle-row">
+<label class="motion-control" style="order:2"><input id="motion-toggle" type="checkbox" checked> Animações</label>
+    <button class="btn-filtros" id="btn-toggle-filtros" type="button" aria-expanded="false">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+      Filtros
+      <span class="badge-filtros hidden" id="badge-filtros-count">0</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
   </div>
 
-  <div class="filterbar">
+  <div class="filterbar" id="filterbar" style="display:none;">
     <div class="field">
       <label>Data de postagem &mdash; De</label>
       <input type="date" id="f-date-start">
@@ -391,12 +772,12 @@
       <label>Status</label>
       <select id="f-status">
         <option value="">Todos</option>
-        <option value="entregue">Entregue</option>
         <option value="retirada">Aguardando retirada</option>
-        <option value="transito">Em trânsito</option>
-        <option value="aguardando">Aguardando ação</option>
         <option value="naoentregue">Não entregue</option>
         <option value="problema">Problema</option>
+        <option value="aguardando">Aguardando ação</option>
+        <option value="transito">Em trânsito</option>
+        <option value="entregue">Entregue</option>
       </select>
     </div>
     <div class="field">
@@ -430,138 +811,250 @@
 
   <div class="period-banner" id="period-banner"></div>
 
-  <div class="kpi-row" id="secao-kpis">
-    <div class="kpi">
-      <div class="label">Total de postagens</div>
-      <div class="value" id="kpi-total">&mdash;</div>
-      <div class="sub">objetos no período</div>
-    </div>
-    <div class="kpi entregue">
-      <div class="label">Total entregue</div>
-      <div class="value" id="kpi-entregue">&mdash;</div>
-      <div class="sub" id="kpi-pct-entregue">&mdash;</div>
-    </div>
-    <div class="kpi retirada">
-      <div class="label">Aguardando retirada</div>
-      <div class="value" id="kpi-retirada">&mdash;</div>
-      <div class="sub" id="kpi-pct-retirada">&mdash;</div>
-    </div>
-    <div class="kpi transferencia">
-      <div class="label">Em trânsito</div>
-      <div class="value" id="kpi-transito">&mdash;</div>
-      <div class="sub">em rota</div>
-    </div>
-    <div class="kpi naoentregue">
-      <div class="label">Não entregue</div>
-      <div class="value" id="kpi-naoentregue">&mdash;</div>
-      <div class="sub">falha de entrega</div>
-    </div>
-    <div class="kpi problema">
-      <div class="label">Problema</div>
-      <div class="value" id="kpi-problema">&mdash;</div>
-      <div class="sub">precisa de ação</div>
-    </div>
-    <div class="kpi valor">
-      <div class="label">Valor total postagens</div>
-      <div class="value" id="kpi-valor">&mdash;</div>
-      <div class="sub">soma no período</div>
-    </div>
-    <div class="kpi valor">
-      <div class="label">Ticket médio</div>
-      <div class="value" id="kpi-ticket">&mdash;</div>
-      <div class="sub">valor / postagens</div>
-    </div>
-  </div>
+    <div class="main-content">
 
-  <div id="view-graficos">
-  <div class="grid-2" id="secao-graficos">
-    <div class="panel">
-      <h2>Postagens por dia</h2>
-      <p class="hint">Volume de objetos postados, por dia, no período selecionado</p>
-      <div class="chart-holder"><canvas id="chart-por-dia"></canvas></div>
-    </div>
-    <div class="panel">
-      <h2>Status das entregas</h2>
-      <p class="hint">Clique em um status para filtrar todo o painel</p>
-      <div class="chart-holder"><canvas id="chart-status"></canvas></div>
-      <div class="status-legend" id="status-legend"></div>
-    </div>
-  </div>
+      <div class="tab-panel active" id="tab-visao-geral">
+        <div class="kpi-row">
+          <div class="kpi">
+            <div class="label">Total de postagens</div>
+            <div class="value" id="kpi-total">&mdash;</div>
+            <div class="sub">objetos no período</div>
+          </div>
+          <div class="kpi retirada">
+            <div class="label">Aguardando retirada</div>
+            <div class="value" id="kpi-retirada">&mdash;</div>
+            <div class="sub" id="kpi-pct-retirada">&mdash;</div>
+          </div>
+          <div class="kpi naoentregue">
+            <div class="label">Não entregue</div>
+            <div class="value" id="kpi-naoentregue">&mdash;</div>
+            <div class="sub">falha de entrega</div>
+          </div>
+          <div class="kpi problema">
+            <div class="label">Problema</div>
+            <div class="value" id="kpi-problema">&mdash;</div>
+            <div class="sub">precisa de ação</div>
+          </div>
+          <div class="kpi aguardando">
+            <div class="label">Aguardando ação</div>
+            <div class="value" id="kpi-aguardando">&mdash;</div>
+            <div class="sub">a processar</div>
+          </div>
+          <div class="kpi transferencia">
+            <div class="label">Em trânsito</div>
+            <div class="value" id="kpi-transito">&mdash;</div>
+            <div class="sub">em rota</div>
+          </div>
+          <div class="kpi entregue">
+            <div class="label">Total entregue</div>
+            <div class="value" id="kpi-entregue">&mdash;</div>
+            <div class="sub" id="kpi-pct-entregue">&mdash;</div>
+          </div>
+        </div>
 
-  <div class="grid-2b">
-    <div class="panel">
-      <h2>Postagens por estado</h2>
-      <p class="hint">Quantidade de objetos por UF de destino, do maior para o menor</p>
-      <div class="chart-holder tall"><canvas id="chart-uf-qtd"></canvas></div>
-    </div>
-    <div class="panel">
-      <h2>Valor postado por estado</h2>
-      <p class="hint">Soma do valor de postagem por UF de destino</p>
-      <div class="chart-holder tall"><canvas id="chart-uf-valor"></canvas></div>
-    </div>
-  </div>
+        <div class="subtab-nav" id="subtab-visao-nav">
+          <button type="button" class="subtab-btn active" data-subtab="volume">Volume</button>
+          <button type="button" class="subtab-btn" data-subtab="geografico">Geográfico</button>
+        </div>
 
-  <div class="panel" style="margin-bottom:18px;">
-    <h2>Ranking de cidades</h2>
-    <p class="hint">Cidades com maior quantidade de postagens no período</p>
-    <div class="table-scroll" style="max-height:320px;">
-      <table>
-        <thead>
-          <tr><th>Cidade</th><th>UF</th><th class="num">Postagens</th><th class="num">Valor total</th></tr>
-        </thead>
-        <tbody id="ranking-cidades-body"></tbody>
-      </table>
-    </div>
-  </div>
-  </div>
+        <div class="subtab-panel active" id="subtab-volume">
+          <div class="grid-2">
+            <div class="panel">
+              <h2>Postagens por dia</h2>
+              <p class="hint">Volume de objetos postados, por dia, no período selecionado</p>
+              <div class="chart-holder"><canvas id="chart-por-dia"></canvas></div>
+            </div>
+            <div class="panel">
+              <h2>Status das entregas</h2>
+              <p class="hint">Clique em um status para filtrar todo o painel</p>
+              <div class="chart-holder"><canvas id="chart-status"></canvas></div>
+              <div class="status-legend" id="status-legend"></div>
+            </div>
+          </div>
+        </div>
 
+        <div class="subtab-panel" id="subtab-geografico">
+          <div class="grid-2b">
+            <div class="panel">
+              <h2>Postagens por estado</h2>
+              <p class="hint">Quantidade de objetos por UF de destino, do maior para o menor</p>
+              <div class="chart-holder tall"><canvas id="chart-uf-qtd"></canvas></div>
+            </div>
+            <div class="panel">
+              <h2>Valor postado por estado</h2>
+              <p class="hint">Soma do valor de postagem por UF de destino</p>
+              <div class="chart-holder tall"><canvas id="chart-uf-valor"></canvas></div>
+            </div>
+          </div>
 
-  <div class="table-panel" id="view-testeapi" style="display:none">
-    <h2 style="font-family:'Source Serif 4',serif;font-size:16px;margin:0 0 4px;">Teste da API Pré-Postagem</h2>
-    <p class="hint" style="margin:0 0 12px;">Consulta só leitura no Correios. Compara o que a API devolve com o que já está na sua base.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
-      <input type="text" id="ppnCodigo" placeholder="Código do objeto (ex: AB123456789BR)" style="padding:8px 12px;border:1px solid var(--border,#d3d1c7);border-radius:8px;min-width:260px;background:transparent;color:inherit;">
-      <button class="btn-primary" id="ppnTestarBtn" type="button">Testar código</button>
-      <button class="btn-ghost" id="ppnStinBtn" type="button">Pegar 1 da Stin</button>
-      <button class="btn-ghost" id="ppnMayBtn" type="button">Pegar 1 da Mayderma</button>
-    </div>
-    <div id="ppnSaida" class="hint">Nada testado ainda.</div>
-  </div>
-
-  <div class="table-panel" id="secao-tabela">
-    <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;">
-      <div>
-        <h2 style="font-family:'Source Serif 4',serif;font-size:16px;margin:0 0 4px;">Detalhamento dos objetos</h2>
-        <p class="hint" style="margin:0;">Um objeto por linha &mdash; respeita todos os filtros acima</p>
+          <div class="panel" style="margin-bottom:18px;">
+            <h2>Ranking de cidades</h2>
+            <p class="hint">Cidades com maior quantidade de postagens no período</p>
+            <div class="table-scroll" style="max-height:320px;">
+              <table>
+                <thead>
+                  <tr><th>Cidade</th><th>UF</th><th class="num">Postagens</th><th class="num">Valor total</th></tr>
+                </thead>
+                <tbody id="ranking-cidades-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
-      <button class="btn-ghost" id="btn-exportar-csv" type="button">Exportar CSV</button>
+
+      <div class="tab-panel" id="tab-retirada">
+        <div class="empresa-switch" id="retirada-empresa-switch" style="margin-bottom:14px;">
+          <button type="button" class="empresa-btn active" data-empresa="">Todas</button>
+          <button type="button" class="empresa-btn" data-empresa="Stin Pharma">Stin Pharma</button>
+          <button type="button" class="empresa-btn" data-empresa="Mayderma">Mayderma</button>
+        </div>
+        <div class="priority-box" id="priorityBox" style="display:none;margin-bottom:0;">
+          <div class="priority-title">Aguardando retirada — ligar pro cliente <span class="count" id="priorityCount">0</span></div>
+          <p style="margin:-6px 0 10px;font-size:11.5px;color:#8a5540;">Ordenado por quem está esperando há mais tempo &mdash; dias em vermelho = perto do prazo de devolução. Essa lista não respeita os filtros acima — é um radar fixo, olha a base inteira.</p>
+          <div class="priority-list" id="priorityList" style="max-height:none;"></div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-detalhamento">
+        <div class="table-panel">
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;">
+            <div>
+              <h2 style="font-family:'Inter',sans-serif;font-size:16px;margin:0 0 4px;">Detalhamento dos objetos</h2>
+              <p class="hint" style="margin:0;">Um objeto por linha &mdash; respeita todos os filtros acima</p>
+            </div>
+            <button class="btn-ghost" id="btn-exportar-csv" type="button">Exportar CSV</button>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th data-field="dataPostagem">Data postagem<span class="sort-arrow"></span></th>
+                  <th data-field="empresa">Empresa<span class="sort-arrow"></span></th>
+                  <th data-field="codigo">Registro<span class="sort-arrow"></span></th>
+                  <th data-field="destinatario">Destinatário<span class="sort-arrow"></span></th>
+                  <th data-field="cidade">Cidade<span class="sort-arrow"></span></th>
+                  <th data-field="uf">UF<span class="sort-arrow"></span></th>
+                  <th data-field="nf">Nota fiscal<span class="sort-arrow"></span></th>
+                  <th class="num" data-field="valorPostagem">Valor<span class="sort-arrow"></span></th>
+                  <th data-field="status">Status atual<span class="sort-arrow"></span></th>
+                  <th data-field="atualizadoEm">Última verificação<span class="sort-arrow"></span></th>
+                </tr>
+              </thead>
+              <tbody id="detail-body"></tbody>
+            </table>
+          </div>
+          <div class="row-count" id="detail-count"></div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-gestao">
+
+        <div class="kpi-row">
+          <div class="kpi">
+            <div class="label">Envios no período</div>
+            <div class="value" id="kpiG-total">&mdash;</div>
+            <div class="sub">objetos postados</div>
+          </div>
+          <div class="kpi valor">
+            <div class="label">Gasto com postagem</div>
+            <div class="value" id="kpiG-gasto">&mdash;</div>
+            <div class="sub">soma no período</div>
+          </div>
+          <div class="kpi valor">
+            <div class="label">Ticket médio</div>
+            <div class="value" id="kpiG-ticket">&mdash;</div>
+            <div class="sub">gasto / envios</div>
+          </div>
+          <div class="kpi retirada">
+            <div class="label">Pedidos em atraso</div>
+            <div class="value" id="kpiG-atraso">&mdash;</div>
+            <div class="sub" id="kpiG-atraso-pct">&mdash;</div>
+          </div>
+          <div class="kpi naoentregue">
+            <div class="label">Com ocorrência</div>
+            <div class="value" id="kpiG-ocorrencia">&mdash;</div>
+            <div class="sub">não entregue + problema</div>
+          </div>
+        </div>
+
+        <div class="subtab-nav" id="subtab-gestao-nav">
+          <button type="button" class="subtab-btn active" data-subtab="gestao-financeiro">Financeiro</button>
+          <button type="button" class="subtab-btn" data-subtab="gestao-risco">Operacional &amp; Risco</button>
+        </div>
+
+        <div class="subtab-panel active" id="subtab-gestao-financeiro">
+          <div class="grid-2b">
+            <div class="panel">
+              <h2>Gasto por empresa</h2>
+              <p class="hint">Soma do valor de postagem, por empresa, no período &mdash; sempre mostra as duas juntas, mesmo com uma empresa selecionada no topo</p>
+              <div class="chart-holder"><canvas id="chart-gasto-empresa"></canvas></div>
+              <div id="gasto-empresa-lista" class="gasto-empresa-lista"></div>
+            </div>
+            <div class="panel">
+              <h2>Envios e gasto por mês</h2>
+              <p class="hint">Quantidade de envios (linha) e valor gasto (barra), por mês</p>
+              <div class="chart-holder"><canvas id="chart-periodo-mensal"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="subtab-panel" id="subtab-gestao-risco">
+          <div class="panel" style="margin-bottom:18px;">
+            <h2>Ranking por UF — envios e atrasos</h2>
+            <p class="hint">Quantos foram enviados por estado, e quantos desses estão em atraso</p>
+            <div class="table-scroll" style="max-height:340px;">
+              <table>
+                <thead>
+                  <tr><th>UF</th><th class="num">Enviados</th><th class="num">Em atraso</th><th class="num">% atraso</th></tr>
+                </thead>
+                <tbody id="ranking-uf-atraso-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-bottom:18px;">
+            <h2>Etiquetas sem postagem confirmada</h2>
+            <p class="hint">Expiradas, erro de geração ou sem etiqueta — não entram nos gráficos de período porque não têm data de postagem</p>
+            <div class="kpi-row" style="border:none;background:transparent;">
+              <div class="kpi problema" style="border:1px solid var(--line);">
+                <div class="label">Quantidade</div>
+                <div class="value" id="kpiG-semetiqueta-qtd">&mdash;</div>
+                <div class="sub">objetos</div>
+              </div>
+              <div class="kpi problema" style="border:1px solid var(--line);">
+                <div class="label">Valor envolvido</div>
+                <div class="value" id="kpiG-semetiqueta-valor">&mdash;</div>
+                <div class="sub">soma</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel zona-risco" style="margin-bottom:18px;">
+            <h2>Zona de risco</h2>
+            <p class="hint">Ações que apagam dados. Use só se for recomeçar a base do zero.</p>
+            <button class="btn-ghost" id="btn-limpar-base" type="button" style="color:var(--problema);border-color:var(--problema);">Limpar base</button>
+            <div style="margin-top:14px;">
+      <div id="limparBaseModal" class="hidden" style="border:1px solid #FCA5A5;border-radius:10px;background:#FEF2F2;padding:16px 20px;margin-bottom:0;">
+        <p style="margin:0 0 4px;font-weight:600;color:#6b201a;">Isso apaga TODOS os pedidos da base (não dá pra desfazer).</p>
+        <p style="margin:0 0 10px;font-size:12.5px;color:#6b201a;">Digite <strong>LIMPAR</strong> abaixo pra confirmar:</p>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" id="limparBaseInput" style="padding:7px 8px;border:1px solid var(--problema);font-family:'IBM Plex Mono',monospace;">
+          <button class="btn-accent" id="btn-confirmar-limpar" type="button">Confirmar exclusão</button>
+          <button class="btn-ghost" id="btn-cancelar-limpar" type="button">Cancelar</button>
+        </div>
+      </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
-    <div class="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Data postagem</th>
-            <th>Registro</th>
-            <th>Destinatário</th>
-            <th>Cidade</th>
-            <th>UF</th>
-            <th>Nota fiscal</th>
-            <th class="num">Valor</th>
-            <th>Status atual</th>
-            <th>Última verificação</th>
-          </tr>
-        </thead>
-        <tbody id="detail-body"></tbody>
-      </table>
-    </div>
-    <div class="row-count" id="detail-count"></div>
-  </div>
 
   <footer class="note">
     Dados ao vivo do Firebase (rastreioVipp/pedidos). O robô automático atualiza status e data do evento 1x/dia para pedidos ainda não entregues; pedidos já entregues não são mais consultados.
   </footer>
 
-</main>
+  </main>
 </div>
 
 <script>
@@ -615,7 +1108,7 @@ var STATUS_MAP = {
   "Objeto(s) Comparado(s) entre o VIPP e VisualPost não Divergentes": "transito"
 };
 var STATUS_LABEL = { entregue:"Entregue", retirada:"Aguardando retirada", naoentregue:"Não entregue", transito:"Em trânsito", aguardando:"Aguardando ação", problema:"Problema" };
-var STATUS_COLOR = { entregue:"#2F7A54", retirada:"#B4452F", naoentregue:"#8C5383", transito:"#5C6F8C", aguardando:"#C1841F", problema:"#93493A" };
+var STATUS_COLOR = { entregue:"#0D9488", retirada:"#EA580C", naoentregue:"#9333EA", transito:"#64748B", aguardando:"#D97706", problema:"#DC2626" };
 var STATUS_ORDER = ["retirada","naoentregue","problema","aguardando","transito","entregue"];
 
 // Versão curta e legível pro texto original de cada status — pros que a gente já
@@ -665,6 +1158,58 @@ var PRAZO_ATENCAO_DIAS = 4;
 var PRAZO_URGENTE_DIAS = 7;
 var LIMITE_LINHAS_TABELA = 500; // performance: acima disso, pede pra refinar os filtros
 
+var EMPRESA_COLOR = { 'Stin Pharma': '#EDA996', 'Mayderma': '#1A4773' };
+function corEmpresa(nome){ return Object.prototype.hasOwnProperty.call(EMPRESA_COLOR,nome) ? EMPRESA_COLOR[nome] : '#8C5383'; }
+function abrevEmpresa(emp){
+  if (emp === 'Mayderma') return 'MD';
+  if (emp === 'Stin Pharma') return 'SP';
+  return (emp||'—').slice(0,2).toUpperCase();
+}
+var retiradaEmpresaSel = '';
+document.querySelectorAll('#retirada-empresa-switch .empresa-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('#retirada-empresa-switch .empresa-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    retiradaEmpresaSel = btn.dataset.empresa;
+    render();
+  });
+});
+
+var detailSort = { campo: 'dataPostagem', dir: -1 };
+function valorOrdenavel(o, campo){
+  switch(campo){
+    case 'dataPostagem': return o.dataPostagem ? o.dataPostagem.getTime() : 0;
+    case 'empresa': return String(o.empresa == null ? '' : o.empresa).toLowerCase();
+    case 'codigo': return String(o.codigo == null ? '' : o.codigo).toLowerCase();
+    case 'destinatario': return String(o.destinatario == null ? '' : o.destinatario).toLowerCase();
+    case 'cidade': return String(o.cidade == null ? '' : o.cidade).toLowerCase();
+    case 'uf': return String(o.uf == null ? '' : o.uf).toLowerCase();
+    case 'nf': return String(o.nf == null ? '' : o.nf).toLowerCase();
+    case 'valorPostagem': return o.valorPostagem || 0;
+    case 'status': return STATUS_ORDER.indexOf(o._bucket);
+    case 'atualizadoEm': return o.atualizadoEm || 0;
+    default: return 0;
+  }
+}
+function atualizarSetasOrdenacao(){
+  document.querySelectorAll('#tab-detalhamento thead th[data-field]').forEach(function(th){
+    var ativo = th.dataset.field === detailSort.campo;
+    th.classList.toggle('sorted', ativo);
+    th.querySelector('.sort-arrow').textContent = ativo ? (detailSort.dir === 1 ? '▲' : '▼') : '';
+  });
+}
+document.querySelectorAll('#tab-detalhamento thead th[data-field]').forEach(function(th){
+  th.addEventListener('click', function(){
+    if (detailSort.campo === th.dataset.field){
+      detailSort.dir *= -1;
+    } else {
+      detailSort.campo = th.dataset.field;
+      detailSort.dir = 1;
+    }
+    render();
+  });
+});
+
 function debounce(fn, ms){
   var t;
   return function(){
@@ -674,8 +1219,8 @@ function debounce(fn, ms){
   };
 }
 
-function bucketFor(status){ return STATUS_MAP[status] || "aguardando"; }
-function escapeHtml(str){ return String(str == null ? "" : str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function bucketFor(status){ return Object.prototype.hasOwnProperty.call(STATUS_MAP,status) ? STATUS_MAP[status] : "aguardando"; }
+function escapeHtml(str){ return String(str == null ? "" : str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
 function chaveSegura(codigo){ return String(codigo).replace(/[.#$\[\]\/]/g, ""); }
 function fmtMoney(v){ return (v||0).toLocaleString('pt-BR', {style:'currency', currency:'BRL'}); }
 function fmtDateOnly(d){ if(!d) return ''; return d.toLocaleDateString('pt-BR'); }
@@ -691,8 +1236,78 @@ document.getElementById("loginBtn").addEventListener("click", function () {
   });
 });
 document.getElementById("logoutBtn").addEventListener("click", function () { auth.signOut(); });
+
+// -------- Navegação lateral (abas) --------
+// -------- Sub-abas de Visão Geral (Volume / Geográfico) --------
+// -------- Sub-abas de Gestão (Financeiro / Operacional & Risco) --------
+document.querySelectorAll('#subtab-gestao-nav .subtab-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('#subtab-gestao-nav .subtab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('#tab-gestao .subtab-panel').forEach(function(p){ p.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('subtab-' + btn.dataset.subtab).classList.add('active');
+    if (btn.dataset.subtab === 'gestao-financeiro'){
+      chartGastoEmpresa.resize();
+      chartPeriodoMensal.resize();
+    }
+  });
+});
+
+document.querySelectorAll('#subtab-visao-nav .subtab-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('#subtab-visao-nav .subtab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('#tab-visao-geral .subtab-panel').forEach(function(p){ p.classList.remove('active'); });
+    btn.classList.add('active');
+    var painel = document.getElementById('subtab-' + btn.dataset.subtab);
+    painel.classList.add('active');
+    // Gráficos que nasceram escondidos às vezes ficam com tamanho errado até
+    // a gente forçar um resize agora que o painel deles está visível de verdade.
+    if (btn.dataset.subtab === 'geografico'){
+      chartUfQtd.resize();
+      chartUfValor.resize();
+    } else {
+      chartPorDia.resize();
+      chartStatus.resize();
+    }
+  });
+});
+
+// -------- Sidebar: recolher/expandir, com preferência salva --------
+(function(){
+  var sidebar = document.getElementById('sidebar');
+  var btn = document.getElementById('btn-collapse-sidebar');
+  var salvo = null;
+  try { salvo = localStorage.getItem('rastro-sidebar-recolhida'); } catch(e){}
+  if (salvo === '1') sidebar.classList.add('collapsed');
+  btn.addEventListener('click', function(){
+    sidebar.classList.toggle('collapsed');
+    try { localStorage.setItem('rastro-sidebar-recolhida', sidebar.classList.contains('collapsed') ? '1' : '0'); } catch(e){}
+  });
+})();
+
+document.querySelectorAll('.sidebar .nav-item').forEach(function(item){
+  item.addEventListener('click', function(){
+    document.querySelectorAll('.sidebar .nav-item').forEach(function(i){ i.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+    item.classList.add('active');
+    document.getElementById('topbar-title').textContent = item.dataset.label;
+    document.getElementById('tab-' + item.dataset.tab).classList.add('active');
+  });
+});
 document.getElementById("btn-ver-tecnico").addEventListener("click", function(){
-  document.getElementById("debugConteudo").textContent = JSON.stringify(window._ultimaRespostaAtualizar, null, 2);
+  var r = window._resumoAtualizacao;
+  var resumoTxt = "";
+  if (r){
+    resumoTxt = "Resumo da última atualização\n" +
+      "-----------------------------\n" +
+      "Rodadas executadas: " + r.rodadas + "\n" +
+      "Pedidos pendentes no início: " + r.totalPendentesInicial + "\n" +
+      "Pedidos verificados na sessão: " + r.totalTocadosNaSessao + "\n" +
+      "Pedidos com status atualizado: " + r.totalAtualizadosNaSessao + "\n" +
+      "Passou por todos os pendentes? " + (r.voltaCompleta ? "Sim" : "Não — ainda tem gente a verificar") + "\n\n" +
+      "Resposta técnica crua da última rodada:\n";
+  }
+  document.getElementById("debugConteudo").textContent = resumoTxt + JSON.stringify(window._ultimaRespostaAtualizar, null, 2);
   document.getElementById("debugPanel").classList.remove("hidden");
 });
 document.getElementById("btn-fechar-tecnico").addEventListener("click", function(){
@@ -712,6 +1327,7 @@ document.getElementById("btn-confirmar-limpar").addEventListener("click", functi
   }
   var btn = this;
   btn.disabled = true;
+  btn.classList.add("is-loading");
   btn.textContent = "Apagando...";
   db.ref(CAMINHO_PEDIDOS).remove().then(function(){
     document.getElementById("limparBaseModal").classList.add("hidden");
@@ -720,30 +1336,87 @@ document.getElementById("btn-confirmar-limpar").addEventListener("click", functi
     alert("Erro ao limpar: " + err.message);
   }).finally(function(){
     btn.disabled = false;
+    btn.classList.remove("is-loading");
     btn.textContent = "Confirmar exclusão";
   });
 });
 
 var allRows = [];
-
-auth.onAuthStateChanged(function (user) {
-  if (!user) {
-    document.getElementById("loginScreen").classList.remove("hidden");
-    document.getElementById("appScreen").classList.add("hidden");
-    return;
+// A snapshot comparison is independent of view filters and does not persist customer data.
+var rastroUpdates=(function(){
+  var previous=null,changes=new Map(),received=null,hasComparison=false;
+  function operation(kind,text){var el=document.getElementById('operation-state');el.dataset.state=kind;el.textContent=text;}
+  function show(){
+    var el=document.getElementById('change-summary');
+    if(!hasComparison){el.textContent='';el.classList.add('hidden');return;}
+    var company=state.empresa,counts=changes.get(company)||{changed:0,added:0};
+    var parts=[];
+    if(counts.changed)parts.push(counts.changed+' '+(counts.changed===1?'envio mudou':'envios mudaram')+' de status');
+    if(counts.added)parts.push(counts.added+' '+(counts.added===1?'novo envio recebido':'novos envios recebidos'));
+    var text=(parts.length?parts.join(' · '):'Nenhuma mudança de status ou nova entrada')+' na base de '+company+'.';
+    text+=' Base completa da empresa, independentemente dos filtros.';
+    if(el.textContent!==text)el.textContent=text;
+    el.classList.remove('hidden');
   }
-  db.ref("centralApps/usuarios/" + user.uid).once("value").then(function (snap) {
-    var perfil = snap.val();
-    var temAcesso = perfil && (perfil.admin === true || (Array.isArray(perfil.grupos) && perfil.grupos.indexOf(GRUPO_PERMITIDO) !== -1));
-    if (!temAcesso) {
-      document.getElementById("loginError").textContent = "Sua conta não tem acesso a este app.";
-      auth.signOut();
-      return;
-    }
-    document.getElementById("loginScreen").classList.add("hidden");
-    document.getElementById("appScreen").classList.remove("hidden");
+  function receive(rows){
+    var next=new Map();changes=new Map();hasComparison=previous!==null;
+    rows.forEach(function(row){
+      var key=JSON.stringify([row.empresa,row.codigo]);
+      if(next.has(key))return;
+      next.set(key,String(row.status||''));
+      if(!previous)return;
+      var count=changes.get(row.empresa)||{changed:0,added:0};
+      if(!previous.has(key))count.added++;
+      else if(previous.get(key)!==String(row.status||''))count.changed++;
+      changes.set(row.empresa,count);
+    });
+    previous=next;received=new Date();
+    document.getElementById('received-at').textContent='Dados recebidos às '+received.toLocaleTimeString('pt-BR');
+    show();
+    if(window.rastroMotion)window.rastroMotion.dataReady();
+  }
+  function reset(){previous=null;changes=new Map();hasComparison=false;received=null;show();document.getElementById('received-at').textContent='';operation('idle','Pronto para consultar');}
+  return {receive:receive,show:show,reset:reset,operation:operation};
+})();
+
+
+var pedidosRef=null, pedidosCallback=null, authVersion=0, atualizacaoController=null;
+async function buscarAtualizacao(idToken){
+  var controller=new AbortController();atualizacaoController=controller;
+  var timeout=setTimeout(function(){controller.abort();},45000);
+  try{
+    var response=await fetch('https://central-de-apps.vercel.app/api/atualizar-rastreio',{headers:{Authorization:'Bearer '+idToken},signal:controller.signal});
+    var data;
+    try{data=await response.json();}catch(e){if(controller.signal.aborted)throw e;throw new Error('O serviço retornou uma resposta inválida (HTTP '+response.status+').');}
+    if(!data||typeof data!=='object')throw new Error('O serviço retornou uma resposta vazia.');
+    return {resposta:response,dados:data};
+  }catch(e){if(controller.signal.aborted)throw new Error('A atualização foi interrompida ou excedeu 45 segundos. Tente novamente.');throw e;}
+  finally{clearTimeout(timeout);if(atualizacaoController===controller)atualizacaoController=null;}
+}
+function pararEscutaPedidos(){if(pedidosRef&&pedidosCallback)pedidosRef.off('value',pedidosCallback);pedidosRef=null;pedidosCallback=null;}
+auth.onAuthStateChanged(function (user) {
+  var version=++authVersion;
+  rastroUpdates.reset();
+  if(window.rastroMotion)window.rastroMotion.reset();
+  if(atualizacaoController)atualizacaoController.abort();
+  pararEscutaPedidos();
+  document.getElementById('appScreen').classList.add('hidden');
+  document.getElementById('appScreen').classList.remove('app-loading');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  allRows=[];window._ultimaListaFiltrada=[];
+  if(typeof chartPorDia!=='undefined' && chartPorDia){render();document.getElementById('meta-total-obj').textContent='0';document.getElementById('lastUpdate').textContent='';}
+  if(!user)return;
+  db.ref('centralApps/usuarios/'+user.uid).once('value').then(function(snap){
+    if(version!==authVersion)return;
+    var perfil=snap.val();
+    var permitido=perfil&&(perfil.admin===true||(Array.isArray(perfil.grupos)&&perfil.grupos.includes(GRUPO_PERMITIDO)));
+    if(!permitido){document.getElementById('loginError').textContent='Sua conta não tem acesso a este app.';return auth.signOut();}
+    document.getElementById('loginError').textContent='';
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('appScreen').classList.remove('hidden');
+    document.getElementById('appScreen').classList.add('app-loading');
     escutarPedidos();
-  });
+  }).catch(function(){if(version===authVersion)document.getElementById('loginError').textContent='Não foi possível verificar seu acesso. Verifique a conexão e tente entrar novamente.';});
 });
 
 // -------- Atualizar agora --------
@@ -752,48 +1425,75 @@ var MAX_RODADAS_AUTOMATICAS = 6; // trava de segurança, pra nunca ficar num loo
 document.getElementById("atualizarAgoraBtn").addEventListener("click", async function () {
   var btn = this;
   btn.disabled = true;
+  btn.classList.add("is-loading");
   document.getElementById("errorMsg").textContent = "";
   document.getElementById("avisoErroAtualizacao").classList.add("hidden");
 
   var totalAtualizadosNaSessao = 0;
+  var totalTocadosNaSessao = 0; // quantos pedidos essa sessão realmente consultou (soma das rodadas)
+  var totalPendentesInicial = null; // tamanho do lote pendente na 1ª rodada, pra saber quando já deu a volta completa
   var rodada = 0;
   var dados = null;
-
+  var requestVersion=authVersion;
+  rastroUpdates.operation('loading','Consultando rastreios…');
   try {
-    var idToken = await auth.currentUser.getIdToken();
+    var usuario=auth.currentUser;
+    if(!usuario)throw new Error('Entre novamente para atualizar.');
+    var sessionVersion=authVersion;
+    var idToken = await usuario.getIdToken();
     do {
+      if(sessionVersion!==authVersion)throw new Error('A sessão mudou. Entre novamente para atualizar.');
       rodada++;
       btn.textContent = rodada === 1 ? "Atualizando..." : "Atualizando... (rodada " + rodada + ")";
-      var resposta = await fetch("https://central-de-apps.vercel.app/api/atualizar-rastreio", {
-        headers: { Authorization: "Bearer " + idToken }
-      });
-      dados = await resposta.json();
+      var resultado=await buscarAtualizacao(idToken);
+      if(sessionVersion!==authVersion)throw new Error('A sessão mudou. Atualização interrompida.');
+      var resposta=resultado.resposta;
+      dados=resultado.dados;
       window._ultimaRespostaAtualizar = dados;
       document.getElementById('btn-ver-tecnico').style.display = 'inline-block';
 
       if (!resposta.ok) {
+        rastroUpdates.operation('error','Falha na consulta. Tente novamente.');
         document.getElementById("errorMsg").textContent = "Erro ao atualizar: " + (dados.error || resposta.status);
         break;
       }
+      if (totalPendentesInicial === null) totalPendentesInicial = dados.totalPendentes || 0;
       totalAtualizadosNaSessao += (dados.atualizados || 0);
-      document.getElementById("fileInfo").textContent = totalAtualizadosNaSessao + " pedidos atualizados agora" + (dados.restantes ? " (ainda restam " + dados.restantes + ")" : "");
-    } while (dados && dados.restantes > 0 && rodada < MAX_RODADAS_AUTOMATICAS);
+      totalTocadosNaSessao += (dados.processadosNessaExecucao || 0);
+    } while (
+      dados && dados.restantes > 0 &&
+      totalTocadosNaSessao < totalPendentesInicial &&
+      rodada < MAX_RODADAS_AUTOMATICAS
+    );
 
-    if (dados) {
+    if (dados && resposta && resposta.ok) {
       var totalErros = (dados.erros ? dados.erros.length : 0) + (dados.semEventoOuErro || 0);
+      rastroUpdates.operation(totalErros?'warning':'success',totalErros?'Consulta concluída com ocorrências. Veja os detalhes.':(dados.restantes>0&&totalTocadosNaSessao<totalPendentesInicial?'Consulta encerrada; ainda há pedidos pendentes.':'Consulta concluída.'));
       if (totalErros > 0) {
         var aviso = document.getElementById("avisoErroAtualizacao");
         aviso.textContent = "A última atualização teve " + (dados.semEventoOuErro || 0) + " pedido(s) com erro ou sem informação disponível. Clica em \"Ver detalhes técnicos\" pra ver quais.";
         aviso.classList.remove("hidden");
       }
-      if (dados.restantes > 0) {
-        document.getElementById("fileInfo").textContent = totalAtualizadosNaSessao + " pedidos atualizados — ainda restam " + dados.restantes + ", clica em \"Atualizar agora\" de novo pra continuar";
-      }
+      var voltaCompleta = totalPendentesInicial !== null && totalTocadosNaSessao >= totalPendentesInicial; // guardado pra referência técnica, se precisar no futuro
+      window._resumoAtualizacao = {
+        rodadas: rodada,
+        totalPendentesInicial: totalPendentesInicial,
+        totalTocadosNaSessao: totalTocadosNaSessao,
+        totalAtualizadosNaSessao: totalAtualizadosNaSessao,
+        voltaCompleta: voltaCompleta
+      };
+      // Não mostra mais resumo ao lado do botão — os números completos ficam
+      // só em "Ver detalhes técnicos", pra não poluir a tela com mensagem
+      // toda vez que atualiza (a atualização já é automática mesmo).
     }
   } catch (err) {
-    document.getElementById("errorMsg").textContent = "Erro ao atualizar: " + err.message;
+    if(requestVersion===authVersion){
+      rastroUpdates.operation('error','Falha na consulta. '+err.message);
+      document.getElementById("errorMsg").textContent = "Erro ao atualizar: " + err.message;
+    }
   } finally {
     btn.disabled = false;
+    btn.classList.remove("is-loading");
     btn.textContent = "Atualizar agora";
   }
 });
@@ -813,30 +1513,63 @@ function checarDesatualizado(maisRecente) {
 // -------- Escuta o Firebase em tempo real --------
 function dataValidaOuNula(valor){
   if (!valor) return null;
-  var d = new Date(valor);
+  var d = new Date(typeof valor === "string" && /^\d{4}-\d{2}-\d{2}$/.test(valor) ? valor + "T00:00:00" : valor);
   return isNaN(d.getTime()) ? null : d; // data corrompida vira "sem data" em vez de quebrar o painel
 }
 function escutarPedidos() {
-  db.ref(CAMINHO_PEDIDOS).off(); // evita empilhar ouvintes se a pessoa deslogar/logar de novo
-  db.ref(CAMINHO_PEDIDOS).on("value", function (snapshot) {
+  pararEscutaPedidos();
+  var version=authVersion;
+  pedidosRef=db.ref(CAMINHO_PEDIDOS);
+  pedidosCallback=function(snapshot){
+    if(version!==authVersion)return;
     var dados = snapshot.val() || {};
-    allRows = Object.keys(dados).map(function (chave) {
+    var agoraTs = Date.now();
+    allRows = Object.keys(dados).filter(function(chave){return dados[chave] && typeof dados[chave] === "object";}).map(function (chave) {
       var r = dados[chave];
+      var bucket = bucketFor(r.status);
+      var dataPostagem = dataValidaOuNula(r.dataPostagem);
+      var dataEvento = dataValidaOuNula(r.dataEvento);
+      var prazoDias = (r.prazoDias != null && r.prazoDias !== "") ? Number(r.prazoDias) : null;
+      var dataPrevista = dataValidaOuNula(r.dataPrevista);
+      // Atraso: preferência é a dataPrevista que os próprios Correios calculam pra
+      // aquele objeto específico (mais precisa que um prazo genérico por serviço).
+      // Só cai pro cálculo por prazoDias quando o robô ainda não trouxe a previsão
+      // real (pedido nunca consultado, ou consultado antes dessa mudança existir).
+      var atrasado = false;
+      if (dataPrevista) {
+        if (bucket === 'entregue' && dataEvento) {
+          atrasado = dataEvento.getTime() > dataPrevista.getTime();
+        } else if (bucket !== 'entregue') {
+          atrasado = agoraTs > dataPrevista.getTime();
+        }
+      } else if (prazoDias != null && dataPostagem) {
+        if (bucket === 'entregue' && dataEvento) {
+          var diasAteEntrega = Math.floor((dataEvento.getTime() - dataPostagem.getTime()) / 86400000);
+          atrasado = diasAteEntrega > prazoDias;
+        } else if (bucket !== 'entregue') {
+          var diasDecorridos = Math.floor((agoraTs - dataPostagem.getTime()) / 86400000);
+          atrasado = diasDecorridos > prazoDias;
+        }
+      }
       return {
-        codigo: r.codigo || "",
-        destinatario: r.destinatario || "",
-        cidade: r.cidade || "",
-        uf: r.uf || "",
-        status: r.status || "",
-        servico: r.servico || "",
-        nf: r.nf || "",
-        remetente: r.remetente || "",
-        cep: r.cep || "",
-        valorPostagem: Number(r.valorPostagem) || 0,
-        dataPostagem: dataValidaOuNula(r.dataPostagem),
-        dataEvento: dataValidaOuNula(r.dataEvento),
+        codigo: String(r.codigo == null ? "" : r.codigo),
+        destinatario: String(r.destinatario == null ? "" : r.destinatario),
+        cidade: String(r.cidade == null ? "" : r.cidade),
+        uf: String(r.uf == null ? "" : r.uf),
+        status: String(r.status == null ? "" : r.status),
+        servico: String(r.servico == null ? "" : r.servico),
+        nf: String(r.nf == null ? "" : r.nf),
+        remetente: String(r.remetente == null ? "" : r.remetente),
+        cep: String(r.cep == null ? "" : r.cep),
+        empresa: String(r.empresa || "Stin Pharma"),
+        valorPostagem: Number.isFinite(Number(r.valorPostagem)) ? Number(r.valorPostagem) : 0,
+        dataPostagem: dataPostagem,
+        dataEvento: dataEvento,
+        prazoDias: prazoDias,
+        dataPrevista: dataPrevista,
         atualizadoEm: r.atualizadoEm || null,
-        _bucket: bucketFor(r.status)
+        _bucket: bucket,
+        _atrasado: atrasado
       };
     });
     document.getElementById("meta-total-obj").textContent = allRows.length;
@@ -844,14 +1577,60 @@ function escutarPedidos() {
     if (maisRecente) {
       document.getElementById("lastUpdate").textContent = "Última verificação: " + new Date(maisRecente).toLocaleString("pt-BR");
     }
+    if(!maisRecente)document.getElementById('lastUpdate').textContent='Nenhuma verificação disponível';
     checarDesatualizado(maisRecente);
-    refreshCidadeOptions();
     fillStaticOptions();
+    refreshCidadeOptions();
+    rastroUpdates.receive(allRows);
     render();
+    document.getElementById("appScreen").classList.remove("app-loading");
+  };
+  pedidosRef.on('value',pedidosCallback,function(){
+    if(version!==authVersion)return;
+    document.getElementById('appScreen').classList.remove('app-loading');
+    document.getElementById('errorMsg').textContent='Não foi possível carregar os pedidos. Verifique sua conexão e permissão de acesso.';
   });
 }
 
 // -------- Importação de Excel do VIPP --------
+// O VIPP tem pelo menos 3 formatos de relatório diferentes, cada um com nomes de
+// coluna próprios. Essa função traduz qualquer um deles pro mesmo formato interno,
+// então o resto do código nem precisa saber qual veio.
+function primeiroValor() {
+  for (var i = 0; i < arguments.length; i++) {
+    if (arguments[i] != null && arguments[i] !== "") return arguments[i];
+  }
+  return "";
+}
+function normalizarLinhaVipp(r) {
+  return {
+    Registro: primeiroValor(r.Registro, r['Reg. Correios']),
+    Destinatario: primeiroValor(r.Destinatario, r['Nome Dest']),
+    CidadeDestinatario: primeiroValor(r.CidadeDestinatario, r['Cid Dest']),
+    UFDestinatario: primeiroValor(r.UFDestinatario, r['UF Dest']),
+    CEPDestinatario: primeiroValor(r.CEPDestinatario, r['CEP Dest']),
+    Status: primeiroValor(r.Status),
+    DescricaoEvento: primeiroValor(r.DescricaoEvento),
+    Servico: primeiroValor(r.Servico, r['Desc Serviço']),
+    CodigoServicoCorreios: r.CodigoServicoCorreios,
+    DataPostagem: primeiroValor(r.DataPostagem, r['Dta Postagem']),
+    DataDoEvento: primeiroValor(r.DataDoEvento, r['Dta Entregat']),
+    Prazo: primeiroValor(r.Prazo, r['Prazo Est (dias)']),
+    NumeroNotaFiscal: primeiroValor(r.NumeroNotaFiscal, r['Nro NF']),
+    Remetente: primeiroValor(r.Remetente, r['Nome Rem.']),
+    ValorPostagem: primeiroValor(r.ValorPostagem, r['Vlr Tarifa (R$)'])
+  };
+}
+// Detecta a empresa pelo texto do Remetente da própria linha (quando o relatório
+// traz esse campo). Só cai no que tá selecionado no seletor se não conseguir
+// identificar — assim o seletor vira reforço/exceção, não obrigação.
+function detectarEmpresa(remetenteTexto, valorSelecionado) {
+  var t = String(remetenteTexto || '').toUpperCase();
+  if (t.indexOf('MAY') !== -1) return 'Mayderma';
+  if (t.indexOf('STIN') !== -1) return 'Stin Pharma';
+  return valorSelecionado;
+}
+
 document.getElementById("fileInput").addEventListener("change", function (e) {
   var file = e.target.files[0];
   if (!file) return;
@@ -868,53 +1647,95 @@ document.getElementById("fileInput").addEventListener("change", function (e) {
       // só a função parseDataVipp, sempre do nosso jeito.
       var workbook = XLSX.read(data, { type: "array", raw: true });
       var sheet = workbook.Sheets[workbook.SheetNames[0]];
-      var json = XLSX.utils.sheet_to_json(sheet, { defval: "", range: 1 });
-      var linhas = json.filter(function (r) { return r.Registro && String(r.Registro).indexOf('http') === -1; });
-      salvarNoRealtimeDb(linhas, file.name);
+      var rows = XLSX.utils.sheet_to_json(sheet, {header:1,defval:""});
+      var header=rows.slice(0,20).findIndex(function(row){return row.some(function(cell){return ['Registro','Reg. Correios'].includes(String(cell).trim());});});
+      if(header<0)throw new Error('Cabeçalho de rastreio não encontrado');
+      var json = XLSX.utils.sheet_to_json(sheet, { defval: "", range: header });
+      var linhas = json.map(normalizarLinhaVipp).filter(function (r) { return r.Registro && String(r.Registro).indexOf('http') === -1; });
+      // Empresa: detecta sozinho pelo remetente. Só pergunta se alguma linha não
+      // tiver remetente reconhecível (alguns formatos de relatório não trazem).
+      if(!linhas.length)throw new Error('Nenhum pedido válido encontrado');
+      // Validate all rows before the first write; do not silently convert invalid amounts to zero.
+      linhas.forEach(function(r){
+        if(!/^[a-zA-Z0-9_-]+$/.test(String(r.Registro).trim()))throw new Error('Registro inválido');
+        r.Registro=String(r.Registro).trim();
+        r.ValorPostagem=numeroVipp(r.ValorPostagem);
+        if(r.Prazo!==''&&r.Prazo!=null)r.Prazo=numeroVipp(r.Prazo);
+        ['DataPostagem','DataDoEvento'].forEach(function(key){if(r[key]!==''&&r[key]!=null&&!parseDataVipp(r[key]))throw new Error('Data inválida em '+key);});
+      });
+      var precisaPerguntar = linhas.some(function (r) { return !detectarEmpresa(r.Remetente, null); });
+      if (precisaPerguntar) {
+        document.getElementById("fileInfo").textContent = "";
+        perguntarEmpresa(file.name).then(function (escolha) {
+          if (!escolha) { document.getElementById("fileInfo").textContent = "Importação cancelada"; return; }
+          salvarNoRealtimeDb(linhas, file.name, escolha);
+        });
+      } else {
+        salvarNoRealtimeDb(linhas, file.name, null);
+      }
     } catch (err) {
-      document.getElementById("errorMsg").textContent = "Não consegui ler esse arquivo. Confirma se é o Excel exportado do VIPP.";
+      document.getElementById("errorMsg").textContent = "Não consegui importar: " + err.message;
       document.getElementById("fileInfo").textContent = "";
     }
   };
+  reader.onerror=function(){document.getElementById('fileInfo').textContent='';document.getElementById('errorMsg').textContent='Falha ao ler o arquivo. Tente selecioná-lo novamente.';};
   reader.readAsArrayBuffer(file);
+  e.target.value = ""; // permite escolher o mesmo arquivo de novo, se precisar reimportar
 });
 
+// Caixa de pergunta que aparece só quando o arquivo não diz de qual empresa é
+function perguntarEmpresa(nomeArquivo) {
+  return new Promise(function (resolve) {
+    var box = document.getElementById('empresaPerguntaBox');
+    document.getElementById('empresaPerguntaArquivo').textContent = nomeArquivo;
+    box.classList.remove('hidden');
+    box.querySelectorAll('button[data-empresa]').forEach(function (b) {
+      b.onclick = function () { box.classList.add('hidden'); resolve(b.dataset.empresa); };
+    });
+    document.getElementById('empresaPerguntaCancelar').onclick = function () { box.classList.add('hidden'); resolve(null); };
+  });
+}
+
+function diaLocal(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function numeroVipp(valor){
+  if (valor == null || valor === '') return 0;
+  var text=String(valor).trim().replace(/^R\$\s*/, '').replace(/\s/g,'');
+  if(text.indexOf(',')!==-1) text=text.replace(/\./g,'').replace(',','.');
+  var n=Number(text);
+  if(!Number.isFinite(n))throw new Error('Valor numérico inválido: '+String(valor));
+  return n;
+}
 function excelSerialParaData(serial){
-  // Excel (sistema de datas 1900): o dia 0 é 30/12/1899. Usado quando a
-  // planilha vem como .xlsx de verdade (data nativa), não como texto.
-  var epoch = Date.UTC(1899, 11, 30);
-  var ms = Math.round(serial * 86400000);
-  return new Date(epoch + ms);
+  if(!Number.isFinite(serial))return new Date(NaN);
+  var parts=new Date(Date.UTC(1899,11,30)+Math.round(serial*86400000));
+  return new Date(parts.getUTCFullYear(),parts.getUTCMonth(),parts.getUTCDate(),parts.getUTCHours(),parts.getUTCMinutes(),parts.getUTCSeconds(),parts.getUTCMilliseconds());
 }
-
 function parseDataVipp(valor){
-  if (!valor && valor !== 0) return "";
-  if (valor instanceof Date) {
-    return isNaN(valor.getTime()) ? "" : valor.toISOString();
+  if(valor==null||valor==='')return '';
+  if(valor instanceof Date)return Number.isNaN(valor.getTime())?'':valor.toISOString();
+  if(typeof valor==='number'){var serial=excelSerialParaData(valor);return Number.isNaN(serial.getTime())?'':serial.toISOString();}
+  var text=String(valor).trim();
+  var br=text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+  var iso=text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(br||iso){
+    var y=Number(br?br[3]:iso[1]),m=Number((br||iso)[2]),d=Number(br?br[1]:iso[3]);
+    var h=Number(br&&br[4]||0),min=Number(br&&br[5]||0),s=Number(br&&br[6]||0);
+    var date=new Date(y,m-1,d,h,min,s);
+    if(date.getFullYear()!==y||date.getMonth()!==m-1||date.getDate()!==d||date.getHours()!==h||date.getMinutes()!==min||date.getSeconds()!==s)return '';
+    return date.toISOString();
   }
-  if (typeof valor === "number") {
-    var dSerial = excelSerialParaData(valor);
-    return isNaN(dSerial.getTime()) ? "" : dSerial.toISOString();
-  }
-  var texto = String(valor).trim();
-  // Formato brasileiro DD/MM/AAAA (com ou sem hora) — o jeito que o VIPP escreve
-  // quando a coluna vem como texto (relatório em HTML disfarçado de .xls). O
-  // JavaScript sozinho leria isso como MM/DD (formato americano) e trocaria
-  // dia com mês, bagunçando tudo — por isso interpretamos na mão aqui.
-  var m = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
-  if (m) {
-    var dia = parseInt(m[1],10), mes = parseInt(m[2],10), ano = parseInt(m[3],10);
-    var hora = m[4]?parseInt(m[4],10):0, min = m[5]?parseInt(m[5],10):0, seg = m[6]?parseInt(m[6],10):0;
-    var d = new Date(ano, mes-1, dia, hora, min, seg);
-    if (!isNaN(d.getTime())) return d.toISOString();
-  }
-  // último recurso: deixa o JS tentar sozinho (ex: formato ISO, sem ambiguidade)
-  var d2 = new Date(texto);
-  return isNaN(d2.getTime()) ? "" : d2.toISOString();
+  if(!/^\d{4}-\d{2}-\d{2}T/.test(text))return '';
+  var parsed=new Date(text);return Number.isNaN(parsed.getTime())?'':parsed.toISOString();
 }
 
-function salvarNoRealtimeDb(linhas, nomeArquivo) {
+function salvarNoRealtimeDb(linhas, nomeArquivo, empresaFallback) {
+  if(!linhas.length || linhas.some(function(r){return !/^[a-zA-Z0-9_-]+$/.test(String(r.Registro).trim());})){
+    document.getElementById('errorMsg').textContent='Importação interrompida: registro vazio ou inválido.';return;
+  }
   document.getElementById("fileInfo").textContent = "Salvando " + linhas.length + " pedidos...";
+  var empresaSelecionada = empresaFallback || 'Stin Pharma';
   // pedidos que já existem na base não têm o status sobrescrito pela reimportação —
   // o robô já pode ter uma info mais atual que o Excel do VIPP (que tem ~1 dia de atraso)
   var existentes = new Set(allRows.map(function(r){ return chaveSegura(r.codigo); }));
@@ -924,7 +1745,7 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
     var fim = Math.min(i + 500, linhas.length);
     for (; i < fim; i++) {
       var r = linhas[i];
-      var chave = chaveSegura(r.Registro);
+      var chave = chaveSegura(String(r.Registro).trim());
       // O VIPP exporta relatórios com nomes de coluna diferentes dependendo do tipo
       // escolhido. Aceita os dois formatos que já vimos: o de "postagem" (Status,
       // Servico) e o de "eventos" (DescricaoEvento, CodigoServicoCorreios, DataDoEvento).
@@ -932,6 +1753,8 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
       var servicoTexto = r.Servico || (r.CodigoServicoCorreios != null ? String(r.CodigoServicoCorreios) : "");
       var dataEventoTexto = r.DataDoEvento ? parseDataVipp(r.DataDoEvento) : "";
       var dataPostagemTexto = r.DataPostagem ? parseDataVipp(r.DataPostagem) : "";
+      var prazoDias = r.Prazo !== "" && r.Prazo != null ? Number(r.Prazo) : null;
+      var empresaDaLinha = detectarEmpresa(r.Remetente, empresaSelecionada);
       if (existentes.has(chave)) {
         // já existe: atualiza só dado cadastral, preserva status/data do evento que o robô já tenha
         updates[CAMINHO_PEDIDOS + "/" + chave + "/destinatario"] = r.Destinatario || "";
@@ -943,6 +1766,8 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
         updates[CAMINHO_PEDIDOS + "/" + chave + "/cep"] = r.CEPDestinatario || "";
         updates[CAMINHO_PEDIDOS + "/" + chave + "/valorPostagem"] = r.ValorPostagem !== "" && r.ValorPostagem != null ? Number(r.ValorPostagem) : 0;
         updates[CAMINHO_PEDIDOS + "/" + chave + "/dataPostagem"] = dataPostagemTexto;
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/empresa"] = empresaDaLinha;
+        updates[CAMINHO_PEDIDOS + "/" + chave + "/prazoDias"] = prazoDias;
       } else {
         // pedido novo: grava tudo, inclusive o status inicial que veio do VIPP
         updates[CAMINHO_PEDIDOS + "/" + chave] = {
@@ -957,6 +1782,8 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
           nf: r.NumeroNotaFiscal || "",
           remetente: r.Remetente || "",
           cep: r.CEPDestinatario || "",
+          empresa: empresaDaLinha,
+          prazoDias: prazoDias,
           valorPostagem: r.ValorPostagem !== "" && r.ValorPostagem != null ? Number(r.ValorPostagem) : 0,
           atualizadoEm: Date.now()
         };
@@ -976,15 +1803,34 @@ function salvarNoRealtimeDb(linhas, nomeArquivo) {
 }
 
 // -------- Estado dos filtros --------
-var state = { dateStart: null, dateEnd: null, status: "", statusDetalhado: "", uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
+var state = { dateStart: null, dateEnd: null, status: "", statusDetalhado: "", empresa: "Stin Pharma", uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
 
 document.getElementById('f-status').addEventListener('change', function(e){ state.status = e.target.value; render(); });
 document.getElementById('f-status-detalhado').addEventListener('change', function(e){ state.statusDetalhado = e.target.value; render(); });
+document.querySelectorAll('#empresa-switch .empresa-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('#empresa-switch .empresa-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    state.empresa = btn.dataset.empresa;
+    render();
+  });
+});
 document.getElementById('f-uf').addEventListener('change', function(e){ state.uf = e.target.value; state.cidade=''; document.getElementById('f-cidade').value=''; refreshCidadeOptions(); render(); });
 document.getElementById('f-cidade').addEventListener('change', function(e){ state.cidade = e.target.value; render(); });
 document.getElementById('f-destinatario').addEventListener('input', debounce(function(e){ state.destinatario = e.target.value; render(); }, 250));
 document.getElementById('f-registro').addEventListener('input', debounce(function(e){ state.registro = e.target.value; render(); }, 250));
 document.getElementById('f-nf').addEventListener('input', debounce(function(e){ state.nf = e.target.value; render(); }, 250));
+
+// -------- Painel de filtros: abre/fecha + contador de filtros ativos --------
+function atualizarBadgeFiltros(){
+  var ativos = ['status','statusDetalhado','uf','cidade','destinatario','registro','nf']
+    .filter(function(k){ return !!state[k]; }).length;
+  if (state.dateStart) ativos++;
+  if (state.dateEnd) ativos++;
+  var badge = document.getElementById('badge-filtros-count');
+  badge.textContent = ativos;
+  badge.classList.toggle('hidden', ativos === 0);
+}
 
 function applyDateFilter(){
   var startVal = document.getElementById('f-date-start').value;
@@ -995,7 +1841,7 @@ function applyDateFilter(){
     document.getElementById('f-date-end').value = endVal;
   }
   state.dateStart = startVal ? new Date(startVal + 'T00:00:00') : null;
-  state.dateEnd = endVal ? new Date(endVal + 'T23:59:59') : null;
+  state.dateEnd = endVal ? new Date(endVal + 'T23:59:59.999') : null;
   render();
 }
 ['f-date-start','f-date-end'].forEach(function(id){
@@ -1003,7 +1849,8 @@ function applyDateFilter(){
 });
 
 document.getElementById('btn-reset').addEventListener('click', function(){
-  state = { dateStart: null, dateEnd: null, status: "", statusDetalhado: "", uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
+  var empresaAtual = state.empresa;
+  state = { dateStart: null, dateEnd: null, status: "", statusDetalhado: "", empresa: empresaAtual, uf: "", cidade: "", destinatario: "", registro: "", nf: "" };
   document.getElementById('f-date-start').value='';
   document.getElementById('f-date-end').value='';
   document.getElementById('f-status').value='';
@@ -1027,6 +1874,7 @@ function fillStaticOptions(){
     var opt = document.createElement('option'); opt.value = v; opt.textContent = v; ufSel.appendChild(opt);
   });
   if (current) ufSel.value = current;
+  state.uf=ufSel.value;
 
   // Status detalhado: lista todo texto original que existe de verdade na base agora,
   // ordenado por quantidade (o mais comum primeiro), mostrando a versão curta.
@@ -1043,6 +1891,7 @@ function fillStaticOptions(){
     statusSel.appendChild(opt);
   });
   if (currentStatus) statusSel.value = currentStatus;
+  state.statusDetalhado=statusSel.value;
 }
 
 function refreshCidadeOptions(){
@@ -1053,19 +1902,41 @@ function refreshCidadeOptions(){
   var cidades = uniqueSorted(allRows.filter(function(o){return !ufFilter || o.uf === ufFilter;}).map(function(o){return o.cidade;}));
   cidades.forEach(function(c){ var opt = document.createElement('option'); opt.value = c; opt.textContent = c; sel.appendChild(opt); });
   if (cidades.indexOf(current) !== -1) sel.value = current;
+  state.cidade=sel.value;
 }
 
 function applyFilters(){
   return allRows.filter(function(o){
+    if ((state.dateStart || state.dateEnd) && !o.dataPostagem) return false;
+    if (state.dateStart && o.dataPostagem && o.dataPostagem < state.dateStart) return false;
+    if (state.dateEnd && o.dataPostagem && o.dataPostagem > state.dateEnd) return false;
+    if (state.status && o._bucket !== state.status) return false;
+    if (state.statusDetalhado && (o.status || '(vazio)') !== state.statusDetalhado) return false;
+    if (state.empresa && o.empresa !== state.empresa) return false;
+    if (state.uf && o.uf !== state.uf) return false;
+    if (state.cidade && o.cidade !== state.cidade) return false;
+    if (state.destinatario && String(o.destinatario == null ? '' : o.destinatario).toLowerCase().indexOf(state.destinatario.toLowerCase()) === -1) return false;
+    if (state.registro && String(o.codigo == null ? '' : o.codigo).toLowerCase().indexOf(state.registro.toLowerCase()) === -1) return false;
+    if (state.nf && String(o.nf == null ? '' : o.nf).indexOf(state.nf) === -1) return false;
+    return true;
+  });
+}
+
+// Igual a applyFilters, mas sem o filtro de empresa — usado no gráfico "Gasto por
+// empresa" da Gestão, que precisa sempre comparar as duas juntas, mesmo com o
+// botão Stin Pharma/Mayderma do topo selecionado numa só.
+function applyFiltersSemEmpresa(){
+  return allRows.filter(function(o){
+    if ((state.dateStart || state.dateEnd) && !o.dataPostagem) return false;
     if (state.dateStart && o.dataPostagem && o.dataPostagem < state.dateStart) return false;
     if (state.dateEnd && o.dataPostagem && o.dataPostagem > state.dateEnd) return false;
     if (state.status && o._bucket !== state.status) return false;
     if (state.statusDetalhado && (o.status || '(vazio)') !== state.statusDetalhado) return false;
     if (state.uf && o.uf !== state.uf) return false;
     if (state.cidade && o.cidade !== state.cidade) return false;
-    if (state.destinatario && o.destinatario.toLowerCase().indexOf(state.destinatario.toLowerCase()) === -1) return false;
-    if (state.registro && o.codigo.toLowerCase().indexOf(state.registro.toLowerCase()) === -1) return false;
-    if (state.nf && (o.nf || '').indexOf(state.nf) === -1) return false;
+    if (state.destinatario && String(o.destinatario == null ? '' : o.destinatario).toLowerCase().indexOf(state.destinatario.toLowerCase()) === -1) return false;
+    if (state.registro && String(o.codigo == null ? '' : o.codigo).toLowerCase().indexOf(state.registro.toLowerCase()) === -1) return false;
+    if (state.nf && String(o.nf == null ? '' : o.nf).indexOf(state.nf) === -1) return false;
     return true;
   });
 }
@@ -1082,44 +1953,153 @@ function groupSum(arr, keyFn, valFn){
 }
 
 // -------- Charts --------
-function corTema(nomeVar){ return getComputedStyle(document.documentElement).getPropertyValue(nomeVar).trim(); }
+// -------- Visual dos gráficos: deixa com a cara do site, não o padrão do Chart.js --------
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.color = '#6B7280';
+var motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+var motionEnabled = !motionPreference.matches;
+try { motionEnabled = motionEnabled && localStorage.getItem('rastro-motion') !== 'off'; } catch(e){}
+Chart.defaults.animation.duration = motionEnabled ? 280 : 0;
+Chart.defaults.animation.easing = 'easeOutQuart';
+Chart.defaults.plugins.tooltip.backgroundColor = '#111827';
+Chart.defaults.plugins.tooltip.titleFont = { family:"'Inter',sans-serif", size:12, weight:'600' };
+Chart.defaults.plugins.tooltip.bodyFont = { family:"'Inter',sans-serif", size:12 };
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+Chart.defaults.plugins.tooltip.displayColors = false;
 
-// Cor de texto/linha de grade dos gráficos, respeitando o tema claro/escuro —
-// sem isso o texto dos eixos fica ilegível no modo escuro (bug corrigido).
-function aplicarCoresGraficos(){
-  var corTexto = corTema('--ink-soft');
-  var corGrade = corTema('--line');
-  [chartPorDia, chartUfQtd, chartUfValor].forEach(function(c){
-    ['x','y'].forEach(function(eixo){
-      if (c.options.scales && c.options.scales[eixo]){
-        c.options.scales[eixo].ticks = Object.assign({}, c.options.scales[eixo].ticks, {color: corTexto});
-        c.options.scales[eixo].grid = Object.assign({}, c.options.scales[eixo].grid, {color: corGrade});
-      }
-    });
-    c.update();
-  });
+function hexParaRgb(hex){
+  hex = hex.replace('#','');
+  var n = parseInt(hex, 16);
+  return [(n>>16)&255, (n>>8)&255, n&255];
+}
+// Barra vertical: mais forte em cima, esmaece embaixo — dá profundidade sem
+// perder legibilidade (chartArea só existe depois do 1º layout, por isso o fallback).
+function gradienteVertical(ctx, corHex){
+  var area = ctx.chart.chartArea;
+  if (!area) return corHex;
+  var rgb = hexParaRgb(corHex);
+  var g = ctx.chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+  g.addColorStop(0, 'rgba('+rgb.join(',')+',0.95)');
+  g.addColorStop(1, 'rgba('+rgb.join(',')+',0.5)');
+  return g;
+}
+// Barra horizontal (ranking por UF): mais forte na ponta, some na base da barra.
+function gradienteHorizontal(ctx, corHex){
+  var area = ctx.chart.chartArea;
+  if (!area) return corHex;
+  var rgb = hexParaRgb(corHex);
+  var g = ctx.chart.ctx.createLinearGradient(area.left, 0, area.right, 0);
+  g.addColorStop(0, 'rgba('+rgb.join(',')+',0.45)');
+  g.addColorStop(1, 'rgba('+rgb.join(',')+',0.95)');
+  return g;
 }
 
+// Plugin próprio: escreve o total no buraco do gráfico de rosca — sem isso o
+// centro fica um vazio sem função nenhuma.
+var pluginTextoCentral = {
+  id: 'textoCentral',
+  afterDraw: function(chart){
+    var cfg = chart.config.options.plugins && chart.config.options.plugins.textoCentral;
+    if (!cfg || !chart.chartArea) return;
+    var total = (chart.data.datasets[0].data || []).reduce(function(a,b){ return a+(b||0); }, 0);
+    var texto = cfg.formatar ? cfg.formatar(total) : total.toLocaleString('pt-BR');
+    var ctx = chart.ctx;
+    var x = (chart.chartArea.left + chart.chartArea.right) / 2;
+    var y = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+    ctx.save();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#111827';
+    ctx.font = "700 19px 'Inter', sans-serif";
+    ctx.fillText(texto, x, y - 9);
+    ctx.fillStyle = '#9CA3AF';
+    ctx.font = "600 9.5px 'Inter', sans-serif";
+    ctx.fillText((cfg.legenda || 'total').toUpperCase(), x, y + 11);
+    ctx.restore();
+  }
+};
+
 var chartPorDia = new Chart(document.getElementById('chart-por-dia'), {
-  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:'#2E5EA8'}]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+  type:'bar',
+  data:{labels:[],datasets:[{data:[],backgroundColor:function(c){return gradienteVertical(c,'#2E5EA8');},borderRadius:5,borderSkipped:false,maxBarThickness:32,hoverBackgroundColor:'#2E5EA8'}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.parsed.y.toLocaleString('pt-BR')+' objeto(s)';}}}},
+    scales:{
+      y:{beginAtZero:true,grid:{color:'#F1F2F4'},border:{display:false},ticks:{font:{size:10.5}}},
+      x:{grid:{display:false},border:{display:false},ticks:{font:{size:10.5}}}
+    }
+  }
 });
 var chartStatus = new Chart(document.getElementById('chart-status'), {
-  type:'doughnut', data:{labels:[],datasets:[{data:[],backgroundColor:[]}]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+  type:'doughnut', data:{labels:[],datasets:[{data:[],backgroundColor:[],hoverOffset:8,borderWidth:2,borderColor:'#fff'}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
+    plugins:{
+      legend:{display:false},
+      textoCentral:{legenda:'objetos'},
+      tooltip:{callbacks:{label:function(ctx){
+        var total = ctx.dataset.data.reduce(function(a,b){return a+b;},0);
+        var pct = total ? (ctx.parsed/total*100).toFixed(1) : '0';
+        return ctx.label+': '+ctx.parsed.toLocaleString('pt-BR')+' ('+pct+'%)';
+      }}}
+    }
+  },
+  plugins:[pluginTextoCentral]
 });
 var chartUfQtd = new Chart(document.getElementById('chart-uf-qtd'), {
-  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:'#5C6F8C'}]},
-  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}}}
+  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:function(c){return gradienteHorizontal(c,'#5C6F8C');},borderRadius:5,borderSkipped:false,hoverBackgroundColor:'#5C6F8C'}]},
+  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.parsed.x.toLocaleString('pt-BR')+' objeto(s)';}}}},
+    scales:{
+      x:{beginAtZero:true,grid:{color:'#F1F2F4'},border:{display:false},ticks:{font:{size:10.5}}},
+      y:{grid:{display:false},border:{display:false},ticks:{font:{size:11}}}
+    }
+  }
 });
 var chartUfValor = new Chart(document.getElementById('chart-uf-valor'), {
-  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:'#C1841F'}]},
-  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}}}
+  type:'bar', data:{labels:[],datasets:[{data:[],backgroundColor:function(c){return gradienteHorizontal(c,'#C1841F');},borderRadius:5,borderSkipped:false,hoverBackgroundColor:'#C1841F'}]},
+  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return fmtMoney(ctx.parsed.x);}}}},
+    scales:{
+      x:{beginAtZero:true,grid:{color:'#F1F2F4'},border:{display:false},ticks:{font:{size:10.5},callback:function(v){return 'R$ '+v.toLocaleString('pt-BR');}}},
+      y:{grid:{display:false},border:{display:false},ticks:{font:{size:11}}}
+    }
+  }
 });
-aplicarCoresGraficos();
+var chartGastoEmpresa = new Chart(document.getElementById('chart-gasto-empresa'), {
+  type:'doughnut', data:{labels:[],datasets:[{data:[],backgroundColor:['#2E5EA8','#8C5383','#5C6F8C','#C1841F'],hoverOffset:8,borderWidth:2,borderColor:'#fff'}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
+    plugins:{
+      legend:{position:'bottom',labels:{boxWidth:10,font:{size:11},padding:14}},
+      textoCentral:{legenda:'gasto total',formatar:fmtMoney},
+      tooltip:{callbacks:{label:function(ctx){return ctx.label+': '+fmtMoney(ctx.parsed);}}}
+    }
+  },
+  plugins:[pluginTextoCentral]
+});
+var chartPeriodoMensal = new Chart(document.getElementById('chart-periodo-mensal'), {
+  data:{labels:[],datasets:[
+    {type:'bar',label:'Gasto (R$)',data:[],backgroundColor:function(c){return gradienteVertical(c,'#2F7A54');},borderRadius:5,borderSkipped:false,yAxisID:'y',order:2},
+    {type:'line',label:'Envios',data:[],borderColor:'#B4452F',backgroundColor:'rgba(180,69,47,0.12)',yAxisID:'y1',tension:0.35,fill:true,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:'#fff',pointBorderColor:'#B4452F',pointBorderWidth:2,order:1}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    scales:{
+      y:{beginAtZero:true,position:'left',title:{display:true,text:'R$'},grid:{color:'#F1F2F4'},border:{display:false}},
+      y1:{beginAtZero:true,position:'right',grid:{drawOnChartArea:false},border:{display:false},title:{display:true,text:'envios'}},
+      x:{grid:{display:false},border:{display:false}}
+    },
+    plugins:{
+      legend:{position:'bottom',labels:{boxWidth:10,font:{size:11},padding:14}},
+      tooltip:{callbacks:{label:function(ctx){
+        return ctx.dataset.label==='Gasto (R$)' ? ('Gasto: '+fmtMoney(ctx.parsed.y)) : ('Envios: '+ctx.parsed.y.toLocaleString('pt-BR'));
+      }}}
+    }
+  }
+});
 
 function render(){
  try {
+  atualizarBadgeFiltros();
   var filtered = applyFilters();
   var total = filtered.length;
 
@@ -1152,15 +2132,16 @@ function render(){
   document.getElementById('kpi-pct-retirada').textContent = pctRetirada.toFixed(1) + '% do total';
   document.getElementById('kpi-transito').textContent = byBucket.transito.toLocaleString('pt-BR');
   document.getElementById('kpi-naoentregue').textContent = byBucket.naoentregue.toLocaleString('pt-BR');
+  document.getElementById('kpi-aguardando').textContent = byBucket.aguardando.toLocaleString('pt-BR');
   document.getElementById('kpi-problema').textContent = byBucket.problema.toLocaleString('pt-BR');
-  document.getElementById('kpi-valor').textContent = fmtMoney(valorTotal);
-  document.getElementById('kpi-ticket').textContent = fmtMoney(ticketMedio);
 
   // Priority box — sempre olha a base inteira (não respeita filtros, é radar fixo)
   // Ordenado por quem está esperando há mais tempo (maior risco de devolução primeiro)
   var agora = Date.now();
-  var retiradaGeral = allRows.filter(function(o){return o._bucket==='retirada';}).map(function(o){
-    var dataBase = o.dataEvento || o.dataPostagem; var dias = dataBase ? Math.floor((agora - dataBase.getTime())/86400000) : null;
+  var retiradaGeral = allRows.filter(function(o){
+    return o._bucket==='retirada' && (!retiradaEmpresaSel || o.empresa === retiradaEmpresaSel);
+  }).map(function(o){
+    var dias = o.dataPostagem ? Math.floor((agora - o.dataPostagem.getTime())/86400000) : null;
     return Object.assign({}, o, {_diasEsperando: dias});
   }).sort(function(a,b){
     if (a._diasEsperando==null) return 1;
@@ -1170,6 +2151,9 @@ function render(){
   var priorityBox = document.getElementById('priorityBox');
   var priorityList = document.getElementById('priorityList');
   document.getElementById('priorityCount').textContent = retiradaGeral.length;
+  var totalGeralRetirada = allRows.filter(function(o){return o._bucket==='retirada';}).length;
+  document.getElementById('nav-badge-retirada').textContent = totalGeralRetirada;
+  document.getElementById('nav-badge-retirada').classList.toggle('pulso', totalGeralRetirada > 0);
   if (retiradaGeral.length > 0){
     priorityBox.style.display = 'block';
     priorityList.innerHTML = '<table><tbody>' + retiradaGeral.map(function(o){
@@ -1177,14 +2161,15 @@ function render(){
       var diasClass = 'ok';
       if (o._diasEsperando!=null && o._diasEsperando >= PRAZO_URGENTE_DIAS) diasClass = 'urgente';
       else if (o._diasEsperando!=null && o._diasEsperando >= PRAZO_ATENCAO_DIAS) diasClass = 'atencao';
-      return '<tr><td class="mono">'+escapeHtml(o.codigo)+'</td><td class="dest">'+escapeHtml(o.destinatario)+'</td><td class="nf">'+(o.nf?'NF '+escapeHtml(o.nf):'—')+'</td><td class="dias '+diasClass+'"><span class="selo">'+diasTxt+'</span></td><td class="loc">'+escapeHtml(o.cidade)+'/'+escapeHtml(o.uf)+'</td></tr>';
+      var tagClass = o.empresa === 'Mayderma' ? 'md' : 'sp';
+      return '<tr><td class="etag"><span class="empresa-tag '+tagClass+'">'+abrevEmpresa(o.empresa)+'</span></td><td class="mono">'+escapeHtml(o.codigo)+'</td><td class="dest">'+escapeHtml(o.destinatario)+'</td><td class="nf">'+(o.nf?'NF '+escapeHtml(o.nf):'—')+'</td><td class="dias '+diasClass+'"><span class="selo">'+diasTxt+'</span></td><td class="loc">'+escapeHtml(o.cidade)+'/'+escapeHtml(o.uf)+'</td></tr>';
     }).join('') + '</tbody></table>';
   } else {
     priorityBox.style.display = 'none';
   }
 
   // Postagens por dia
-  var porDia = groupSum(filtered, function(o){ return o.dataPostagem ? o.dataPostagem.toISOString().slice(0,10) : 'sem-data'; }, function(){return 1;});
+  var porDia = groupSum(filtered, function(o){ return o.dataPostagem ? diaLocal(o.dataPostagem) : 'sem-data'; }, function(){return 1;});
   var diasOrdenados = Array.from(porDia.keys()).sort();
   chartPorDia.data.labels = diasOrdenados.map(function(d){ return d==='sem-data' ? 'S/ data' : d.split('-').reverse().join('/'); });
   chartPorDia.data.datasets[0].data = diasOrdenados.map(function(d){ return porDia.get(d); });
@@ -1199,10 +2184,14 @@ function render(){
   chartStatus.update();
 
   var legendEl = document.getElementById('status-legend');
+  var focusedStatus=legendEl.contains(document.activeElement)?document.activeElement.dataset.status:null;
   legendEl.innerHTML = '';
   STATUS_ORDER.forEach(function(s){
     var count = statusCounts.get(s) || 0;
-    var chip = document.createElement('span');
+    var chip = document.createElement('button');
+    chip.type = 'button';
+    chip.dataset.status=s;
+    chip.setAttribute('aria-pressed', String(state.status === s));
     chip.className = 'chip' + (state.status && state.status !== s ? ' dim' : '');
     chip.innerHTML = '<span class="dot" style="background:'+STATUS_COLOR[s]+'"></span>' + STATUS_LABEL[s] + ' (' + count + ')';
     chip.style.cursor = 'pointer';
@@ -1212,6 +2201,7 @@ function render(){
       render();
     };
     legendEl.appendChild(chip);
+    if(focusedStatus===s)chip.focus({preventScroll:true});
   });
 
   // Postagens por UF
@@ -1250,16 +2240,21 @@ function render(){
   // Detail table (guarda a lista completa ordenada pro export CSV; renderiza só um limite pra não travar o navegador)
   var detailBody = document.getElementById('detail-body');
   detailBody.innerHTML = '';
-  var sortedDetail = filtered.slice().sort(function(a,b){ return (b.dataPostagem||0) - (a.dataPostagem||0); });
+  var sortedDetail = filtered.slice().sort(function(a,b){
+    var va = valorOrdenavel(a, detailSort.campo), vb = valorOrdenavel(b, detailSort.campo);
+    var c = va < vb ? -1 : (va > vb ? 1 : 0);
+    return c * detailSort.dir;
+  });
   window._ultimaListaFiltrada = sortedDetail;
   if (!sortedDetail.length){
-    detailBody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--ink-soft);padding:20px;">Nenhum objeto encontrado para os filtros selecionados</td></tr>';
+    detailBody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--ink-soft);padding:20px;">Nenhum objeto encontrado para os filtros selecionados</td></tr>';
   }
   var paraRenderizar = sortedDetail.slice(0, LIMITE_LINHAS_TABELA);
   paraRenderizar.forEach(function(o){
     var tr = document.createElement('tr');
     tr.innerHTML =
       '<td>'+fmtDateOnly(o.dataPostagem)+'</td>'+
+      '<td><span class="dot" style="width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:1px;background:'+corEmpresa(o.empresa)+';"></span>'+escapeHtml(o.empresa)+'</td>'+
       '<td class="mono">'+escapeHtml(o.codigo)+'</td>'+
       '<td>'+escapeHtml(o.destinatario)+'</td>'+
       '<td>'+escapeHtml(o.cidade)+'</td>'+
@@ -1277,6 +2272,11 @@ function render(){
     textoContagem += ' de ' + allRows.length + ' na base';
   }
   document.getElementById('detail-count').textContent = textoContagem;
+  atualizarSetasOrdenacao();
+
+  renderGestao(filtered);
+  rastroUpdates.show();
+  if(window.rastroMotion)window.rastroMotion.afterRender();
  } catch (erroRender) {
   // Blindagem: se algum dado vier quebrado (ex: data corrompida), não deixa o
   // painel inteiro travar — mostra um aviso claro em vez de ficar tudo em branco.
@@ -1287,15 +2287,107 @@ function render(){
  }
 }
 
+function renderGestao(filtered){
+  // Essa aba usa "filtered" (mesmos filtros de data/empresa/etc da tela) — mas
+  // etiquetas sem data de postagem nunca aparecem em "filtered" quando há filtro
+  // de data ativo, por isso elas têm o card próprio (busca na base inteira, allRows).
+
+  var total = filtered.length;
+  var gastoTotal = filtered.reduce(function(s,o){return s+o.valorPostagem;},0);
+  var comAtraso = filtered.filter(function(o){return o._atrasado;});
+  var comOcorrencia = filtered.filter(function(o){return o._bucket==='naoentregue' || o._bucket==='problema';});
+
+  document.getElementById('kpiG-total').textContent = total.toLocaleString('pt-BR');
+  document.getElementById('kpiG-gasto').textContent = fmtMoney(gastoTotal);
+  document.getElementById('kpiG-ticket').textContent = fmtMoney(total ? gastoTotal/total : 0);
+  document.getElementById('kpiG-atraso').textContent = comAtraso.length.toLocaleString('pt-BR');
+  document.getElementById('kpiG-atraso-pct').textContent = (total ? (comAtraso.length/total*100).toFixed(1) : '0.0') + '% do total';
+  document.getElementById('kpiG-ocorrencia').textContent = comOcorrencia.length.toLocaleString('pt-BR');
+
+  // Gasto por empresa — sempre compara as duas juntas, ignora o botão Stin Pharma/Mayderma do topo
+  var filteredSemEmpresa = applyFiltersSemEmpresa();
+  var gastoEmpresa = groupSum(filteredSemEmpresa, function(o){return o.empresa || 'N/D';}, function(o){return o.valorPostagem;});
+  var gastoEmpresaSorted = Array.from(gastoEmpresa.entries()).sort(function(a,b){return b[1]-a[1];});
+  chartGastoEmpresa.data.labels = gastoEmpresaSorted.map(function(e){return e[0];});
+  chartGastoEmpresa.data.datasets[0].data = gastoEmpresaSorted.map(function(e){return e[1];});
+  chartGastoEmpresa.data.datasets[0].backgroundColor = gastoEmpresaSorted.map(function(e){return corEmpresa(e[0]);});
+  chartGastoEmpresa.update();
+
+  var coresGastoEmpresa = chartGastoEmpresa.data.datasets[0].backgroundColor;
+  var listaGastoEmpresa = document.getElementById('gasto-empresa-lista');
+  var totalGastoEmpresas = gastoEmpresaSorted.reduce(function(s,e){return s+e[1];}, 0);
+  listaGastoEmpresa.innerHTML = gastoEmpresaSorted.map(function(e, i){
+    var pct = totalGastoEmpresas ? (e[1]/totalGastoEmpresas*100).toFixed(1) : '0.0';
+    return '<div class="gasto-empresa-item">'
+      + '<span class="nome"><span class="dot" style="background:'+coresGastoEmpresa[i % coresGastoEmpresa.length]+'"></span>'+escapeHtml(e[0])+'</span>'
+      + '<span class="valores"><div class="valor">'+fmtMoney(e[1])+'</div><div class="pct">'+pct+'% do total</div></span>'
+      + '</div>';
+  }).join('') || '<p class="hint" style="margin:0;">Nenhum registro para os filtros selecionados</p>';
+
+  // Envios e gasto por mês (usa dataPostagem, agrupado por ano-mês)
+  var porMes = new Map();
+  filtered.forEach(function(o){
+    if (!o.dataPostagem) return;
+    var chave = o.dataPostagem.getFullYear() + '-' + String(o.dataPostagem.getMonth()+1).padStart(2,'0');
+    if (!porMes.has(chave)) porMes.set(chave, {qtd:0, valor:0});
+    var rec = porMes.get(chave);
+    rec.qtd += 1; rec.valor += o.valorPostagem;
+  });
+  var mesesOrdenados = Array.from(porMes.keys()).sort();
+  var nomesMes = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  chartPeriodoMensal.data.labels = mesesOrdenados.map(function(m){
+    var partes = m.split('-'); return nomesMes[parseInt(partes[1],10)-1] + '/' + partes[0].slice(2);
+  });
+  chartPeriodoMensal.data.datasets[0].data = mesesOrdenados.map(function(m){return porMes.get(m).valor;});
+  chartPeriodoMensal.data.datasets[1].data = mesesOrdenados.map(function(m){return porMes.get(m).qtd;});
+  chartPeriodoMensal.update();
+
+  // Ranking por UF — envios e atrasos
+  var ufMap = new Map();
+  filtered.forEach(function(o){
+    var uf = o.uf || 'N/D';
+    if (!ufMap.has(uf)) ufMap.set(uf, {qtd:0, atraso:0});
+    var rec = ufMap.get(uf);
+    rec.qtd += 1;
+    if (o._atrasado) rec.atraso += 1;
+  });
+  var ufRows = Array.from(ufMap.entries()).sort(function(a,b){return b[1].qtd-a[1].qtd;});
+  var rankUfBody = document.getElementById('ranking-uf-atraso-body');
+  rankUfBody.innerHTML = '';
+  if (!ufRows.length){
+    rankUfBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--ink-soft);padding:16px;">Nenhum registro para os filtros selecionados</td></tr>';
+  }
+  ufRows.forEach(function(e){
+    var uf = e[0], rec = e[1];
+    var pct = rec.qtd ? (rec.atraso/rec.qtd*100).toFixed(1) : '0.0';
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>'+escapeHtml(uf)+'</td><td class="num">'+rec.qtd.toLocaleString('pt-BR')+'</td><td class="num">'+rec.atraso.toLocaleString('pt-BR')+'</td><td class="num">'+pct+'%</td>';
+    rankUfBody.appendChild(tr);
+  });
+
+  // Etiquetas sem postagem confirmada — sempre olha a base inteira (não tem data pra filtrar por período)
+  var semEtiqueta = allRows.filter(function(o){
+    return o.status === 'Etiqueta Expirada' || o.status === 'Erro Geraçâo PPN' || o.status === 'Objeto(s) Não Etiquetado(s) Ou Range Esgotado';
+  });
+  document.getElementById('kpiG-semetiqueta-qtd').textContent = semEtiqueta.length.toLocaleString('pt-BR');
+  document.getElementById('kpiG-semetiqueta-valor').textContent = fmtMoney(semEtiqueta.reduce(function(s,o){return s+o.valorPostagem;},0));
+}
+
+function csvCell(value){
+  var text=String(value==null?'':value);
+  if(/^[\s]*[=+@-]/.test(text)||/^[\t\r\n]/.test(text))text="'"+text;
+  return '"'+text.replace(/"/g,'""')+'"';
+}
 function exportarCSV(){
   var linhas = window._ultimaListaFiltrada || [];
-  var cab = ['Data postagem','Registro','Destinatario','Cidade','UF','Nota fiscal','Valor','Status','Ultima verificacao'];
+  var cab = ['Data postagem','Empresa','Registro','Destinatario','Cidade','UF','Nota fiscal','Valor','Status','Ultima verificacao'];
   var csv = [cab.join(';')];
   linhas.forEach(function(o){
     var campos = [
       fmtDateOnly(o.dataPostagem),
+      o.empresa,
       o.codigo,
-      '"' + String(o.destinatario||'').replace(/"/g,'""') + '"',
+      o.destinatario,
       o.cidade,
       o.uf,
       o.nf,
@@ -1303,7 +2395,7 @@ function exportarCSV(){
       STATUS_LABEL[o._bucket],
       o.atualizadoEm ? fmtDateTime(new Date(o.atualizadoEm)) : ''
     ];
-    csv.push(campos.join(';'));
+    csv.push(campos.map(csvCell).join(';'));
   });
   var blob = new Blob(['\uFEFF' + csv.join('\n')], {type:'text/csv;charset=utf-8;'});
   var url = URL.createObjectURL(blob);
@@ -1316,93 +2408,139 @@ function exportarCSV(){
   URL.revokeObjectURL(url);
 }
 document.getElementById('btn-exportar-csv').addEventListener('click', exportarCSV);
-</script>
-<script>
-(function () {
-  var salvo = localStorage.getItem('rastreioVippTema');
-  if (salvo === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
 
-  function atualizarTexto() {
-    var ativo = document.documentElement.getAttribute('data-theme') === 'dark';
-    var btn = document.getElementById('themeToggle');
-    if (btn) btn.textContent = (ativo ? '☀️' : '🌙') + ' Modo ' + (ativo ? 'claro' : 'escuro');
+// -------- Presentation / accessibility: coordinated, interruptible motion --------
+(function(){
+  var charts=[chartPorDia,chartStatus,chartUfQtd,chartUfValor,chartGastoEmpresa,chartPeriodoMensal];
+  var records=new Map(),animations=new Map(),timers=new Set(),cardsSeen=new WeakSet();
+  var ready=false,keyboard=false,frame=0,epoch=0;
+  var control=document.getElementById('motion-toggle'),ease='cubic-bezier(.23,1,.32,1)';
+  function canMove(){return motionEnabled&&!motionPreference.matches&&!keyboard&&!document.hidden;}
+  function inView(el){var r=el.getBoundingClientRect();return !!el.getClientRects().length&&r.width>0&&r.height>0&&r.bottom>0&&r.top<innerHeight;}
+  function animate(el,frames,options){
+    var old=animations.get(el);if(old)old.cancel();
+    var animation=el.animate(frames,options);animations.set(el,animation);
+    function clean(){if(animations.get(el)===animation)animations.delete(el);}
+    animation.onfinish=clean;animation.oncancel=clean;return animation;
   }
-  document.addEventListener('DOMContentLoaded', function () {
-    atualizarTexto();
-    var btn = document.getElementById('themeToggle');
-    if (btn) {
-      btn.addEventListener('click', function () {
-        var ativo = document.documentElement.getAttribute('data-theme') === 'dark';
-        if (ativo) {
-          document.documentElement.removeAttribute('data-theme');
-          localStorage.setItem('rastreioVippTema', 'light');
-        } else {
-          document.documentElement.setAttribute('data-theme', 'dark');
-          localStorage.setItem('rastreioVippTema', 'dark');
-        }
-        atualizarTexto();
-        // recoloreia os gráficos existentes pro novo tema, sem precisar recarregar a página
-        if (typeof aplicarCoresGraficos === 'function') aplicarCoresGraficos();
-      });
-    }
-
-
-    // Teste API Pré-Postagem (temporário)
-    (function () {
-      var saida = document.getElementById('ppnSaida');
-      function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
-      async function testar(codigo) {
-        saida.textContent = 'Consultando...';
-        try {
-          var tk = await auth.currentUser.getIdToken();
-          var r = await fetch('https://central-de-apps.vercel.app/api/testar-ppn?codigo=' + encodeURIComponent(codigo), { headers: { Authorization: 'Bearer ' + tk } });
-          var d = await r.json();
-          var base = allRows.filter(function (x) { return x.codigo === codigo.toUpperCase(); })[0];
-          var h = '';
-          if (base) {
-            h += '<p><strong>Na sua base:</strong> remetente ' + esc(base.remetente) + ' · valor ' + fmtMoney(base.valorPostagem) + ' · postagem ' + (base.dataPostagem ? fmtDateOnly(base.dataPostagem) : '—') + ' · CEP destino ' + esc(base.cep) + '</p>';
-          } else { h += '<p class="hint">Esse código não está na base do Rastro.</p>'; }
-          h += '<p><strong>Resposta da API (HTTP ' + esc(d.httpStatus || r.status) + '):</strong></p><pre style="white-space:pre-wrap;font-size:12px;max-height:420px;overflow:auto;">' + esc(JSON.stringify(d.resposta || d, null, 2)) + '</pre>';
-          saida.innerHTML = h;
-        } catch (e) { saida.textContent = 'Erro: ' + e.message; }
-      }
-      function pegar(filtro) {
-        var achou = allRows.filter(function (x) { return x.codigo && filtro((x.remetente || '').toUpperCase()); })[0];
-        if (!achou) { saida.textContent = 'Não achei pedido desse remetente na base.'; return; }
-        document.getElementById('ppnCodigo').value = achou.codigo; testar(achou.codigo);
-      }
-      document.getElementById('ppnTestarBtn').addEventListener('click', function () { testar(document.getElementById('ppnCodigo').value); });
-      document.getElementById('ppnStinBtn').addEventListener('click', function () { pegar(function (r) { return r.indexOf('MAYDERMA') === -1; }); });
-      document.getElementById('ppnMayBtn').addEventListener('click', function () { pegar(function (r) { return r.indexOf('MAYDERMA') !== -1; }); });
-    })();
-
-    // Navegação da sidebar: cada opção mostra só a sua seção; "Visão geral" mostra tudo de novo.
-    var VIEWS = {
-      kpis: document.getElementById('secao-kpis'),
-      radar: document.getElementById('view-radar'),
-      graficos: document.getElementById('view-graficos'),
-      tabela: document.getElementById('secao-tabela'),
-      testeapi: document.getElementById('view-testeapi')
-    };
-    function mostrarView(nome) {
-      Object.keys(VIEWS).forEach(function (chave) {
-        var el = VIEWS[chave];
-        if (!el) return;
-        el.style.display = ((nome === 'geral' && chave !== 'testeapi') || chave === nome) ? '' : 'none';
-      });
-      document.querySelectorAll('.nav-item').forEach(function (a) {
-        a.classList.toggle('active', a.getAttribute('data-view') === nome);
-      });
-    }
-    document.querySelectorAll('.nav-item').forEach(function (a) {
-      a.addEventListener('click', function (e) {
-        e.preventDefault();
-        mostrarView(a.getAttribute('data-view'));
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
+  function cancelAll(){
+    epoch++;cancelAnimationFrame(frame);frame=0;
+    timers.forEach(clearTimeout);timers.clear();
+    animations.forEach(function(a){a.cancel();});animations.clear();
+    records.forEach(function(r){r.pending=false;r.chart.stop();r.native('none');});
+    settleFilter();
+  }
+  function schedule(){if(!ready||frame)return;frame=requestAnimationFrame(function(){frame=0;introduce();});}
+  function introduce(){
+    if(!ready)return;
+    var slot=0;
+    document.querySelectorAll('.kpi').forEach(function(card){
+      if(cardsSeen.has(card)||!inView(card))return;cardsSeen.add(card);
+      if(canMove())animate(card,[{opacity:.65,transform:'translateY(8px)'},{opacity:1,transform:'translateY(0)'}],{duration:200,delay:40*slot++,easing:ease,fill:'backwards'});
     });
+    var chartSlot=0;
+    records.forEach(function(r){
+      if(r.seen||!r.chart.data.labels.length||!inView(r.chart.canvas))return;
+      r.seen=true;
+      if(!canMove()){r.native('none');return;}
+      r.chart.reset();r.pending=true;
+      var ownEpoch=epoch;
+      var timer=setTimeout(function(){
+        timers.delete(timer);r.pending=false;
+        if(ownEpoch!==epoch)return;
+        r.native(canMove()&&inView(r.chart.canvas)?undefined:'none');
+      },chartSlot++*60);
+      timers.add(timer);
+    });
+  }
+  function applyPolicy(){
+    motionEnabled=motionEnabled&&!motionPreference.matches;
+    control.checked=motionEnabled;control.disabled=motionPreference.matches;
+    control.title=motionPreference.matches?'Movimento reduzido ativado no sistema':'';
+    document.documentElement.classList.toggle('motion-off',!motionEnabled);
+    charts.forEach(function(c){c.options.animation.duration=motionEnabled?280:0;});
+    cancelAll();schedule();
+  }
+  control.addEventListener('change',function(){motionEnabled=control.checked&&!motionPreference.matches;try{localStorage.setItem('rastro-motion',motionEnabled?'on':'off');}catch(e){}applyPolicy();});
+  motionPreference.addEventListener('change',function(){motionEnabled=!motionPreference.matches;try{motionEnabled=motionEnabled&&localStorage.getItem('rastro-motion')!=='off';}catch(e){}applyPolicy();});
+  document.addEventListener('keydown',function(){if(!keyboard){keyboard=true;document.documentElement.classList.add('keyboard-input');cancelAll();}},true);
+  document.addEventListener('pointerdown',function(){keyboard=false;document.documentElement.classList.remove('keyboard-input');},true);
+  document.addEventListener('visibilitychange',function(){if(document.hidden)cancelAll();else schedule();});
+  charts.forEach(function(chart){
+    var holder=chart.canvas.parentElement,title=holder.parentElement.querySelector('h2').textContent;
+    chart.canvas.setAttribute('role','img');
+    var empty=document.createElement('div');empty.className='chart-empty hidden';
+    empty.innerHTML='<strong>Nenhum dado neste recorte</strong><small>Ajuste os filtros para visualizar os envios.</small>';holder.appendChild(empty);
+    var details=document.createElement('details');details.className='chart-data';
+    var summary=document.createElement('summary');summary.textContent='Consultar valores do gráfico';details.appendChild(summary);
+    var container=document.createElement('div');container.className='table-scroll';details.appendChild(container);holder.after(details);
+    var r={chart:chart,native:chart.update.bind(chart),key:null,seen:false,pending:false};records.set(chart,r);
+    chart.update=function(mode){
+      var key=JSON.stringify([chart.data.labels,chart.data.datasets.map(function(d,i){return [d.label,d.data,chart.isDatasetVisible(i)];}),chart.data.labels.map(function(_,i){return chart.getDataVisibility(i);})]);
+      var changed=key!==r.key;
+      if(changed){
+        r.key=key;
+        empty.classList.toggle('hidden',chart.data.datasets.some(function(d){return d.data.some(function(v){return Number.isFinite(Number(v))&&Number(v)!==0;});}));
+        chart.canvas.setAttribute('aria-label',title+'. '+chart.data.labels.length+' categorias. Valores disponíveis na tabela abaixo.');
+        var table=document.createElement('table'),head=table.createTHead().insertRow();
+        ['Categoria'].concat(chart.data.datasets.map(function(d){return d.label||title;})).forEach(function(label){var th=document.createElement('th');th.textContent=label;th.scope='col';head.appendChild(th);});
+        var body=table.createTBody();
+        chart.data.labels.forEach(function(label,i){var row=body.insertRow();row.insertCell().textContent=label;chart.data.datasets.forEach(function(d){var n=Number(d.data[i]||0);row.insertCell().textContent=(chart===chartUfValor||chart===chartGastoEmpresa||d.label==='Gasto (R$)')?fmtMoney(n):n.toLocaleString('pt-BR',{maximumFractionDigits:2});});});
+        container.replaceChildren(table);
+      }
+      if(!changed&&mode===undefined)return;
+      var result=r.native(!changed||!ready||!r.seen||r.pending||!canMove()||!inView(chart.canvas)?'none':mode);
+      schedule();return result;
+    };
+    if(chart.config.type==='doughnut'){chart.options.cutout='74%';chart.data.datasets[0].borderRadius=4;chart.data.datasets[0].hoverOffset=5;}
+    chart.update('none');
   });
+  chartPorDia.options.interaction={mode:'index',intersect:false};
+  chartPorDia.options.scales.y.ticks.precision=0;chartUfQtd.options.scales.x.ticks.precision=0;chartPeriodoMensal.options.scales.y1.ticks.precision=0;
+  document.querySelectorAll('.kpi .value').forEach(function(el){
+    var previous=el.textContent,card=el.closest('.kpi');
+    var flash=document.createElement('span');flash.className='kpi-flash';flash.setAttribute('aria-hidden','true');card.appendChild(flash);
+    new MutationObserver(function(){
+      if(el.textContent===previous)return;previous=el.textContent;
+      if(ready&&cardsSeen.has(card)&&canMove()&&inView(card))animate(flash,[{opacity:1},{opacity:0}],{duration:250,easing:ease});
+    }).observe(el,{childList:true,characterData:true,subtree:true});
+  });
+  document.querySelectorAll('.sidebar .nav-item').forEach(function(item){
+    item.tabIndex=0;item.setAttribute('role','button');
+    item.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();item.click();}});
+  });
+  function syncNav(){document.querySelectorAll('.sidebar .nav-item').forEach(function(item){item.setAttribute('aria-pressed',String(item.classList.contains('active')));});}
+  document.querySelectorAll('.sidebar .nav-item,.subtab-btn').forEach(function(item){item.addEventListener('click',function(){
+    syncNav();var panel=item.dataset.tab?document.getElementById('tab-'+item.dataset.tab):document.getElementById('subtab-'+item.dataset.subtab);
+    if(panel&&canMove())animate(panel,[{opacity:.65,transform:'translateY(4px)'},{opacity:1,transform:'translateY(0)'}],{duration:180,easing:ease});
+    charts.forEach(function(c){if(c.canvas.getClientRects().length)c.resize();});schedule();
+  });});
+  var filter=document.getElementById('filterbar'),filterButton=document.getElementById('btn-toggle-filtros');
+  var filterOpen=filterButton.getAttribute('aria-expanded')==='true';
+  filterButton.setAttribute('aria-controls','filterbar');filter.inert=!filterOpen;
+  function settleFilter(){if(!filter)return;filter.style.height='';filter.style.opacity='';filter.style.display=filterOpen?'grid':'none';filter.inert=!filterOpen;}
+  filterButton.addEventListener('click',function(){
+    var height=filter.getBoundingClientRect().height;
+    var opacity=filter.style.display==='none'?0:Number(getComputedStyle(filter).opacity);
+    var old=animations.get(filter);if(old)old.cancel();
+    filterOpen=!filterOpen;filterButton.setAttribute('aria-expanded',String(filterOpen));filter.inert=!filterOpen;
+    if(!canMove()){settleFilter();return;}
+    filter.style.display='grid';filter.style.height='';
+    var target=filterOpen?filter.getBoundingClientRect().height:0;
+    var a=animate(filter,[{height:height+'px',opacity:opacity},{height:target+'px',opacity:filterOpen?1:0}],{duration:200,easing:ease});
+    a.onfinish=function(){if(animations.get(filter)===a){animations.delete(filter);settleFilter();}};
+  });
+  var observer=new IntersectionObserver(function(){schedule();},{threshold:.05});
+  charts.forEach(function(c){observer.observe(c.canvas);});document.querySelectorAll('.kpi').forEach(function(c){observer.observe(c);});
+  window.rastroMotion={
+    dataReady:function(){ready=true;},
+    afterRender:schedule,
+    reset:function(){ready=false;cancelAll();cardsSeen=new WeakSet();records.forEach(function(r){r.seen=false;r.key=null;});},
+    replay:function(){cancelAll();cardsSeen=new WeakSet();records.forEach(function(r){r.seen=false;});schedule();}
+  };
+  syncNav();applyPolicy();
 })();
+
 </script>
 </body>
 </html>
