@@ -696,7 +696,8 @@ window.__startApp=init; if(window.__gateOk) init();
 </script>
 <script>
 (function(){
-  var GRUPOS_PERMITIDOS = ["EXPEDIÇÃO"];
+  var GRUPOS_PERMITIDOS = ["OPERAÇÕES"];
+  function norm(x){ return String(x).normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().trim(); }
   var firebaseConfig = {
     apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
     authDomain: "stinpharma-qualidade.firebaseapp.com",
@@ -729,7 +730,8 @@ window.__startApp=init; if(window.__gateOk) init();
     firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
       var dados = snap.val();
       var meusGrupos = (dados && dados.grupos) || [];
-      var permitido = GRUPOS_PERMITIDOS.some(function(g){ return meusGrupos.indexOf(g) !== -1; });
+      var permitidos = GRUPOS_PERMITIDOS.map(norm);
+      var permitido = meusGrupos.some(function(g){ return permitidos.indexOf(norm(g)) !== -1; });
       if(permitido){ liberar(); }
       else { negar('Você não tem permissão pra acessar este app.'); }
     }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
