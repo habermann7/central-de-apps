@@ -2588,6 +2588,15 @@ document.getElementById('btn-exportar-csv').addEventListener('click', exportarCS
 </script>
 
 <style>
+/* Radar de retirada: item do menu "acende" enquanto houver pedido aguardando retirada */
+.sidebar .nav-item:has(.nav-badge.pulso){background:linear-gradient(90deg,rgba(234,88,12,.22),rgba(234,88,12,.06));border-color:rgba(251,146,60,.45);animation:radarAcende 2.4s ease-in-out infinite}
+.sidebar .nav-item:has(.nav-badge.pulso).active{background:linear-gradient(90deg,rgba(234,88,12,.32),#263959)}
+.sidebar .nav-badge.pulso{background:#F97316;color:#fff;font-weight:700;animation:radarBadge 1.6s ease-in-out infinite!important}
+@keyframes radarAcende{0%,100%{box-shadow:0 0 0 0 rgba(249,115,22,0),inset 3px 0 #F97316}50%{box-shadow:0 0 18px 2px rgba(249,115,22,.55),inset 3px 0 #FDBA74}}
+@keyframes radarBadge{0%,100%{box-shadow:0 0 0 0 rgba(249,115,22,.7);transform:scale(1)}50%{box-shadow:0 0 0 7px rgba(249,115,22,0);transform:scale(1.12)}}
+@media(prefers-reduced-motion:reduce){.sidebar .nav-item:has(.nav-badge.pulso),.sidebar .nav-badge.pulso{animation:none!important}}
+</style>
+<style>
 .kpi-click{cursor:pointer;position:relative}
 .kpi-click:focus-visible{outline:2px solid var(--postal-blue);outline-offset:2px}
 .kpi-click::after{content:'ver pedidos →';position:absolute;right:12px;top:12px;font-size:10px;color:var(--ink-soft);opacity:0;transition:opacity .15s}
