@@ -1106,7 +1106,7 @@ firebase.initializeApp(firebaseConfig);
 var auth = firebase.auth();
 var db = firebase.database();
 
-var GRUPO_PERMITIDO = "EXPEDIÇÃO";
+var GRUPOS_PERMITIDOS = ["EXPEDIÇÃO"];
 var CAMINHO_PEDIDOS = "rastreioVipp/pedidos";
 
 // -------- Classificação de status (mesma regra de sempre, mais fina) --------
@@ -1446,7 +1446,7 @@ auth.onAuthStateChanged(function (user) {
   db.ref('centralApps/usuarios/'+user.uid).once('value').then(function(snap){
     if(version!==authVersion)return;
     var perfil=snap.val();
-    var permitido=perfil&&(perfil.admin===true||(Array.isArray(perfil.grupos)&&perfil.grupos.includes(GRUPO_PERMITIDO)));
+    var permitido=perfil&&(perfil.admin===true||(Array.isArray(perfil.grupos)&&perfil.grupos.some(function(g){return GRUPOS_PERMITIDOS.indexOf(g)>-1;})));
     if(!permitido){document.getElementById('loginError').textContent='Sua conta não tem acesso a este app.';return auth.signOut();}
     document.getElementById('loginError').textContent='';
     document.getElementById('loginScreen').classList.add('hidden');
