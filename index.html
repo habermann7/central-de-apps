@@ -875,8 +875,7 @@
       <h3>Editar <span id="editAppTitleLabel">app</span></h3>
       <label>Título</label>
       <input type="text" id="editAppTitulo">
-      <label>Categoria (etiqueta exibida no card)</label>
-      <input type="text" id="editAppCategoria" list="listaCategorias" placeholder="Ex: Operações, Logística..."><datalist id="listaCategorias"></datalist>
+
       <label>Descrição</label>
       <input type="text" id="editAppDescricao">
       <label>Grupos com acesso</label>
@@ -1347,6 +1346,12 @@ document.addEventListener('keydown', function(e){
   }
 });
 
+// a prateleira de um app = o primeiro grupo com acesso (não existe mais campo "categoria" separado)
+function categoriaDoApp(app){
+  const g = (app.grupos && app.grupos.length) ? app.grupos[0] : 'Geral';
+  return formatarCategoria(g);
+}
+
 function formatarCategoria(cat){
   const limpo = (cat || '').trim();
   if(!limpo) return 'Sem categoria';
@@ -1372,7 +1377,7 @@ function corPorCategoria(categoriaFormatada){
 function cardHtml(app, i, extraClass){
   const acessoNormal = tenhoAcesso(app);
   const isFav = ehFavorito(app.file);
-  const corCard = corPorCategoria(formatarCategoria(app.category)); // cor sempre pela categoria (padrão único)
+  const corCard = corPorCategoria(categoriaDoApp(app)); // cor sempre pela categoria (padrão único)
   return `
     <div class="card-wrap${extraClass ? ' ' + extraClass : ''}" style="animation-delay:${i * 55}ms">
       <a class="card" href="./${app.file}" style="--accent-card:${corCard}" onclick="abrirApp(this, event, '${escapeAttr(app.file)}')">
@@ -1384,7 +1389,7 @@ function cardHtml(app, i, extraClass){
               : '<div class="card-status" style="color:var(--warn);"><span class="dot" style="background:var(--warn);"></span> sem seu acesso</div>'}
           </div>
           <div class="card-icon">${app.icon || '🧩'}</div>
-          <div class="card-tag">${app.category ? escapeAttr(formatarCategoria(app.category)) : 'FERRAMENTA'}</div>
+          <div class="card-tag">${escapeAttr(categoriaDoApp(app))}</div>
           <div class="card-title">${app.title}</div>
           <div class="card-desc">${app.description || ''}</div>
           <div class="card-open">Abrir app <span class="arrow">→</span></div>
@@ -1431,12 +1436,11 @@ async function loadApps(){
     // agrupa em "prateleiras" por categoria — nomes parecidos (Operações / OPERAÇÕES) caem juntos
     const prateleiras = {};
     apps.forEach(function(app){
-      const chave = formatarCategoria(app.category);
+      const chave = categoriaDoApp(app);
       if(!prateleiras[chave]) prateleiras[chave] = [];
       prateleiras[chave].push(app);
     });
     Object.keys(prateleiras).forEach(function(k){ prateleiras[k].sort(function(a,b){ return (a.title||'').localeCompare(b.title||'', 'pt-BR'); }); });
-    const dl = document.getElementById('listaCategorias'); if(dl) dl.innerHTML = Object.keys(prateleiras).map(function(c){ return '<option value="'+escapeAttr(c)+'">'; }).join('');
     const categorias = Object.keys(prateleiras).sort(function(a,b){ return a.localeCompare(b, 'pt-BR'); });
 
     grid.innerHTML = categorias.map(function(cat){
@@ -1691,7 +1695,6 @@ function abrirEditarAppFromButton(btn){
   editingAppFile = btn.dataset.file;
   document.getElementById('editAppTitleLabel').textContent = btn.dataset.title || btn.dataset.file;
   document.getElementById('editAppTitulo').value = btn.dataset.title || '';
-  document.getElementById('editAppCategoria').value = btn.dataset.category || '';
   document.getElementById('editAppDescricao').value = btn.dataset.description || '';
   renderGruposCheckboxes(document.getElementById('editAppGrupos'), 'grupo-cb-app', grupos);
   const statusEl = document.getElementById('editAppStatus');
@@ -1705,9 +1708,9 @@ function fecharEditarApp(){
 async function salvarApp(){
   if(!editingAppFile) return;
   const title = document.getElementById('editAppTitulo').value.trim();
-  const category = document.getElementById('editAppCategoria').value.trim() ? formatarCategoria(document.getElementById('editAppCategoria').value) : '';
   const description = document.getElementById('editAppDescricao').value.trim();
   const grupos = Array.from(document.querySelectorAll('.grupo-cb-app:checked')).map(el => el.value);
+  const category = grupos.length ? formatarCategoria(grupos[0]) : '';
   const statusEl = document.getElementById('editAppStatus');
   if(!title){ statusEl.className = 'modal-status err'; statusEl.textContent = 'Preenche o título.'; return; }
   if(grupos.length === 0){ statusEl.className = 'modal-status err'; statusEl.textContent = 'Marca pelo menos um grupo.'; return; }
