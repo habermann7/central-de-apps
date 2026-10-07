@@ -851,6 +851,16 @@
   /* cards: totalmente monocromático, sem cor por categoria */
   .card-cat:before{ display:none; }
   .mono-logo{ box-shadow:-8px 10px 20px #080d1533,inset 0 1px 0 #fff; }
+
+  /* topo compacto: logo à esquerda, semana à direita (sem faixa vazia) */
+  .topbar{ margin-bottom:34px; }
+  .topbar .date-widget{ width:auto; display:flex; align-items:center; gap:26px; padding:10px 20px; border-radius:20px; }
+  .topbar .date-row{ margin-top:0; gap:8px; }
+  .topbar .date-head{ gap:12px; }
+  .topbar .date-day{ flex-direction:row; gap:0; }
+  .topbar .date-day span{ display:none; }
+  .topbar .date-day b{ width:30px; height:30px; }
+  @media (max-width:560px){ .topbar .date-widget{ display:none; } .topbar{ margin-bottom:22px; } }
 </style>
 </head>
 <body>
@@ -947,13 +957,10 @@
 
       <!-- ===================== GALERIA ===================== -->
       <div id="galleryWrap">
-        <header class="topbar fade-in"><div class="wordmark">estante<span>.</span></div><div class="workspace"><i></i> Seu espaço de trabalho</div></header>
-        <section class="hero fade-in" style="animation-delay:.04s;">
-          <div>
-            <div class="eyebrow"><span data-icon="sun"></span> Tudo no seu lugar</div>
-          </div>
-          <aside class="date-widget glass" aria-label="Semana atual"><div class="date-head" id="dateHead"></div><div class="date-row" id="dateRow"></div><div class="date-note"><span data-icon="spark"></span> Um bom dia começa com tudo à mão.</div></aside>
-        </section>
+        <header class="topbar fade-in">
+          <div class="wordmark">estante<span>.</span></div>
+          <aside class="date-widget glass" aria-label="Semana atual"><div class="date-head" id="dateHead"></div><div class="date-row" id="dateRow"></div></aside>
+        </header>
         <section aria-label="Catálogo de ferramentas" class="fade-in" style="animation-delay:.08s;">
           <div class="toolbar">
             <label class="search glass"><span data-icon="search"></span><input id="appSearch" type="search" placeholder="Qual ferramenta você precisa?" aria-label="Buscar ferramentas" oninput="filtrarApps()" autocomplete="off"><kbd>Ctrl K</kbd></label>
