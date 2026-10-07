@@ -717,8 +717,8 @@ window.__startApp=init; if(window.__gateOk) init();
 </script>
 <script>
 (function(){
-  var GRUPOS_PERMITIDOS = ["OPERAÇÕES"];
-  function norm(x){ return String(x).normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().trim(); }
+  /* Quem entra = grupos definidos na Estante para este app (manifest.json). Se não achar o app lá, usa o padrão abaixo. */
+  var GRUPOS_PADRAO = ["OPERAÇÕES"];
   var firebaseConfig = {
     apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
     authDomain: "stinpharma-qualidade.firebaseapp.com",
@@ -730,6 +730,7 @@ window.__startApp=init; if(window.__gateOk) init();
     measurementId: "G-6C0TLHH2VP"
   };
   if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  function norm(x){ return String(x).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().trim(); }
   function liberar(){
     var st = document.getElementById('__gateStyle');
     var ov = document.getElementById('__gateOverlay');
@@ -741,6 +742,15 @@ window.__startApp=init; if(window.__gateOk) init();
   function negar(msg){
     document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Central de Apps</a>';
   }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  function gruposDoApp(){
+    var arq = decodeURIComponent((location.pathname.split('/').pop() || '')).toLowerCase();
+    return fetch('./manifest.json?t=' + Date.now(), {cache:'no-store'}).then(function(r){ return r.ok ? r.json() : []; }).then(function(lista){
+      var app = (Array.isArray(lista) ? lista : []).filter(function(a){ return a && String(a.file||'').toLowerCase() === arq; })[0];
+      if(!app) return GRUPOS_PADRAO;
+      return (app.grupos && app.grupos.length) ? app.grupos : ['Geral'];
+    }).catch(function(){ return GRUPOS_PADRAO; });
+  }
   var jaResolveu = false;
   setTimeout(function(){
     if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
@@ -748,13 +758,16 @@ window.__startApp=init; if(window.__gateOk) init();
   firebase.auth().onAuthStateChanged(function(user){
     jaResolveu = true;
     if(!user){ negar('Você precisa entrar pela Central de Apps.'); return; }
-    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
-      var dados = snap.val();
-      var meusGrupos = (dados && dados.grupos) || [];
-      var permitidos = GRUPOS_PERMITIDOS.map(norm);
-      var permitido = meusGrupos.some(function(g){ return permitidos.indexOf(norm(g)) !== -1; });
-      if(permitido){ liberar(); }
-      else { negar('Você não tem permissão pra acessar este app.'); }
+    Promise.all([
+      firebase.database().ref('centralApps/usuarios/' + user.uid).once('value'),
+      gruposDoApp()
+    ]).then(function(res){
+      var dados = res[0].val() || {};
+      var meus = (dados.grupos || []).map(norm);
+      var exigidos = res[1];
+      var permitido = dados.admin === true || exigidos.some(function(g){ return meus.indexOf(norm(g)) !== -1; });
+      if(permitido){ liberar(); return; }
+      negar('Você não tem permissão pra acessar este app.<br><span style="font-size:12px;">Seus grupos: ' + esc((dados.grupos||[]).join(', ') || 'nenhum') + '<br>Grupos com acesso: ' + esc(exigidos.join(', ')) + '</span>');
     }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
   });
 })();
