@@ -144,13 +144,13 @@
   },
   {
     "title": "GoPlant",
-    "category": "Outros",
+    "category": "Testes",
     "description": "Desenho de fluxos e plantas",
     "file": "GoPlant.html",
     "icon": "🏭",
     "color": "#A6485B",
     "grupos": [
-      "Outros"
+      "TESTES"
     ]
   }
 ]
