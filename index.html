@@ -3,38 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Estante · Stinpharma</title>
+<title>Estante</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
 <style>
   :root{
-    --bg:#0B0A0A;
-    --wood:#C9924F;
-    --wood-soft:rgba(201,146,79,.10);
-    --surface:#12161C;
-    --surface-2:#161B22;
-    --surface-hover:#1D232C;
-    --border:#242B34;
-    --border-soft:#1A1F27;
-    --text:#EDF0F3;
-    --text-dim:#8E96A3;
-    --text-faint:#565E6B;
-    --accent:#D9A15A;
-    --accent-soft:rgba(217,161,90,.14);
-    --accent-2:#4E8368;
-    --accent-2-soft:rgba(78,131,104,.16);
-    --danger:#F0654E;
-    --danger-soft:rgba(240,101,78,.12);
-    --warn:#C97A3D;
-    --display:'Fraunces', 'Georgia', serif;
-    --body:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --mono:'IBM Plex Mono', ui-monospace, monospace;
-    --radius:10px;
-    --radius-sm:7px;
+    --bg:#eceef0;
+    --wood:#33353b;
+    --wood-soft:rgba(51,53,59,.06);
+    --surface:#f8f9fa;
+    --surface-2:#ffffff;
+    --surface-hover:#eef0f3;
+    --border:#d8dbe0;
+    --border-soft:#e5e7eb;
+    --text:#292b30;
+    --text-dim:#626874;
+    --text-faint:#7b808b;
+    --accent:#33353b;
+    --accent-soft:rgba(51,53,59,.08);
+    --accent-2:#4f6b5c;
+    --accent-2-soft:rgba(79,107,92,.12);
+    --danger:#c0392b;
+    --danger-soft:rgba(192,57,43,.10);
+    --warn:#9a6a35;
+    --display:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --radius:16px;
+    --radius-sm:12px;
   }
   *{ box-sizing:border-box; }
   html{ background:var(--bg); }
@@ -554,6 +554,219 @@
   }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
+
+  /* ===================================================================
+     NOVO VISUAL — vidro monocromático (só a casca da galeria; login,
+     administração e modais continuam com o visual escuro de antes)
+     =================================================================== */
+  .app-shell{ color:#292b30; font-family:var(--body); }
+  .scene{ position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;
+    background:radial-gradient(ellipse at 78% 5%,#fff 0%,transparent 48%),radial-gradient(ellipse at 9% 70%,#d5d7db,transparent 60%),#eeeff0; }
+  .scene:before{ content:""; position:absolute; width:1100px; height:1100px; right:-470px; top:40px; border-radius:50%; border:100px solid #ffffff60; box-shadow:0 0 100px #c1c4cc35,inset 0 0 80px #afb3bc20; transform:rotate(-35deg) scaleX(1.4); }
+  .scene:after{ content:""; position:absolute; width:900px; height:350px; left:10%; bottom:-180px; border-radius:50%; background:#ffffff90; filter:blur(60px); }
+  .glass{ background:linear-gradient(135deg,#ffffffb8,#ffffff52); border:1px solid #ffffffcc; box-shadow:0 8px 30px #353a4a06,inset 0 1px 0 #fff; backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); }
+  svg.i{ width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.65; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; pointer-events:none; }
+  [data-icon]{ display:inline-flex; align-items:center; justify-content:center; }
+
+  /* barra lateral de vidro */
+  .rail{ position:fixed; left:24px; top:24px; bottom:24px; width:82px; border-radius:29px; display:flex; flex-direction:column; align-items:center; padding:22px 12px; z-index:20; }
+  .rail-brand{ display:grid; place-items:center; width:42px; height:42px; color:#292b31; }
+  .rail-brand svg.i{ width:31px; height:31px; stroke-width:2; }
+  .rail-divider{ width:24px; height:1px; background:rgba(30,32,40,.09); margin:20px 0; flex-shrink:0; }
+  .rail nav{ display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .nav-btn{ width:48px; height:48px; border:0; border-radius:17px; display:grid; place-items:center; background:transparent; position:relative; color:#292b31; cursor:pointer; transition:background .2s; }
+  .nav-btn:hover{ background:#ffffff80; }
+  .nav-btn.active{ background:#303238; color:#fff; box-shadow:0 5px 10px #2223,inset 0 1px 0 #ffffff33; }
+  .nav-btn .tip{ position:absolute; left:61px; white-space:nowrap; background:#303238; color:#fff; font-size:12px; padding:8px 12px; border-radius:9px; opacity:0; pointer-events:none; transform:translateX(-5px); transition:opacity .18s,transform .18s; z-index:30; }
+  .nav-btn:hover .tip,.nav-btn:focus-visible .tip{ opacity:1; transform:translateX(0); }
+  .nav-btn:focus-visible,.rail-avatar:focus-visible,.fchip:focus-visible,.mono-action:focus-visible,.view-switch button:focus-visible{ outline:3px solid #818997; outline-offset:4px; }
+  .rail-bottom{ margin-top:auto; display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .rail-avatar{ border:1px solid #fff; background:linear-gradient(145deg,#c3c6cc,#f8f8f9); box-shadow:0 3px 8px #3331; display:grid; place-items:center; border-radius:50%; width:40px; height:40px; font-size:11px; font-weight:650; color:#292b31; cursor:pointer; font-family:var(--body); }
+  .rail-pop{ position:fixed; left:120px; bottom:24px; width:250px; border-radius:22px; padding:16px; z-index:40; display:none; color:#292b30; background:linear-gradient(135deg,#fffffff2,#f1f2f5f2); }
+  .rail-pop.open{ display:block; }
+  .rail-pop .who-name{ font-size:14px; font-weight:600; }
+  .rail-pop .who-groups{ font-size:11px; color:#626874; margin:3px 0 10px; }
+  .rail-pop .sync{ font-size:10px; color:#626874; display:flex; align-items:center; gap:6px; padding-bottom:10px; border-bottom:1px solid rgba(30,32,40,.09); margin-bottom:6px; }
+  .rail-pop .sync i{ width:6px; height:6px; border-radius:50%; background:#4E8368; }
+  .rail-pop button{ display:flex; width:100%; align-items:center; gap:9px; background:transparent; border:0; text-align:left; font-size:12.5px; color:#34373e; padding:9px 8px; border-radius:10px; cursor:pointer; font-family:var(--body); }
+  .rail-pop button:hover{ background:#ffffffb0; }
+  .rail-pop button.sair:hover{ color:#c0392b; }
+  .rail-pop svg.i{ width:16px; height:16px; }
+
+  /* miolo */
+  .app-shell .main{ margin:0 auto; padding:38px 52px 28px 150px; max-width:1540px; width:100%; flex:1; min-width:0; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; gap:24px; }
+  .wordmark{ font-size:22px; font-weight:600; letter-spacing:-.9px; color:#292b30; }
+  .wordmark span{ color:#9498a0; }
+  .workspace{ font-size:11px; color:#626874; display:flex; align-items:center; gap:7px; }
+  .workspace i{ width:5px; height:5px; border-radius:100%; background:#72797b; }
+  .hero{ display:flex; justify-content:space-between; align-items:center; gap:40px; margin:54px 0 35px; }
+  .hero>div:first-child{ min-width:0; }
+  .eyebrow{ font-size:11px; color:#626874; letter-spacing:1.3px; text-transform:uppercase; display:flex; align-items:center; gap:9px; }
+  .eyebrow svg.i{ width:15px; height:15px; }
+  .hero h1{ font-family:var(--body); font-size:clamp(35px,3.8vw,57px); font-weight:500; letter-spacing:-2.8px; line-height:1.12; margin:16px 0; color:#292b30; }
+  .hero h1 span{ color:#737780; }
+  .hero p{ color:#626874; font-size:13px; line-height:1.7; margin:0; }
+  .date-widget{ width:274px; border-radius:24px; padding:18px 20px; flex-shrink:0; }
+  .date-head{ display:flex; align-items:center; justify-content:space-between; font-size:12px; font-weight:600; }
+  .date-head span{ color:#626874; font-size:10px; font-weight:400; }
+  .date-row{ display:flex; justify-content:space-between; margin-top:17px; gap:5px; }
+  .date-day{ display:flex; align-items:center; flex-direction:column; gap:9px; color:#626874; font-size:9px; }
+  .date-day b{ display:grid; place-items:center; width:28px; height:28px; font-size:11px; font-weight:500; color:#555861; }
+  .date-day.today b{ color:#fff; background:linear-gradient(145deg,#55585f,#24262d); border-radius:50%; box-shadow:0 3px 8px #0003; }
+  .date-note{ font-size:10px; color:#626874; border-top:1px solid rgba(30,32,40,.09); padding-top:12px; margin-top:13px; display:flex; gap:7px; align-items:center; }
+  .date-note svg.i{ width:12px; height:12px; }
+
+  .toolbar{ display:flex; gap:15px; align-items:center; margin-bottom:22px; flex-wrap:wrap; }
+  .search{ display:flex; align-items:center; gap:11px; border-radius:16px; padding:0 15px; height:48px; flex:1; max-width:430px; min-width:0; color:#8d9098; }
+  .search svg.i{ width:17px; height:17px; }
+  .search input{ border:0; outline:0; background:transparent; min-width:0; width:100%; font-size:12.5px; color:#34363c; height:100%; padding:0; border-radius:0; box-shadow:none; font-family:var(--body); }
+  .search input:focus{ border:0; box-shadow:none; }
+  .search input::placeholder{ color:#686f7b; }
+  .search:focus-within{ box-shadow:0 0 0 2px #8b929f66; }
+  .search kbd{ font:10px var(--body); white-space:nowrap; background:#ffffff88; border:1px solid #fff; padding:4px 6px; border-radius:5px; color:#626874; }
+  .toolbar-spacer{ flex:1; }
+  .count{ font-size:11px; color:#626874; white-space:nowrap; }
+  .view-switch{ display:flex; padding:4px; gap:4px; border-radius:13px; }
+  .view-switch button{ border:0; background:none; width:32px; height:30px; border-radius:9px; display:grid; place-items:center; color:#92949b; cursor:pointer; }
+  .view-switch button svg.i{ width:16px; height:16px; }
+  .view-switch button.active{ background:#fff; box-shadow:0 2px 5px #2221; color:#363941; }
+  .add-link{ display:flex; align-items:center; gap:8px; height:40px; padding:0 15px; border-radius:13px; font-size:12px; color:#34373e; text-decoration:none; }
+  .add-link:hover{ background:#ffffffd0; }
+  .add-link svg.i{ width:15px; height:15px; }
+
+  .fchips{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:30px; }
+  .fchip{ border:1px solid transparent; background:transparent; padding:9px 15px; border-radius:30px; font-size:11px; color:#626874; display:flex; align-items:center; gap:9px; transition:background .18s; cursor:pointer; font-family:var(--body); min-height:36px; }
+  .fchip:hover{ background:#ffffff60; }
+  .fchip.active{ background:#33353b; color:#fff; box-shadow:inset 0 1px 1px #ffffff30,0 3px 8px #292b3018; }
+  .fchip .chip-count{ font-size:9px; opacity:.65; margin:0; }
+
+  /* prateleiras */
+  #grid{ display:block; }
+  #grid .shelf{ width:100%; margin-bottom:14px; }
+  #grid .shelf-label{ display:flex; align-items:center; gap:10px; justify-content:flex-start; border:0; padding:0; margin:0 0 6px; font-family:var(--body); text-transform:none; letter-spacing:-.25px; font-size:14px; font-weight:600; color:#292b30; }
+  #grid .shelf-count{ background:#ffffff88; border:1px solid #fff; color:#626874; font-size:10px; padding:1px 8px; border-radius:20px; font-weight:500; }
+
+  /* cards de vidro com profundidade */
+  .cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:38px 30px; padding:12px 4px 25px; justify-items:center; }
+  .cards .card-wrap{ position:relative; width:290px; max-width:100%; align-self:stretch; perspective:1000px; min-width:0; }
+  .cards .card-wrap:hover{ z-index:3; }
+  .cards .card-wrap:has(.kebab-menu.open){ z-index:6; }
+  .app-card{ position:relative; width:100%; height:100%; min-height:300px; border-radius:50px; color:#fff; background:linear-gradient(145deg,#292c32 0%,#1d2026 52%,#13161b 100%); box-shadow:0 20px 38px -18px #2026315c,inset 0 1px 0 #ffffff24; transform-style:preserve-3d; transition:transform 500ms ease-in-out,box-shadow 500ms ease-in-out; transform:rotate3d(1,1,0,0deg); }
+  .app-card .card-glass{ position:absolute; inset:8px; border-radius:42px; border-bottom:1px solid #ffffff12; border-left:1px solid #ffffff24; background:linear-gradient(145deg,#ffffff18 0%,#ffffff0a 55%,#ffffff04 100%); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); transform:translate3d(0,0,25px); pointer-events:none; }
+  .open-card{ position:absolute; inset:0; border-radius:50px; transform:translate3d(0,0,26px); z-index:1; display:block; }
+  .open-card:focus-visible{ outline:3px solid #8b97aa; outline-offset:5px; }
+  .card-meta{ position:absolute; top:44px; left:28px; right:100px; display:flex; flex-direction:column; gap:6px; transform:translate3d(0,0,26px); pointer-events:none; }
+  .card-cat{ font-size:9px; letter-spacing:1.4px; text-transform:uppercase; color:#c9cbd2; display:flex; align-items:center; gap:7px; }
+  .card-cat:before{ content:""; width:7px; height:7px; border-radius:50%; background:var(--cc,#c9cbd2); box-shadow:0 0 0 3px color-mix(in srgb,var(--cc,#c9cbd2) 25%,transparent); }
+  .card-lock{ font-size:9px; letter-spacing:.6px; text-transform:uppercase; color:#e6b27a; }
+  .mono-content{ position:relative; padding:100px 28px 82px; transform:translate3d(0,0,26px); pointer-events:none; }
+  .mono-content h3{ color:#f4f5f7; font-family:var(--body); font-size:20px; line-height:1.25; font-weight:700; letter-spacing:0; margin:0; text-transform:none; overflow-wrap:anywhere; }
+  .mono-content p{ color:#d5d9e0; font-size:14px; line-height:1.45; margin:16px 0 0; overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .mono-footer{ position:absolute; left:20px; right:24px; bottom:20px; display:flex; align-items:center; justify-content:space-between; transform-style:preserve-3d; transform:translate3d(0,0,26px); pointer-events:none; z-index:2; }
+  .mono-actions{ display:flex; gap:10px; transform-style:preserve-3d; }
+  .mono-action{ display:grid; place-items:center; position:relative; width:34px; height:34px; border:0; border-radius:50%; flex-shrink:0; pointer-events:auto; cursor:pointer; background-color:#e8ebf0; background-image:linear-gradient(145deg,#ffffff88,#ffffff00); color:#29313b; box-shadow:0 5px 8px -4px #070b1259,inset 0 1px 0 #ffffffcc; transition-property:transform,box-shadow,background-color,color; transition-duration:200ms,200ms,140ms,140ms; transition-timing-function:ease-in-out,ease-in-out,ease-out,ease-out; transition-delay:400ms,400ms,0ms,0ms; backface-visibility:hidden; }
+  .mono-action:nth-child(2){ transition-delay:600ms,600ms,0ms,0ms; }
+  .mono-action:before{ content:""; position:absolute; inset:-5px; border-radius:50%; }
+  .mono-action svg.i{ width:16px; height:16px; }
+  .mono-action:hover{ background-color:#fff; background-image:none; }
+  .mono-action:active{ background-color:#d6dce5; background-image:none; }
+  .mono-action.active{ background-color:#c6d1df; background-image:none; }
+  .mono-action.active svg.i{ fill:currentColor; }
+  .mono-more{ display:flex; gap:4px; align-items:center; padding:8px 0; color:#e8ebf0; font-size:12px; font-weight:700; text-decoration:none; pointer-events:auto; transition:transform 200ms ease-in-out; min-height:40px; }
+  .mono-more svg.i{ width:16px; height:16px; stroke-width:3; }
+  .mono-more:hover{ transform:translate3d(0,0,10px); }
+  .rings{ position:absolute; top:0; right:0; width:0; height:0; transform-style:preserve-3d; pointer-events:none; }
+  .rings i{ position:absolute; top:8px; right:8px; width:170px; height:170px; border:1px solid #ffffff14; border-radius:50%; background:linear-gradient(145deg,#ffffff0a,#ffffff03); box-shadow:-8px 10px 20px #080d151a,inset 0 1px 0 #ffffff0d; transform:translate3d(0,0,20px); transition:transform 500ms ease-in-out; }
+  .rings i:nth-child(2){ width:140px; height:140px; top:10px; right:10px; transform:translate3d(0,0,40px); transition-delay:400ms; }
+  .rings i:nth-child(3){ width:110px; height:110px; top:17px; right:17px; transform:translate3d(0,0,60px); transition-delay:800ms; }
+  .rings i:nth-child(4){ width:80px; height:80px; top:23px; right:23px; transform:translate3d(0,0,80px); transition-delay:1200ms; }
+  .mono-logo{ position:absolute; top:30px; right:30px; display:grid; place-items:center; width:50px; height:50px; border-radius:50%; font-size:22px; line-height:1; background:linear-gradient(145deg,#fafbfd,#dce1e8); box-shadow:-8px 10px 20px #080d1533,inset 0 1px 0 #fff,0 0 0 3px color-mix(in srgb,var(--cc,#fff) 38%,transparent); transform:translate3d(0,0,100px); transition:transform 500ms ease-in-out; transition-delay:1600ms; pointer-events:none; }
+  body:not(.no-motion) .cards:not(.x) .card-wrap:hover .app-card{ transform:rotate3d(1,1,0,30deg); box-shadow:30px 50px 25px -40px #11192366,0 25px 30px #151d291f,inset 0 1px 0 #ffffff24; }
+  body:not(.no-motion) .card-wrap:hover .mono-action{ transform:translate3d(0,0,50px); box-shadow:-5px 20px 10px #080d152e,inset 0 1px 0 #ffffffb3; }
+  body:not(.no-motion) .card-wrap:hover .mono-logo{ transform:translate3d(0,0,120px); }
+  body.no-motion .app-card,body.no-motion .app-card *{ transition:none !important; transform:none !important; }
+  @media (hover:none){ body:not(.no-motion) .card-wrap:hover .app-card{ transform:none; } body:not(.no-motion) .card-wrap:hover .mono-action{ transform:none; } body:not(.no-motion) .card-wrap:hover .mono-logo{ transform:translate3d(0,0,100px); } }
+  @media (pointer:coarse){ .mono-action{ width:40px; height:40px; } }
+
+  /* menu ⋯ do admin */
+  .cards .kebab-menu{ position:absolute; left:20px; bottom:66px; top:auto; right:auto; z-index:20; min-width:140px; background:#fffffff2; border:1px solid #fff; border-radius:14px; box-shadow:0 14px 30px -10px #1d2a4a40; }
+  .cards .kebab-menu button{ color:#34373e; padding:10px 14px; }
+  .cards .kebab-menu button:hover{ background:#eef0f3; color:#111; }
+  .cards .kebab-menu button.item-delete:hover{ color:#c0392b; }
+
+  /* modo lista */
+  #grid.list .cards{ grid-template-columns:1fr; gap:14px; padding:6px 0 18px; justify-items:stretch; }
+  #grid.list .cards .card-wrap{ width:100%; perspective:none; }
+  #grid.list .app-card{ min-height:96px; border-radius:26px; height:auto; display:flex; align-items:center; }
+  #grid.list .app-card{ transform-style:flat; transform:none; }
+  #grid.list .app-card .card-glass{ border-radius:20px; transform:none; }
+  #grid.list .app-card .card-glass{ -webkit-backdrop-filter:none; backdrop-filter:none; }
+  #grid.list .card-meta{ position:relative; top:auto; left:auto; right:auto; z-index:2; }
+  #grid.list .open-card{ border-radius:26px; transform:none; }
+  #grid.list .rings{ display:none; }
+  #grid.list .mono-logo{ position:relative; top:auto; right:auto; margin-left:24px; width:46px; height:46px; transform:none; flex-shrink:0; order:-1; }
+  #grid.list .mono-content{ position:relative; flex:1; min-width:0; padding:18px 20px; transform:none; }
+  #grid.list .mono-content h3{ font-size:16px; }
+  #grid.list .mono-content p{ font-size:12px; margin-top:4px; -webkit-line-clamp:1; }
+  #grid.list .card-meta{ transform:none; order:-1; width:130px; flex-shrink:0; padding-left:16px; }
+  #grid.list .mono-footer{ position:relative; inset:auto; transform:none; padding-right:24px; gap:18px; }
+  #grid.list .card-wrap:hover{ z-index:3; }
+  #grid.list .cards .kebab-menu{ left:auto; right:60px; bottom:auto; top:60px; }
+
+  /* mensagens de estado em fundo claro */
+  #grid .no-access,.app-shell .no-results{ background:#ffffff80; border:1px dashed #c3c6cd; color:#292b30; border-radius:24px; }
+  #grid .no-access h2,.app-shell .no-results h2{ font-family:var(--body); color:#292b30; }
+  #grid .no-access p,.app-shell .no-results p{ color:#626874; }
+  #grid .empty-icon,.app-shell .no-results .empty-icon{ border-color:#8b929f; color:#555b66; }
+  .app-shell .btn-clear{ border-color:#c3c6cd; color:#34373e; background:#ffffff70; }
+  .app-shell .btn-clear:hover{ color:#111; border-color:#8b929f; }
+  #grid .error{ color:#b3392b; }
+
+  /* painéis de baixo */
+  .lower{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:23px; margin-top:26px; }
+  .small-panel{ padding:21px 24px; border-radius:23px; min-width:0; }
+  .panel-title{ display:flex; align-items:center; gap:8px; font-size:11px; font-weight:600; margin-bottom:16px; color:#292b30; }
+  .panel-title svg.i{ width:14px; height:14px; color:#82868d; }
+  .recent-list{ display:flex; gap:12px; flex-wrap:wrap; }
+  .recent{ flex:1 1 150px; display:flex; align-items:center; gap:10px; background:transparent; border:0; text-align:left; padding:4px 0; min-width:0; text-decoration:none; color:#292b30; }
+  .recent:hover strong{ text-decoration:underline; }
+  .mini-icon{ display:grid; place-items:center; width:34px; height:34px; border-radius:11px; background:#ffffff8c; border:1px solid #fff; flex-shrink:0; font-size:16px; }
+  .recent strong,.rank strong{ font-size:11px; font-weight:600; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .recent small,.rank small{ display:block; font-size:9.5px; color:#626874; margin-top:4px; }
+  .recent>span:last-child,.rank>span:last-child{ min-width:0; }
+  .rank-list{ display:flex; gap:20px; flex-wrap:wrap; }
+  .rank{ flex:1 1 120px; min-width:0; background:none; border:0; text-align:left; padding:0; display:flex; gap:10px; align-items:center; text-decoration:none; color:#292b30; }
+  .rank-no{ font-size:18px; letter-spacing:-1px; color:#a0a4ad; }
+  .app-shell footer.rodape{ display:flex; justify-content:space-between; margin-top:28px; padding-top:0; border-top:0; color:#626874; font-family:var(--body); font-size:9px; letter-spacing:.2px; gap:15px; flex-wrap:wrap; }
+
+  /* administração dentro da casca clara: painel escuro, igual ao de antes */
+  #adminWrap,#gruposWrap{ margin-top:46px; background:linear-gradient(135deg,#ffffffb8,#ffffff66); border:1px solid #ffffffcc; border-radius:28px; padding:34px; color:var(--text); box-shadow:0 8px 30px #353a4a0a,inset 0 1px 0 #fff; backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); }
+  .app-shell .toast{ color:var(--text); }
+
+  @media (max-width:1100px){ .app-shell .main{ padding-left:125px; padding-right:28px; } .rail{ left:18px; width:76px; } .date-widget{ width:245px; } .hero h1{ font-size:42px; } }
+  @media (max-width:850px){ .date-widget{ display:none; } .hero{ margin-top:38px; } .workspace{ display:none; } .hero h1{ font-size:44px; } .search{ max-width:none; } }
+  @media (max-width:560px){
+    .app-shell{ flex-direction:column; }
+    .app-shell .main{ padding:25px 20px 110px; }
+    .rail{ left:50%; transform:translateX(-50%); bottom:16px; top:auto; width:auto; max-width:calc(100% - 24px); height:67px; flex-direction:row; border-radius:24px; padding:8px 12px; gap:8px; background:#ffffffd0; box-shadow:0 8px 30px #0002; }
+    .rail-brand,.rail-divider{ display:none; }
+    .rail nav{ flex-direction:row; gap:4px; }
+    .rail-bottom{ margin-top:0; flex-direction:row; }
+    .nav-btn{ width:42px; height:42px; border-radius:14px; }
+    .nav-btn .tip{ display:none; }
+    .rail-pop{ left:50%; transform:translateX(-50%); bottom:96px; }
+    .hero{ margin:39px 0 27px; } .hero h1{ font-size:clamp(30px,10vw,40px); letter-spacing:-2px; }
+    .search kbd{ display:none; } .count{ display:none; }
+    .search{ flex:1 1 100%; max-width:none; }
+    .toolbar-spacer{ display:none; }
+    .cards{ grid-template-columns:minmax(0,1fr); gap:30px; }
+    #grid.list .card-meta{ display:none; }
+    #adminWrap,#gruposWrap{ padding:20px; border-radius:22px; }
+  }
+
+  #categoryChips.fchips{ flex-wrap:wrap; overflow:visible; padding-bottom:0; }
+
   /* ===================== RESPONSIVO ===================== */
   @media (max-width: 880px){
     .app-shell{ flex-direction:column; }
@@ -577,9 +790,71 @@
     .card-wrap:hover .card{ transform:none !important; }
     .login-step.step-in{ animation:none !important; }
   }
+
+  /* ===== uma única identidade visual: vidro claro + grafite ===== */
+  html,body{ background:#eeeff0; }
+  body::before,body::after,#kineticGrid{ display:none !important; }
+  .intro-screen{ background:radial-gradient(ellipse at 78% 5%,#fff 0%,transparent 48%),radial-gradient(ellipse at 9% 70%,#d5d7db,transparent 60%),#eeeff0; }
+  .ambient-glow.a{ background:#ffffff; opacity:.9; }
+  .ambient-glow.b{ background:#cfd2d8; }
+  .intro-sweep{ background:linear-gradient(100deg, transparent, rgba(255,255,255,.85), transparent); }
+  .intro-mote{ background:#8b929f; box-shadow:0 0 8px #ffffff; }
+  .intro-logo{ width:76px; height:76px; border-radius:26px; display:grid; place-items:center; color:#292b31; margin-bottom:22px;
+    background:linear-gradient(135deg,#ffffffd0,#ffffff66); border:1px solid #fff; box-shadow:0 10px 30px #353a4a12,inset 0 1px 0 #fff;
+    opacity:0; transform:translateY(14px) scale(.94); animation:introUp .7s cubic-bezier(.16,.9,.35,1) .1s forwards; }
+  .intro-logo svg{ width:40px; height:40px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .intro-title{ font-family:var(--body); font-size:34px; font-weight:600; letter-spacing:-1.2px; color:#292b30; animation-delay:.5s; }
+  .intro-title span{ color:#9498a0; }
+  .intro-tagline{ font-family:var(--body); font-size:12px; letter-spacing:.3px; color:#626874; animation-delay:.8s; }
+  @media (prefers-reduced-motion: reduce){ .intro-logo{ animation:none !important; opacity:1 !important; transform:none !important; } }
+
+  .login-box{ background:linear-gradient(135deg,#ffffffd9,#ffffff80); border:1px solid #fff; border-radius:29px; box-shadow:0 30px 80px -34px #2a3140aa,inset 0 1px 0 #fff; backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); }
+  .login-brand{ display:flex; align-items:center; gap:10px; margin-bottom:22px; color:#292b31; }
+  .login-brand svg{ width:30px; height:30px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .login-brand span{ font-size:22px; font-weight:600; letter-spacing:-.9px; }
+  .login-brand i{ font-style:normal; color:#9498a0; }
+  .login-box h1{ font-weight:500; letter-spacing:-.6px; }
+  .login-badge{ letter-spacing:.14em; }
+  .btn-primary{ background:linear-gradient(140deg,#565c66,#2d323a); color:#fff; border:1px solid #444951; box-shadow:inset 0 1px 0 #ffffff30,0 4px 8px #0001; border-radius:13px; font-weight:600; }
+  .btn-primary:hover:not(:disabled){ filter:brightness(1.12); }
+  input[type=text], input[type=email], input[type=password]{ background:#ffffffb0; border-radius:12px; }
+  input:focus{ border-color:#8b929f; box-shadow:0 0 0 3px #8b929f33; }
+  .float-field input{ background:transparent; }
+  .float-field.active .float-label span{ color:#626874; }
+  .float-field input:focus{ border-bottom-color:#33353b; }
+  .login-status.ok{ color:#4f6b5c; }
+  .email-chip{ background:#ffffff90; }
+  .login-ticker{ letter-spacing:.02em; }
+
+  .page-header h1{ font-weight:500; letter-spacing:-1.4px; }
+  .page-header h1 .accent{ color:#737780; font-style:normal; }
+  .page-eyebrow{ letter-spacing:.14em; }
+  .table-wrap{ background:#ffffff99; border-color:#ffffffcc; border-radius:20px; }
+  .user-table thead th{ background:#ffffff66; }
+  .admin-card{ background:#ffffff99; border-color:#ffffffcc; border-radius:20px; }
+  .btn-row{ border-radius:11px; }
+  .btn-row:hover{ border-color:#8b929f; }
+  .chip-expedição{ color:#4f6b5c; border-color:rgba(79,107,92,.4); }
+  .chip-pcp,.chip-admin{ color:#9a6a35; border-color:rgba(154,106,53,.4); }
+
+  .modal-bg{ background:rgba(28,32,42,.30); backdrop-filter:blur(9px); -webkit-backdrop-filter:blur(9px); }
+  .modal{ background:linear-gradient(140deg,#f8f9fadf,#e8eaefeb); border:1px solid #fff; border-radius:29px; box-shadow:0 30px 100px #10152040; padding:30px; }
+  .modal h3{ font-weight:600; letter-spacing:-.4px; font-size:19px; }
+  .modal-actions button{ border-radius:13px; }
+  .btn-ghost{ background:#ffffff80; }
+  .grupos-check label{ background:#ffffffa0; border-radius:12px; }
+  .grupos-check input{ accent-color:#33353b; }
+  .toast{ background:#30343bec; color:#fff; border:0; border-radius:16px; backdrop-filter:blur(8px); }
+  .app-shell .toast{ color:#fff; }
+  ::selection{ background:#33353b; color:#fff; }
+
+  /* cards: totalmente monocromático, sem cor por categoria */
+  .card-cat:before{ display:none; }
+  .mono-logo{ box-shadow:-8px 10px 20px #080d1533,inset 0 1px 0 #fff; }
 </style>
 </head>
 <body>
+<div class="scene" aria-hidden="true"></div>
 <script>
   window.__introStart = Date.now();
   window.esconderIntro = function(){
@@ -604,34 +879,17 @@
       <div id="introDust"></div>
     </div>
     <div class="intro-content">
-      <div class="intro-shelf">
-        <span class="intro-book" style="--d:0s;"></span>
-        <span class="intro-book" style="--d:.12s;"></span>
-        <span class="intro-book" style="--d:.24s;"></span>
-        <span class="intro-book" style="--d:.36s;"></span>
-        <span class="intro-book" style="--d:.48s;"></span>
-      </div>
-      <div class="intro-ledge"></div>
-      <h1 class="intro-title">ESTANTE</h1>
-      <p class="intro-tagline">preparando sua estante de apps…</p>
+      <div class="intro-logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V7m6 12V4m6 15V9m5 12H2"/></svg></div>
+      <h1 class="intro-title">estante<span>.</span></h1>
+      <p class="intro-tagline">preparando suas ferramentas…</p>
     </div>
   </div>
-
-  <canvas id="kineticGrid" aria-hidden="true"></canvas>
 
   <!-- ===================== LOGIN ===================== -->
   <div class="login-screen" id="loginScreen">
     <div class="login-box fade-in">
       <div class="login-badge"><span class="dot"></span> ACESSO RESTRITO</div>
-      <div class="brand" style="border:none; padding:0; margin-bottom:20px;">
-        <div class="brand-mark"><svg class="brand-icon" viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
-          <rect x="3" y="6" width="4" height="13" rx="0.8" fill="currentColor" opacity="0.85"/>
-          <rect x="8.5" y="3" width="4" height="16" rx="0.8" fill="currentColor"/>
-          <rect x="14" y="8" width="4" height="11" rx="0.8" fill="currentColor" opacity="0.7"/>
-          <path d="M2 20.2h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-        </svg></div>
-        <div class="brand-text">Estante<small>Stinpharma</small></div>
-      </div>
+      <div class="login-brand"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V7m6 12V4m6 15V9m5 12H2"/></svg><span>estante<i>.</i></span></div>
       <h1>Entrar na sua conta</h1>
 
       <div class="login-step" id="stepEmail">
@@ -661,79 +919,65 @@
 
   <!-- ===================== APP SHELL ===================== -->
   <div class="app-shell" id="appShell" style="display:none;">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-mark"><svg class="brand-icon" viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
-          <rect x="3" y="6" width="4" height="13" rx="0.8" fill="currentColor" opacity="0.85"/>
-          <rect x="8.5" y="3" width="4" height="16" rx="0.8" fill="currentColor"/>
-          <rect x="14" y="8" width="4" height="11" rx="0.8" fill="currentColor" opacity="0.7"/>
-          <path d="M2 20.2h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-        </svg></div>
-        <div class="brand-text">Estante<small>Stinpharma</small></div>
-      </div>
-
-      <nav class="nav">
-        <div class="nav-label">Catálogo</div>
-        <button class="nav-item active" id="nav-galeria" onclick="mostrarGaleria()"><span class="nav-icon">▦</span> Galeria</button>
-
-        <div class="nav-label" id="adminNavLabel" style="display:none;">Administração</div>
-        <button class="nav-item" id="nav-admin" onclick="abrirAdmin()" style="display:none;"><span class="nav-icon">👥</span> Usuários</button>
-        <button class="nav-item" id="nav-vertudo" onclick="alternarVerTudo()" style="display:none;"><span class="nav-icon">👁️</span> <span id="vertudoTxt">Ver todos: desligado</span></button>
-        <button class="nav-item" id="nav-grupos" onclick="mostrarGrupos()" style="display:none;"><span class="nav-icon">🏷️</span> Grupos</button>
+    <aside class="rail glass">
+      <div class="rail-brand" title="Estante" data-icon="brand"></div>
+      <div class="rail-divider"></div>
+      <nav aria-label="Navegação principal">
+        <button class="nav-btn active" id="nav-galeria" onclick="irGaleria()" aria-label="Galeria"><span data-icon="grid"></span><span class="tip">Sua estante</span></button>
+        <button class="nav-btn" id="nav-favs" onclick="railFavoritos()" aria-label="Favoritos"><span data-icon="star"></span><span class="tip">Favoritos</span></button>
+        <div class="rail-divider" id="adminNavLabel" style="display:none;margin:8px 0;"></div>
+        <button class="nav-btn" id="nav-admin" onclick="abrirAdmin()" style="display:none;" aria-label="Usuários"><span data-icon="users"></span><span class="tip">Usuários</span></button>
+        <button class="nav-btn" id="nav-grupos" onclick="mostrarGrupos()" style="display:none;" aria-label="Grupos"><span data-icon="tag"></span><span class="tip">Grupos</span></button>
+        <button class="nav-btn" id="nav-vertudo" onclick="alternarVerTudo()" style="display:none;" aria-label="Ver todos os apps"><span data-icon="eye"></span><span class="tip" id="vertudoTxt">Ver todos: desligado</span></button>
       </nav>
-
-      <div class="sidebar-footer">
-        <div class="sync-status"><span class="sync-dot"></span> Sincronizado em tempo real</div>
-        <div class="user-card">
-          <span class="avatar" id="whoAvatar">--</span>
-          <div>
-            <div class="user-card-name" id="whoName">—</div>
-            <div class="user-card-groups" id="whoGroups">—</div>
-          </div>
-        </div>
-        <div class="user-card-actions">
-          <button onclick="openSenhaModal()">🔑 Trocar senha</button>
-          <button class="sair" onclick="fazerLogout()">↩ Sair</button>
-        </div>
+      <div class="rail-bottom">
+        <button class="rail-avatar" id="whoAvatar" onclick="toggleRailPop(event)" aria-label="Minha conta">--</button>
       </div>
     </aside>
+    <div class="rail-pop glass" id="railPop">
+      <div class="who-name" id="whoName">—</div>
+      <div class="who-groups" id="whoGroups">—</div>
+      <div class="sync"><i></i> Sincronizado em tempo real</div>
+      <button onclick="openSenhaModal()"><span data-icon="key"></span> Trocar senha</button>
+      <button onclick="alternarMovimento()"><span data-icon="spark"></span> <span id="movTxt">Efeito 3D: ligado</span></button>
+      <button class="sair" onclick="fazerLogout()"><span data-icon="out"></span> Sair</button>
+    </div>
 
     <main class="main">
 
       <!-- ===================== GALERIA ===================== -->
       <div id="galleryWrap">
-        <div class="page-header fade-in">
+        <header class="topbar fade-in"><div class="wordmark">estante<span>.</span></div><div class="workspace"><i></i> Seu espaço de trabalho</div></header>
+        <section class="hero fade-in" style="animation-delay:.04s;">
           <div>
-            <div class="page-eyebrow">Catálogo interno · unidade operações</div>
-            <h1>Sua <span class="accent">estante</span> de ferramentas</h1>
-            <div class="hero-rule">
-              <span class="hero-rule-line"></span>
-              <span class="hero-rule-dot"></span>
-              <span class="hero-rule-line grow"></span>
-            </div>
+            <div class="eyebrow"><span data-icon="sun"></span> Tudo no seu lugar</div>
+            <h1>Menos procura.<br><span>Mais possibilidades.</span></h1>
+            <p>Suas ferramentas, reunidas em um espaço feito para você.</p>
           </div>
-          <div class="app-of-day" id="topAcessados" style="display:none;">
-            <span class="aod-label">🔥 Mais acessados</span>
-            <div class="aod-list" id="aodList"></div>
+          <aside class="date-widget glass" aria-label="Semana atual"><div class="date-head" id="dateHead"></div><div class="date-row" id="dateRow"></div><div class="date-note"><span data-icon="spark"></span> Um bom dia começa com tudo à mão.</div></aside>
+        </section>
+        <section aria-label="Catálogo de ferramentas" class="fade-in" style="animation-delay:.08s;">
+          <div class="toolbar">
+            <label class="search glass"><span data-icon="search"></span><input id="appSearch" type="search" placeholder="Qual ferramenta você precisa?" aria-label="Buscar ferramentas" oninput="filtrarApps()" autocomplete="off"><kbd>Ctrl K</kbd></label>
+            <div class="toolbar-spacer"></div>
+            <span class="count" id="countText">0 ferramentas</span>
+            <a class="add-link glass" href="./adicionar.html"><span data-icon="plus"></span> Adicionar app</a>
+            <div class="view-switch glass" aria-label="Modo de exibição"><button class="active" data-view="grid" aria-label="Ver em cards" aria-pressed="true" onclick="setView('grid')"><span data-icon="grid"></span></button><button data-view="list" aria-label="Ver em lista" aria-pressed="false" onclick="setView('list')"><span data-icon="list"></span></button></div>
           </div>
-        </div>
-
-        <div class="search-row fade-in" style="animation-delay:.06s;">
-          <input type="text" id="appSearch" class="search-input" placeholder="Buscar um app... (atalho: /)" oninput="filtrarApps()">
-        </div>
-        <div class="recent-row" id="recentRow" style="display:none;"></div>
-        <div class="chip-row fade-in" id="categoryChips" style="animation-delay:.08s;"></div>
-        <div id="grid"></div>
-        <div class="no-results" id="noResults" style="display:none;">
-          <div class="empty-icon">🔍</div>
-          <h2 id="noResultsTitle">Nenhum app encontrado</h2>
-          <p id="noResultsSub"></p>
-          <button class="btn-clear" onclick="limparFiltros()">Limpar filtros</button>
-        </div>
-        <footer>
-          <span>ESTANTE — sincroniza sozinha conforme o time publica</span>
-          <span id="countText">0 ferramentas</span>
-        </footer>
+          <div class="fchips" id="categoryChips" aria-label="Filtrar por área"></div>
+          <div id="grid"></div>
+          <div class="no-results" id="noResults" style="display:none;">
+            <div class="empty-icon">🔍</div>
+            <h2 id="noResultsTitle">Nenhum app encontrado</h2>
+            <p id="noResultsSub"></p>
+            <button class="btn-clear" onclick="limparFiltros()">Limpar filtros</button>
+          </div>
+        </section>
+        <section class="lower" id="lowerWrap" style="display:none;">
+          <div class="small-panel glass" id="recentPanel" style="display:none;"><div class="panel-title"><span data-icon="clock"></span> Continue de onde parou</div><div class="recent-list" id="recentRow"></div></div>
+          <div class="small-panel glass" id="topAcessados" style="display:none;"><div class="panel-title"><span data-icon="trend"></span> Mais usados pelo time</div><div class="rank-list" id="aodList"></div></div>
+        </section>
+        <footer class="rodape"><span>ESTANTE — sincroniza sozinha conforme o time publica</span></footer>
       </div>
 
       <!-- ===================== ADMINISTRAÇÃO ===================== -->
@@ -832,7 +1076,7 @@
       <label>Nome</label>
       <input type="text" id="adm-nome">
       <label>E-mail</label>
-      <input type="email" id="adm-email" placeholder="nome@stinpharma.com.br">
+      <input type="email" id="adm-email" placeholder="nome@empresa.com.br">
       <label>Senha</label>
       <input type="password" id="adm-senha" placeholder="mínimo 6 caracteres">
       <label>Grupos</label>
@@ -925,7 +1169,7 @@ function renderGruposCheckboxes(containerEl, cssClass, checkedList){
 
 /* ================= navegação (sidebar) ================= */
 function setActiveNav(which){
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
   const el = document.getElementById('nav-' + which);
   if(el) el.classList.add('active');
 }
@@ -1062,6 +1306,7 @@ firebase.auth().onAuthStateChanged(function(user){
   const btn = document.getElementById('loginBtn');
   if(btn) btn.disabled = false;
   if(!user){
+    document.documentElement.classList.remove('shell-on');
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('appShell').style.display = 'none';
     document.getElementById('stepPassword').style.display = 'none';
@@ -1093,6 +1338,7 @@ firebase.auth().onAuthStateChanged(function(user){
     }
     carregarGrupos();
     document.getElementById('loginScreen').style.display = 'none';
+    document.documentElement.classList.add('shell-on');
     document.getElementById('appShell').style.display = 'flex';
     mostrarGaleria();
     loadApps();
@@ -1149,11 +1395,11 @@ async function confirmDelete(){
 /* ================= menu único (···) dos cards de admin ================= */
 function fecharKebabMenus(){
   document.querySelectorAll('.kebab-menu.open').forEach(function(m){ m.classList.remove('open'); });
-  document.querySelectorAll('.kebab-btn.open').forEach(function(b){ b.classList.remove('open'); });
+  document.querySelectorAll('.kebab-toggle.open').forEach(function(b){ b.classList.remove('open'); });
 }
 function toggleKebabMenu(btn, e){
   e.preventDefault(); e.stopPropagation();
-  const menu = btn.nextElementSibling;
+  const menu = btn.closest('.card-wrap').querySelector('.kebab-menu');
   const jaAberto = menu.classList.contains('open');
   fecharKebabMenus();
   if(!jaAberto){ menu.classList.add('open'); btn.classList.add('open'); }
@@ -1194,14 +1440,14 @@ function toggleFavorito(btn, e){
   try{ localStorage.setItem(FAV_KEY, JSON.stringify(favs)); }catch(err){}
   const agoraFav = idx === -1;
   btn.classList.toggle('active', agoraFav);
-  btn.textContent = agoraFav ? '★' : '☆';
+  btn.setAttribute('aria-pressed', agoraFav ? 'true' : 'false');
   btn.title = agoraFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos';
   atualizarFavChip();
   if(favoritosAtivo) filtrarApps();
 }
 
 function atualizarFavChip(){
-  const count = document.querySelectorAll('#grid .fav-btn.active').length;
+  const count = document.querySelectorAll('#grid .fav-toggle.active').length;
   const row = document.getElementById('categoryChips');
   let favChip = document.getElementById('favChip');
   if(count > 0){
@@ -1209,7 +1455,7 @@ function atualizarFavChip(){
       favChip = document.createElement('button');
       favChip.type = 'button';
       favChip.id = 'favChip';
-      favChip.className = 'chip chip-pinned';
+      favChip.className = 'fchip';
       favChip.onclick = selecionarFavoritos;
       row.insertBefore(favChip, row.firstChild);
     }
@@ -1239,27 +1485,37 @@ function registrarUso(file){
   try{ localStorage.setItem(RECENTES_KEY, JSON.stringify(lista)); }catch(err){}
 }
 
+function ajustarLower(){
+  const l = document.getElementById('lowerWrap');
+  if(!l) return;
+  const algum = Array.prototype.some.call(l.children, function(c){ return c.style.display !== 'none'; });
+  l.style.display = algum ? '' : 'none';
+}
+
 function renderRecentRow(apps){
   const wrap = document.getElementById('recentRow');
-  if(!wrap) return;
+  const painel = document.getElementById('recentPanel');
+  if(!wrap || !painel) return;
   let lista;
   try{ lista = JSON.parse(localStorage.getItem(RECENTES_KEY) || '[]'); }catch(e){ lista = []; }
   const porArquivo = {};
   apps.forEach(function(a){ porArquivo[a.file] = a; });
-  const validos = lista.map(function(r){ return porArquivo[r.file]; }).filter(Boolean).slice(0, 5);
-  if(!validos.length){ wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
-  wrap.style.display = '';
-  wrap.innerHTML = '<span class="recent-row-label">Usados recentemente</span>' +
-    validos.map(function(app){
-      return '<a class="recent-pill" href="./' + app.file + '" onclick="abrirApp(this, event, \'' + escapeAttr(app.file) + '\')">' +
-        (app.icon || '🧩') + ' ' + escapeAttr(app.title) +
-      '</a>';
-    }).join('');
+  const validos = lista.map(function(r){ return porArquivo[r.file]; }).filter(Boolean).slice(0, 3);
+  if(!validos.length){ painel.style.display = 'none'; wrap.innerHTML = ''; ajustarLower(); return; }
+  painel.style.display = '';
+  wrap.innerHTML = validos.map(function(app){
+    return '<a class="recent" href="./' + encodeURI(app.file) + '" onclick="abrirApp(this, event, \'' + escapeAttr(app.file) + '\')">' +
+      '<span class="mini-icon">' + (app.icon || '🧩') + '</span>' +
+      '<span><strong>' + escapeAttr(app.title) + '</strong><small>' + escapeAttr(categoriaDoApp(app)) + ' · Retomar</small></span>' +
+    '</a>';
+  }).join('');
+  ajustarLower();
 }
 
 function filtrarApps(){
   const q = document.getElementById('appSearch').value.trim().toLowerCase();
   let algumaPrateleiraVisivel = false;
+  let visiveis = 0;
   document.querySelectorAll('#grid .shelf').forEach(function(shelf){
     const categoriaTexto = shelf.dataset.categoria || '';
     if(!favoritosAtivo && categoriaAtiva && categoriaTexto !== categoriaAtiva){
@@ -1267,38 +1523,36 @@ function filtrarApps(){
       return;
     }
     let algumVisivel = false;
-    let revelouExtra = false;
     shelf.querySelectorAll('.card-wrap').forEach(function(el){
-      if(el.classList.contains('stack-more-toggle')) return;
       if(favoritosAtivo){
-        const favBtn = el.querySelector('.fav-btn');
+        const favBtn = el.querySelector('.fav-toggle');
         if(!favBtn || !favBtn.classList.contains('active')){ el.style.display = 'none'; return; }
       }
-      const texto = el.textContent.toLowerCase();
-      const bate = !q || texto.indexOf(q) !== -1 || categoriaTexto.indexOf(q) !== -1;
-      if(bate && el.classList.contains('stack-hidden')){ el.classList.remove('stack-hidden'); revelouExtra = true; }
+      const bate = !q || (el.dataset.busca || '').indexOf(q) !== -1;
       el.style.display = bate ? '' : 'none';
-      if(bate) algumVisivel = true;
+      if(bate){ algumVisivel = true; visiveis++; }
     });
-    const toggle = shelf.querySelector('.stack-more-toggle');
-    if(toggle){ revelouExtra ? toggle.remove() : (toggle.style.display = (q || favoritosAtivo) ? 'none' : ''); }
     shelf.style.display = algumVisivel ? '' : 'none';
     if(algumVisivel) algumaPrateleiraVisivel = true;
   });
 
   const noResults = document.getElementById('noResults');
   const grid = document.getElementById('grid');
-  if(!algumaPrateleiraVisivel && grid.querySelector('.shelf')){
+  const temPrateleira = !!grid.querySelector('.shelf');
+  if(!algumaPrateleiraVisivel && temPrateleira){
     document.getElementById('noResultsSub').textContent = favoritosAtivo
       ? 'Você ainda não marcou nenhum favorito — clique na estrela de um card pra favoritar.'
       : (q
-        ? `Nada bateu com "${q}"${categoriaAtiva ? ' na categoria selecionada' : ''}.`
+        ? 'Nada bateu com "' + q + '"' + (categoriaAtiva ? ' na categoria selecionada' : '') + '.'
         : 'Nenhum app nessa categoria.');
     noResults.style.display = '';
     grid.style.display = 'none';
   } else {
     noResults.style.display = 'none';
     grid.style.display = '';
+  }
+  if(temPrateleira){
+    document.getElementById('countText').textContent = visiveis + ' ferramenta' + (visiveis === 1 ? '' : 's');
   }
 }
 
@@ -1318,19 +1572,20 @@ function selecionarCategoria(catLower){
 }
 
 function atualizarChipsAtivos(){
-  document.querySelectorAll('#categoryChips .chip[data-cat]').forEach(function(chip){
+  document.querySelectorAll('#categoryChips .fchip[data-cat]').forEach(function(chip){
     chip.classList.toggle('active', !favoritosAtivo && chip.dataset.cat === (categoriaAtiva || ''));
   });
   const favChip = document.getElementById('favChip');
   if(favChip) favChip.classList.toggle('active', favoritosAtivo);
+  if(document.getElementById('galleryWrap').style.display !== 'none') setActiveNav(favoritosAtivo ? 'favs' : 'galeria');
 }
 
 function renderChips(categorias, prateleiras){
   const total = categorias.reduce(function(soma, cat){ return soma + prateleiras[cat].length; }, 0);
-  const chipsHtml = [`<button class="chip active" data-cat="" onclick="selecionarCategoria(null)">Todos <span class="chip-count">${total}</span></button>`]
+  const chipsHtml = ['<button class="fchip active" data-cat="" onclick="selecionarCategoria(null)">Todos <span class="chip-count">' + total + '</span></button>']
     .concat(categorias.map(function(cat){
       const lower = cat.toLowerCase();
-      return `<button class="chip" data-cat="${escapeAttr(lower)}" onclick="selecionarCategoria('${lower.replace(/'/g,"\\'")}')">${escapeAttr(cat)} <span class="chip-count">${prateleiras[cat].length}</span></button>`;
+      return '<button class="fchip" data-cat="' + escapeAttr(lower) + '" onclick="selecionarCategoria(\'' + lower.replace(/'/g,"\\'") + '\')">' + escapeAttr(cat) + ' <span class="chip-count">' + prateleiras[cat].length + '</span></button>';
     }));
   document.getElementById('categoryChips').innerHTML = chipsHtml.join('');
 }
@@ -1374,33 +1629,40 @@ function corPorCategoria(categoriaFormatada){
   return PALETA_CATEGORIA[hash % PALETA_CATEGORIA.length];
 }
 
-function cardHtml(app, i, extraClass){
-  const acessoNormal = tenhoAcesso(app);
+function cardHtml(app, i){
+  const acesso = tenhoAcesso(app);
   const isFav = ehFavorito(app.file);
-  const corCard = corPorCategoria(categoriaDoApp(app)); // cor sempre pela categoria (padrão único)
+  const cat = categoriaDoApp(app);
+  const cor = corPorCategoria(cat); // cor sempre pela prateleira (padrão único)
+  const titulo = escapeAttr(app.title || '');
+  const desc = escapeAttr(app.description || '');
+  const busca = escapeAttr(((app.title || '') + ' ' + (app.description || '') + ' ' + cat).toLowerCase());
+  const href = './' + encodeURI(app.file);
+  const fileAttr = escapeAttr(app.file);
   return `
-    <div class="card-wrap${extraClass ? ' ' + extraClass : ''}" style="animation-delay:${i * 55}ms">
-      <a class="card" href="./${app.file}" style="--accent-card:${corCard}" onclick="abrirApp(this, event, '${escapeAttr(app.file)}')">
-        <div class="card-body">
-          <div class="card-top">
-            <span class="card-index">${String(i + 1).padStart(2, '0')}</span>
-            ${acessoNormal
-              ? '<div class="card-status"><span class="dot"></span> online</div>'
-              : '<div class="card-status" style="color:var(--warn);"><span class="dot" style="background:var(--warn);"></span> sem seu acesso</div>'}
-          </div>
-          <div class="card-icon">${app.icon || '🧩'}</div>
-          <div class="card-tag">${escapeAttr(categoriaDoApp(app))}</div>
-          <div class="card-title">${app.title}</div>
-          <div class="card-desc">${app.description || ''}</div>
-          <div class="card-open">Abrir app <span class="arrow">→</span></div>
+    <div class="card-wrap" data-busca="${busca}" style="animation-delay:${i * 55}ms; --cc:${cor};">
+      <article class="app-card">
+        <div class="card-glass"></div>
+        <a class="open-card" href="${href}" aria-label="Abrir ${titulo}" onclick="abrirApp(this, event, '${fileAttr}')"></a>
+        <div class="card-meta">
+          <span class="card-cat">${escapeAttr(cat)}</span>
+          ${acesso ? '' : '<span class="card-lock">sem seu acesso</span>'}
         </div>
-      </a>
-      <button class="fav-btn${isFav ? ' active' : ''}" title="${isFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}" data-file="${escapeAttr(app.file)}" onclick="toggleFavorito(this, event)">${isFav ? '★' : '☆'}</button>
+        <div class="mono-content"><h3>${titulo}</h3>${desc ? '<p>' + desc + '</p>' : ''}</div>
+        <div class="mono-footer">
+          <div class="mono-actions">
+            <button class="mono-action fav-toggle${isFav ? ' active' : ''}" title="${isFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}" aria-label="Favoritar ${titulo}" aria-pressed="${isFav}" data-file="${fileAttr}" onclick="toggleFavorito(this, event)">${ico('star')}</button>
+            ${SOU_ADMIN ? `<button class="mono-action kebab-toggle" title="Mais opções" aria-label="Mais opções de ${titulo}" onclick="toggleKebabMenu(this, event)">${ico('dots')}</button>` : ''}
+          </div>
+          <a class="mono-more" href="${href}" onclick="abrirApp(this, event, '${fileAttr}')">Abrir app ${ico('chev')}</a>
+        </div>
+        <div class="rings" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div class="mono-logo" aria-hidden="true">${app.icon || '🧩'}</div>
+      </article>
       ${SOU_ADMIN ? `
-      <button class="kebab-btn" title="Mais opções" onclick="toggleKebabMenu(this, event)">⋯</button>
       <div class="kebab-menu">
-        <button class="item-edit" data-file="${escapeAttr(app.file)}" data-title="${escapeAttr(app.title)}" data-category="${escapeAttr(app.category || '')}" data-description="${escapeAttr(app.description || '')}" data-grupos="${escapeAttr(JSON.stringify(app.grupos || []))}" onclick="fecharKebabMenus(); abrirEditarAppFromButton(this);">✎ Editar</button>
-        <button class="item-delete" data-file="${escapeAttr(app.file)}" data-title="${escapeAttr(app.title)}" onclick="fecharKebabMenus(); openDeleteModal(this.dataset.file, this.dataset.title);">✕ Remover</button>
+        <button class="item-edit" data-file="${fileAttr}" data-title="${titulo}" data-category="${escapeAttr(app.category || '')}" data-description="${desc}" data-grupos="${escapeAttr(JSON.stringify(app.grupos || []))}" onclick="fecharKebabMenus(); abrirEditarAppFromButton(this);">✎ Editar</button>
+        <button class="item-delete" data-file="${fileAttr}" data-title="${titulo}" onclick="fecharKebabMenus(); openDeleteModal(this.dataset.file, this.dataset.title);">✕ Remover</button>
       </div>
       ` : ''}
     </div>
@@ -1410,6 +1672,8 @@ function cardHtml(app, i, extraClass){
 function alternarVerTudo(){
   ADMIN_VER_TUDO = !ADMIN_VER_TUDO;
   document.getElementById('vertudoTxt').textContent = ADMIN_VER_TUDO ? 'Ver todos: ligado' : 'Ver todos: desligado';
+  const b = document.getElementById('nav-vertudo');
+  if(b) b.style.background = ADMIN_VER_TUDO ? '#ffffff' : '';
   loadApps();
 }
 
@@ -1423,17 +1687,17 @@ async function loadApps(){
     const apps = (Array.isArray(todos) ? todos : []).filter(app => tenhoAcesso(app) || (SOU_ADMIN && ADMIN_VER_TUDO));
 
     if(apps.length === 0){
-      grid.innerHTML = `<div class="no-access"><div class="empty-icon">🔒</div><h2>Nenhum app liberado ainda</h2><p>Seu grupo (${MEUS_GRUPOS.join(', ') || '—'}) não tem acesso a nenhuma ferramenta por enquanto. Fala com o David se acha que deveria ter acesso a algo.</p></div>`;
+      grid.innerHTML = `<div class="no-access"><div class="empty-icon">🔒</div><h2>Nenhum app liberado ainda</h2><p>Seu grupo (${escapeAttr(MEUS_GRUPOS.join(', ') || '—')}) não tem acesso a nenhuma ferramenta por enquanto. Fala com o David se acha que deveria ter acesso a algo.</p></div>`;
       countText.textContent = '0 ferramentas';
       document.getElementById('categoryChips').innerHTML = '';
       document.getElementById('noResults').style.display = 'none';
-      const recentRowVazio = document.getElementById('recentRow');
-      if(recentRowVazio){ recentRowVazio.style.display = 'none'; }
+      const painelRec = document.getElementById('recentPanel');
+      if(painelRec) painelRec.style.display = 'none';
       buildAppOfDay([]);
       return;
     }
 
-    // agrupa em "prateleiras" por categoria — nomes parecidos (Operações / OPERAÇÕES) caem juntos
+    // agrupa em "prateleiras" pelo primeiro grupo do app
     const prateleiras = {};
     apps.forEach(function(app){
       const chave = categoriaDoApp(app);
@@ -1444,27 +1708,16 @@ async function loadApps(){
     const categorias = Object.keys(prateleiras).sort(function(a,b){ return a.localeCompare(b, 'pt-BR'); });
 
     grid.innerHTML = categorias.map(function(cat){
-      const appsDaCategoria = prateleiras[cat];
-      const STACK_CAP = Infinity; // acima disso, a prateleira vira uma coluna gigante e desbalanceia o mosaico
-      const precisaCap = appsDaCategoria.length > STACK_CAP;
-      const visiveis = precisaCap ? appsDaCategoria.slice(0, STACK_CAP - 1) : appsDaCategoria;
-      const extras = precisaCap ? appsDaCategoria.slice(STACK_CAP - 1) : [];
+      const lista = prateleiras[cat];
       return `
-        <div class="shelf" data-categoria="${escapeAttr(cat.toLowerCase())}">
-          <div class="shelf-label">${escapeAttr(cat)} <span class="shelf-count">${appsDaCategoria.length}</span></div>
-          <div class="wallet-stack">
-            ${visiveis.map(function(app, i){ return cardHtml(app, i); }).join('')}
-            ${extras.map(function(app, i){ return cardHtml(app, i, 'stack-hidden'); }).join('')}
-            ${precisaCap ? `<button type="button" class="card-wrap stack-more-toggle" onclick="expandirPrateleira(this)"><span class="plus-n">+${extras.length}</span> mostrar mais</button>` : ''}
+        <section class="shelf" data-categoria="${escapeAttr(cat.toLowerCase())}">
+          <div class="shelf-label"><h2 style="margin:0;font:inherit;">${escapeAttr(cat)}</h2> <span class="shelf-count">${lista.length}</span></div>
+          <div class="cards">
+            ${lista.map(function(app, i){ return cardHtml(app, i); }).join('')}
           </div>
-        </div>
+        </section>
       `;
-    }).join('') + `
-      <a class="add-card" href="./adicionar.html">
-        <div class="add-plus">+</div>
-        Adicionar app
-      </a>
-    `;
+    }).join('');
 
     countText.textContent = apps.length + ' ferramenta' + (apps.length > 1 ? 's' : '');
     categoriaAtiva = null;
@@ -1474,19 +1727,19 @@ async function loadApps(){
     renderRecentRow(apps);
     buildAppOfDay(apps);
     grid.style.display = '';
-    wireCardFX();
+    aplicarView();
     filtrarApps();
   }catch(err){
     grid.innerHTML = '<div class="error">Não consegui ler o manifest.json. Confira se este arquivo está sendo aberto por um servidor (http://...), não direto pelo Windows (file://...).</div>';
   }
 }
 
-/* ================= app do dia (destaque pequeno e decorativo, fixo por dia) ================= */
+/* ================= mais usados pelo time (contagem real, guardada no Firebase) ================= */
 function buildAppOfDay(apps){
   const el = document.getElementById('topAcessados');
   const list = document.getElementById('aodList');
   if(!el || !list) return Promise.resolve();
-  if(!apps.length){ el.style.display = 'none'; return Promise.resolve(); }
+  if(!apps.length){ el.style.display = 'none'; ajustarLower(); return Promise.resolve(); }
   return firebase.database().ref('centralApps/acessos').once('value').then(function(snap){
     const contagem = snap.val() || {};
     const ranking = apps
@@ -1494,19 +1747,17 @@ function buildAppOfDay(apps){
       .filter(function(r){ return r.n > 0; })
       .sort(function(a, b){ return b.n - a.n; })
       .slice(0, 3);
-    if(!ranking.length){ el.style.display = 'none'; return; }
+    if(!ranking.length){ el.style.display = 'none'; ajustarLower(); return; }
     list.innerHTML = ranking.map(function(r, i){
-      return '<a class="aod-row" href="./' + r.app.file + '" onclick="abrirApp(this, event, \'' + escapeAttr(r.app.file) + '\')">' +
-        '<span class="aod-rank">' + (i + 1) + '</span>' +
-        '<span class="aod-icon-sm">' + (r.app.icon || '🧩') + '</span>' +
-        '<div class="aod-row-info">' +
-          '<div class="aod-row-title">' + escapeAttr(r.app.title) + '</div>' +
-          '<div class="aod-row-count">' + r.n + (r.n === 1 ? ' acesso' : ' acessos') + '</div>' +
-        '</div>' +
+      return '<a class="rank" href="./' + encodeURI(r.app.file) + '" onclick="abrirApp(this, event, \'' + escapeAttr(r.app.file) + '\')">' +
+        '<span class="rank-no">0' + (i + 1) + '</span>' +
+        '<span><strong>' + escapeAttr(r.app.title) + '</strong>' +
+        '<small>' + r.n + (r.n === 1 ? ' acesso' : ' acessos') + '</small></span>' +
       '</a>';
     }).join('');
     el.style.display = '';
-  }).catch(function(){ el.style.display = 'none'; });
+    ajustarLower();
+  }).catch(function(){ el.style.display = 'none'; ajustarLower(); });
 }
 
 function chaveAcesso(file){ return String(file).replace(/[.#$\/\[\]\s]/g, '_'); }
@@ -1525,24 +1776,85 @@ function abrirApp(el, e, file){
   setTimeout(function(){ window.location.href = href; }, 120);
 }
 
-/* ================= efeito de "puxar da carteira": tilt 3D leve seguindo o mouse ================= */
-function wireCardFX(){
-  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(reduceMotion) return;
-  document.querySelectorAll('.card').forEach(function(card){
-    if(card.dataset.fxWired) return;
-    card.dataset.fxWired = '1';
-    card.addEventListener('mousemove', function(e){
-      const r = card.getBoundingClientRect();
-      const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
-      const rx = (0.5 - py) * 7, ry = (px - 0.5) * 7;
-      card.style.transform = 'perspective(900px) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) translateY(-9px) scale(1.015)';
-      card.style.setProperty('--mx', (px * 100) + '%');
-      card.style.setProperty('--my', (py * 100) + '%');
-    });
-    card.addEventListener('mouseleave', function(){ card.style.transform = ''; });
+/* ================= ícones, modo de exibição, efeito 3D, menu da conta ================= */
+const ICONES = {
+  brand:'M4 19V7m6 12V4m6 15V9m5 12H2', grid:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',
+  star:'m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z',
+  clock:'M12 8v5l3 2 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
+  users:'M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1 M13 8a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0 M21 20v-1a4 4 0 0 0-3-3.9 M16 4.1a3.5 3.5 0 0 1 0 6.8',
+  tag:'M3 12V4h8l10 10-8 8Z M7.5 8.5h.01', eye:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0',
+  sun:'M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0 M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5',
+  spark:'m12 3 2.3 6.7L21 12l-6.7 2.3L12 21l-2.3-6.7L3 12l6.7-2.3Z', search:'M20 20l-5-5 M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0',
+  list:'M9 5h12M9 12h12M9 19h12M3 5h.01M3 12h.01M3 19h.01', plus:'M12 5v14M5 12h14', dots:'M5 12h.01M12 12h.01M19 12h.01',
+  chev:'m6 9 6 6 6-6', trend:'m3 17 6-6 4 4 8-10m-6 0h6v6',
+  key:'M15 7a4 4 0 1 1-3.9 5L3 20v-3h3v-2h2l1.6-1.6A4 4 0 0 1 15 7Z M17 8h.01', out:'M9 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4 M16 8l4 4-4 4 M20 12H9'
+};
+function ico(n){ return '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="' + (ICONES[n] || ICONES.grid) + '"/></svg>'; }
+document.querySelectorAll('[data-icon]').forEach(function(el){ el.innerHTML = ico(el.dataset.icon); });
+
+function lerPref(k, padrao){ try{ var v = localStorage.getItem(k); return v === null ? padrao : v; }catch(e){ return padrao; } }
+function salvarPref(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
+
+let MODO_VIEW = lerPref('estante:view', 'grid');
+function aplicarView(){
+  const g = document.getElementById('grid');
+  if(g) g.classList.toggle('list', MODO_VIEW === 'list');
+  document.querySelectorAll('.view-switch button').forEach(function(b){
+    const ativo = b.dataset.view === MODO_VIEW;
+    b.classList.toggle('active', ativo);
+    b.setAttribute('aria-pressed', ativo ? 'true' : 'false');
   });
 }
+function setView(v){ MODO_VIEW = v; salvarPref('estante:view', v); aplicarView(); }
+aplicarView();
+
+let MOVIMENTO = lerPref('estante:motion', '1') !== '0';
+function aplicarMovimento(){
+  document.body.classList.toggle('no-motion', !MOVIMENTO);
+  const t = document.getElementById('movTxt');
+  if(t) t.textContent = 'Efeito 3D: ' + (MOVIMENTO ? 'ligado' : 'desligado');
+}
+function alternarMovimento(){ MOVIMENTO = !MOVIMENTO; salvarPref('estante:motion', MOVIMENTO ? '1' : '0'); aplicarMovimento(); }
+aplicarMovimento();
+
+function toggleRailPop(e){
+  if(e) e.stopPropagation();
+  document.getElementById('railPop').classList.toggle('open');
+}
+document.addEventListener('click', function(e){
+  const pop = document.getElementById('railPop');
+  if(pop && pop.classList.contains('open') && !pop.contains(e.target)) pop.classList.remove('open');
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){ const pop = document.getElementById('railPop'); if(pop) pop.classList.remove('open'); }
+});
+
+function irGaleria(){
+  mostrarGaleria();
+  if(favoritosAtivo) limparFiltros();
+  setActiveNav('galeria');
+}
+function railFavoritos(){
+  mostrarGaleria();
+  if(favoritosAtivo){ limparFiltros(); setActiveNav('galeria'); return; }
+  const n = document.querySelectorAll('#grid .fav-toggle.active').length;
+  if(n){ selecionarFavoritos(); setActiveNav('favs'); }
+  else { toast('Marque a estrela de um app pra favoritar.'); setActiveNav('galeria'); }
+}
+
+/* faixa da semana (decorativa) */
+(function(){
+  const agora = new Date();
+  const mes = agora.toLocaleDateString('pt-BR', {month:'long'});
+  const cab = document.getElementById('dateHead');
+  if(cab) cab.innerHTML = '<div>' + mes.charAt(0).toUpperCase() + mes.slice(1) + ' <span>' + agora.getFullYear() + '</span></div>' + ico('sun');
+  const ini = new Date(agora); ini.setDate(agora.getDate() - ((agora.getDay() + 6) % 7));
+  const linha = document.getElementById('dateRow');
+  if(linha) linha.innerHTML = Array.from({length:7}, function(_, i){
+    const d = new Date(ini); d.setDate(ini.getDate() + i);
+    return '<div class="date-day ' + (d.toDateString() === agora.toDateString() ? 'today' : '') + '"><span>' + ['S','T','Q','Q','S','S','D'][i] + '</span><b>' + d.getDate() + '</b></div>';
+  }).join('');
+})();
 
 /* ================= Painel de administração ================= */
 function abrirCriarUsuario(){
