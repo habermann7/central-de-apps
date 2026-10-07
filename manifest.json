@@ -133,13 +133,13 @@
   },
   {
     "title": "SLA Transportadoras",
-    "category": "Operações",
+    "category": "Testes",
     "description": "",
     "file": "sla_transportadoras.html",
     "icon": "⏱️",
     "color": "#3F8E8A",
     "grupos": [
-      "Operações"
+      "TESTES"
     ]
   },
   {
