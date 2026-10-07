@@ -875,7 +875,7 @@
       <label>Título</label>
       <input type="text" id="editAppTitulo">
       <label>Categoria (etiqueta exibida no card)</label>
-      <input type="text" id="editAppCategoria" placeholder="Ex: Operações, Logística...">
+      <input type="text" id="editAppCategoria" list="listaCategorias" placeholder="Ex: Operações, Logística..."><datalist id="listaCategorias"></datalist>
       <label>Descrição</label>
       <input type="text" id="editAppDescricao">
       <label>Grupos com acesso</label>
@@ -1355,7 +1355,10 @@ function formatarCategoria(cat){
 // paleta enxuta e dessaturada (terrosa/joia) — cada categoria sempre cai na mesma cor,
 // sem precisar de ninguém escolher hex na mão ao cadastrar um app
 const PALETA_CATEGORIA = ['#D9A15A', '#4E8368', '#5B7FA6', '#A6485B', '#3F8E8A', '#B8963E'];
+const COR_FIXA_CATEGORIA = {'pcp':'#D9A15A','expedição':'#4E8368','financeiro':'#5B7FA6','operações':'#3F8E8A','outros':'#A6485B'};
 function corPorCategoria(categoriaFormatada){
+  const fixa = COR_FIXA_CATEGORIA[categoriaFormatada.toLowerCase()];
+  if(fixa) return fixa;
   let hash = 0;
   for(let i = 0; i < categoriaFormatada.length; i++){
     hash = (hash * 31 + categoriaFormatada.charCodeAt(i)) >>> 0;
@@ -1366,7 +1369,7 @@ function corPorCategoria(categoriaFormatada){
 function cardHtml(app, i, extraClass){
   const acessoNormal = tenhoAcesso(app);
   const isFav = ehFavorito(app.file);
-  const corCard = app.color || corPorCategoria(formatarCategoria(app.category));
+  const corCard = corPorCategoria(formatarCategoria(app.category)); // cor sempre pela categoria (padrão único)
   return `
     <div class="card-wrap${extraClass ? ' ' + extraClass : ''}" style="animation-delay:${i * 55}ms">
       <a class="card" href="./${app.file}" style="--accent-card:${corCard}" onclick="abrirApp(this, event, '${escapeAttr(app.file)}')">
@@ -1378,7 +1381,7 @@ function cardHtml(app, i, extraClass){
               : '<div class="card-status" style="color:var(--warn);"><span class="dot" style="background:var(--warn);"></span> sem seu acesso</div>'}
           </div>
           <div class="card-icon">${app.icon || '🧩'}</div>
-          <div class="card-tag">${app.category || 'FERRAMENTA'}</div>
+          <div class="card-tag">${app.category ? escapeAttr(formatarCategoria(app.category)) : 'FERRAMENTA'}</div>
           <div class="card-title">${app.title}</div>
           <div class="card-desc">${app.description || ''}</div>
           <div class="card-open">Abrir app <span class="arrow">→</span></div>
@@ -1423,11 +1426,13 @@ async function loadApps(){
       if(!prateleiras[chave]) prateleiras[chave] = [];
       prateleiras[chave].push(app);
     });
+    Object.keys(prateleiras).forEach(function(k){ prateleiras[k].sort(function(a,b){ return (a.title||'').localeCompare(b.title||'', 'pt-BR'); }); });
+    const dl = document.getElementById('listaCategorias'); if(dl) dl.innerHTML = Object.keys(prateleiras).map(function(c){ return '<option value="'+escapeAttr(c)+'">'; }).join('');
     const categorias = Object.keys(prateleiras).sort(function(a,b){ return a.localeCompare(b, 'pt-BR'); });
 
     grid.innerHTML = categorias.map(function(cat){
       const appsDaCategoria = prateleiras[cat];
-      const STACK_CAP = 6; // acima disso, a prateleira vira uma coluna gigante e desbalanceia o mosaico
+      const STACK_CAP = Infinity; // acima disso, a prateleira vira uma coluna gigante e desbalanceia o mosaico
       const precisaCap = appsDaCategoria.length > STACK_CAP;
       const visiveis = precisaCap ? appsDaCategoria.slice(0, STACK_CAP - 1) : appsDaCategoria;
       const extras = precisaCap ? appsDaCategoria.slice(STACK_CAP - 1) : [];
@@ -1691,7 +1696,7 @@ function fecharEditarApp(){
 async function salvarApp(){
   if(!editingAppFile) return;
   const title = document.getElementById('editAppTitulo').value.trim();
-  const category = document.getElementById('editAppCategoria').value.trim();
+  const category = document.getElementById('editAppCategoria').value.trim() ? formatarCategoria(document.getElementById('editAppCategoria').value) : '';
   const description = document.getElementById('editAppDescricao').value.trim();
   const grupos = Array.from(document.querySelectorAll('.grupo-cb-app:checked')).map(el => el.value);
   const statusEl = document.getElementById('editAppStatus');
