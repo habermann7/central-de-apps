@@ -89,7 +89,7 @@ function derive(dataset,T=today()){
   for(const car of ORDER){const rows=dataset.carriers[car];let until=null;
     rows.forEach(r=>{for(const val of [r.base,r.ent]){const d=dateDay(val);if(d!=null&&(until==null||d>until))until=d}});
     const ref=until==null?null:Math.min(T,until);
-    const items=rows.map(r=>{const base=dateDay(r.base),ent=dateDay(r.ent),prev=car==='correios'?addBD(base,r.prazo):dateDay(r.prev);
+    const items=rows.map(r=>{const base=dateDay(r.base),ent=dateDay(r.ent),prev=car==='correios'?addBD(base,r.prazo+1):dateDay(r.prev);
       const excluded=car==='correios'&&/entregue ao remetente|estornad|cancelad|devolvid/i.test(r.st);
       const delivered=ent!=null&&(car!=='correios'||/entregue ao destinat|caixa de correios inteligente/i.test(r.st));
       const cls=excluded?'excl':delivered?(ent<=prev?'ok':'late_deliv'):ref!=null&&prev<ref?'late_open':'open';
@@ -254,7 +254,7 @@ window.__startApp=start;if(window.__gateOk)start();
 </script>
 <script>
 (function(){
-  var GRUPOS_PERMITIDOS = ["PCP"];
+  var GRUPOS_PERMITIDOS = ["OPERAÇÕES"];
   function norm(x){ return String(x).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().trim(); }
   var firebaseConfig = {
     apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
