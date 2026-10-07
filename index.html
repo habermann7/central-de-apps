@@ -678,6 +678,7 @@
 
         <div class="nav-label" id="adminNavLabel" style="display:none;">Administração</div>
         <button class="nav-item" id="nav-admin" onclick="abrirAdmin()" style="display:none;"><span class="nav-icon">👥</span> Usuários</button>
+        <button class="nav-item" id="nav-vertudo" onclick="alternarVerTudo()" style="display:none;"><span class="nav-icon">👁️</span> <span id="vertudoTxt">Ver todos: desligado</span></button>
         <button class="nav-item" id="nav-grupos" onclick="mostrarGrupos()" style="display:none;"><span class="nav-icon">🏷️</span> Grupos</button>
       </nav>
 
@@ -893,6 +894,7 @@ const API_BASE = 'https://central-de-apps.vercel.app';
 let pendingDeleteFile = null;
 let GRUPOS_DISPONIVEIS = [];
 let SOU_ADMIN = false;
+let ADMIN_VER_TUDO = false; // admin só vê o que é do próprio grupo, a não ser que ligue 'Ver todos os apps'
 
 function escapeAttr(str){
   return String(str).replace(/[&<>"']/g, c => ({
@@ -1087,6 +1089,7 @@ firebase.auth().onAuthStateChanged(function(user){
       SOU_ADMIN = true;
       document.getElementById('nav-admin').style.display = '';
       document.getElementById('nav-grupos').style.display = '';
+      document.getElementById('nav-vertudo').style.display = '';
       document.getElementById('adminNavLabel').style.display = '';
     }
     carregarGrupos();
@@ -1399,6 +1402,12 @@ function cardHtml(app, i, extraClass){
   `;
 }
 
+function alternarVerTudo(){
+  ADMIN_VER_TUDO = !ADMIN_VER_TUDO;
+  document.getElementById('vertudoTxt').textContent = ADMIN_VER_TUDO ? 'Ver todos: ligado' : 'Ver todos: desligado';
+  loadApps();
+}
+
 async function loadApps(){
   const grid = document.getElementById('grid');
   const countText = document.getElementById('countText');
@@ -1406,7 +1415,7 @@ async function loadApps(){
     const res = await fetch('./manifest.json?t=' + Date.now(), {cache:'no-store'});
     if(!res.ok) throw new Error('manifest.json não encontrado');
     const todos = await res.json();
-    const apps = (Array.isArray(todos) ? todos : []).filter(app => SOU_ADMIN || tenhoAcesso(app));
+    const apps = (Array.isArray(todos) ? todos : []).filter(app => tenhoAcesso(app) || (SOU_ADMIN && ADMIN_VER_TUDO));
 
     if(apps.length === 0){
       grid.innerHTML = `<div class="no-access"><div class="empty-icon">🔒</div><h2>Nenhum app liberado ainda</h2><p>Seu grupo (${MEUS_GRUPOS.join(', ') || '—'}) não tem acesso a nenhuma ferramenta por enquanto. Fala com o David se acha que deveria ter acesso a algo.</p></div>`;
