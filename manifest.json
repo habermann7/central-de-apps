@@ -1,22 +1,11 @@
 [
   {
-    "title": "Qualidade",
-    "category": "EXPEDIÇÃO",
-    "description": "",
-    "file": "qualidade.html",
-    "icon": "🧩",
-    "color": "#ff8a3d",
-    "grupos": [
-      "EXPEDIÇÃO"
-    ]
-  },
-  {
-    "title": "Cauculadora Frete",
+    "title": "Calculadora de Frete",
     "category": "PCP",
     "description": "",
     "file": "calculadora frete v4.html",
-    "icon": "🧩",
-    "color": "#ff6b5b",
+    "icon": "🧮",
+    "color": "#D9A15A",
     "grupos": [
       "PCP"
     ]
@@ -26,8 +15,30 @@
     "category": "PCP",
     "description": "Proposta de implantacao de app logistico rodoviario",
     "file": "simulador frete ativa _1_.html",
-    "icon": "🧩",
-    "color": "#3ecf8e",
+    "icon": "⚖️",
+    "color": "#D9A15A",
+    "grupos": [
+      "PCP"
+    ]
+  },
+  {
+    "title": "Comparativo de Fretes",
+    "category": "PCP",
+    "description": "",
+    "file": "calculadora frete comparativa.html",
+    "icon": "📦",
+    "color": "#D9A15A",
+    "grupos": [
+      "PCP"
+    ]
+  },
+  {
+    "title": "Consulta de Chave de Nota Fiscal",
+    "category": "PCP",
+    "description": "Consultar chaves das notas fiscais para pedidos",
+    "file": "consulta-nfe.html",
+    "icon": "🧾",
+    "color": "#D9A15A",
     "grupos": [
       "PCP"
     ]
@@ -37,54 +48,21 @@
     "category": "PCP",
     "description": "Controle de visao de pedidos da semana",
     "file": "painel pcp _2_.html",
-    "icon": "🧩",
-    "color": "#c084fc",
+    "icon": "📊",
+    "color": "#D9A15A",
     "grupos": [
       "PCP"
     ]
   },
   {
-    "title": "Consulta de Chave de Nota FIscal",
-    "category": "PCP",
-    "description": "Consultar chaves das notas fiscais para pedidos",
-    "file": "consulta-nfe.html",
-    "icon": "🧩",
-    "color": "#ffd54d",
-    "grupos": [
-      "PCP"
-    ]
-  },
-  {
-    "title": "GoPlant",
-    "category": "Operações",
-    "description": "Desenho de fluxos e plantas",
-    "file": "GoPlant.html",
-    "icon": "🧩",
-    "color": "#ffd54d",
-    "grupos": [
-      "Outros"
-    ]
-  },
-  {
-    "title": "Painel de Ocorrências",
+    "title": "Painel SLA",
     "category": "PCP",
     "description": "",
-    "file": "stin-logistica-ocorrencias_2.html",
-    "icon": "🧩",
-    "color": "#4d9fff",
+    "file": "painel_sla_tv.html",
+    "icon": "📺",
+    "color": "#D9A15A",
     "grupos": [
       "PCP"
-    ]
-  },
-  {
-    "title": "PEDIDOS DE COMPRA EM ABERTO",
-    "category": "FINANCEIRO",
-    "description": "PEDIDOS DE COMPRA EM ABERTO",
-    "file": "pesquisa pedidos fornecedor _3_.html",
-    "icon": "🧩",
-    "color": "#ff8a3d",
-    "grupos": [
-      "FINANCEIRO"
     ]
   },
   {
@@ -92,65 +70,87 @@
     "category": "PCP",
     "description": "Desempenho de entregas da transportadora ATIVA",
     "file": "painel_ativa_v2.html",
-    "icon": "🧩",
-    "color": "#1B2B44",
+    "icon": "🚚",
+    "color": "#D9A15A",
     "grupos": [
       "PCP"
     ]
   },
   {
-    "title": "COMPARATIVO DE FRETES",
+    "title": "Painel de Ocorrências",
     "category": "PCP",
-    "description": "",
-    "file": "calculadora frete comparativa.html",
-    "icon": "🧩",
-    "color": "#3ecf8e",
+    "description": "Abertura e tratamento de ocorrências de logística",
+    "file": "stin-logistica-ocorrencias_2.html",
+    "icon": "⚠️",
+    "color": "#D9A15A",
     "grupos": [
       "PCP"
     ]
   },
   {
-    "title": "RASTREIO VIPP",
-    "category": "EXPEDIÇÃO",
-    "description": "Rastreio de pedidos VIPP. atualizado com API Correios em tempo REAL",
-    "file": "rastreio-vipp.html",
-    "icon": "🧩",
-    "color": "#ffd54d",
-    "grupos": [
-      "EXPEDIÇÃO"
-    ]
-  },
-  {
-    "title": "DashBoard Produtividade",
-    "category": "expedição",
+    "title": "Dashboard Produtividade",
+    "category": "Expedição",
     "description": "",
     "file": "dashboard_produtividade.html",
-    "icon": "🧩",
-    "color": "#ffd54d",
+    "icon": "📈",
+    "color": "#4E8368",
     "grupos": [
       "EXPEDIÇÃO"
+    ]
+  },
+  {
+    "title": "Qualidade",
+    "category": "Expedição",
+    "description": "Registro e acompanhamento de ocorrências de qualidade",
+    "file": "qualidade.html",
+    "icon": "✅",
+    "color": "#4E8368",
+    "grupos": [
+      "EXPEDIÇÃO"
+    ]
+  },
+  {
+    "title": "Rastreio VIPP",
+    "category": "Expedição",
+    "description": "Rastreio de pedidos VIPP. atualizado com API Correios em tempo REAL",
+    "file": "rastreio-vipp.html",
+    "icon": "📍",
+    "color": "#4E8368",
+    "grupos": [
+      "EXPEDIÇÃO"
+    ]
+  },
+  {
+    "title": "Pedidos de Compra em Aberto",
+    "category": "Financeiro",
+    "description": "Pedidos de compra em aberto",
+    "file": "pesquisa pedidos fornecedor _3_.html",
+    "icon": "🛒",
+    "color": "#5B7FA6",
+    "grupos": [
+      "FINANCEIRO"
     ]
   },
   {
     "title": "SLA Transportadoras",
-    "category": "Outros",
+    "category": "Operações",
     "description": "",
     "file": "sla_transportadoras.html",
-    "icon": "🧩",
-    "color": "#4d9fff",
+    "icon": "⏱️",
+    "color": "#3F8E8A",
     "grupos": [
       "Operações"
     ]
   },
   {
-    "title": "PAINEL SLA",
-    "category": "PCP",
-    "description": "",
-    "file": "painel_sla_tv.html",
-    "icon": "🧩",
-    "color": "#ff8a3d",
+    "title": "GoPlant",
+    "category": "Outros",
+    "description": "Desenho de fluxos e plantas",
+    "file": "GoPlant.html",
+    "icon": "🏭",
+    "color": "#A6485B",
     "grupos": [
-      "PCP"
+      "Outros"
     ]
   }
 ]
