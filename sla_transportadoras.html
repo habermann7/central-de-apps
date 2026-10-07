@@ -1,17 +1,15 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
 <title>SLA Transportadoras STIN</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 /* Layout: painel de torre de controle — barra de abas no topo, faixa de período, cartões por transportadora e gráficos por dia/semana.
-   Dark-first (tela de acompanhamento), com versão clara completa. */
+   Dark-first (tela de acompanhamento), tema escuro fixo. */
 :root{
   color-scheme:dark;
   --bg:#0f1316; --panel:#161c20; --panel-2:#1d252a; --line:#2a343a;
@@ -21,30 +19,10 @@
   --ok:#2fbf4a; --warn:#f0a92a; --late:#ec835a; --crit:#e5534b; --open:#7c93a6;
   --ok-soft:rgba(47,191,74,.14); --warn-soft:rgba(240,169,42,.15); --crit-soft:rgba(229,83,75,.16); --open-soft:rgba(124,147,166,.16);
   --shadow:0 1px 0 rgba(255,255,255,.03) inset;
-  --f-display:'Barlow Semi Condensed','Arial Narrow',Arial,sans-serif;
-  --f-body:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;
-  --f-mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+  --f-display:'Segoe UI',system-ui,-apple-system,Roboto,'Helvetica Neue',Arial,sans-serif;
+  --f-body:'Segoe UI',system-ui,-apple-system,Roboto,'Helvetica Neue',Arial,sans-serif;
+  --f-mono:'Segoe UI',system-ui,-apple-system,Roboto,'Helvetica Neue',Arial,sans-serif;
   --r:10px;
-}
-@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){
-  color-scheme:light;
-  --bg:#eef1f2; --panel:#ffffff; --panel-2:#f5f7f8; --line:#dde3e6;
-  --ink:#10181c; --ink-2:#4a5a62; --ink-3:#7d8c94;
-  --accent:#1f7f94; --accent-ink:#ffffff;
-  --c-correios:#d14f1c; --c-azul:#2a78d6; --c-ativa:#148a62;
-  --ok:#14892a; --warn:#b97806; --late:#c4572b; --crit:#c8322b; --open:#5e7487;
-  --ok-soft:rgba(20,137,42,.10); --warn-soft:rgba(185,120,6,.12); --crit-soft:rgba(200,50,43,.10); --open-soft:rgba(94,116,135,.12);
-  --shadow:0 1px 2px rgba(16,24,28,.06);
-}}
-:root[data-theme="light"]{
-  color-scheme:light;
-  --bg:#eef1f2; --panel:#ffffff; --panel-2:#f5f7f8; --line:#dde3e6;
-  --ink:#10181c; --ink-2:#4a5a62; --ink-3:#7d8c94;
-  --accent:#1f7f94; --accent-ink:#ffffff;
-  --c-correios:#d14f1c; --c-azul:#2a78d6; --c-ativa:#148a62;
-  --ok:#14892a; --warn:#b97806; --late:#c4572b; --crit:#c8322b; --open:#5e7487;
-  --ok-soft:rgba(20,137,42,.10); --warn-soft:rgba(185,120,6,.12); --crit-soft:rgba(200,50,43,.10); --open-soft:rgba(94,116,135,.12);
-  --shadow:0 1px 2px rgba(16,24,28,.06);
 }
 *{box-sizing:border-box}
 html,body{margin:0}
@@ -229,6 +207,7 @@ tbody tr:hover td{background:var(--panel-2)}
   <div class="hd"><h3 id="mTitle">Lista</h3>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <input class="search" id="mSearch" placeholder="Buscar NF, objeto, destinatário, cidade…" aria-label="Buscar na lista">
+      <button class="btn" type="button" id="mExport">⭳ Exportar Excel</button>
       <button class="x" id="mClose" aria-label="Fechar">×</button>
     </div>
   </div>
@@ -284,7 +263,7 @@ function addBD(d,n){ const key=d*100+n; let r=bdCache.get(key); if(r!==undefined
 /* ===================== transportadoras ===================== */
 const CARRIERS = {
   correios:{ name:'Correios', color:'--c-correios', idLabel:'Objeto', baseLabel:'Postagem', placeLabel:'Cidade',
-    rule:'Previsão = data de postagem + "Prazo Est" em dias úteis (sem sábados, domingos e feriados nacionais). Comparada com a data de entrega do relatório.',
+    rule:'Previsão = data de postagem + "Prazo Est" + 1 dia, em dias úteis (sem sábados, domingos e feriados nacionais). Comparada com a data de entrega do relatório.',
     must:['prazo est','dta postagem','status'],
     parse(h,rows){
       const c=cols(h,['reg. correios','pnet','nro nf','nome dest','uf dest','cid dest','dta postagem','prazo est','dta entrega','status','desc servico']);
@@ -298,7 +277,7 @@ const CARRIERS = {
     },
     excluded: r => /entregue ao remetente|estornad|cancelad|devolvid/i.test(r.st),
     delivered: r => !!r.ent && /entregue ao destinat|caixa de correios inteligente/i.test(r.st),
-    prevOf: r => addBD(dn(r.base), r.prazo||0),
+    prevOf: r => addBD(dn(r.base), (r.prazo||0)+1), // +1 dia útil após o prazo dos Correios
   },
   azul:{ name:'Azul', color:'--c-azul', idLabel:'AWB', baseLabel:'Faturamento', placeLabel:'Destino',
     rule:'Compara a coluna "Previsão Entrega" com "desembarque/entrega".',
@@ -397,16 +376,17 @@ function buildPeriodo(){
   const months=new Set(); ORDER.forEach(c=>S.der[c].forEach(d=>{ const t=dnDate(d.prev); months.add(t.getUTCFullYear()*100+t.getUTCMonth()+1); }));
   const T=todayDN(); const tt=dnDate(T); const cur=tt.getUTCFullYear()*100+tt.getUTCMonth()+1;
   const ms=[...months].filter(m=>m<=cur).sort((a,b)=>b-a);
-  const opts=[['u7','Últimos 7 dias'],['u4s','Últimas 4 semanas'],['u8s','Últimas 8 semanas'],['u13s','Últimas 13 semanas']]
+  const opts=[['u7','Últimos 7 dias úteis'],['u4s','Últimas 4 semanas'],['u8s','Últimas 8 semanas'],['u13s','Últimas 13 semanas']]
     .concat(ms.map(m=>['m'+m, MESES[m%100-1]+'/'+String(Math.floor(m/100)).slice(2)]))
     .concat([['all','Todo o período']]);
   const sel=$('#periodo'); sel.innerHTML=opts.map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join('');
   if(!opts.some(o=>o[0]===S.periodo)) S.periodo='u8s';
   sel.value=S.periodo;
 }
-function range(){
-  const T=todayDN(), p=S.periodo;
-  if(p==='u7') return [T-6,T];
+function range(car){
+  // "últimos N" contam a partir da data mais recente do relatório de cada transportadora
+  const p=S.periodo; const T=(car && S.ref[car]!=null) ? S.ref[car] : todayDN();
+  if(p==='u7'){ let a=T, n=0; while(n<7){ if(wday(a)!==0&&wday(a)!==6) n++; if(n<7) a--; } return [a,T]; }
   if(p==='u4s') return [monday(T)-21,T];
   if(p==='u8s') return [monday(T)-49,T];
   if(p==='u13s') return [monday(T)-84,T];
@@ -426,16 +406,30 @@ function stats(list){
   s.pct=s.base?s.ok/s.base*100:null; return s;
 }
 const level = p => p==null?'none':(p>=META?'ok':(p>=80?'warn':'crit'));
-function periodList(car){ const rg=range(); return S.der[car].filter(d=>inRange(d,rg)); }
-function buckets(list, upTo){
+function periodList(car){ const rg=range(car); return S.der[car].filter(d=>inRange(d,rg)); }
+function buckets(list, upTo, rg){
   const m=new Map();
   list.forEach(d=>{ if(upTo!=null && d.prev>upTo) return; const b=bucketOf(d.prev); if(!m.has(b)) m.set(b,[]); m.get(b).push(d); });
-  return [...m.keys()].sort((a,b)=>a-b).map(b=>({b,s:stats(m.get(b))}));
+  // mostra todos os dias/semanas do período, mesmo sem previsão (ex.: fim de semana)
+  if(rg && rg[0]>-1e8){ const end=Math.min(rg[1], upTo!=null?upTo:rg[1]); const step=S.gran==='dia'?1:7; for(let d=bucketOf(rg[0]); d<=end; d+=step){ if(step===1 && (wday(d)===0||wday(d)===6)) continue; if(!m.has(d)) m.set(d,[]); } }
+  // na visão por dia, sábados e domingos não aparecem nos gráficos/quadros (continuam contando nos indicadores)
+  return [...m.keys()].filter(b=>S.gran!=='dia'||(wday(b)!==0&&wday(b)!==6)).sort((a,b)=>a-b).map(b=>({b,s:stats(m.get(b))}));
 }
 function lastImport(car){ const l=S.imports.filter(i=>i.car===car).sort((a,b)=>new Date(b.ts)-new Date(a.ts)); return l[0]; }
 function dataUntil(car){ return S.ref[car]; }
 
 /* ===================== cores (tokens) ===================== */
+/* rótulos de dados nas barras */
+const barLabels={id:'barLabels',afterDatasetsDraw(chart){
+  const ctx=chart.ctx; ctx.save();
+  chart.data.datasets.forEach((ds,i)=>{ if(!ds._labels) return; const meta=chart.getDatasetMeta(i); if(meta.hidden) return;
+    meta.data.forEach((el,j)=>{ const v=ds.data[j]; if(v==null) return;
+      ctx.font='700 13px "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif'; ctx.fillStyle=tok('--ink'); ctx.textAlign='center'; ctx.textBaseline='bottom';
+      ctx.fillText(pctTxt(v)+'%', el.x, el.y-4);
+    });
+  });
+  ctx.restore();
+}};
 function tok(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 
 /* ===================== render ===================== */
@@ -450,7 +444,6 @@ function render(){
 }
 
 function renderGeral(){
-  const rg=range();
   const cards=ORDER.map(car=>{
     const C=CARRIERS[car], s=stats(periodList(car)), lv=level(s.pct), li=lastImport(car), du=dataUntil(car);
     const openNow=S.der[car].filter(d=>d.cls==='late_open').length;
@@ -469,7 +462,7 @@ function renderGeral(){
 
   // matriz
   const T=todayDN(); const all=new Set(); const per={};
-  ORDER.forEach(car=>{ per[car]=new Map(buckets(periodList(car),S.ref[car]).map(x=>[x.b,x.s])); per[car].forEach((v,k)=>all.add(k)); });
+  ORDER.forEach(car=>{ per[car]=new Map(buckets(periodList(car),S.ref[car],range(car)).map(x=>[x.b,x.s])); per[car].forEach((v,k)=>all.add(k)); });
   let bs=[...all].sort((a,b)=>a-b); const maxCols=S.gran==='dia'?14:10; bs=bs.slice(-maxCols);
   const mat='<div class="tscroll" style="max-height:none"><table class="matrix"><thead><tr><th>Transportadora</th>'+bs.map(b=>'<th title="'+esc(bucketTitle(b))+'">'+bucketLabel(b)+'</th>').join('')+'</tr></thead><tbody>'+
     ORDER.map(car=>'<tr><td><span class="name" style="display:inline-flex;gap:8px;align-items:center;font-family:var(--f-display);font-weight:700;font-size:16px"><i style="width:10px;height:10px;border-radius:2px;background:var('+CARRIERS[car].color+')"></i>'+CARRIERS[car].name+'</span></td>'+
@@ -501,15 +494,15 @@ function chipFor(p){ const lv=level(p); const t=lv==='ok'?'✓ Na meta':lv==='wa
 
 function baseOpts(o){
   const ink2=tok('--ink-2'), line=tok('--line');
-  return {responsive:true,maintainAspectRatio:false,animation:{duration:250},interaction:{mode:'index',intersect:false},
-    plugins:{legend:{display:false},tooltip:Object.assign({backgroundColor:tok('--panel-2'),titleColor:tok('--ink'),bodyColor:tok('--ink'),borderColor:line,borderWidth:1,padding:10,titleFont:{family:'Barlow Semi Condensed',size:14,weight:'700'},bodyFont:{family:'Barlow',size:13}},o.tooltip||{})},
-    scales:{x:{grid:{display:false},ticks:{color:ink2,font:{family:'JetBrains Mono',size:11},maxRotation:0,autoSkip:true},border:{color:line}},
-            y:Object.assign({grid:{color:line},ticks:{color:ink2,font:{family:'JetBrains Mono',size:11}},border:{display:false}},o.y||{})}};
+  return {responsive:true,maintainAspectRatio:false,animation:{duration:250},layout:o.layout||{},interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:false},tooltip:Object.assign({backgroundColor:tok('--panel-2'),titleColor:tok('--ink'),bodyColor:tok('--ink'),borderColor:line,borderWidth:1,padding:10,titleFont:{family:"Segoe UI",size:14,weight:'700'},bodyFont:{family:"Segoe UI",size:13}},o.tooltip||{})},
+    scales:{x:{grid:{display:false},ticks:{color:ink2,font:{family:"Segoe UI",size:11},maxRotation:0,autoSkip:true},border:{color:line}},
+            y:Object.assign({grid:{color:line},ticks:{color:ink2,font:{family:"Segoe UI",size:11}},border:{display:false}},o.y||{})}};
 }
 
 function renderCarrier(car){
   const C=CARRIERS[car], list=periodList(car), s=stats(list), lv=level(s.pct);
-  const bks=buckets(list,S.ref[car]);
+  const bks=buckets(list,S.ref[car],range(car));
   const openAll=S.der[car].filter(d=>d.cls==='late_open').sort((a,b)=>b.dias-a.dias);
   const li=lastImport(car), du=dataUntil(car);
   const avg=s.late_open?(s.diasSum/s.late_open).toFixed(1).replace('.',','):'0';
@@ -524,7 +517,7 @@ function renderCarrier(car){
   '</section>';
 
   // tabela por período
-  const rows=bks.slice().reverse().map(x=>'<tr title="'+esc(bucketTitle(x.b))+'"><td class="mono">'+(S.gran==='dia'?fmtDN(x.b):'S'+isoWeek(x.b)+' · '+fmtDM(x.b)+'–'+fmtDM(x.b+6))+'</td><td class="n">'+fmtInt(x.s.total)+'</td><td class="n">'+fmtInt(x.s.ok)+'</td><td class="n">'+fmtInt(x.s.late_deliv)+'</td><td class="n">'+fmtInt(x.s.late_open)+'</td><td class="n">'+fmtInt(x.s.open)+'</td><td class="n"><span class="chip '+level(x.s.pct)+'">'+pctTxt(x.s.pct)+'%</span></td></tr>').join('');
+  const rows=bks.filter(x=>x.s.total>0).reverse().map(x=>'<tr title="'+esc(bucketTitle(x.b))+'"><td class="mono">'+(S.gran==='dia'?fmtDN(x.b):'S'+isoWeek(x.b)+' · '+fmtDM(x.b)+'–'+fmtDM(x.b+6))+'</td><td class="n">'+fmtInt(x.s.total)+'</td><td class="n">'+fmtInt(x.s.ok)+'</td><td class="n">'+fmtInt(x.s.late_deliv)+'</td><td class="n">'+fmtInt(x.s.late_open)+'</td><td class="n">'+fmtInt(x.s.open)+'</td><td class="n"><span class="chip '+level(x.s.pct)+'">'+pctTxt(x.s.pct)+'%</span></td></tr>').join('');
   const tbl='<div class="tscroll"><table><thead><tr><th>'+(S.gran==='dia'?'Dia':'Semana')+'</th><th class="n">Pedidos</th><th class="n">No prazo</th><th class="n">Entregue c/ atraso</th><th class="n">Atrasado aberto</th><th class="n">Em andamento</th><th class="n">% no prazo</th></tr></thead><tbody>'+(rows||'<tr><td colspan="7" class="empty">Sem pedidos com previsão nesse período.</td></tr>')+'</tbody></table></div>';
 
   // UF
@@ -556,7 +549,7 @@ function renderCarrier(car){
     kpis+
     '<section class="grid g-main" style="margin-top:14px">'+
       '<div class="panel"><h2>% no prazo por '+(S.gran==='dia'?'dia':'semana')+'</h2><p class="sub">'+esc(C.rule)+'</p><div class="chart-box"><canvas id="chCar" aria-label="Gráfico de % no prazo"></canvas></div>'+
-        '<div class="legend"><span><i style="background:var(--ok)"></i>≥ '+META+'%</span><span><i style="background:var(--warn)"></i>80–'+META+'%</span><span><i style="background:var(--crit)"></i>&lt; 80%</span><span><i class="line" style="background:var(--ink-3);width:18px"></i>Meta</span></div></div>'+
+        '<div class="legend"><span><i style="background:var(--ok)"></i>≥ '+META+'%</span><span><i style="background:var(--warn)"></i>80–'+META+'%</span><span><i style="background:var(--crit)"></i>&lt; 80%</span></div></div>'+
       '<div class="panel"><h2>SLA por UF de destino</h2><p class="sub">Pior para melhor, no período</p>'+ufTbl+'</div>'+
     '</section>'+flag+
     '<section class="panel" style="margin-top:14px"><h2>Resumo por '+(S.gran==='dia'?'dia':'semana')+'</h2><p class="sub">Mais recente primeiro · previsões até '+fmtDN(S.ref[car])+', data mais recente do relatório</p>'+tbl+'</section>'+
@@ -568,9 +561,9 @@ function renderCarrier(car){
   const colors=bks.map(x=>{ const l=level(x.s.pct); return l==='ok'?T2:l==='warn'?W:R; });
   const mn=Math.min(...data.filter(v=>v!=null),80);
   charts.push(new Chart($('#chCar'),{type:'bar',data:{labels:bks.map(x=>bucketLabel(x.b)),datasets:[
-      {type:'line',label:'Meta',data:bks.map(()=>META),borderColor:tok('--ink-3'),borderDash:[5,5],borderWidth:1.5,pointRadius:0,pointHoverRadius:0,order:0},
-      {label:'% no prazo',data,backgroundColor:colors,borderRadius:{topLeft:4,topRight:4},borderSkipped:'bottom',maxBarThickness:46,categoryPercentage:.8,barPercentage:.9,order:1}]},
-    options:baseOpts({y:{min:Math.max(0,Math.floor(mn/10)*10-10),max:100,ticks:{callback:v=>v+'%'}},
+      {label:'% no prazo',_labels:true,data,backgroundColor:colors,borderRadius:{topLeft:4,topRight:4},borderSkipped:'bottom',maxBarThickness:46,categoryPercentage:.8,barPercentage:.9,order:1}]},
+    plugins:[barLabels],
+    options:baseOpts({layout:{padding:{top:22}},y:{min:Math.max(0,Math.floor(mn/10)*10-10),max:100,ticks:{display:false},grid:{display:false}},
       tooltip:{filter:i=>i.dataset.label!=='Meta',callbacks:{title:items=>bucketTitle(bks[items[0].dataIndex].b),label:c=>{ const s=bks[c.dataIndex].s; return ['% no prazo: '+pctTxt(s.pct)+'%','No prazo: '+s.ok+' · Entregue c/ atraso: '+s.late_deliv+' · Atrasado aberto: '+s.late_open]; }}}})}));
 
   // eventos
@@ -591,7 +584,7 @@ function renderCarrier(car){
 }
 
 /* ===================== lista (modal) ===================== */
-let ML={car:null,list:[]};
+let ML={car:null,list:[],title:''};
 function openList(car,kind){
   const C=CARRIERS[car]; let list, title;
   const per=periodList(car);
@@ -600,10 +593,11 @@ function openList(car,kind){
   else if(kind==='all'||kind==='base'){ list=per.filter(d=>kind==='all'?d.cls!=='excl':d.cls!=='excl'&&d.cls!=='open'); title=kind==='all'?'Pedidos no período':'Pedidos que entram no % no prazo'; }
   else { list=per.filter(d=>d.cls===kind); title=CLS_LABEL[kind]; }
   if(kind!=='openall') list=list.slice().sort((a,b)=>b.dias-a.dias||b.prev-a.prev);
-  ML={car,list};
+  ML={car,list,title};
   $('#mTitle').textContent=C.name+' · '+title+(kind==='openall'?'':' · '+periodLabel());
   $('#mSearch').value=''; drawList(); $('#modal').hidden=false; $('#mSearch').focus();
 }
+function filteredList(){ const q=norm($('#mSearch').value); return q?ML.list.filter(d=>norm([d.r.id,d.r.nf,d.r.dest,d.r.cid,d.r.uf,d.r.st].join(' ')).includes(q)):ML.list; }
 function drawList(){
   const C=CARRIERS[ML.car], q=norm($('#mSearch').value);
   const f=q?ML.list.filter(d=>norm([d.r.id,d.r.nf,d.r.dest,d.r.cid,d.r.uf,d.r.st].join(' ')).includes(q)):ML.list;
@@ -614,6 +608,35 @@ function drawList(){
     (lim.map(d=>'<tr><td class="mono">'+esc(d.r.id)+'</td><td class="mono">'+esc(d.r.nf||'—')+'</td><td>'+esc(d.r.dest)+'</td><td>'+esc(d.r.cid)+'/'+esc(d.r.uf)+'</td><td class="mono">'+fmtDN(d.base)+'</td><td class="mono">'+fmtDN(d.prev)+'</td><td class="mono">'+fmtDN(d.ent)+'</td><td><span class="chip '+CLS_CHIP[d.cls]+'">'+CLS_LABEL[d.cls]+'</span></td><td class="n">'+(d.dias||'—')+'</td><td>'+esc(d.r.st)+'</td>'+extra(d)+'</tr>').join('')||'<tr><td colspan="12" class="empty">Nada encontrado.</td></tr>')+'</tbody>';
   $('#mCount').textContent=fmtInt(f.length)+' pedidos'+(f.length>lim.length?' · mostrando os primeiros '+lim.length+', use a busca para achar os outros':'');
 }
+/* exportar a lista (todas as linhas filtradas, não só as 600 da tela) */
+let dlNs; const dlReady=(async()=>{ try{ dlNs = (window.claude && window.claude.use) ? await window.claude.use('downloads') : null; }catch(e){ dlNs=null; } })();
+async function exportList(){
+  if(typeof XLSX==='undefined'){ toast('Não foi possível carregar o gerador de Excel. Verifique a internet.',true); return; }
+  const C=CARRIERS[ML.car], f=filteredList();
+  if(!f.length){ toast('Nada para exportar.',true); return; }
+  const dt=d=>d==null?null:d+25569; // número de série do Excel (sem fuso horário)
+  const extraH=ML.car==='ativa'?['Tipo','Classificação Ativa','Justificativa']:ML.car==='azul'?['Modalidade','Motivo atraso']:['Serviço'];
+  const aoa=[[C.idLabel,'NF','Destinatário',C.placeLabel,'UF',C.baseLabel,'Previsão','Entrega','Situação','Dias de atraso','Status no relatório'].concat(extraH)];
+  f.forEach(d=>{ const p=(d.r.x||'').split('|'); const ex=ML.car==='ativa'?[p[0],p[1],p[2]]:ML.car==='azul'?[p[0],p[1]||'']:[p[0]];
+    aoa.push([d.r.id,d.r.nf,d.r.dest,d.r.cid,d.r.uf,dt(d.base),dt(d.prev),dt(d.ent),CLS_LABEL[d.cls],d.dias||0,d.r.st].concat(ex)); });
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  for(let r=1;r<aoa.length;r++) for(const c of [5,6,7]){ const cell=ws[XLSX.utils.encode_cell({r,c})]; if(cell&&cell.t==='n') cell.z='dd/mm/yyyy'; }
+  ws['!cols']=aoa[0].map((h,i)=>({wch:[16,10,34,18,4,11,11,11,18,8,40,16,16,30][i]||14}));
+  ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:aoa.length-1,c:aoa[0].length-1}})};
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Pedidos');
+  const buf=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  const T=new Date(); const stamp=T.getFullYear()+pad(T.getMonth()+1)+pad(T.getDate());
+  const name=('SLA_'+C.name+'_'+ML.title+'_'+stamp).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9_-]+/g,'_').replace(/_+/g,'_')+'.xlsx';
+  await dlReady;
+  if(dlNs){
+    try{ await dlNs.save({filename:name,data:buf}); toast('Arquivo exportado: '+fmtInt(f.length)+' pedidos.'); }
+    catch(e){ const c=e&&e.code; if(c==='declined') return; if(c==='rate_limited'){ toast('Já existe um download aguardando confirmação.',true); return; } toast('Não foi possível exportar aqui. Baixe o painel e abra no computador para exportar.',true); }
+    return;
+  }
+  try{ const url=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),4000); toast('Arquivo exportado: '+fmtInt(f.length)+' pedidos.'); }
+  catch(e){ toast('Não foi possível exportar: '+(e.message||e),true); }
+}
+$('#mExport').addEventListener('click',exportList);
 $('#mSearch').addEventListener('input',()=>{ clearTimeout(drawList._t); drawList._t=setTimeout(drawList,180); });
 $('#mClose').addEventListener('click',()=>{ $('#modal').hidden=true; });
 $('#modal').addEventListener('click',e=>{ if(e.target.id==='modal') $('#modal').hidden=true; });
@@ -688,15 +711,13 @@ $('#btnTV').addEventListener('click',async()=>{
 });
 
 // redesenha gráficos quando o tema muda
-const mq=window.matchMedia('(prefers-color-scheme: light)'); try{ mq.addEventListener('change',()=>render()); }catch(e){}
-new MutationObserver(()=>render()).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 
 window.__startApp=init; if(window.__gateOk) init();
 })();
 </script>
 <script>
 (function(){
-  var GRUPOS_PERMITIDOS = ["TESTES"];
+  var GRUPOS_PERMITIDOS = ["OPERAÇÕES"];
   function norm(x){ return String(x).normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().trim(); }
   var firebaseConfig = {
     apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
