@@ -114,12 +114,22 @@ firebase.auth().onAuthStateChanged(function(user){
     return;
   }
   aviso.textContent = '';
-  firebase.database().ref('centralApps/grupos').on('value', function(snap){
-    const v = snap.val();
-    let grupos = [];
-    if(Array.isArray(v)) grupos = v;
-    else if(v && typeof v === 'object') grupos = Object.values(v);
-    renderGrupos(grupos);
+  firebase.database().ref('centralApps/usuarios/' + user.uid + '/admin').once('value').then(function(s){
+    if(s.val() !== true){
+      document.getElementById('gruposContainer').innerHTML = '';
+      document.getElementById('submitBtn').disabled = true;
+      document.getElementById('form').style.opacity = '.5';
+      document.getElementById('form').style.pointerEvents = 'none';
+      aviso.textContent = '⛔ Só administradores podem adicionar apps.';
+      return;
+    }
+    firebase.database().ref('centralApps/grupos').on('value', function(snap){
+      const v = snap.val();
+      let grupos = [];
+      if(Array.isArray(v)) grupos = v;
+      else if(v && typeof v === 'object') grupos = Object.values(v);
+      renderGrupos(grupos);
+    });
   });
 });
 </script>
