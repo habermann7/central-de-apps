@@ -604,7 +604,6 @@ if (/github\.io$/.test(location.hostname)) {
   .app-shell .main{ margin:0 auto; padding:38px 52px 28px 150px; max-width:1540px; width:100%; flex:1; min-width:0; }
   .topbar{ display:flex; justify-content:space-between; align-items:center; gap:24px; }
   .wordmark{ font-size:22px; font-weight:600; letter-spacing:-.9px; color:#292b30; }
-  .wordmark span{ color:#9498a0; }
   .workspace{ font-size:11px; color:#626874; display:flex; align-items:center; gap:7px; }
   .workspace i{ width:5px; height:5px; border-radius:100%; background:#72797b; }
   .hero{ display:flex; justify-content:space-between; align-items:flex-start; gap:40px; margin:34px 0 28px; }
@@ -820,6 +819,20 @@ if (/github\.io$/.test(location.hostname)) {
   .login-brand svg{ width:30px; height:30px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
   .login-brand span{ font-size:22px; font-weight:600; letter-spacing:-.9px; }
   .login-brand i{ font-style:normal; color:#9498a0; }
+
+  /* Logo editorial: símbolo de estante + palavra em serifa (ajuste do David) */
+  .estante-logo{ font-family:Georgia,"Times New Roman",serif; font-weight:400; font-style:normal; font-kerning:normal; font-feature-settings:"kern" 1,"liga" 1; text-transform:none; color:#30343a; white-space:nowrap; line-height:1; }
+  .wordmark.brand-lockup{ display:inline-flex; align-items:center; gap:12px; flex-shrink:0; min-height:48px; letter-spacing:normal; }
+  .brand-lockup .estante-logo{ font-size:38px; letter-spacing:-1.65px; padding-bottom:4px; }
+  .brand-emblem{ display:grid; place-items:center; width:42px; height:42px; border-radius:14px; border:1px solid #ffffffdf; background:linear-gradient(145deg,#ffffffb3,#ffffff33); box-shadow:inset 0 1px 0 #fff,0 3px 10px #29313f08; color:#444b54; flex-shrink:0; }
+  .brand-emblem svg,.brand-symbol svg{ width:29px; height:29px; stroke:currentColor; stroke-width:1.45; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+  .brand-symbol{ width:42px; height:42px; color:#444b54; display:flex; align-items:center; justify-content:center; }
+  .brand-symbol svg{ width:30px; height:30px; }
+  .intro-logo svg{ width:44px; height:44px; stroke-width:1.45; }
+  .intro-title.estante-logo{ font-size:46px; letter-spacing:-2px; font-weight:400; }
+  .login-brand svg{ width:34px; height:34px; stroke-width:1.45; }
+  .login-brand .estante-logo{ font-size:32px; letter-spacing:-1.3px; font-weight:400; padding-bottom:3px; }
+  @media (max-width:560px){ .wordmark.brand-lockup{ gap:10px; min-height:42px; } .brand-lockup .estante-logo{ font-size:33px; letter-spacing:-1.35px; padding-bottom:3px; } .brand-emblem{ width:36px; height:36px; border-radius:12px; } .brand-emblem svg{ width:25px; height:25px; } }
   .login-box h1{ font-weight:500; letter-spacing:-.6px; }
   .login-badge{ letter-spacing:.14em; }
   .btn-primary{ background:linear-gradient(140deg,#565c66,#2d323a); color:#fff; border:1px solid #444951; box-shadow:inset 0 1px 0 #ffffff30,0 4px 8px #0001; border-radius:13px; font-weight:600; }
@@ -896,8 +909,8 @@ if (/github\.io$/.test(location.hostname)) {
       <div id="introDust"></div>
     </div>
     <div class="intro-content">
-      <div class="intro-logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V7m6 12V4m6 15V9m5 12H2"/></svg></div>
-      <h1 class="intro-title">estante<span>.</span></h1>
+      <div class="intro-logo"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect x="5.5" y="10" width="4" height="13" rx="1.1"/><rect x="12.5" y="6" width="4" height="17" rx="1.1"/><rect x="20" y="9" width="4" height="14" rx="1.1" transform="rotate(-10 22 23)"/><path d="M4 26h24"/></svg></div>
+      <h1 class="intro-title estante-logo">estante</h1>
       <p class="intro-tagline">preparando suas ferramentas…</p>
     </div>
   </div>
@@ -906,7 +919,7 @@ if (/github\.io$/.test(location.hostname)) {
   <div class="login-screen" id="loginScreen">
     <div class="login-box fade-in">
       <div class="login-badge"><span class="dot"></span> ACESSO RESTRITO</div>
-      <div class="login-brand"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V7m6 12V4m6 15V9m5 12H2"/></svg><span>estante<i>.</i></span></div>
+      <div class="login-brand"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect x="5.5" y="10" width="4" height="13" rx="1.1"/><rect x="12.5" y="6" width="4" height="17" rx="1.1"/><rect x="20" y="9" width="4" height="14" rx="1.1" transform="rotate(-10 22 23)"/><path d="M4 26h24"/></svg><span class="estante-logo">estante</span></div>
       <h1>Entrar na sua conta</h1>
 
       <div class="login-step" id="stepEmail">
@@ -937,7 +950,7 @@ if (/github\.io$/.test(location.hostname)) {
   <!-- ===================== APP SHELL ===================== -->
   <div class="app-shell" id="appShell" style="display:none;">
     <aside class="rail glass">
-      <div class="rail-brand" title="Estante" data-icon="brand"></div>
+      <div class="rail-brand brand-symbol" title="Estante" aria-label="Estante"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect x="5.5" y="10" width="4" height="13" rx="1.1"/><rect x="12.5" y="6" width="4" height="17" rx="1.1"/><rect x="20" y="9" width="4" height="14" rx="1.1" transform="rotate(-10 22 23)"/><path d="M4 26h24"/></svg></div>
       <div class="rail-divider"></div>
       <nav aria-label="Navegação principal">
         <button class="nav-btn active" id="nav-galeria" onclick="irGaleria()" aria-label="Galeria"><span data-icon="grid"></span><span class="tip">Sua estante</span></button>
@@ -965,7 +978,7 @@ if (/github\.io$/.test(location.hostname)) {
       <!-- ===================== GALERIA ===================== -->
       <div id="galleryWrap">
         <header class="topbar fade-in">
-          <div class="wordmark">estante<span>.</span></div>
+          <div class="wordmark brand-lockup" aria-label="Estante"><span class="brand-emblem"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect x="5.5" y="10" width="4" height="13" rx="1.1"/><rect x="12.5" y="6" width="4" height="17" rx="1.1"/><rect x="20" y="9" width="4" height="14" rx="1.1" transform="rotate(-10 22 23)"/><path d="M4 26h24"/></svg></span><span class="estante-logo">estante</span></div>
           <aside class="date-widget glass" aria-label="Semana atual"><div class="date-head" id="dateHead"></div><div class="date-row" id="dateRow"></div></aside>
         </header>
         <section aria-label="Catálogo de ferramentas" class="fade-in" style="animation-delay:.08s;">
