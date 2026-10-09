@@ -10,6 +10,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Painel PCP">
 <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiUGFpbmVsIFBDUCIsInNob3J0X25hbWUiOiJQYWluZWwgUENQIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNFRUYxRjYiLCJ0aGVtZV9jb2xvciI6IiMxQjI0MzgiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SdzBLR2dvQUFBQU5TVWhFVWdBQUFNQUFBQURBQ0FJQUFBRGR2dnRRQUFBRC9rbEVRVlI0bk8zZHdaRVRTUlJGMFdJQ0gxaXdIUTlnZ1JtNE1oWVFXSUFyWThoZ0NGNnd5RTB0WU5SZHIvTG5UM0dPQTNxTEcxOEtxYVByemZ1L1B4MXcxVityQjdBM0FSRVJFQkVCRVJFUUVRRVJFUkFSQVJFUkVCRUJFUkVRRVVFUkVSQVpBUkVSRUJFQkVSRVFFUUVSRVJBUkFSRVJFQkVCRVJFUUVRRVJFUkFSQVJFUkVDRUJFZmtKb3hrRWZzWndVYWNBQUFBQVNVVk9SSzVDWUlJPSIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmcifV19">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAADoUlEQVR4nO3dwW1kRRRAUQ+aHFiwJQNYEAapEAEiAlIhECaQyYLFl9Coh2t9N/3qV3vOCaD9Flev3N32rw8//PjLC/yX764egH2JgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQO0scLf/bPf/41+vp///br6Ov/69Pv34++/k9/fB59/fJh/T9STzfxtaFKppv42uJKlsaxPosvPTCR9Vl8aVki637nuLaMBw5wbRkrB1ixOS7P4sbdK+TyLG5Mr5DxzbFbGS/3jrRbGS/zI3krS5qNY8O1cXjrYBuujcPoYINxbFvG4fx425ZxmBvPsUKaimPztXE4M+Tma+MwNKTNQRIHaSSOpzhTDq+P+hRnymFiVJuDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEgjcSx7Iv3/9/qoVz2R/g4To9ocJHGQpuJ4ipPlzJBPcbIMDWlzkAbj2Hx5nB9v8+UxN97s5ti2j7cOtm0fo4M5VkjjcWy4PO4bacPlMT3Sujvednhy7UNK3eHJtWtKXXesXL5CHjXA5Stk2QCuDr2fq0MHuXT4pG/o0mGehbeyJHGQxEESB0kcJHGQxEESB+njhT/73Xyw+G4+6r1xwSek7+YriXfzJVFZGse1X3Y/MJFr//xgWSLrfue4/M8gHjXA5X+YsmyAFZvj8ixu3L1CLs/ixvQKGd8cu5Xxcu9Iu5XxMj+St7Kk2Tg2XBuHtw624do4jA42GMe2ZRzOj7dtGYe58RwrpKk4Nl8bhzNDbr42DkND2hwkcZBG4niKM+Xw+qhPcaYcJka1OUjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDNBLH5dfynvf6qJdflHzexKg2B0kcpKk4nuJkOTPkU5wsQ0PaHKTBODZfHufH23x5zI03uzm27eOtg23bx+hgjhXSeBwbLo/7RtpweUyPtO6Otx2eXPuQUnd4cu2aUtcdK5evkEcNcPkKWTaAq0Pv5+rQQS4dPukbunSYZ+GtLEkcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcpH8AJTvsV7BqfdQAAAAASUVORK5CYII=">
+<link rel="icon" type="image/png" sizes="192x192" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAAD/klEQVR4nO3dwZETSRRF0WICH1iwHQ9ggRm4MhYQWIArY8hgCF6wyE0tYNRdr/LnT3GOA3qLG18KqaPrzfu/Px1w1V+rB7A3AREREBEBEREQEQERERARAREREBEBEREQEQERERARAREREBEBEREQEQERERARAREREBEBEREQEQERERARAREREBEBEREQkberBxwfv/1b80L//fO55oWO4/j+5V3NC334+qPmhX7nzcJ/71KWztnsjMrSOVuY0ZqAlqRzNiOjJemcLcmoOqDl6ZzdldHydM6KMyr9EN2qnuOmPa3qOcr31AXUrZ4hXNWtnqFyVVFAPesZLm/rWc9Qtq0ioM71DBcWdq5nqFnoi0Qi0wPqf36GV+3sf36Ggp0uEJG5Ae1yfoYXrt3l/Ayz17pARCYGtNf5GR5u3uv8DFM3u0BEBEREQEQERERARAREREBEBEREQEQERERARAREREBEBEREQEQERERARAREREBEBEREQEQERERARAREREBEBEREQEQERERARAREREBEBEREQEQERGRiQJXP57rLw83Ln891wdTNLhCRuQHtdYReuHavIzR7rQtEZHpAuxyhV+3c5QgV7HSBiFQE1P8IXVjY/wjVLCy6QJ0burytc0Nl2+rewno2FK7q2VDlqtLPQN0aumVPt4aK93hu/G2WP4flj3hu/NmSjGZfwSUZLbyCKwMayjKqfAMty2j5G+j6gNiaLxKJCIiIgIgIiIiAiAiIiICICIiIgIi8XT3gOb/1f8rfZ35p5U8ZT/m741P+Qvw/1gT0lH/58JR/o/JQdUDL0zm7K6Pl6ZwVZ1T6IbpVPcdNe1rVc5TvqQuoWz1DuKpbPUPlqqKAetYzXN7Ws56hbFtFQJ3rGS4s7FzPULPQF4lEpgfU//wMr9rZ//wMBTtdICJzA9rl/AwvXLvL+Rlmr3WBiEwMaK/zMzzcvNf5GaZudoGICIiIgIgIiIiAiAiIiICICIiIgIgIiIiAiAiIiICICIiIgIgIiIiAiAiIiICICIiIgIgIiIiAiAiIiICICIiIgIgIiIiAiAiIiICICIiIgIgIiMjEgCqfz3WXh5uXP5/rgqmbXSAicwPa6wi9cO1eR2j2WheIyPSAdjlCr9q5yxEq2OkCEakIqP8RurCw/xGqWVh0gTo3dHlb54bKttW9hfVsKFzVs6HKVaWfgbo1dMuebg0V7/Hc+Nssfw7LH/Hc+LMlGc2+gksyWngFVwY0lGVU+QZaltHyN9D1AbE1XyQSERARAREREBEBEREQEQERERARAREREBEBEREQEQERERARAREREBEBEREQEQERERARAREREBEBEREQEQERERARAREREBEBEfkJoxkEfsZwUacAAAAASUVORK5CYII=">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -555,6 +557,12 @@
 </style>
 </head>
 <body>
+<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
+  <div style="max-width:320px;width:100%;">
+    <div id="__gateMsg" style="font-size:14px;color:#8a93a3;line-height:1.6;">Verificando acesso...</div>
+  </div>
+</div>
+
 
 <!-- ========== LOGIN OVERLAY ========== -->
 <div class="login-overlay" id="loginOverlay">
@@ -1955,6 +1963,51 @@
     window.print();
   });
 
+})();
+</script>
+<script>
+(function(){
+  /* CADEADO PADRÃO DA ESTANTE. Só esta linha muda (o ✎ Editar troca ela). */
+  var GRUPOS_PERMITIDOS = ["PCP"];
+  var firebaseConfig = {
+    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+    authDomain: "stinpharma-qualidade.firebaseapp.com",
+    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+    projectId: "stinpharma-qualidade",
+    storageBucket: "stinpharma-qualidade.firebasestorage.app",
+    messagingSenderId: "422803826984",
+    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+    measurementId: "G-6C0TLHH2VP"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  function norm(x){ return String(x).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().trim(); }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  function liberar(){
+    var st = document.getElementById('__gateStyle');
+    var ov = document.getElementById('__gateOverlay');
+    if(st) st.remove();
+    if(ov) ov.remove();
+    window.__gateOk = true;
+    if(window.__startApp) window.__startApp();
+  }
+  function negar(msg){
+    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Estante</a>';
+  }
+  var jaResolveu = false;
+  setTimeout(function(){
+    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
+  }, 10000);
+  firebase.auth().onAuthStateChanged(function(user){
+    jaResolveu = true;
+    if(!user){ negar('Você precisa entrar pela Estante.'); return; }
+    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
+      var dados = snap.val() || {};
+      var meus = (dados.grupos || []).map(norm);
+      var permitido = dados.admin === true || GRUPOS_PERMITIDOS.some(function(g){ return meus.indexOf(norm(g)) !== -1; });
+      if(permitido){ liberar(); return; }
+      negar('Você não tem permissão pra acessar este app.<br><span style="font-size:12px;">Seus grupos: ' + esc((dados.grupos||[]).join(', ') || 'nenhum') + '<br>Grupos com acesso: ' + esc(GRUPOS_PERMITIDOS.join(', ')) + '</span>');
+    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
+  });
 })();
 </script>
 </body>
