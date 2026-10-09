@@ -60,14 +60,8 @@
   <p class="sub">Preenche os campos, escolhe o arquivo .html do seu app e manda.</p>
 
   <form id="form">
-    <label>Senha do time</label>
-    <input type="password" id="password" autocomplete="off" required>
-
     <label>Nome do app</label>
     <input type="text" id="title" maxlength="60" required>
-
-    <label>Categoria (ex: PCP · OPERAÇÕES)</label>
-    <input type="text" id="category" maxlength="40">
 
     <label>Descrição curta</label>
     <textarea id="description" maxlength="220"></textarea>
@@ -152,15 +146,13 @@ function fileToBase64(file){
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const password = document.getElementById('password').value.trim();
   const title = document.getElementById('title').value.trim();
-  const category = document.getElementById('category').value.trim();
   const description = document.getElementById('description').value.trim();
   const grupos = Array.from(document.querySelectorAll('input[name=grupo]:checked')).map(el => el.value);
   const file = document.getElementById('file').files[0];
 
-  if(!password || !title || !file){
-    showStatus('Preenche a senha, o nome do app e escolhe o arquivo .html', 'err');
+  if(!title || !file){
+    showStatus('Preenche o nome do app e escolhe o arquivo .html', 'err');
     return;
   }
   if(grupos.length === 0){
@@ -176,11 +168,14 @@ form.addEventListener('submit', async (e) => {
   showStatus('Publicando...', 'loading');
 
   try{
+    const usuario = firebase.auth().currentUser;
+    if(!usuario){ throw new Error('Você precisa estar logado na Estante (como admin).'); }
+    const idToken = await usuario.getIdToken();
     const fileBase64 = await fileToBase64(file);
     const res = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password, title, category, description, filename: file.name, fileBase64, grupos })
+      body: JSON.stringify({ idToken, title, description, filename: file.name, fileBase64, grupos })
     });
     const data = await res.json().catch(() => ({}));
     if(!res.ok){
