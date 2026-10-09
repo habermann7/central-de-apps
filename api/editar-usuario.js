@@ -11,6 +11,18 @@ if (!admin.apps.length) {
   });
 }
 
+// Chave "limpa" do grupo (sem acento, maiúscula, sem espaço): "Expedição" -> "EXPEDICAO".
+// As regras do Firebase usam esse mapa pra saber de que grupos a pessoa faz parte.
+function chaveGrupo(g) {
+  return String(g).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim()
+    .replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+}
+function mapaDeGrupos(grupos) {
+  const m = {};
+  (grupos || []).forEach((g) => { const k = chaveGrupo(g); if (k) m[k] = true; });
+  return m;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -58,7 +70,7 @@ export default async function handler(req, res) {
     // 5. Atualiza o registro de permissão no Realtime Database
     await admin.database()
       .ref('centralApps/usuarios/' + uid)
-      .update({ nome, email, grupos, admin: ehAdmin === true });
+      .update({ nome, email, grupos, gruposMap: mapaDeGrupos(grupos), admin: ehAdmin === true });
 
     return res.status(200).json({ ok: true });
   } catch (err) {
