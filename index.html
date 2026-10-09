@@ -986,7 +986,7 @@ if (/github\.io$/.test(location.hostname)) {
             <label class="search glass"><span data-icon="search"></span><input id="appSearch" type="search" placeholder="Qual ferramenta você precisa?" aria-label="Buscar ferramentas" oninput="filtrarApps()" autocomplete="off"><kbd>Ctrl K</kbd></label>
             <div class="toolbar-spacer"></div>
             <span class="count" id="countText">0 ferramentas</span>
-            <a class="add-link glass" href="./adicionar.html"><span data-icon="plus"></span> Adicionar app</a>
+            <a class="add-link glass" id="addAppLink" style="display:none" href="./adicionar.html"><span data-icon="plus"></span> Adicionar app</a>
             <div class="view-switch glass" aria-label="Modo de exibição"><button class="active" data-view="grid" aria-label="Ver em cards" aria-pressed="true" onclick="setView('grid')"><span data-icon="grid"></span></button><button data-view="list" aria-label="Ver em lista" aria-pressed="false" onclick="setView('list')"><span data-icon="list"></span></button></div>
           </div>
           <div class="fchips" id="categoryChips" aria-label="Filtrar por área"></div>
@@ -1354,6 +1354,7 @@ firebase.auth().onAuthStateChanged(function(user){
     if(dados.admin === true){
       SOU_ADMIN = true;
       document.getElementById('nav-admin').style.display = '';
+      document.getElementById('addAppLink').style.display = '';
       document.getElementById('nav-grupos').style.display = '';
       document.getElementById('nav-vertudo').style.display = '';
       document.getElementById('adminNavLabel').style.display = '';
