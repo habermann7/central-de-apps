@@ -717,8 +717,8 @@ window.__startApp=init; if(window.__gateOk) init();
 </script>
 <script>
 (function(){
-  /* Quem entra = grupos definidos na Estante para este app (manifest.json). Se não achar o app lá, usa o padrão abaixo. */
-  var GRUPOS_PADRAO = ["OPERAÇÕES"];
+  /* CADEADO PADRÃO DA ESTANTE. Só esta linha muda (o ✎ Editar troca ela). */
+  var GRUPOS_PERMITIDOS = ["TESTES"];
   var firebaseConfig = {
     apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
     authDomain: "stinpharma-qualidade.firebaseapp.com",
@@ -731,6 +731,7 @@ window.__startApp=init; if(window.__gateOk) init();
   };
   if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   function norm(x){ return String(x).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().trim(); }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
   function liberar(){
     var st = document.getElementById('__gateStyle');
     var ov = document.getElementById('__gateOverlay');
@@ -740,16 +741,7 @@ window.__startApp=init; if(window.__gateOk) init();
     if(window.__startApp) window.__startApp();
   }
   function negar(msg){
-    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Central de Apps</a>';
-  }
-  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
-  function gruposDoApp(){
-    var arq = decodeURIComponent((location.pathname.split('/').pop() || '')).toLowerCase();
-    return fetch('./manifest.json?t=' + Date.now(), {cache:'no-store'}).then(function(r){ return r.ok ? r.json() : []; }).then(function(lista){
-      var app = (Array.isArray(lista) ? lista : []).filter(function(a){ return a && String(a.file||'').toLowerCase() === arq; })[0];
-      if(!app) return GRUPOS_PADRAO;
-      return (app.grupos && app.grupos.length) ? app.grupos : ['Geral'];
-    }).catch(function(){ return GRUPOS_PADRAO; });
+    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Estante</a>';
   }
   var jaResolveu = false;
   setTimeout(function(){
@@ -757,20 +749,17 @@ window.__startApp=init; if(window.__gateOk) init();
   }, 10000);
   firebase.auth().onAuthStateChanged(function(user){
     jaResolveu = true;
-    if(!user){ negar('Você precisa entrar pela Central de Apps.'); return; }
-    Promise.all([
-      firebase.database().ref('centralApps/usuarios/' + user.uid).once('value'),
-      gruposDoApp()
-    ]).then(function(res){
-      var dados = res[0].val() || {};
+    if(!user){ negar('Você precisa entrar pela Estante.'); return; }
+    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
+      var dados = snap.val() || {};
       var meus = (dados.grupos || []).map(norm);
-      var exigidos = res[1];
-      var permitido = dados.admin === true || exigidos.some(function(g){ return meus.indexOf(norm(g)) !== -1; });
+      var permitido = dados.admin === true || GRUPOS_PERMITIDOS.some(function(g){ return meus.indexOf(norm(g)) !== -1; });
       if(permitido){ liberar(); return; }
-      negar('Você não tem permissão pra acessar este app.<br><span style="font-size:12px;">Seus grupos: ' + esc((dados.grupos||[]).join(', ') || 'nenhum') + '<br>Grupos com acesso: ' + esc(exigidos.join(', ')) + '</span>');
+      negar('Você não tem permissão pra acessar este app.<br><span style="font-size:12px;">Seus grupos: ' + esc((dados.grupos||[]).join(', ') || 'nenhum') + '<br>Grupos com acesso: ' + esc(GRUPOS_PERMITIDOS.join(', ')) + '</span>');
     }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
   });
 })();
 </script>
+
 </body>
 </html>
