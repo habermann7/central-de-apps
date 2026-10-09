@@ -1065,8 +1065,6 @@ if (/github\.io$/.test(location.hostname)) {
     <div class="modal">
       <h3>Remover <span id="modalAppName"></span>?</h3>
       <p class="modal-text">O app sai da galeria e o arquivo é apagado do repositório. Não dá pra desfazer.</p>
-      <label>Senha do time</label>
-      <input type="password" id="modalPassword" autocomplete="off">
       <div class="modal-actions">
         <button class="btn-ghost" onclick="closeModal()">Cancelar</button>
         <button class="btn-danger" onclick="confirmDelete()">Remover</button>
@@ -1380,7 +1378,6 @@ firebase.auth().onAuthStateChanged(function(user){
 function openDeleteModal(file, title){
   pendingDeleteFile = file;
   document.getElementById('modalAppName').textContent = title;
-  document.getElementById('modalPassword').value = '';
   const statusEl = document.getElementById('modalStatus');
   statusEl.className = 'modal-status';
   statusEl.textContent = '';
@@ -1391,20 +1388,17 @@ function closeModal(){
   pendingDeleteFile = null;
 }
 async function confirmDelete(){
-  const password = document.getElementById('modalPassword').value.trim();
   const statusEl = document.getElementById('modalStatus');
-  if(!password){
-    statusEl.className = 'modal-status err';
-    statusEl.textContent = 'Digita a senha do time';
-    return;
-  }
   statusEl.className = 'modal-status loading';
   statusEl.textContent = 'Removendo...';
   try{
+    const usuario = firebase.auth().currentUser;
+    if(!usuario){ throw new Error('Sessão expirada. Entre de novo.'); }
+    const idToken = await usuario.getIdToken();
     const res = await fetch(API_BASE + '/api/delete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password, filename: pendingDeleteFile })
+      body: JSON.stringify({ idToken, filename: pendingDeleteFile })
     });
     const data = await res.json().catch(() => ({}));
     if(!res.ok) throw new Error(data.error || 'Falha ao remover');
