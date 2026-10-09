@@ -596,8 +596,8 @@
   /* miolo */
   .app-shell .main{ margin:0 auto; padding:38px 52px 28px 150px; max-width:1540px; width:100%; flex:1; min-width:0; }
   .topbar{ display:flex; justify-content:space-between; align-items:center; gap:24px; }
-  .wordmark{ font-size:32px; font-weight:700; letter-spacing:-.6px; color:#292b30; line-height:1; }
-  .wordmark span{ color:#9498a0; font-weight:400; }
+  .wordmark{ font-size:22px; font-weight:600; letter-spacing:-.9px; color:#292b30; }
+  .wordmark span{ color:#9498a0; }
   .workspace{ font-size:11px; color:#626874; display:flex; align-items:center; gap:7px; }
   .workspace i{ width:5px; height:5px; border-radius:100%; background:#72797b; }
   .hero{ display:flex; justify-content:space-between; align-items:flex-start; gap:40px; margin:34px 0 28px; }
@@ -853,14 +853,14 @@
   .mono-logo{ box-shadow:-8px 10px 20px #080d1533,inset 0 1px 0 #fff; }
 
   /* topo compacto: logo à esquerda, semana à direita (sem faixa vazia) */
-  .topbar{ margin-bottom:38px; padding-top:6px; }
+  .topbar{ margin-bottom:34px; }
   .topbar .date-widget{ width:auto; display:flex; align-items:center; gap:26px; padding:10px 20px; border-radius:20px; }
   .topbar .date-row{ margin-top:0; gap:8px; }
   .topbar .date-head{ gap:12px; }
   .topbar .date-day{ flex-direction:row; gap:0; }
   .topbar .date-day span{ display:none; }
   .topbar .date-day b{ width:30px; height:30px; }
-  @media (max-width:560px){ .topbar .date-widget{ display:none; } .topbar{ margin-bottom:22px; } .wordmark{ font-size:26px; } }
+  @media (max-width:560px){ .topbar .date-widget{ display:none; } .topbar{ margin-bottom:22px; } }
 </style>
 </head>
 <body>
@@ -1137,7 +1137,7 @@
   </div>
 
 <script>
-const API_BASE = 'https://central-de-apps.vercel.app';
+const API_BASE = 'https://estanteapps.vercel.app';
 let pendingDeleteFile = null;
 let GRUPOS_DISPONIVEIS = [];
 let SOU_ADMIN = false;
@@ -1339,13 +1339,6 @@ firebase.auth().onAuthStateChanged(function(user){
       document.getElementById('nav-grupos').style.display = '';
       document.getElementById('nav-vertudo').style.display = '';
       document.getElementById('adminNavLabel').style.display = '';
-    } else {
-      SOU_ADMIN = false;
-      ADMIN_VER_TUDO = false;
-      document.getElementById('nav-admin').style.display = 'none';
-      document.getElementById('nav-grupos').style.display = 'none';
-      document.getElementById('nav-vertudo').style.display = 'none';
-      document.getElementById('adminNavLabel').style.display = 'none';
     }
     carregarGrupos();
     document.getElementById('loginScreen').style.display = 'none';
