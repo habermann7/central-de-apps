@@ -1,3 +1,29 @@
+import admin from 'firebase-admin';
+
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
+    }),
+    databaseURL: 'https://stinpharma-qualidade-default-rtdb.firebaseio.com',
+  });
+}
+
+// Confirma que quem chamou está logado E é administrador (mesmo esquema do atualizar-app.js).
+async function checarAdmin(idToken) {
+  if (!idToken) return { ok: false, status: 401, error: 'Não autenticado' };
+  try {
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const snap = await admin.database().ref('centralApps/usuarios/' + decoded.uid + '/admin').once('value');
+    if (snap.val() !== true) return { ok: false, status: 403, error: 'Só administradores podem fazer isso' };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, status: 401, error: 'Sessão inválida. Entre de novo na Estante.' };
+  }
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -10,10 +36,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const { password, filename } = req.body || {};
+  const { idToken, filename } = req.body || {};
 
-  if (!password || password !== process.env.TEAM_PASSWORD) {
-    return res.status(401).json({ error: 'Senha incorreta' });
+  const auth = await checarAdmin(idToken);
+  if (!auth.ok) {
+    return res.status(auth.status).json({ error: auth.error });
   }
   if (!filename) {
     return res.status(400).json({ error: 'Falta o nome do arquivo' });
