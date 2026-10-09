@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const { password, title, category, description, filename, fileBase64, grupos } = req.body || {};
+  const { password, title, description, filename, fileBase64, grupos } = req.body || {};
 
   if (!password || password !== process.env.TEAM_PASSWORD) {
     return res.status(401).json({ error: 'Senha incorreta' });
@@ -26,26 +26,28 @@ export default async function handler(req, res) {
   const REPO = 'central-de-apps';
   const BRANCH = 'main';
   const token = process.env.GITHUB_TOKEN;
-  const COLORS = ['#4d9fff', '#ff8a3d', '#ff6b5b', '#3ecf8e', '#c084fc', '#ffd54d'];
+  const COR_PADRAO = '#4d9fff';
   const cleanName = filename.replace(/[^a-zA-Z0-9.\-_ ]/g, '_');
   const gruposFinal = Array.isArray(grupos) && grupos.length ? grupos : ['Geral'];
 
-  // Injeta um cadeado de login+grupo no HTML do app antes de subir.
-  // Só libera o conteúdo se a pessoa estiver logada (Firebase Auth) E pertencer
-  // a um dos grupos permitidos abaixo. O login em si acontece na Central de Apps.
-  const htmlContent = Buffer.from(fileBase64, 'base64').toString('utf-8');
-  const gateSnippet = `
+  // Cadeado de login+grupo. Só libera o conteúdo se a pessoa estiver logada (Firebase Auth)
+  // E estiver num dos grupos abaixo (ou for admin). O login acontece na Estante.
+  // A parte de cima (tela "Verificando acesso") vai logo depois do <body>, pra página
+  // não "piscar" aberta; a parte de baixo (a lógica) vai antes do </body>.
+  const gateTop = `
 <div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
   <div style="max-width:320px;width:100%;">
     <div id="__gateMsg" style="font-size:14px;color:#8a93a3;line-height:1.6;">Verificando acesso...</div>
   </div>
 </div>
-<style id="__gateStyle">body > *:not(#__gateOverlay){ display:none !important; }</style>
+`;
+  const gateBottom = `
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
 <script>
 (function(){
+  /* CADEADO PADRÃO DA ESTANTE. Só esta linha muda (o ✎ Editar troca ela). */
   var GRUPOS_PERMITIDOS = ${JSON.stringify(gruposFinal)};
   var firebaseConfig = {
     apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
@@ -58,14 +60,18 @@ export default async function handler(req, res) {
     measurementId: "G-6C0TLHH2VP"
   };
   if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  function norm(x){ return String(x).normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toUpperCase().trim(); }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
   function liberar(){
     var st = document.getElementById('__gateStyle');
     var ov = document.getElementById('__gateOverlay');
     if(st) st.remove();
     if(ov) ov.remove();
+    window.__gateOk = true;
+    if(window.__startApp) window.__startApp();
   }
   function negar(msg){
-    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Central de Apps</a>';
+    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Estante</a>';
   }
   var jaResolveu = false;
   setTimeout(function(){
@@ -73,20 +79,33 @@ export default async function handler(req, res) {
   }, 10000);
   firebase.auth().onAuthStateChanged(function(user){
     jaResolveu = true;
-    if(!user){ negar('Você precisa entrar pela Central de Apps.'); return; }
+    if(!user){ negar('Você precisa entrar pela Estante.'); return; }
     firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
-      var dados = snap.val();
-      var meusGrupos = (dados && dados.grupos) || [];
-      var permitido = GRUPOS_PERMITIDOS.some(function(g){ return meusGrupos.indexOf(g) !== -1; });
-      if(permitido){ liberar(); } else { negar('Você não tem permissão pra acessar este app.'); }
+      var dados = snap.val() || {};
+      var meus = (dados.grupos || []).map(norm);
+      var permitido = dados.admin === true || GRUPOS_PERMITIDOS.some(function(g){ return meus.indexOf(norm(g)) !== -1; });
+      if(permitido){ liberar(); return; }
+      negar('Você não tem permissão pra acessar este app.<br><span style="font-size:12px;">Seus grupos: ' + esc((dados.grupos||[]).join(', ') || 'nenhum') + '<br>Grupos com acesso: ' + esc(GRUPOS_PERMITIDOS.join(', ')) + '</span>');
     }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
   });
 })();
 </script>
 `;
-  const injectedHtml = /<\/body>/i.test(htmlContent)
-    ? htmlContent.replace(/<\/body>/i, gateSnippet + '</body>')
-    : htmlContent + gateSnippet;
+
+  const htmlContent = Buffer.from(fileBase64, 'base64').toString('utf-8');
+  const gruposRegex = /var GRUPOS_PERMITIDOS = \[[^\]]*\];/;
+  let injectedHtml;
+  if (gruposRegex.test(htmlContent)) {
+    // O arquivo já tem o cadeado: só atualiza a lista de grupos, sem duplicar nada.
+    injectedHtml = htmlContent.replace(gruposRegex, `var GRUPOS_PERMITIDOS = ${JSON.stringify(gruposFinal)};`);
+  } else {
+    injectedHtml = /<body[^>]*>/i.test(htmlContent)
+      ? htmlContent.replace(/<body[^>]*>/i, (m) => m + gateTop)
+      : gateTop + htmlContent;
+    injectedHtml = /<\/body>/i.test(injectedHtml)
+      ? injectedHtml.replace(/<\/body>/i, () => gateBottom + '</body>')
+      : injectedHtml + gateBottom;
+  }
   const finalFileBase64 = Buffer.from(injectedHtml, 'utf-8').toString('base64');
 
   const ghHeaders = {
@@ -135,18 +154,33 @@ export default async function handler(req, res) {
     }
     if (!Array.isArray(apps)) apps = [];
 
-    apps.push({
-      title,
-      category: category || '',
-      description: description || '',
-      file: cleanName,
-      icon: '🧩',
-      color: COLORS[apps.length % COLORS.length],
-      grupos: gruposFinal
-    });
+    // Cor = a mesma dos outros apps da mesma prateleira (primeiro grupo). Sem sorteio.
+    const primeiroGrupo = gruposFinal[0];
+    const irmao = apps.find(a => a && a.file !== cleanName && Array.isArray(a.grupos) && a.grupos[0] === primeiroGrupo && a.color);
+    const cor = irmao ? irmao.color : COR_PADRAO;
+
+    const idxExistente = apps.findIndex(a => a && a.file === cleanName);
+    if (idxExistente !== -1) {
+      // Reenvio do mesmo arquivo: atualiza a entrada em vez de duplicar na lista.
+      apps[idxExistente] = {
+        ...apps[idxExistente],
+        title,
+        description: description || '',
+        grupos: gruposFinal
+      };
+    } else {
+      apps.push({
+        title,
+        description: description || '',
+        file: cleanName,
+        icon: '🧩',
+        color: cor,
+        grupos: gruposFinal
+      });
+    }
 
     const newManifestContent = Buffer.from(JSON.stringify(apps, null, 2), 'utf-8').toString('base64');
-    const putManifestBody = { message: `Atualiza manifest: adiciona ${title}`, content: newManifestContent, branch: BRANCH };
+    const putManifestBody = { message: `Atualiza manifest: ${title}`, content: newManifestContent, branch: BRANCH };
     if (manifestSha) putManifestBody.sha = manifestSha;
 
     const putManifestRes = await fetch(
