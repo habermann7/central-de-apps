@@ -554,6 +554,81 @@
     .override-panel{margin:12px;}
     .login-box{margin:12px;}
   }
+
+  /* ---------- Filtro de pedido/data ---------- */
+  .search-bar{
+    display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:12px 14px;margin-bottom:18px;box-shadow:var(--shadow-sm);
+  }
+  .search-bar.active{border-color:var(--cold);box-shadow:0 0 0 3px var(--cold-soft);}
+  .search-bar .sf{display:flex;flex-direction:column;gap:4px;}
+  .search-bar label{font-size:11.5px;color:var(--ink-soft);font-weight:600;}
+  .search-bar input{
+    font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:var(--ink);
+    background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:8px 11px;
+  }
+  .search-bar input[type="text"]{width:240px;max-width:100%;}
+  .search-bar input:focus{outline:none;border-color:var(--cold);box-shadow:0 0 0 3px var(--cold-soft);}
+  .search-bar .sb-btn{
+    font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer;
+    border:1px solid var(--border);background:var(--surface-alt);color:var(--ink-soft);
+    border-radius:9px;padding:8px 12px;
+  }
+  .search-bar .sb-btn:hover{background:var(--neutral-soft);color:var(--ink);}
+  .search-bar .sb-spacer{flex:1;}
+  .search-bar .alt-btn{
+    display:none;align-items:center;gap:7px;
+    border:1px solid var(--cold-line);background:var(--cold-soft);color:var(--cold);
+  }
+  .search-bar .alt-btn.show{display:inline-flex;}
+  .search-bar .alt-btn.late{border-color:#E6B8AE;background:var(--danger-soft);color:var(--danger);}
+  .search-bar .alt-btn .n{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;}
+
+  /* ---------- Aviso: data alterada e já vencida ---------- */
+  .alt-late{
+    display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;
+    background:var(--danger-soft);color:var(--danger);
+    font-size:10.5px;font-weight:700;white-space:nowrap;
+  }
+
+  /* ---------- Bloco flutuante: pedidos com data alterada ---------- */
+  .altered-block{
+    position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:800;
+    width:min(430px,92vw);max-height:62vh;display:none;flex-direction:column;
+    background:var(--surface);border:1px solid var(--border-strong);border-left:4px solid var(--cold);
+    border-radius:12px;box-shadow:0 18px 48px rgba(18,24,38,.22);
+  }
+  .altered-block.show{display:flex;}
+  .altered-block.has-late{border-left-color:var(--danger);}
+  .altered-head{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+    padding:12px 14px 10px;cursor:grab;user-select:none;touch-action:none;
+    border-bottom:1px solid var(--border);
+  }
+  .altered-head:active{cursor:grabbing;}
+  .altered-head h4{font-family:'Space Grotesk',sans-serif;font-size:14.5px;margin:0;}
+  .altered-head .asub{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+  .altered-head .asub b{color:var(--danger);}
+  .altered-close{
+    border:none;background:transparent;cursor:pointer;font-size:18px;line-height:1;
+    color:var(--ink-faint);padding:2px 6px;border-radius:6px;
+  }
+  .altered-close:hover{background:var(--neutral-soft);color:var(--ink);}
+  .altered-list{overflow-y:auto;padding:6px 14px 12px;}
+  .altered-item{padding:10px 0;border-bottom:1px dashed var(--border);}
+  .altered-item:last-child{border-bottom:none;}
+  .altered-item .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;}
+  .altered-item .dates{font-size:12px;color:var(--ink-soft);}
+  .altered-item .dates .new{color:var(--cold);font-weight:700;}
+  .altered-item .dates .old{text-decoration:line-through;color:var(--ink-faint);}
+  .altered-item .desc{
+    margin-top:5px;font-size:12.5px;line-height:1.45;white-space:pre-wrap;word-break:break-word;
+    background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;padding:7px 9px;
+  }
+  .altered-item .desc.empty{color:var(--ink-faint);font-style:italic;}
+  .altered-item .who{margin-top:4px;font-size:11px;color:var(--ink-faint);}
+  @media print{ .altered-block, .search-bar{display:none !important;} }
 </style>
 </head>
 <body>
@@ -670,6 +745,25 @@
       <button class="view-tab" data-v="atraso" type="button">Pedidos em atraso<span class="badge" id="atrasoBadge">0</span></button>
     </div>
 
+    <!-- ============ Filtro de pedido e data (vale para as duas visões) ============ -->
+    <div class="search-bar" id="searchBar">
+      <div class="sf">
+        <label for="pedidoSearch">Pedido</label>
+        <input type="text" id="pedidoSearch" placeholder="Ex: 1001, 1002" title="Digite um ou vários pedidos, separados por vírgula" autocomplete="off">
+      </div>
+      <div class="sf">
+        <label for="dateFrom">Data prevista · de</label>
+        <input type="date" id="dateFrom">
+      </div>
+      <div class="sf">
+        <label for="dateTo">até</label>
+        <input type="date" id="dateTo">
+      </div>
+      <button class="sb-btn" id="clearSearch" type="button">Limpar filtros</button>
+      <span class="sb-spacer"></span>
+      <button class="sb-btn alt-btn" id="alteredBtn" type="button">🔔 Datas alteradas <span class="n" id="alteredBtnN">0</span></button>
+    </div>
+
     <!-- ============ VIEW: overview ============ -->
     <div id="viewOverview">
       <div class="toolbar">
@@ -775,6 +869,18 @@
 
   </div>
 
+</div>
+
+<!-- Bloco flutuante: pedidos com data alterada -->
+<div class="altered-block" id="alteredBlock" role="dialog" aria-label="Pedidos com data alterada">
+  <div class="altered-head" id="alteredHead">
+    <div>
+      <h4>Pedidos com data alterada</h4>
+      <div class="asub" id="alteredSub"></div>
+    </div>
+    <button class="altered-close" id="alteredClose" type="button" aria-label="Fechar">✕</button>
+  </div>
+  <div class="altered-list" id="alteredList"></div>
 </div>
 
 <!-- Print-only area used to generate the PDF report -->
@@ -954,6 +1060,7 @@
     });
 
     state.records = dedupedRecords;
+    refreshAltered();
   }
 
   // ========================================================================
@@ -1002,6 +1109,24 @@
       refDate: null
     }
   };
+
+  // ---------- Filtro de pedido e data (compartilhado pelas duas visões) ----------
+  var searchFilter = { tokens: [], from: null, to: null };
+
+  function passesSearch(r){
+    if(searchFilter.tokens.length){
+      var ped = String(r.pedido || '').toLowerCase();
+      var achou = searchFilter.tokens.some(function(t){ return ped.indexOf(t) !== -1; });
+      if(!achou) return false;
+    }
+    if(searchFilter.from !== null || searchFilter.to !== null){
+      if(!r.dateObj) return false;
+      var t = r.dateObj.getTime();
+      if(searchFilter.from !== null && t < searchFilter.from) return false;
+      if(searchFilter.to !== null && t > searchFilter.to) return false;
+    }
+    return true;
+  }
 
   var els = {
     dropzone: document.getElementById('dropzone'),
@@ -1242,6 +1367,7 @@
     state.atraso.modal = 'all';
     state.atraso.filial = 'all';
     state.atraso.refDate = todayUTC();
+    alteredAutoShown = false;
 
     // Apply overrides (dedup + merge Firebase data)
     applyOverrides();
@@ -1348,6 +1474,7 @@
       if(state.activeGroup !== 'all' && r.group !== state.activeGroup) return false;
       if(state.activeModal !== 'all' && r.modal !== state.activeModal) return false;
       if(state.activeFilial !== 'all' && r.filial !== state.activeFilial) return false;
+      if(!passesSearch(r)) return false;
       return true;
     });
   }
@@ -1547,10 +1674,17 @@
   }
 
   // Helper: render date cell with override display
+  function isAlteradoVencido(r){
+    return !!(r.overrideDate && r.dateObj && r.dateObj.getTime() < todayUTC().getTime());
+  }
+  function altLateTagHtml(){
+    return '<span class="alt-late" title="A data deste pedido foi alterada e a nova data já passou">⚠ nova data vencida</span>';
+  }
   function dateCellHtml(r){
     if(r.overrideDate){
       return '<span class="date-override">'+escapeHtml(r.dateKey)+'</span>' +
-             '<span class="date-original">'+escapeHtml(r.originalDateKey)+'</span>';
+             '<span class="date-original">'+escapeHtml(r.originalDateKey)+'</span>' +
+             (isAlteradoVencido(r) ? altLateTagHtml() : '');
     }
     return escapeHtml(r.dateKey);
   }
@@ -1604,6 +1738,133 @@
     els.drilldownCard.style.display = 'block';
     els.drilldownCard.scrollIntoView({behavior:'smooth', block:'nearest'});
   }
+
+  // ---------- Bloco flutuante: pedidos com data alterada ----------
+  var alteredAutoShown = false;
+  var alteredBlock = document.getElementById('alteredBlock');
+  var alteredList = document.getElementById('alteredList');
+  var alteredSub = document.getElementById('alteredSub');
+  var alteredBtn = document.getElementById('alteredBtn');
+  var alteredBtnN = document.getElementById('alteredBtnN');
+
+  function getAlterados(){
+    var hoje = todayUTC().getTime();
+    var lista = state.records.filter(function(r){ return !!r.overrideDate; }).map(function(r){
+      var venc = !!(r.dateObj && r.dateObj.getTime() < hoje);
+      return {
+        pedido: r.pedido, novaData: r.dateKey, dataOriginal: r.originalDateKey || '',
+        obs: r.obs || '', por: r.updatedBy || '', quando: r.updatedAt || null,
+        vencido: venc, dias: venc ? Math.round((hoje - r.dateObj.getTime())/86400000) : 0,
+        ts: r.dateObj ? r.dateObj.getTime() : 0
+      };
+    });
+    lista.sort(function(a,b){
+      if(a.vencido !== b.vencido) return a.vencido ? -1 : 1;
+      if(a.vencido) return b.dias - a.dias;
+      return a.ts - b.ts;
+    });
+    return lista;
+  }
+
+  function renderAlteredList(lista){
+    var vencidos = lista.filter(function(x){ return x.vencido; }).length;
+    alteredSub.innerHTML = lista.length.toLocaleString('pt-BR') + ' pedido' + (lista.length===1?'':'s') +
+      (vencidos ? ' · <b>' + vencidos.toLocaleString('pt-BR') + ' com a nova data já vencida</b>' : '');
+    alteredBlock.classList.toggle('has-late', vencidos > 0);
+    alteredList.innerHTML = lista.map(function(x){
+      var quando = x.quando ? new Date(x.quando).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+      return '<div class="altered-item">'+
+        '<div class="top"><span class="pedido-link" data-pedido="'+escapeHtml(x.pedido)+'">'+escapeHtml(x.pedido)+'</span>'+
+          '<span class="dates"><span class="old">'+escapeHtml(x.dataOriginal)+'</span> → <span class="new">'+escapeHtml(x.novaData)+'</span></span>'+
+          (x.vencido ? '<span class="alt-late" style="margin-left:0">⚠ vencido há '+x.dias+' dia'+(x.dias===1?'':'s')+'</span>' : '')+
+        '</div>'+
+        (x.obs ? '<div class="desc">'+escapeHtml(x.obs)+'</div>' : '<div class="desc empty">(sem descrição informada)</div>')+
+        '<div class="who">'+(x.por ? 'por '+escapeHtml(x.por) : '')+(quando ? ' · '+escapeHtml(quando) : '')+'</div>'+
+      '</div>';
+    }).join('');
+  }
+
+  function openAltered(){ alteredBlock.classList.add('show'); refreshAltered(); }
+  function closeAltered(){ alteredBlock.classList.remove('show'); }
+
+  function refreshAltered(){
+    if(!alteredBlock) return;
+    var lista = getAlterados();
+    var vencidos = lista.filter(function(x){ return x.vencido; }).length;
+    alteredBtnN.textContent = lista.length.toLocaleString('pt-BR');
+    alteredBtn.classList.toggle('show', lista.length > 0);
+    alteredBtn.classList.toggle('late', vencidos > 0);
+    if(lista.length === 0){ closeAltered(); return; }
+    // abre sozinho uma vez por planilha carregada
+    if(!alteredAutoShown && state.records.length){
+      alteredAutoShown = true;
+      alteredBlock.classList.add('show');
+    }
+    if(alteredBlock.classList.contains('show')) renderAlteredList(lista);
+  }
+
+  document.getElementById('alteredClose').addEventListener('click', closeAltered);
+  alteredBtn.addEventListener('click', function(){
+    if(alteredBlock.classList.contains('show')) closeAltered(); else openAltered();
+  });
+  els.changeFileBtn.addEventListener('click', closeAltered);
+
+  // arrastar o bloco pelo cabeçalho (não tampa o que você precisa ver)
+  (function(){
+    var head = document.getElementById('alteredHead');
+    var drag = null;
+    head.addEventListener('pointerdown', function(e){
+      if(e.target.closest('.altered-close')) return;
+      var r = alteredBlock.getBoundingClientRect();
+      alteredBlock.style.transform = 'none';
+      alteredBlock.style.left = r.left + 'px';
+      alteredBlock.style.top = r.top + 'px';
+      drag = { dx: e.clientX - r.left, dy: e.clientY - r.top };
+      head.setPointerCapture(e.pointerId);
+    });
+    head.addEventListener('pointermove', function(e){
+      if(!drag) return;
+      var w = alteredBlock.offsetWidth;
+      var x = Math.min(Math.max(0, e.clientX - drag.dx), window.innerWidth - Math.min(w, 80));
+      var y = Math.min(Math.max(0, e.clientY - drag.dy), window.innerHeight - 40);
+      alteredBlock.style.left = x + 'px';
+      alteredBlock.style.top = y + 'px';
+    });
+    function fim(){ drag = null; }
+    head.addEventListener('pointerup', fim);
+    head.addEventListener('pointercancel', fim);
+  })();
+
+  // ---------- Filtro de pedido e data: eventos ----------
+  (function(){
+    var inPedido = document.getElementById('pedidoSearch');
+    var inFrom = document.getElementById('dateFrom');
+    var inTo = document.getElementById('dateTo');
+    var bar = document.getElementById('searchBar');
+    var timer = null;
+
+    function dayFromInput(v){
+      if(!v) return null;
+      var p = v.split('-');
+      return Date.UTC(+p[0], +p[1]-1, +p[2]);
+    }
+    function aplicar(){
+      searchFilter.tokens = inPedido.value.split(/[\s,;]+/).map(function(t){ return t.trim().toLowerCase(); }).filter(Boolean);
+      searchFilter.from = dayFromInput(inFrom.value);
+      searchFilter.to = dayFromInput(inTo.value);
+      bar.classList.toggle('active', searchFilter.tokens.length > 0 || searchFilter.from !== null || searchFilter.to !== null);
+      if(!state.rawRecords || !state.rawRecords.length) return;
+      render();
+      renderAtraso();
+    }
+    inPedido.addEventListener('input', function(){ clearTimeout(timer); timer = setTimeout(aplicar, 150); });
+    inFrom.addEventListener('change', aplicar);
+    inTo.addEventListener('change', aplicar);
+    document.getElementById('clearSearch').addEventListener('click', function(){
+      inPedido.value = ''; inFrom.value = ''; inTo.value = '';
+      aplicar();
+    });
+  })();
 
   // Event delegation for pedido-link, priority-badge, obs-icon clicks
   document.addEventListener('click', function(e){
@@ -1791,6 +2052,7 @@
     var list = state.records.filter(function(r){
       if(!r.dateObj) return false;
       if(r.dateObj.getTime() >= ref.getTime()) return false;
+      if(!passesSearch(r)) return false;
       if(state.atraso.group !== 'all' && r.group !== state.atraso.group) return false;
       if(state.atraso.modal !== 'all' && r.modal !== state.atraso.modal) return false;
       if(state.atraso.filial !== 'all' && r.filial !== state.atraso.filial) return false;
@@ -1803,7 +2065,8 @@
         dateKey: r.dateKey, days: days,
         priority: r.priority || '', obs: r.obs || '',
         overrideDate: r.overrideDate || null,
-        originalDateKey: r.originalDateKey || null
+        originalDateKey: r.originalDateKey || null,
+        alteradoVencido: isAlteradoVencido(r)
       };
     });
     list.sort(function(a,b){ return b.days - a.days; });
@@ -1866,7 +2129,7 @@
 
         var dateDisplay = r.dateKey;
         if(r.overrideDate){
-          dateDisplay = '<span class="date-override">'+escapeHtml(r.dateKey)+'</span><span class="date-original">'+escapeHtml(r.originalDateKey)+'</span>';
+          dateDisplay = '<span class="date-override">'+escapeHtml(r.dateKey)+'</span><span class="date-original">'+escapeHtml(r.originalDateKey)+'</span>' + (r.alteradoVencido ? altLateTagHtml() : '');
         } else {
           dateDisplay = escapeHtml(r.dateKey);
         }
