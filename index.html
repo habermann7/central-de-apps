@@ -551,6 +551,11 @@ if (/github\.io$/.test(location.hostname)) {
   .grupos-check input{ margin:0; accent-color:var(--accent); }
   .modal-danger-link{ background:transparent !important; border:none !important; color:var(--danger); font-size:12px; font-family:var(--body); cursor:pointer; padding:6px 0; text-align:left; margin-top:4px; }
   .modal-danger-link:hover{ text-decoration:underline; }
+  .pw-box{ margin-top:16px; padding-top:14px; border-top:1px solid var(--border); }
+  .pw-row{ display:flex; gap:8px; }
+  .pw-row input{ flex:1; margin:0; }
+  .pw-row button{ padding:0 16px; border-radius:var(--radius-sm); font-size:13px; font-weight:600; cursor:pointer; font-family:var(--body); background:transparent; border:1px solid var(--border); color:var(--text-dim); }
+  .pw-row button:hover{ color:var(--text); border-color:var(--text-faint); }
   .modal-header-row{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:4px; }
 
   .toast{
@@ -1131,7 +1136,15 @@ if (/github\.io$/.test(location.hostname)) {
         <button class="btn-primary" onclick="salvarUsuarioModal()">Salvar</button>
       </div>
       <div class="modal-status" id="editUserStatus"></div>
-      <button class="modal-danger-link" onclick="removerAcessoModal()">Remover acesso deste usuário</button>
+      <div class="pw-box">
+        <label>Redefinir senha</label>
+        <div class="pw-row">
+          <input type="text" id="editUserNovaSenha" placeholder="Nova senha (mín. 6 caracteres)" autocomplete="off">
+          <button class="btn-ghost" id="btnNovaSenha" onclick="redefinirSenhaModal()">Definir</button>
+        </div>
+        <div class="table-hint" style="padding:4px 0 0;">A pessoa será desconectada e entra com a senha nova.</div>
+      </div>
+      <button class="modal-danger-link" onclick="excluirUsuarioModal()">Excluir usuário (apaga login e cadastro)</button>
     </div>
   </div>
 
@@ -1972,6 +1985,7 @@ function abrirEditarUsuarioFromButton(btn){
   document.getElementById('editUserAdmin').checked = btn.dataset.admin === '1';
   const statusEl = document.getElementById('editUserStatus');
   statusEl.className = 'modal-status'; statusEl.textContent = '';
+  document.getElementById('editUserNovaSenha').value = '';
   document.getElementById('editUserModalBg').classList.add('show');
 }
 function fecharEditarUsuario(){
@@ -2005,17 +2019,45 @@ async function salvarUsuarioModal(){
     statusEl.textContent = err.message;
   }
 }
-async function removerAcessoModal(){
+async function chamarApiAdmin(rota, corpo){
+  const idToken = await firebase.auth().currentUser.getIdToken();
+  const res = await fetch(API_BASE + rota, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.assign({ idToken: idToken }, corpo))
+  });
+  const data = await res.json().catch(() => ({}));
+  if(!res.ok) throw new Error(data.error || 'Falha na operação');
+  return data;
+}
+async function redefinirSenhaModal(){
+  if(!editingUid) return;
+  const campo = document.getElementById('editUserNovaSenha');
+  const statusEl = document.getElementById('editUserStatus');
+  const senha = campo.value;
+  if(senha.length < 6){ statusEl.className = 'modal-status err'; statusEl.textContent = 'A senha precisa ter pelo menos 6 caracteres.'; return; }
+  statusEl.className = 'modal-status loading'; statusEl.textContent = 'Redefinindo senha...';
+  try{
+    await chamarApiAdmin('/api/redefinir-senha', { uid: editingUid, novaSenha: senha });
+    campo.value = '';
+    statusEl.className = 'modal-status ok'; statusEl.textContent = 'Senha redefinida. Passa a nova senha pra pessoa.';
+  }catch(err){
+    statusEl.className = 'modal-status err'; statusEl.textContent = err.message;
+  }
+}
+async function excluirUsuarioModal(){
   if(!editingUid) return;
   const nome = document.getElementById('editUserNome').value.trim() || 'este usuário';
-  if(!confirm('Remover o acesso de ' + nome + '? A pessoa não vai mais conseguir entrar (a conta de e-mail em si continua existindo no Firebase, só perde a permissão).')) return;
+  if(!confirm('Excluir ' + nome + ' de vez? Apaga o login e o cadastro. Não dá pra desfazer (mas dá pra criar a pessoa de novo).')) return;
+  const statusEl = document.getElementById('editUserStatus');
+  statusEl.className = 'modal-status loading'; statusEl.textContent = 'Excluindo...';
   try{
-    await firebase.database().ref('centralApps/usuarios/' + editingUid).remove();
+    await chamarApiAdmin('/api/excluir-usuario', { uid: editingUid });
     fecharEditarUsuario();
-    toast('Acesso removido.');
+    toast('Usuário excluído.');
     carregarListaUsuarios();
   }catch(err){
-    toast('Erro ao remover: ' + err.message);
+    statusEl.className = 'modal-status err'; statusEl.textContent = err.message;
   }
 }
 
