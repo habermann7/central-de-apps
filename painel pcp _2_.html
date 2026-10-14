@@ -1012,6 +1012,8 @@
         dedupedRecords.push(rep);
       } else {
         rep.itemCount += 1;
+        // pedido com qualquer item GELADO é tratado como GELADO (antes valia só a 1ª linha)
+        if(r.group === 'GELADO') rep.group = 'GELADO';
         if(r.desc && rep.descs.indexOf(r.desc) === -1) rep.descs.push(r.desc);
         if(r.produto && rep.produtos.indexOf(r.produto) === -1) rep.produtos.push(r.produto);
       }
