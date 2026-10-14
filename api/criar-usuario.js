@@ -59,19 +59,30 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Senha precisa ter pelo menos 6 caracteres' });
     }
 
-    // 3. Cria a conta no Firebase Auth
-    const novoUsuario = await admin.auth().createUser({
-      email,
-      password: senha,
-      displayName: nome,
-    });
+    // 3. Cria a conta no Firebase Auth (ou reaproveita um login "órfão":
+    //    existe no Authentication mas já não tem cadastro no banco)
+    let uid;
+    try {
+      const novo = await admin.auth().createUser({ email, password: senha, displayName: nome });
+      uid = novo.uid;
+    } catch (e) {
+      if (e.code !== 'auth/email-already-exists') throw e;
+      const existente = await admin.auth().getUserByEmail(email);
+      const reg = await admin.database().ref('centralApps/usuarios/' + existente.uid).once('value');
+      if (reg.exists()) {
+        return res.status(409).json({ error: 'Já existe um usuário ativo com esse e-mail' });
+      }
+      await admin.auth().updateUser(existente.uid, { password: senha, displayName: nome });
+      await admin.auth().revokeRefreshTokens(existente.uid);
+      uid = existente.uid;
+    }
 
     // 4. Cria o registro de permissão no Realtime Database
     await admin.database()
-      .ref('centralApps/usuarios/' + novoUsuario.uid)
+      .ref('centralApps/usuarios/' + uid)
       .set({ nome, email, grupos, gruposMap: mapaDeGrupos(grupos), admin: false });
 
-    return res.status(200).json({ ok: true, uid: novoUsuario.uid });
+    return res.status(200).json({ ok: true, uid });
   } catch (err) {
     const msg = err.code === 'auth/email-already-exists'
       ? 'Já existe uma conta com esse e-mail'
