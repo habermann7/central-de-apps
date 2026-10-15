@@ -152,5 +152,15 @@
     "grupos": [
       "TESTES"
     ]
+  },
+  {
+    "title": "Torre de Controle TV",
+    "description": "acompanhamento de tratativas do time da logistica.",
+    "file": "painel_chamados.html",
+    "icon": "🧩",
+    "color": "#3F8E8A",
+    "grupos": [
+      "TESTES"
+    ]
   }
 ]
