@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>STIN Pharma · Painel de Chamados</title>
+<style>
+:root{color-scheme:dark;--bg:#080f1c;--panel:#111e30;--panel2:#0d1828;--ink:#f2f6fc;--muted:#a8b8cd;--line:#293d57;--ok:#51e0aa;--warn:#ffcb67;--bad:#ff7c89;--azul:#65b2ff;--violet:#a99cff;--ease:cubic-bezier(.23,1,.32,1)}
+*{box-sizing:border-box}
+html{min-height:100%;background:var(--bg)}
+body{margin:0;min-height:100svh;color:var(--ink);background:var(--bg);font-family:'Segoe UI',system-ui,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.num,.v,td.n,th.n{font-variant-numeric:tabular-nums}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px 24px;padding:22px 32px 14px}
+.brand{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.brand a{color:inherit;text-decoration:none}.brand a:hover{color:var(--ink)}
+h1{margin:4px 0 0;font-size:30px;letter-spacing:-.01em;font-weight:650}
+.tools{margin-left:auto;display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px}
+.field{display:flex;flex-direction:column;gap:4px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+select,button{font:inherit;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;cursor:pointer;transition:border-color .15s var(--ease),background .15s var(--ease),transform .12s var(--ease)}
+select:hover,button:hover{border-color:#4a6585}
+button:active{transform:scale(.97)}
+select:focus-visible,button:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
+#upd{font-size:12px;color:var(--muted);align-self:center;padding-bottom:2px}
+main{padding:6px 32px 40px;display:grid;gap:16px}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.tile{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;padding:16px 18px 14px}
+.tile.ok{border-left-color:var(--ok)}.tile.warn{border-left-color:var(--warn)}.tile.bad{border-left-color:var(--bad)}.tile.info{border-left-color:var(--azul)}
+.tile .l{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.tile .v{font-size:38px;font-weight:650;line-height:1.1;margin:8px 0 4px;letter-spacing:-.02em}
+.tile.ok .v{color:var(--ok)}.tile.warn .v{color:var(--warn)}.tile.bad .v{color:var(--bad)}
+.tile .s{font-size:12px;color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;min-width:0}
+.panel h3{margin:0;font-size:15px;font-weight:650}
+.panel .sub{margin:3px 0 12px;font-size:12px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+.grid2b{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--muted);font-size:11px;font-family:inherit}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:11.5px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.aging{display:grid;gap:10px}
+.ag{display:grid;grid-template-columns:96px 1fr 34px;align-items:center;gap:10px;font-size:12.5px}
+.ag .bar{height:12px;border-radius:6px;background:var(--panel2);overflow:hidden}
+.ag .bar b{display:block;height:100%;border-radius:6px;transform-origin:left;animation:grow .6s var(--ease) both}
+.ag .q{text-align:right;font-weight:650}
+.tscroll{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid #1b2b42}
+tr:last-child td{border-bottom:0}
+th.n,td.n{text-align:right}
+.c-ok{color:var(--ok)}.c-warn{color:var(--warn)}.c-bad{color:var(--bad)}
+.empty{padding:40px 12px;text-align:center;color:var(--muted)}
+.msg{margin:40px auto;max-width:520px;text-align:center;color:var(--muted);line-height:1.6}
+.msg b{color:var(--ink)}
+.fade{animation:rise .5s var(--ease) both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media(max-width:1100px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2,.grid2b{grid-template-columns:1fr}}
+@media(max-width:600px){header,main{padding-inline:16px}.tiles{grid-template-columns:1fr 1fr;gap:10px}.tile .v{font-size:30px}h1{font-size:24px}.tools{margin-left:0}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
+</head>
+<body>
+<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
+  <div style="max-width:320px;width:100%;">
+    <div id="__gateMsg" style="font-size:14px;color:#8a93a3;line-height:1.6;">Verificando acesso...</div>
+  </div>
+</div>
+
+<header>
+  <div><div class="brand"><a href="./index.html">&larr; Central de Apps</a> · STIN PHARMA / LOGÍSTICA &amp; PCP</div><h1>Painel de Chamados</h1></div>
+  <div class="tools">
+    <span id="upd"></span>
+    <div class="field"><label for="per">Período</label><select id="per">
+      <option value="7">Últimos 7 dias</option><option value="30" selected>Últimos 30 dias</option><option value="90">Últimos 90 dias</option>
+      <option value="180">Últimos 180 dias</option><option value="mes">Mês atual</option><option value="365">Últimos 12 meses</option></select></div>
+    <button id="btnUpd" type="button">Atualizar</button>
+    <button id="btnFull" type="button">Tela cheia</button>
+  </div>
+</header>
+<main id="view"><div class="msg">Carregando os chamados…</div></main>
+
+<script>
+(function(){
+'use strict';
+var API_URL = 'https://estanteapps.vercel.app/api/torre-metricas';
+var CFG = {
+  expediente:{inicio:8,fim:18}, metaR:60, metaS:180, refreshMin:5,
+  feriados:["2026-01-01","2026-02-16","2026-02-17","2026-04-03","2026-04-21","2026-05-01","2026-06-04","2026-09-07","2026-10-12","2026-11-02","2026-11-20","2026-12-25","2027-01-01","2027-02-08","2027-02-09","2027-03-26","2027-04-21","2027-05-27","2027-09-07","2027-10-12","2027-11-02","2027-11-15","2027-11-20","2027-12-25"]
+};
+var MIN=60000, HORA=3600000, DAY=86400000, OFF=-3*HORA; // Brasília = UTC-3 (sem horário de verão)
+var FER={}; CFG.feriados.forEach(function(f){FER[f]=1;});
+var $=function(s){return document.querySelector(s);};
+var pad=function(n){return String(n).padStart(2,'0');};
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+var started=false, dados=[], geradoEm=0, periodo='30', timer=null;
+
+/* ---------- horas úteis (8h–18h, seg–sex, sem feriados), no horário de Brasília ---------- */
+function bizMs(a,b){
+  if(!a||!b||b<=a) return 0;
+  var A=a+OFF,B=b+OFF,t=0,d=Math.floor(A/DAY)*DAY;
+  while(d<B){
+    var dt=new Date(d),w=dt.getUTCDay(),key=dt.toISOString().slice(0,10);
+    if(w>0&&w<6&&!FER[key]){
+      var s=d+CFG.expediente.inicio*HORA,e=d+CFG.expediente.fim*HORA,lo=Math.max(A,s),hi=Math.min(B,e);
+      if(hi>lo) t+=hi-lo;
+    }
+    d+=DAY;
+  }
+  return t;
+}
+function fmtDur(ms){var m=Math.round(ms/MIN);if(m<60)return m+'min';return Math.floor(m/60)+'h'+pad(m%60);}
+function pct(a,b){return b?Math.round(a/b*100):null;}
+var fp=function(p){return p==null?'—':p+'%';};
+var fd=function(t){return t==null?'—':fmtDur(t);};
+var fnota=function(n){return n==null?'—':n.toFixed(1).replace('.',',')+' ★';};
+var pctCls=function(p){return p==null?'':p>=90?'c-ok':p>=75?'c-warn':'c-bad';};
+var tileCls=function(p){return p==null?'info':p>=90?'ok':p>=75?'warn':'bad';};
+
+function estado(t,meta,done){if(done)return t<=meta?'ok':'late';if(t>meta)return 'late';if(t>meta*.75)return 'risk';return 'run';}
+function metricas(c,now){
+  var mR=(c.metaR||CFG.metaR)*MIN,mS=(c.metaS||CFG.metaS)*MIN;
+  var tR=bizMs(c.abertoEm,c.primeiraRespostaEm||now),fimS=c.resolvidoEm||now;
+  var pausa=(c.pausas||[]).reduce(function(s,p){return s+bizMs(Math.max(p.inicio,c.abertoEm),Math.min(p.fim||now,fimS));},0);
+  var tS=Math.max(0,bizMs(c.abertoEm,fimS)-pausa);
+  var respDone=!!c.primeiraRespostaEm,resolDone=c.status==='Resolvido';
+  return {tR:tR,tS:tS,respDone:respDone,resolDone:resolDone,respOk:tR<=mR,resolOk:tS<=mS,
+    rState:estado(tR,mR,respDone),sState:(c.status==='Aguardando vendedor'&&!resolDone)?'pause':estado(tS,mS,resolDone)};
+}
+function stats(l){
+  var respC=l.filter(function(x){return x.m.respDone||x.m.rState==='late';}),respOk=respC.filter(function(x){return x.m.respDone&&x.m.respOk;});
+  var resC=l.filter(function(x){return x.m.resolDone||x.m.sState==='late';}),resOk=resC.filter(function(x){return x.m.resolDone&&x.m.resolOk;});
+  var resp=l.filter(function(x){return x.m.respDone;}),res=l.filter(function(x){return x.m.resolDone;}),nt=l.filter(function(x){return x.c.nota;});
+  var soma=function(a,f){return a.reduce(function(s,x){return s+f(x);},0);};
+  return {n:l.length,resolvidos:res.length,abertos:l.filter(function(x){return x.c.status!=='Resolvido';}).length,
+    pR:pct(respOk.length,respC.length),pS:pct(resOk.length,resC.length),
+    tmR:resp.length?soma(resp,function(x){return x.m.tR;})/resp.length:null,
+    tmS:res.length?soma(res,function(x){return x.m.tS;})/res.length:null,
+    nota:nt.length?soma(nt,function(x){return x.c.nota;})/nt.length:null,nNotas:nt.length};
+}
+function agrupa(l,fn){var g=new Map();l.forEach(function(x){var k=fn(x);if(!g.has(k))g.set(k,[]);g.get(k).push(x);});return g;}
+
+/* ---------- carregar ---------- */
+function showMsg(html){$('#view').innerHTML='<div class="msg">'+html+'</div>';}
+function carregar(manual){
+  var u=firebase.auth().currentUser;
+  if(!u){showMsg('Você precisa entrar pela Estante.');return Promise.resolve();}
+  if(manual) $('#upd').textContent='Atualizando…';
+  return u.getIdToken().then(function(tok){
+    return fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idToken:tok})});
+  }).then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok)throw new Error(j.error||'Falha ao carregar');return j;});})
+  .then(function(j){dados=j.chamados||[];geradoEm=j.geradoEm||Date.now();render();})
+  .catch(function(e){
+    if(dados.length){$('#upd').textContent='Falha ao atualizar ('+e.message+')';return;}
+    showMsg('<b>Não consegui carregar os chamados.</b><br>'+esc(e.message)+'<br><br><button type="button" id="retry">Tentar de novo</button>');
+    var b=$('#retry');if(b)b.onclick=function(){showMsg('Carregando os chamados…');carregar(true);};
+  });
+}
+
+/* ---------- desenhar ---------- */
+function tile(l,v,s,cls,raw){return '<div class="tile '+cls+'"><div class="l">'+l+'</div><div class="v num" '+(raw!=null?'data-count="'+raw+'"':'')+'>'+v+'</div><div class="s">'+s+'</div></div>';}
+function tabela(titulo,sub,mapa,rot,cols,limite){
+  var linhas=[];mapa.forEach(function(l,k){linhas.push({k:k,s:stats(l)});});
+  linhas.sort(function(a,b){return b.s.n-a.s.n;});if(limite)linhas=linhas.slice(0,limite);
+  var head='<th>'+rot+'</th>'+cols.map(function(c){return '<th class="n">'+c.h+'</th>';}).join('');
+  var body=linhas.map(function(x){return '<tr><td>'+esc(x.k)+'</td>'+cols.map(function(c){return '<td class="n '+(c.cls?c.cls(x.s):'')+'">'+c.v(x.s)+'</td>';}).join('')+'</tr>';}).join('')||'<tr><td colspan="9" class="empty">Sem dados no período</td></tr>';
+  return '<div class="panel fade"><h3>'+titulo+'</h3><p class="sub">'+sub+'</p><div class="tscroll"><table><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div></div>';
+}
+function render(){
+  var now=Date.now(),ini;
+  if(periodo==='mes'){var b=new Date(now+OFF);ini=Date.UTC(b.getUTCFullYear(),b.getUTCMonth(),1)-OFF;}else ini=now-(+periodo)*DAY;
+  var L=dados.filter(function(c){return c.abertoEm>=ini;}).map(function(c){return {c:c,m:metricas(c,now)};});
+  var st=stats(L),Lres=L.filter(function(x){return x.m.resolDone;});
+  var abertosAgora=dados.filter(function(c){return c.status!=='Resolvido';});
+  var foraPrazo=abertosAgora.map(function(c){return metricas(c,now);}).filter(function(m){return m.rState==='late'||m.sState==='late';}).length;
+  var urgAbertos=abertosAgora.filter(function(c){return c.urgente;}).length;
+  var taxa=pct(st.resolvidos,st.n);
+
+  var tiles='<section class="tiles">'+
+    tile('Chamados no período',st.n,st.resolvidos+' resolvidos · '+st.abertos+' em aberto','info',st.n)+
+    tile('Taxa de resolução',fp(taxa),'resolvidos ÷ abertos no período',taxa==null?'info':taxa>=90?'ok':taxa>=75?'warn':'bad')+
+    tile('1ª resposta no prazo',fp(st.pR),'dentro da meta de cada tipo',tileCls(st.pR))+
+    tile('Resolução no prazo',fp(st.pS),'dentro da meta de cada tipo',tileCls(st.pS))+
+    tile('Tempo médio 1ª resposta',fd(st.tmR),'em horas úteis','info')+
+    tile('Tempo médio de tratativa',fd(st.tmS),'abertura até resolução, sem pausas','info')+
+    tile('Avaliação dos vendedores',fnota(st.nota),st.nNotas+' avaliações',st.nota==null?'info':tileCls(st.nota*20))+
+    tile('Fora do prazo agora',foraPrazo,urgAbertos+' urgentes em aberto',foraPrazo?'bad':'ok')+
+  '</section>';
+
+  /* evolução semanal */
+  var nW=Math.min(26,Math.max(4,Math.ceil((periodo==='mes'?31:+periodo)/7)));
+  var hoje=new Date(now+OFF);var seg=Date.UTC(hoje.getUTCFullYear(),hoje.getUTCMonth(),hoje.getUTCDate())-((hoje.getUTCDay()+6)%7)*DAY-OFF;
+  var sem=[];
+  for(var i=nW-1;i>=0;i--){
+    var a=seg-7*i*DAY,b2=a+7*DAY,ab=dados.filter(function(c){return c.abertoEm>=a&&c.abertoEm<b2;}).map(function(c){return {c:c,m:metricas(c,now)};});
+    var rs=dados.filter(function(c){return c.resolvidoEm&&c.resolvidoEm>=a&&c.resolvidoEm<b2;}).length;
+    var d=new Date(a+OFF);sem.push({lbl:pad(d.getUTCDate())+'/'+pad(d.getUTCMonth()+1),abertos:ab.length,resolvidos:rs,pS:stats(ab).pS});
+  }
+  var W=1100,H=250,pl=34,pr=40,pt=14,pb=28,cw=W-pl-pr,ch=H-pt-pb;
+  var maxN=Math.max(4,Math.max.apply(null,sem.map(function(x){return Math.max(x.abertos,x.resolvidos);}))),bw=cw/sem.length;
+  var yN=function(n){return pt+ch-n/maxN*ch;},yP=function(p){return pt+ch-p/100*ch;};
+  var pts=sem.map(function(x,i){return x.pS==null?null:[pl+bw*i+bw/2,yP(x.pS)];}),path='',pen=false;
+  pts.forEach(function(p){if(!p){pen=false;return;}path+=(pen?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1);pen=true;});
+  var svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Chamados abertos e resolvidos por semana e percentual de resolução no prazo">'+
+    [0,50,100].map(function(p){return '<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+yP(p)+'" y2="'+yP(p)+'" stroke="#293d57"/><text x="'+(W-pr+6)+'" y="'+(yP(p)+4)+'">'+p+'%</text>';}).join('')+
+    '<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+yP(90)+'" y2="'+yP(90)+'" stroke="#51e0aa" stroke-dasharray="4 4" opacity=".6"/>'+
+    '<text x="'+(pl-6)+'" y="'+(yN(maxN)+4)+'" text-anchor="end">'+maxN+'</text><text x="'+(pl-6)+'" y="'+(yN(0)+4)+'" text-anchor="end">0</text>'+
+    sem.map(function(x,i){var x0=pl+bw*i;return '<rect x="'+(x0+bw*.12)+'" y="'+yN(x.abertos)+'" width="'+(bw*.36)+'" height="'+Math.max(0,ch-(yN(x.abertos)-pt))+'" rx="3" fill="#65b2ff" opacity=".55"><title>'+x.lbl+': '+x.abertos+' abertos</title></rect>'+
+      '<rect x="'+(x0+bw*.52)+'" y="'+yN(x.resolvidos)+'" width="'+(bw*.36)+'" height="'+Math.max(0,ch-(yN(x.resolvidos)-pt))+'" rx="3" fill="#51e0aa" opacity=".6"><title>'+x.lbl+': '+x.resolvidos+' resolvidos</title></rect>'+
+      ((sem.length<=13||i%2===0)?'<text x="'+(x0+bw/2)+'" y="'+(H-8)+'" text-anchor="middle">'+x.lbl+'</text>':'');}).join('')+
+    '<path d="'+path+'" fill="none" stroke="#ffcb67" stroke-width="2.5" stroke-linejoin="round"/>'+
+    pts.map(function(p,i){return p?'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="3.5" fill="#111e30" stroke="#ffcb67" stroke-width="2"><title>'+sem[i].lbl+': '+sem[i].pS+'% no prazo</title></circle>':'';}).join('')+'</svg>';
+  var chart='<div class="panel fade"><h3>Evolução semanal</h3><p class="sub">Chamados abertos e resolvidos por semana · linha: % resolvido dentro do prazo (tracejado = 90%)</p>'+svg+
+    '<div class="legend"><span><i style="background:#65b2ff"></i>Abertos</span><span><i style="background:#51e0aa"></i>Resolvidos</span><span><i style="background:#ffcb67"></i>% resolução no prazo</span></div></div>';
+
+  /* fila atual por idade */
+  var bk=[['Menos de 1 dia',0,1,'#51e0aa'],['1 a 3 dias',1,4,'#65b2ff'],['4 a 7 dias',4,8,'#ffcb67'],['Mais de 7 dias',8,1e9,'#ff7c89']];
+  var cnt=bk.map(function(k){return abertosAgora.filter(function(c){var d=(now-c.abertoEm)/DAY;return d>=k[1]&&d<k[2];}).length;});
+  var mx=Math.max(1,Math.max.apply(null,cnt));
+  var aging='<div class="panel fade"><h3>Fila agora</h3><p class="sub">'+abertosAgora.length+' chamados em aberto, por tempo desde a abertura</p><div class="aging">'+
+    bk.map(function(k,i){return '<div class="ag"><span>'+k[0]+'</span><div class="bar"><b style="width:'+(cnt[i]/mx*100)+'%;background:'+k[3]+'"></b></div><span class="q num">'+cnt[i]+'</span></div>';}).join('')+'</div></div>';
+
+  var colsTipo=[{h:'Qtd',v:function(s){return s.n;}},{h:'Resolvidos',v:function(s){return s.resolvidos;}},{h:'Abertos',v:function(s){return s.abertos;}},
+    {h:'TM tratativa',v:function(s){return fd(s.tmS);}},{h:'% no prazo',v:function(s){return fp(s.pS);},cls:function(s){return pctCls(s.pS);}}];
+  var colsAt=[{h:'Qtd',v:function(s){return s.n;}},{h:'Resolvidos',v:function(s){return s.resolvidos;}},{h:'TM 1ª resp.',v:function(s){return fd(s.tmR);}},
+    {h:'TM tratativa',v:function(s){return fd(s.tmS);}},{h:'% no prazo',v:function(s){return fp(s.pS);},cls:function(s){return pctCls(s.pS);}}];
+  var colsRes=[{h:'Resolvidos',v:function(s){return s.n;}},{h:'TM tratativa',v:function(s){return fd(s.tmS);}},{h:'% no prazo',v:function(s){return fp(s.pS);},cls:function(s){return pctCls(s.pS);}}];
+
+  $('#view').innerHTML = tiles +
+    '<div class="grid2">'+chart+aging+'</div>'+
+    tabela('Por tipo de chamado','O assunto escolhido pelo vendedor',agrupa(L,function(x){return x.c.tipo||'—';}),'Tipo',colsTipo)+
+    '<div class="grid2b">'+
+      tabela('Casos resolvidos por causa raiz','Onde nasce o problema',agrupa(Lres,function(x){return x.c.causa||'Não informada';}),'Causa',colsRes,10)+
+      tabela('Casos resolvidos por tratativa','O que foi feito para resolver',agrupa(Lres,function(x){return x.c.tratativa||'Não informada';}),'Tratativa',colsRes,10)+
+    '</div>'+
+    tabela('Por atendente','Quem assumiu o chamado',agrupa(L,function(x){return x.c.atendente||'Sem atendente';}),'Atendente',colsAt);
+  if(!dados.length) $('#view').insertAdjacentHTML('afterbegin','<div class="msg">Ainda não há chamados registrados no Control Tower.</div>');
+  var d=new Date(geradoEm+OFF);$('#upd').textContent='Atualizado às '+pad(d.getUTCHours())+':'+pad(d.getUTCMinutes());
+  animar();
+}
+function animar(){
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  document.querySelectorAll('[data-count]').forEach(function(el){
+    var alvo=+el.dataset.count,t0=performance.now(),dur=600;
+    (function f(t){var p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);el.textContent=Math.round(alvo*e);if(p<1)requestAnimationFrame(f);})(t0);
+  });
+  document.querySelectorAll('.tile').forEach(function(t,i){t.style.animation='rise .5s cubic-bezier(.23,1,.32,1) '+(i*40)+'ms both';});
+}
+
+function start(){
+  if(started) return; started=true;
+  $('#per').onchange=function(e){periodo=e.target.value;if(dados.length)render();};
+  $('#btnUpd').onclick=function(){carregar(true);};
+  $('#btnFull').onclick=function(){if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();};
+  carregar(false);
+  timer=setInterval(function(){if(!document.hidden)carregar(false);},CFG.refreshMin*MIN);
+}
+window.__startApp=start;
+if(window.__gateOk) start();
+})();
+</script>
+<script>
+(function(){
+  /* CADEADO PADRÃO DA ESTANTE. Só esta linha muda (o ✎ Editar troca ela). */
+  var GRUPOS_PERMITIDOS = ["TESTES"];
+  var firebaseConfig = {
+    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+    authDomain: "stinpharma-qualidade.firebaseapp.com",
+    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+    projectId: "stinpharma-qualidade",
+    storageBucket: "stinpharma-qualidade.firebasestorage.app",
+    messagingSenderId: "422803826984",
+    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+    measurementId: "G-6C0TLHH2VP"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  function norm(x){ return String(x).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().trim(); }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  function liberar(){
+    var st = document.getElementById('__gateStyle');
+    var ov = document.getElementById('__gateOverlay');
+    if(st) st.remove();
+    if(ov) ov.remove();
+    window.__gateOk = true;
+    if(window.__startApp) window.__startApp();
+  }
+  function negar(msg){
+    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Estante</a>';
+  }
+  var jaResolveu = false;
+  setTimeout(function(){
+    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
+  }, 10000);
+  firebase.auth().onAuthStateChanged(function(user){
+    jaResolveu = true;
+    if(!user){ negar('Você precisa entrar pela Estante.'); return; }
+    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
+      var dados = snap.val() || {};
+      var meus = (dados.grupos || []).map(norm);
+      var permitido = dados.admin === true || GRUPOS_PERMITIDOS.some(function(g){ return meus.indexOf(norm(g)) !== -1; });
+      if(permitido){ liberar(); return; }
+      negar('Você não tem permissão pra acessar este app.<br><span style="font-size:12px;">Seus grupos: ' + esc((dados.grupos||[]).join(', ') || 'nenhum') + '<br>Grupos com acesso: ' + esc(GRUPOS_PERMITIDOS.join(', ')) + '</span>');
+    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
+  });
+})();
+</script>
+</body>
+</html>
