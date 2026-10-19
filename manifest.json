@@ -162,5 +162,15 @@
     "grupos": [
       "TESTES"
     ]
+  },
+  {
+    "title": "NÃO CONFORMIDADE",
+    "description": "",
+    "file": "painel_nc.html",
+    "icon": "🧩",
+    "color": "#4d9fff",
+    "grupos": [
+      "SAC"
+    ]
   }
 ]
