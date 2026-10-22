@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Gastos com Frete</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #EFEAE0;
+    --paper: #ffffff;
+    --ink: #2A2420;
+    --ink-soft: #6b5d4f;
+    --ink-mute: #8A7D6B;
+    --border: #E4DBC9;
+    --border-strong: #DED4C2;
+    --accent: #8B5E3C;
+    --green: #3F6659;
+    --green-bg: #E4EFE9;
+    --orange: #B0562D;
+    --orange-bg: #F7E9DD;
+    --track: #F0EADD;
+    --header: #2A2420;
+    --header-mute: #B8AC98;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1C1815;
+      --paper: #262019;
+      --ink: #EFEAE0;
+      --ink-soft: #C9BEA9;
+      --ink-mute: #9A8D78;
+      --border: #3A322A;
+      --border-strong: #443A30;
+      --accent: #C98A5E;
+      --green: #6FA08D;
+      --green-bg: #24332C;
+      --orange: #D98457;
+      --orange-bg: #362920;
+      --track: #332C24;
+      --header: #14110E;
+      --header-mute: #8A7D6B;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1C1815;
+    --paper: #262019;
+    --ink: #EFEAE0;
+    --ink-soft: #C9BEA9;
+    --ink-mute: #9A8D78;
+    --border: #3A322A;
+    --border-strong: #443A30;
+    --accent: #C98A5E;
+    --green: #6FA08D;
+    --green-bg: #24332C;
+    --orange: #D98457;
+    --orange-bg: #362920;
+    --track: #332C24;
+    --header: #14110E;
+    --header-mute: #8A7D6B;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+  .sg { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  input, select, textarea, button { font-family: 'Inter', sans-serif; }
+  input:focus, select:focus, textarea:focus, button:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 1px;
+  }
+  button { cursor: pointer; }
+  a { color: var(--accent); }
+
+  .header {
+    background: var(--header); color: var(--bg);
+    padding: 20px 28px; display:flex; align-items:center; justify-content:space-between;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .header-left { display:flex; align-items:center; gap:12px; }
+  .logo-box {
+    width:40px; height:40px; border-radius:8px; background: var(--accent);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .header-title { font-size:19px; font-weight:700; letter-spacing:-0.01em; }
+  .header-sub { font-size:12.5px; color: var(--header-mute); }
+  .btn-primary {
+    display:flex; align-items:center; gap:8px; background: var(--accent); color:#fff;
+    border:none; padding:10px 18px; border-radius:7px; font-size:14px; font-weight:600;
+  }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-secondary {
+    display:flex; align-items:center; gap:7px; background: var(--paper); color: var(--ink);
+    border:1px solid var(--border-strong); padding:8px 14px; border-radius:7px; font-size:13px; font-weight:600;
+  }
+  .btn-secondary:hover { background: var(--track); }
+
+  .tabs { display:flex; gap:4px; padding:14px 28px 0; border-bottom:1px solid var(--border-strong); background: var(--bg); overflow-x:auto; }
+  .tab-btn {
+    display:flex; align-items:center; gap:7px; padding:10px 16px; border:none; background:none;
+    border-bottom:2px solid transparent; color: var(--ink-mute); font-weight:500; font-size:14px; white-space:nowrap;
+  }
+  .tab-btn.active { border-bottom-color: var(--accent); color: var(--ink); font-weight:600; }
+
+  .filters { display:flex; gap:10px; padding:16px 28px; flex-wrap:wrap; align-items:center; }
+  .filter-select {
+    padding:8px 12px; border-radius:7px; border:1px solid var(--border-strong); font-size:13px;
+    background: var(--paper); color: var(--ink);
+  }
+  .ms-trigger { display:flex; align-items:center; gap:6px; white-space:nowrap; max-width:220px; overflow:hidden; text-overflow:ellipsis; }
+  .ms-trigger:hover { background: var(--track); }
+  .ms-backdrop { position:fixed; inset:0; z-index:40; }
+  .ms-panel {
+    position:absolute; top:calc(100% + 6px); left:0; z-index:41; min-width:260px; max-height:280px;
+    overflow-y:auto; background: var(--paper); border:1px solid var(--border-strong); border-radius:8px;
+    padding:10px; display:flex; flex-direction:column; gap:2px; box-shadow:0 10px 28px rgba(20,17,14,0.18);
+  }
+  .ms-panel-right { left:auto; right:0; }
+  .ms-item { display:flex; align-items:center; gap:9px; font-size:13px; padding:6px 4px; border-radius:5px; cursor:pointer; }
+  .ms-item:hover { background: var(--track); }
+  .ms-item-all { font-weight:600; border-bottom:1px solid var(--border); margin-bottom:4px; padding-bottom:8px; border-radius:0; }
+  .saving-note { font-size:12px; color: var(--ink-mute); }
+  .anexo-actions { display:inline-flex; gap:6px; white-space:nowrap; }
+  .link-btn { border:1px solid var(--border-strong); background: var(--paper); color: var(--accent); border-radius:6px; padding:3px 9px; font-size:12px; font-weight:600; }
+  .link-btn:hover { background: var(--track); }
+  .toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); z-index:120; background: var(--ink); color: var(--bg); padding:10px 16px; border-radius:8px; font-size:13px; max-width:90vw; box-shadow:0 8px 24px rgba(20,17,14,0.3); }
+  .period-group { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .filter-label { font-size:12px; color: var(--ink-mute); }
+  .range-text { font-size:12px; color: var(--ink-soft); }
+  input[type="date"].filter-select { padding:7px 10px; }
+  .box-sub { font-size:12px; color: var(--ink-mute); margin:-10px 0 14px; }
+  .seg { display:inline-flex; border:1px solid var(--border-strong); border-radius:7px; overflow:hidden; }
+  .seg-btn { border:none; background: var(--paper); color: var(--ink-soft); padding:5px 12px; font-size:12px; font-weight:500; }
+  .seg-btn + .seg-btn { border-left:1px solid var(--border-strong); }
+  .seg-btn.active { background: var(--track); color: var(--ink); font-weight:600; }
+  .mm-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:14px; }
+  .mm-card { border:1px solid var(--border); border-radius:10px; padding:12px 14px 8px; }
+  .mm-head { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:6px; }
+  .mm-name { font-size:12.5px; font-weight:600; color: var(--ink); display:flex; align-items:center; gap:6px; min-width:0; }
+  .mm-name span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .mm-total { font-size:12px; color: var(--ink-soft); white-space:nowrap; }
+  .bar-mark { fill: var(--accent); }
+  .col:hover .bar-mark, .col:focus .bar-mark { fill-opacity:0.78; }
+  .col:focus { outline:none; }
+  .col:focus .hit { stroke: var(--accent); stroke-width:1; }
+  .ax-base { stroke: var(--border-strong); stroke-width:1; }
+  .ax-grid { stroke: var(--border); stroke-width:1; }
+  .ax-text { fill: var(--ink-mute); font-size:10px; font-family:'Inter', sans-serif; }
+  .ax-val { fill: var(--ink-soft); font-size:10.5px; font-weight:600; font-family:'Inter', sans-serif; }
+  .tip { position:fixed; z-index:100; pointer-events:none; display:none; background: var(--ink); color: var(--bg); padding:7px 11px; border-radius:7px; font-size:12px; box-shadow:0 6px 18px rgba(20,17,14,0.25); }
+  .tip-v { display:block; font-weight:700; font-size:13px; }
+  .tip-a { display:block; opacity:0.78; margin-top:1px; }
+  table.pivot { width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.pivot th, table.pivot td { padding:8px 12px; border-top:1px solid var(--track); white-space:nowrap; text-align:right; }
+  table.pivot thead th { position:sticky; top:0; background: var(--track); color: var(--ink-soft); font-weight:600; z-index:2; }
+  table.pivot th:first-child, table.pivot td:first-child { text-align:left; position:sticky; left:0; background: var(--paper); z-index:1; font-weight:500; }
+  table.pivot thead th:first-child { background: var(--track); z-index:3; }
+  table.pivot tfoot td { font-weight:700; background: var(--track); }
+  table.pivot td.zero { color: var(--ink-mute); }
+
+  .panel-wrap { padding:0 28px 32px; display:flex; flex-direction:column; gap:20px; }
+  .cards-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:14px; }
+  .card {
+    background: var(--paper); border:1px solid var(--border); border-radius:10px; padding:16px 18px;
+  }
+  .card-label { font-size:12px; color: var(--ink-mute); margin-bottom:6px; }
+  .card-value { font-size:22px; font-weight:700; color: var(--ink); }
+
+  .box {
+    background: var(--paper); border-radius:10px; padding:20px; border:1px solid var(--border);
+  }
+  .box-title { font-size:14.5px; font-weight:600; margin-bottom:16px; display:flex; align-items:center; gap:7px; }
+
+  .bar-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .bar-label { width:170px; font-size:12.5px; display:flex; align-items:center; gap:6px; color: var(--ink-soft); flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bar-track { flex:1; height:20px; background: var(--track); border-radius:4px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:4px; }
+  .bar-value { width:110px; text-align:right; font-size:13px; font-weight:600; flex-shrink:0; }
+
+  .empty-note { font-size:13px; color: var(--ink-mute); padding: 6px 0; }
+
+  .mini-table-scroll { max-height:340px; overflow-y:auto; overflow-x:auto; border:1px solid var(--border); border-radius:8px; }
+  table.mini-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.mini-table thead th { position:sticky; top:0; background: var(--track); padding:8px 12px; text-align:left; font-weight:600; color: var(--ink-soft); white-space:nowrap; z-index:1; }
+  table.mini-table td { padding:8px 12px; border-top:1px solid var(--track); white-space:nowrap; }
+
+  .table-wrap { background: var(--paper); border-radius:10px; border:1px solid var(--border); overflow:hidden; margin: 0 28px 32px; }
+  .table-scroll { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  thead tr { background: var(--track); text-align:left; }
+  th { padding:10px 14px; font-weight:600; color: var(--ink-soft); white-space:nowrap; border-bottom:1px solid var(--border); }
+  td { padding:10px 14px; border-bottom:1px solid var(--track); }
+  tbody tr:hover { background: color-mix(in srgb, var(--track) 55%, transparent); }
+  .status-pill { border:none; border-radius:12px; padding:3px 10px; font-size:11.5px; font-weight:600; }
+  .status-pago { background: var(--green-bg); color: var(--green); }
+  .status-pendente { background: var(--orange-bg); color: var(--orange); }
+  .icon-btn { border:none; background:none; padding:4px; display:inline-flex; }
+  .icon-btn.edit { color:#4A5D73; margin-right:8px; }
+  .icon-btn.del { color: var(--orange); }
+  .obs-cell { color: var(--ink-mute); max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(20,17,14,0.55); display:flex; align-items:center; justify-content:center;
+    z-index:50; padding:16px;
+  }
+  .modal {
+    background: var(--paper); border-radius:12px; width:520px; max-width:100%; max-height:90vh; overflow-y:auto; padding:26px;
+  }
+  .modal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+  .modal-title { font-size:17px; font-weight:700; }
+  .modal-close { border:none; background:none; color: var(--ink-mute); }
+  .form-col { display:flex; flex-direction:column; gap:14px; }
+  .field { display:flex; flex-direction:column; gap:6px; font-size:12.5px; color: var(--ink-soft); font-weight:500; }
+  .field input, .field select, .field textarea {
+    padding:9px 12px; border-radius:7px; border:1px solid var(--border-strong); font-size:13.5px; color: var(--ink);
+    background: var(--paper); width:100%;
+  }
+  .field textarea { resize: vertical; }
+  .field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .error-text { font-size:13px; color: var(--orange); }
+  .btn-submit {
+    margin-top:6px; background: var(--accent); color:#fff; border:none; padding:11px; border-radius:7px;
+    font-weight:600; font-size:14.5px; width:100%;
+  }
+  .attach-note { font-size:12px; color: var(--green); margin-top:4px; }
+  .attach-uploading { font-size:12px; color: var(--ink-mute); margin-top:4px; }
+  .autofill-note { font-size:12px; color: var(--accent); margin-top:4px; background: color-mix(in srgb, var(--accent) 12%, transparent); padding:7px 10px; border-radius:6px; }
+
+  .loading-screen { display:flex; align-items:center; justify-content:center; height:400px; color: var(--ink-mute); font-size:14px; }
+  .unavailable-banner { margin:16px 28px; padding:12px 16px; border-radius:8px; background: var(--orange-bg); color: var(--orange); font-size:13px; }
+
+  ::-webkit-scrollbar { width:8px; height:8px; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius:4px; }
+[hidden]:not([hidden=until-found i]){display:none!important}
+</style>
+</head>
+<body>
+<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
+  <div style="max-width:320px;width:100%;">
+    <div id="__gateMsg" style="font-size:14px;color:#8a93a3;line-height:1.6;">Verificando acesso...</div>
+  </div>
+</div>
+
+<div id="root"><div class="loading-screen">Carregando lançamentos…</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+if (window.pdfjsLib) {
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+</script>
+<script>
+const SEED_DATA = [{"prestador": "LEVI", "vencimento": "2026-01-05", "nfatura": "68", "valor": 3150.0, "dataEnvio": "2025-12-29", "obs": "Frete referente 7 viagens da mudança"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-01-05", "nfatura": "39", "valor": 345.0, "dataEnvio": "2025-12-29", "obs": "REF AO PERIODO  22/12/25 A 26/12/25"}, {"prestador": "MOTOBOY - DM", "vencimento": "2026-01-07", "nfatura": "29", "valor": 11494.0, "dataEnvio": "2026-01-06", "obs": "FECHAMENTO MENSAL REF A DEZEMBRO 2026"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-01-07", "nfatura": "40", "valor": 2436.25, "dataEnvio": "2026-01-06", "obs": "REF AO PERIODO  29/12/25 A 02/01/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-01-07", "nfatura": "39", "valor": 1345.0, "dataEnvio": "2026-01-06", "obs": "REF AO PERIODO  29/12/25 A 02/01/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-01-07", "nfatura": "38", "valor": 805.0, "dataEnvio": "2026-01-06", "obs": "REF AO PERIODO  22/12/25 A 26/12/25"}, {"prestador": "ANDERSON - FIORINO", "vencimento": "2026-01-12", "nfatura": "RPN", "valor": 294.77, "dataEnvio": "2026-01-09", "obs": "FECHAMENTO 1° SEMANA - JANEIRO/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-01-12", "nfatura": "41", "valor": 642.5, "dataEnvio": "2026-01-09", "obs": "FECHAMENTO 1° SEMANA - JANEIRO/26"}, {"prestador": "AEREO - AZUL", "vencimento": "2026-01-14", "nfatura": "3781201", "valor": 66776.31, "dataEnvio": "2026-01-06", "obs": "FECHAMENTO 2° QUINZENA - DEZEMBRO/25"}, {"prestador": "MOTOBOY - MDR", "vencimento": "2026-01-15", "nfatura": "195", "valor": 1572.5, "dataEnvio": "2026-01-22", "obs": "FECHAMENTO 1° QUINZENA - JANEIRO/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-01-15", "nfatura": "1", "valor": 3550.0, "dataEnvio": "2026-01-19", "obs": "REF 15/01/26 A 22/01/26"}, {"prestador": "AEREO - GOL", "vencimento": "2026-01-16", "nfatura": "45096302", "valor": 58105.07, "dataEnvio": "2026-01-06", "obs": "FECHAMENTO 2° QUINZENA - DEZEMBRO/25"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-01-16", "nfatura": "43", "valor": 1824.5, "dataEnvio": "2026-01-22", "obs": "FECHAMENTO 3° SEMANA - JANEIRO/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-01-16", "nfatura": "44", "valor": 2745.0, "dataEnvio": "2026-01-26", "obs": "FECHAMENTO 3° SEMANA - JANEIRO/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-01-16", "nfatura": "2", "valor": 2745.0, "dataEnvio": "2026-01-26", "obs": "06/01/26 A 15/01/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-01-19", "nfatura": "42", "valor": 1824.5, "dataEnvio": "2026-01-19", "obs": "FECHAMENTO 2° SEMANA - JANEIRO/26"}, {"prestador": "CORREIOS", "vencimento": "2026-01-21", "nfatura": "3795903", "valor": 122921.79, "dataEnvio": "2026-01-10", "obs": "FECHAMENTO 2° QUINZENA - DEZEMBRO/25"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-01-23", "nfatura": "45", "valor": 3196.0, "dataEnvio": "2026-01-28", "obs": "FECHAMENTO 4° SEMANA - JANEIRO/26"}, {"prestador": "AEREO - AZUL", "vencimento": "2026-01-30", "nfatura": "3802721", "valor": 68916.52, "dataEnvio": "2026-01-21", "obs": "FECHAMENTO 1° QUINZENA - JANEIRO/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-01-30", "nfatura": "47", "valor": 3462.5, "dataEnvio": "2026-02-02", "obs": "REF 26/01/26 A 30/01/29"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-01-30", "nfatura": "3", "valor": 2980.0, "dataEnvio": "2026-02-02", "obs": "REF 26/01/26 A 30/01/26"}, {"prestador": "AEREO - GOL", "vencimento": "2026-01-31", "nfatura": "45399302", "valor": 52081.12, "dataEnvio": "2026-01-22", "obs": "FECHAMENTO 1° QUINZENA - JANEIRO/26"}, {"prestador": "MOTOBOY - DM", "vencimento": "2026-02-05", "nfatura": "30", "valor": 7304.0, "dataEnvio": "2026-02-02", "obs": "REF 01/01/26 A 31/01/26"}, {"prestador": "MOTOBOY - MDR", "vencimento": "2026-02-06", "nfatura": "200", "valor": 1572.5, "dataEnvio": "2026-02-03", "obs": "REF 16/01/26 A 31/01/26"}, {"prestador": "ANDERSON - FIORINO", "vencimento": "2026-02-10", "nfatura": "RPA", "valor": 543.6, "dataEnvio": "2026-02-07", "obs": "REF 02/02/26 A 06/02/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-02-10", "nfatura": "48", "valor": 1933.5, "dataEnvio": "2026-02-06", "obs": "REF 02/02/26 A 06/02/26"}, {"prestador": "MOTOBOY ESP - FELIPE", "vencimento": "2026-02-10", "nfatura": "RPA", "valor": 123.87, "dataEnvio": "2026-02-06", "obs": "REF 05/02/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-02-10", "nfatura": "4", "valor": 2000.0, "dataEnvio": "2026-02-07", "obs": "REF 30/02/26 A 06/02/26"}, {"prestador": "AEREO - AZUL", "vencimento": "2026-02-15", "nfatura": "3821941", "valor": 178004.65, "dataEnvio": "2026-02-05", "obs": "REF 15/01/26 A 31/01/26"}, {"prestador": "AEREO - GOL", "vencimento": "2026-02-16", "nfatura": "457456", "valor": 76169.56, "dataEnvio": "2026-02-06", "obs": "REF 15/01/26 A 31/01/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-02-19", "nfatura": "51", "valor": 1607.5, "dataEnvio": "2026-02-16", "obs": "REF 06/02/26  A 12/02/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-02-19", "nfatura": "5", "valor": 1275.0, "dataEnvio": "2026-02-16", "obs": "REF 09/02/26 A 11/02/26"}, {"prestador": "CORREIOS", "vencimento": "2026-02-23", "nfatura": "3829620", "valor": 99355.11, "dataEnvio": "2026-02-06", "obs": "REF 01/01/26 A 30/01/26"}, {"prestador": "MOTOBOY - MDR", "vencimento": "2026-02-25", "nfatura": "204", "valor": 1230.0, "dataEnvio": "2026-02-23", "obs": "REF 02/02/26 A 13/02/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-02-25", "nfatura": "53", "valor": 1379.5, "dataEnvio": "2026-02-23", "obs": "REF 14/02/26 A 19/02/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-02-25", "nfatura": "6", "valor": 1565.0, "dataEnvio": "2026-02-23", "obs": "REF 13/02/26 A 20/02/26"}, {"prestador": "AEREO - AZUL", "vencimento": "2026-03-01", "nfatura": "3848828", "valor": 124576.49, "dataEnvio": "2026-02-18", "obs": "REF 01/02/26 A 15/02/26"}, {"prestador": "AEREO - GOL", "vencimento": "2026-03-03", "nfatura": "460909", "valor": 71666.95, "dataEnvio": "2026-02-20", "obs": "REF 01/02/26 A 15/02/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-03-03", "nfatura": "54", "valor": 2727.5, "dataEnvio": "2026-02-27", "obs": "REF 20/02/26 A 26/02/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-03-03", "nfatura": "4", "valor": 400.0, "dataEnvio": "2026-02-27", "obs": "REF 20/02/26 A 25/02/26"}, {"prestador": "ANDERSON - FIORINO", "vencimento": "2026-03-05", "nfatura": "RPA", "valor": 458.9, "dataEnvio": "2026-03-02", "obs": ""}, {"prestador": "MOTOBOY - DM", "vencimento": "2026-03-05", "nfatura": "31", "valor": 11255.0, "dataEnvio": "2026-03-02", "obs": "REF 02/02/26 A 27/02/26"}, {"prestador": "MOTOBOY - MDR", "vencimento": "2026-03-09", "nfatura": "211", "valor": 1635.0, "dataEnvio": "2026-03-05", "obs": "REF 16/02/26 A 28/02/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-03-11", "nfatura": "55", "valor": 1628.7, "dataEnvio": "2026-03-09", "obs": "REF 27/02/26 A 06/03/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-03-11", "nfatura": "8", "valor": 685.0, "dataEnvio": "2026-03-09", "obs": "REF 27/02/26 A 04/03/26"}, {"prestador": "AEREO - AZUL", "vencimento": "2026-03-14", "nfatura": "3875190", "valor": 115209.17, "dataEnvio": "2026-03-05", "obs": "REF 16/02/26 A 28/02/26"}, {"prestador": "AEREO - GOL", "vencimento": "2026-03-16", "nfatura": "464427", "valor": 58207.38, "dataEnvio": "2026-02-05", "obs": "REF 16/02/26 A 28/02/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-03-18", "nfatura": "57", "valor": 1126.8, "dataEnvio": "2026-06-16", "obs": "REF"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-03-18", "nfatura": "9", "valor": 455.0, "dataEnvio": "2026-06-16", "obs": "REF 09/03/26 A 13/03/26"}, {"prestador": "CORREIOS", "vencimento": "2026-03-23", "nfatura": "3858530", "valor": 156215.75, "dataEnvio": "2026-03-06", "obs": "REF 01/02/26 A 28/02/26"}, {"prestador": "MOTOBOY - MDR", "vencimento": "2026-03-25", "nfatura": "218", "valor": 1635.0, "dataEnvio": "2026-03-23", "obs": "REF 01/03/26 A 15/03/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-03-25", "nfatura": "60", "valor": 2382.75, "dataEnvio": "2026-03-23", "obs": "REF 13/03/26 A 20/03/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-03-25", "nfatura": "10", "valor": 290.0, "dataEnvio": "2026-03-23", "obs": "REF 18/03/26 A 19/03/26"}, {"prestador": "AEREO - AZUL", "vencimento": "2026-03-29", "nfatura": "3895533", "valor": 50931.53, "dataEnvio": "2026-03-17", "obs": "REF 01/03/26 A 15/03/26"}, {"prestador": "AEREO - GOL", "vencimento": "2026-03-31", "nfatura": "467761", "valor": 26356.27, "dataEnvio": "2026-03-15", "obs": "REF 01/03/26 A 15/03/26"}, {"prestador": "MOTOBOY - DM", "vencimento": "2026-04-03", "nfatura": "32", "valor": 12932.0, "dataEnvio": "2026-04-01", "obs": "REF 01/03/26 A 31/03/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-04-03", "nfatura": "61", "valor": 1720.0, "dataEnvio": "2026-04-30", "obs": "REF 20/03/26 A 27/03/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-04-03", "nfatura": "11", "valor": 1785.0, "dataEnvio": "2026-04-30", "obs": "REF 24/03/26 A 30/03/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-04-08", "nfatura": "63", "valor": 2340.0, "dataEnvio": "2026-04-06", "obs": "REF 27/03/26 A 02/04/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-04-08", "nfatura": "12", "valor": 710.0, "dataEnvio": "2026-04-06", "obs": "REF 30/03/26 A 31/03/26"}, {"prestador": "MOTOBOY - MDR", "vencimento": "2026-04-13", "nfatura": "223", "valor": 1635.0, "dataEnvio": "2026-04-09", "obs": "REF 16/03/26 A 31/03/26"}, {"prestador": "AEREO - AZUL", "vencimento": "2026-04-15", "nfatura": "3918211", "valor": 61571.92, "dataEnvio": "2026-04-02", "obs": "REF 15/03/26 A 31/03/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-04-15", "nfatura": "66", "valor": 1350.0, "dataEnvio": "2026-04-13", "obs": "REF 06/04/26 A 10/04/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-04-15", "nfatura": "13", "valor": 100.0, "dataEnvio": "2026-04-13", "obs": "REF 07/04/26 A 11/04/26"}, {"prestador": "AEREO - GOL", "vencimento": "2026-04-16", "nfatura": "471347", "valor": 32733.2, "dataEnvio": "2026-04-06", "obs": "REF 16/03/26 A 31/03/26"}, {"prestador": "CORREIOS", "vencimento": "2026-04-22", "nfatura": "3881951", "valor": 145573.59, "dataEnvio": "2026-04-06", "obs": "REF 01/03/26 A 31/03/26"}, {"prestador": "MOTOBOY - MDR", "vencimento": "2026-04-23", "nfatura": "229", "valor": 1635.0, "dataEnvio": "2026-04-20", "obs": "REF 01/04/26 A 15/04/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-04-23", "nfatura": "67", "valor": 3055.88, "dataEnvio": "2026-04-20", "obs": "REF 10/04/26 A 16/04/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-04-23", "nfatura": "14", "valor": 1145.0, "dataEnvio": "2026-04-20", "obs": "REF 13/04/26 A 17/04/26"}, {"prestador": "AEREO - AZUL", "vencimento": "2026-04-29", "nfatura": "3948911", "valor": 41176.64, "dataEnvio": "2026-04-20", "obs": "REF 01/04/26 A 15/04/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-04-29", "nfatura": "15", "valor": 415.0, "dataEnvio": "2026-04-27", "obs": "REF 17/04/26 A 24/04/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-04-29", "nfatura": "69", "valor": 1147.5, "dataEnvio": "2026-04-27", "obs": "REF 17/04/26 A 24/04/26"}, {"prestador": "AEREO - GOL", "vencimento": "2026-05-01", "nfatura": "474837", "valor": 25669.36, "dataEnvio": "2026-04-20", "obs": "REF 01/04/26 A 15/04/26"}, {"prestador": "MOTOBOY - DM", "vencimento": "2026-05-06", "nfatura": "33", "valor": 9675.0, "dataEnvio": "2026-05-04", "obs": "REF 01/04/26 A 30/04/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-05-06", "nfatura": "71", "valor": 3399.5, "dataEnvio": "2026-05-05", "obs": "REF 24/04/26 A 30/04/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-05-06", "nfatura": "16", "valor": 1145.0, "dataEnvio": "2026-05-05", "obs": "REF 27/04/26 A 01/05/26"}, {"prestador": "MOTOBOY - MDR", "vencimento": "2026-05-11", "nfatura": "233", "valor": 1635.0, "dataEnvio": "2026-05-07", "obs": "REF 16/04/26 A 30/04/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-05-13", "nfatura": "73", "valor": 2650.5, "dataEnvio": "2026-05-11", "obs": "REF 04/05/26 A 08/05/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-05-13", "nfatura": "17", "valor": 2125.0, "dataEnvio": "2026-05-11", "obs": "REF 04/05/26 A 07/05/26"}, {"prestador": "AEREO - AZUL", "vencimento": "2026-05-14", "nfatura": "3972052", "valor": 51554.5, "dataEnvio": "2026-05-05", "obs": "REF 06/04/26 A 30/04/26"}, {"prestador": "AEREO - GOL", "vencimento": "2026-05-16", "nfatura": "478430", "valor": 29588.37, "dataEnvio": "2026-05-05", "obs": "REF 16/04/26 A 30/04/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-05-20", "nfatura": "75", "valor": 2610.0, "dataEnvio": "2026-05-18", "obs": "REF 11/05/26 A 16/05/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-05-20", "nfatura": "18", "valor": 690.0, "dataEnvio": "2026-05-18", "obs": "REF 11/05/26 A 15/05/26"}, {"prestador": "CORREIOS", "vencimento": "2026-05-21", "nfatura": "3910014", "valor": 115916.79, "dataEnvio": "2026-05-07", "obs": "REF 01/04/26 A 30/04/26"}, {"prestador": "MOTOBOY - MDR", "vencimento": "2026-05-21", "nfatura": "238", "valor": 1635.0, "dataEnvio": "2026-05-19", "obs": "REF 01/05/26 A 15/05/26"}, {"prestador": "AEREO - AZUL", "vencimento": "2026-05-30", "nfatura": "3994935", "valor": 51979.67, "dataEnvio": "2026-05-21", "obs": "REF 01/05/26 A 15/05/26"}, {"prestador": "AEREO - GOL", "vencimento": "2026-05-31", "nfatura": "481851", "valor": 34702.0, "dataEnvio": "2026-05-21", "obs": "REF 01/05/26 A 15/05/26"}, {"prestador": "MOTOBOY - DM", "vencimento": "2026-06-03", "nfatura": "34", "valor": 11672.0, "dataEnvio": "2026-06-01", "obs": "REF 01/05/26 A 31/05/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-06-03", "nfatura": "79", "valor": 1868.5, "dataEnvio": "2026-06-01", "obs": "REF 22/05/26 A 29/05/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-06-03", "nfatura": "20", "valor": 1730.0, "dataEnvio": "2026-06-01", "obs": "REF 27/05/26 A 30/05/26"}, {"prestador": "MOTOBOY - MDR", "vencimento": "2026-06-11", "nfatura": "242", "valor": 1635.0, "dataEnvio": "2026-06-08", "obs": "REF 16/05/26 A 31/05/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-06-11", "nfatura": "81", "valor": 2188.0, "dataEnvio": "2026-06-08", "obs": "REF 29/05/26 A 05/06/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-06-11", "nfatura": "21", "valor": 650.0, "dataEnvio": "2026-06-08", "obs": "REF 01/06/26 A 06/06/26"}, {"prestador": "AEREO - AZUL", "vencimento": "2026-06-14", "nfatura": "4020928", "valor": 39036.36, "dataEnvio": "2026-06-02", "obs": "REF 16/05/26 A 31/05/26"}, {"prestador": "AEREO - GOL", "vencimento": "2026-06-16", "nfatura": "48538002", "valor": 35962.79, "dataEnvio": "2026-06-05", "obs": "REF 16/05/26 A 31/05/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-06-17", "nfatura": "83", "valor": 2145.0, "dataEnvio": "2026-06-15", "obs": "REF 05/06/26 A 12/06/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-06-17", "nfatura": "22", "valor": 2080.0, "dataEnvio": "2026-06-15", "obs": "REF 08/06/26 A 13/06/26"}, {"prestador": "CORREIOS", "vencimento": "2026-06-22", "nfatura": "3928221", "valor": 194574.65, "dataEnvio": "2026-06-08", "obs": "REF 01/05/26 A 31/05/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-06-24", "nfatura": "85", "valor": 1333.5, "dataEnvio": "2026-06-22", "obs": "REF 12/06/26 A 19/06/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-06-24", "nfatura": "23", "valor": 1935.0, "dataEnvio": "2026-06-22", "obs": "REF 15/06/26 A 19/06/26"}, {"prestador": "AEREO - AZUL", "vencimento": "2026-06-29", "nfatura": "4047288", "valor": 76324.73, "dataEnvio": "2026-06-17", "obs": "REF 15/05/26 A 31/05/26"}, {"prestador": "AEREO - GOL", "vencimento": "2026-07-01", "nfatura": "488730", "valor": 18968.35, "dataEnvio": "2026-06-16", "obs": "REF 15/05/26 A 31/05/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-07-01", "nfatura": "87", "valor": 1957.5, "dataEnvio": "2026-06-29", "obs": "REF 19/06/26 A 26/06/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-07-01", "nfatura": "24", "valor": 1220.0, "dataEnvio": "2026-06-29", "obs": "REF 22/06/26 A 26/06/26"}, {"prestador": "MOTOBOY - DM", "vencimento": "2026-07-06", "nfatura": "36", "valor": 11906.0, "dataEnvio": "2026-06-02", "obs": "REF 01/06/26 A 30/06/26"}, {"prestador": "MOTOBOY - MDR", "vencimento": "2026-07-08", "nfatura": "250", "valor": 1635.0, "dataEnvio": "2026-07-06", "obs": "REF 16/06/26 A 30/06/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-07-08", "nfatura": "89", "valor": 1816.0, "dataEnvio": "2026-07-06", "obs": "REF 26/06/26 A 03/07/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-07-08", "nfatura": "25", "valor": 830.0, "dataEnvio": "2026-07-07", "obs": "REF 29/06/26 A 03/07/26"}, {"prestador": "AEREO - AZUL", "vencimento": "2026-07-14", "nfatura": "4072783", "valor": 31852.15, "dataEnvio": "2026-07-02", "obs": "REF 16/06/26 A 30/06/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-07-15", "nfatura": "91", "valor": 966.0, "dataEnvio": "2026-07-13", "obs": "REF 04/07/26 A 08/07/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-07-15", "nfatura": "26", "valor": 615.0, "dataEnvio": "2026-07-13", "obs": "REF 06/07/26 A 08/07/26"}, {"prestador": "AEREO - GOL", "vencimento": "2026-07-16", "nfatura": "492174", "valor": 5116.92, "dataEnvio": "2026-07-02", "obs": "REF 16/06/26 A 30/06/26"}, {"prestador": "CORREIOS", "vencimento": "2026-07-21", "nfatura": "3956434", "valor": 345962.58, "dataEnvio": "2026-07-13", "obs": "REF 01/06/26 A 30/06/26"}, {"prestador": "MOTOBOY - MDR", "vencimento": "2026-07-22", "nfatura": "254", "valor": 1635.0, "dataEnvio": "2026-07-20", "obs": "REF 01/07/26 A 15/07/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-07-22", "nfatura": "94", "valor": 2011.5, "dataEnvio": "2026-07-20", "obs": "REF 13/07/26 A 17/07/26"}, {"prestador": "AEREO - AZUL", "vencimento": "2026-07-30", "nfatura": "4094715", "valor": 8106.98, "dataEnvio": "2026-07-20", "obs": "REF 01/07/26 A 15/07/26"}, {"prestador": "AEREO - GOL", "vencimento": "2026-07-31", "nfatura": "498632", "valor": 1042.64, "dataEnvio": "2026-08-04", "obs": "REF 01/07/26 A 15/07/26  ATRASO"}, {"prestador": "STIN SEM FRONTEIRA - DIEGO", "vencimento": "2026-08-04", "nfatura": "32", "valor": 5000.0, "dataEnvio": "2026-07-31", "obs": "REF 30/07/26 A 30/07/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-08-05", "nfatura": "97", "valor": 1084.0, "dataEnvio": "2026-08-03", "obs": "REF 28/07/26 A 28/07/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-08-05", "nfatura": "29", "valor": 1085.0, "dataEnvio": "2026-08-03", "obs": "REF 24/07/26 A 31/07/26"}, {"prestador": "MOTOBOY - DM", "vencimento": "2026-08-06", "nfatura": "37", "valor": 12227.0, "dataEnvio": "2026-08-04", "obs": "REF 01/07/26 A 31/07/26"}, {"prestador": "MOTOBOY - MDR", "vencimento": "2026-08-06", "nfatura": "258", "valor": 1635.0, "dataEnvio": "2026-08-04", "obs": "REF 16/07/26 A 31/08/26"}, {"prestador": "TRANS MODEL", "vencimento": "2026-08-10", "nfatura": "18142", "valor": 345.51, "dataEnvio": "2026-09-08", "obs": ""}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-08-12", "nfatura": "99", "valor": 1793.5, "dataEnvio": "2026-08-10", "obs": "REF 31/07/26 A 07/08/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-08-12", "nfatura": "30", "valor": 3011.5, "dataEnvio": "2026-08-10", "obs": "REF 03/08/26 A 07/08/26"}, {"prestador": "AEREO - AZUL", "vencimento": "2026-08-14", "nfatura": "4121159", "valor": 58591.67, "dataEnvio": "2026-08-04", "obs": "REF 16/07/26 A 31/07/26"}, {"prestador": "AEREO - GOL", "vencimento": "2026-08-16", "nfatura": "502199", "valor": 1111.62, "dataEnvio": "2026-08-04", "obs": "REF 16/07/26 A 31/07/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-08-19", "nfatura": "101", "valor": 1554.0, "dataEnvio": "2026-08-17", "obs": "REF 06/08/26 A 14/08/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-08-19", "nfatura": "31", "valor": 1220.0, "dataEnvio": "2026-08-17", "obs": "REF 10/08/26 A 14/08/26"}, {"prestador": "MOTOBOY - MDR", "vencimento": "2026-08-19", "nfatura": "262", "valor": 1635.0, "dataEnvio": "2026-08-18", "obs": "REF 01/08/26 A 15/08/26"}, {"prestador": "TRANS MODEL", "vencimento": "2026-08-20", "nfatura": "11111", "valor": 5840.32, "dataEnvio": "2026-08-14", "obs": "David gerou"}, {"prestador": "ATIVA", "vencimento": "2026-08-20", "nfatura": "11112", "valor": 10745.67, "dataEnvio": "2026-08-14", "obs": "David gerou"}, {"prestador": "CORREIOS", "vencimento": "2026-08-20", "nfatura": "3983887", "valor": 473003.82, "dataEnvio": "2026-08-10", "obs": "REF 01/07/26 A 31/08/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-08-26", "nfatura": "32", "valor": 1230.0, "dataEnvio": "2026-08-24", "obs": "REF 17/04/26 A 21/08/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-08-26", "nfatura": "103", "valor": 2336.0, "dataEnvio": "2026-08-24", "obs": "REF 14/08/26 A 21/08/26"}, {"prestador": "TRANS MODEL", "vencimento": "2026-08-28", "nfatura": "18358", "valor": 146368.34, "dataEnvio": "2026-08-04", "obs": ""}, {"prestador": "ATIVA", "vencimento": "2026-08-28", "nfatura": "1587824", "valor": 60.61, "dataEnvio": "2026-09-08", "obs": ""}, {"prestador": "AEREO - AZUL", "vencimento": "2026-08-30", "nfatura": "4147614", "valor": 41111.57, "dataEnvio": "2026-08-18", "obs": "REF 01/08/26 A 15/08/26"}, {"prestador": "AEREO - GOL", "vencimento": "2026-08-31", "nfatura": "508932", "valor": 1165.94, "dataEnvio": "2026-08-18", "obs": "REF 01/08/26 A 15/08/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-09-02", "nfatura": "104", "valor": 1042.0, "dataEnvio": "2026-08-31", "obs": "REF 24/08/26 A 28/08/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-09-02", "nfatura": "33", "valor": 1100.0, "dataEnvio": "2026-08-31", "obs": "REF 24/08/26 A 28/08/26"}, {"prestador": "MOTOBOY - DM", "vencimento": "2026-09-03", "nfatura": "39", "valor": 12317.0, "dataEnvio": "2026-09-01", "obs": "REF 03/08/26 A 31/08/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-09-08", "nfatura": "106", "valor": 1642.0, "dataEnvio": "2026-09-10", "obs": "REF 31/08/26 A 04/09/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-09-08", "nfatura": "34", "valor": 585.0, "dataEnvio": "2026-09-10", "obs": "REF 31/08/26 A 04/09/26"}, {"prestador": "MOTOBOY - MDR", "vencimento": "2026-09-08", "nfatura": "266", "valor": 1635.0, "dataEnvio": "2026-09-03", "obs": "REF 16/08/26 A 31/08/26"}, {"prestador": "AEREO - AZUL", "vencimento": "2026-09-14", "nfatura": "4170647", "valor": 55637.34, "dataEnvio": "2026-09-08", "obs": "REF 16/08/26 A 31/08/26"}, {"prestador": "ATIVA", "vencimento": "2026-09-18", "nfatura": "1595716", "valor": 12685.63, "dataEnvio": "2026-09-08", "obs": ""}, {"prestador": "ATIVA", "vencimento": "2026-09-18", "nfatura": "1595183", "valor": 53.63, "dataEnvio": "2026-09-08", "obs": ""}, {"prestador": "AEREO - GOL", "vencimento": "2026-09-16", "nfatura": "512508", "valor": 1302.63, "dataEnvio": "2026-09-09", "obs": "REF 16/08/26 A 31/08/26"}, {"prestador": "CORREIOS", "vencimento": "2026-09-21", "nfatura": "21605", "valor": 109794.47, "dataEnvio": "2026-09-05", "obs": "REF 03/08/26 A 31/08/26"}, {"prestador": "MOTOBOY ESP - ELIAS", "vencimento": "2026-09-16", "nfatura": "108", "valor": 1176.0, "dataEnvio": "2026-09-15", "obs": "REF 04/09/26 A 11/09/26"}, {"prestador": "MOTOBOY ESP - JOAO", "vencimento": "2026-09-16", "nfatura": "35", "valor": 900.0, "dataEnvio": "2026-09-15", "obs": "REF 08/09/26 A 11/09/26"}, {"prestador": "ATIVA", "vencimento": "2026-09-04", "nfatura": "1590937", "valor": 12925.28, "dataEnvio": "2026-09-03", "obs": ""}, {"prestador": "ATIVA", "vencimento": "2026-08-28", "nfatura": "1588352", "valor": 9490.13, "dataEnvio": "2026-09-04", "obs": ""}, {"prestador": "TRANS MODEL", "vencimento": "2026-09-18", "nfatura": "18548", "valor": 274724.31, "dataEnvio": "2026-09-15", "obs": ""}, {"prestador": "ATIVA", "vencimento": "2026-09-18", "nfatura": "1592932", "valor": 9811.96, "dataEnvio": "2026-09-15", "obs": ""}, {"prestador": "ATIVA", "vencimento": "2026-09-25", "nfatura": "1597770", "valor": 12698.44, "dataEnvio": "2026-09-15", "obs": ""}, {"prestador": "TRANS MODEL", "vencimento": "2026-09-25", "nfatura": "18603", "valor": 89066.2, "dataEnvio": "2026-09-15", "obs": ""}]
+;
+
+const MONTH_LABELS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const PALETTE = ['#8B5E3C','#3F6659','#B0562D','#4A5D73','#8A7148','#6B4E71','#C77B3F','#37665A','#9C5A2E','#5A6B4E'];
+
+const ICONS = {
+  truck: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3h13v13H1z"/><path d="M14 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="1.8"/><circle cx="16.5" cy="18.5" r="1.8"/></svg>',
+  plus: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  grid: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>',
+  list: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+  x: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>',
+  trash: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>',
+  pencil: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+  plane: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-1 .1-1.3.5l-.6.6c-.4.4-.3 1.1.2 1.4L9 12l-2 2H4l-1 1 3 1.5L7.5 20l1-1v-3l2-2 3.1 5.9c.3.5 1 .6 1.4.2l.6-.6c.4-.3.5-.8.4-1.3z"/></svg>',
+  bike: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 100-2 1 1 0 000 2zM12 17.5V14l-3-3 4-3 2 3h2"/></svg>',
+  mail: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>',
+  download: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  package: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>',
+};
+
+function iconFor(nome) {
+  const n = (nome || '').toUpperCase();
+  if (n.includes('AEREO')) return ICONS.plane;
+  if (n.includes('CORREIOS')) return ICONS.mail;
+  if (n.includes('MOTOBOY')) return ICONS.bike;
+  return ICONS.package;
+}
+function colorFor(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+  return PALETTE[Math.abs(h) % PALETTE.length];
+}
+function currency(v) {
+  return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+function fmtDate(s) {
+  if (!s) return '—';
+  return new Date(s + 'T00:00:00').toLocaleDateString('pt-BR');
+}
+function jsq(v) { return esc(JSON.stringify(v)); } // valor seguro dentro de onclick='...'
+function esc(s) {
+  return (s == null ? '' : String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+const EMPTY_FORM = { prestador:'', vencimento:'', nfatura:'', valor:'', dataEnvio: new Date().toISOString().slice(0,10), obs:'', status:'Pendente' };
+
+const state = {
+  ref: null,
+  started: false,
+  expenses: [],
+  loading: true,
+  dbUnavailable: false,
+  saving: false,
+  tab: 'painel',
+  showForm: false,
+  editingId: null,
+  form: { ...EMPTY_FORM },
+  attachment: null,
+  attachUploading: false,
+  autofillNote: '',
+  error: '',
+  periodPreset: 'todo',
+  dateFrom: '',
+  dateTo: '',
+  monthViewMode: 'graficos',
+  toast: '',
+  prestMonths: null, // null = todos os meses do período; Set() = filtro do box por transportadora
+  monthDropdownOpen: false,
+  filterPrestadores: null, // null = todas selecionadas; Set() = filtro ativo
+  prestadorDropdownOpen: false,
+  showExportModal: false,
+  exportSelected: null,
+  exporting: false,
+  exportError: '',
+};
+
+function setState(patch) { Object.assign(state, patch); render(); }
+
+async function init() {
+  if (state.started) return; state.started = true;
+  try {
+    state.ref = firebase.database().ref('controleFrete/lancamentos');
+    subscribeExpenses();
+    maybeSeed();
+  } catch (e) {
+    console.error(e);
+    setState({ loading:false, dbUnavailable:true });
+  }
+}
+
+function subscribeExpenses() {
+  state.ref.on('value',
+    (snap) => {
+      const v = snap.val() || {};
+      const items = Object.keys(v).map(id => ({ id, ...v[id] }));
+      setState({ expenses: items, loading:false, dbUnavailable:false });
+    },
+    (err) => {
+      console.error('db snapshot error', err);
+      setState({ loading:false, dbUnavailable: state.expenses.length===0 });
+    }
+  );
+}
+
+// Na 1ª abertura (uma única vez, no mundo todo) carrega o histórico inicial.
+async function maybeSeed() {
+  try {
+    const r = await firebase.database().ref('controleFrete/meta/semeado').transaction(cur => cur ? undefined : true);
+    if (!r.committed) return;
+    await Promise.all(SEED_DATA.map(d => state.ref.push({
+      prestador: d.prestador,
+      vencimento: d.vencimento,
+      nfatura: d.nfatura,
+      valor: d.valor,
+      dataEnvio: d.dataEnvio,
+      obs: d.obs || '',
+      status: 'Pago',
+    })));
+  } catch (e) {
+    console.error('seed error', e);
+  }
+}
+
+function prestadorOptions() {
+  return Array.from(new Set(state.expenses.map(e => e.prestador).filter(Boolean))).sort();
+}
+function yearOptions() {
+  return Array.from(new Set(state.expenses.map(e => (e.vencimento||'').slice(0,4)).filter(Boolean))).sort().reverse();
+}
+
+const PERIOD_PRESETS = [
+  ['todo','Todo o período'], ['mes_atual','Este mês'], ['mes_anterior','Mês anterior'],
+  ['30d','Últimos 30 dias'], ['90d','Últimos 90 dias'], ['ano_atual','Este ano'], ['personalizado','Personalizado…']
+];
+function parseBRL(s) {
+  s = String(s == null ? '' : s).replace(/R\$|\s/g, '');
+  if (s.indexOf(',') !== -1) s = s.replace(/\./g, '').replace(',', '.');      // 3.150,50 -> 3150.50
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');          // 3.150 -> 3150
+  return parseFloat(s);
+}
+function pad2(n) { return String(n).padStart(2,'0'); }
+function ymd(d) { return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
+function periodRange() {
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  switch (state.periodPreset) {
+    case 'mes_atual': return [ymd(new Date(y, m, 1)), ymd(new Date(y, m+1, 0))];
+    case 'mes_anterior': return [ymd(new Date(y, m-1, 1)), ymd(new Date(y, m, 0))];
+    case '30d': return [ymd(new Date(y, m, now.getDate()-29)), ymd(now)];
+    case '90d': return [ymd(new Date(y, m, now.getDate()-89)), ymd(now)];
+    case 'ano_atual': return [y + '-01-01', y + '-12-31'];
+    case 'personalizado': return [state.dateFrom || null, state.dateTo || null];
+    default: return [null, null];
+  }
+}
+function fmtRangeText() {
+  const r = periodRange();
+  if (!r[0] && !r[1]) return '';
+  return (r[0] ? fmtDate(r[0]) : 'início') + ' a ' + (r[1] ? fmtDate(r[1]) : 'hoje em diante');
+}
+function setPeriodPreset(v) { state.periodPreset = v; render(); }
+function setDateFrom(v) { state.dateFrom = v; render(); }
+function setDateTo(v) { state.dateTo = v; render(); }
+function setMonthViewMode(m) { state.monthViewMode = m; render(); }
+let toastTimer = null;
+function showToast(msg) {
+  state.toast = msg; render();
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { state.toast = ''; render(); }, 5000);
+}
+function attachmentUrl(a) { return (a && a.url) || ''; }
+function findAnexo(id) { const it = state.expenses.find(e => e.id === id); return it && it.anexo ? it.anexo : null; }
+
+// Abre o anexo em nova aba; se o navegador bloquear, tenta o link direto de download
+async function downloadAnexo(id) {
+  const a = findAnexo(id);
+  if (!a) { showToast('Anexo não encontrado.'); return; }
+  const l = document.createElement('a');
+  l.href = attachmentUrl(a); l.target = '_blank'; l.rel = 'noopener'; l.download = a.name || 'anexo';
+  document.body.appendChild(l); l.click(); l.remove();
+}
+async function openAnexo(id) {
+  const a = findAnexo(id);
+  if (!a) { showToast('Anexo não encontrado.'); return; }
+  let w = null;
+  try { w = window.open(attachmentUrl(a), '_blank'); } catch (e) { w = null; }
+  if (!w) { await downloadAnexo(id); }
+}
+
+function toggleMonthDropdown() { state.monthDropdownOpen = !state.monthDropdownOpen; render(); }
+function closeMonthDropdown() { if (state.monthDropdownOpen) { state.monthDropdownOpen = false; render(); } }
+function toggleMonthSel(key) {
+  const avail = monthKeysFor(filteredExpenses());
+  const cur = effectiveMonthSel(avail);
+  const sel = new Set(cur === null ? avail : cur);
+  if (sel.has(key)) sel.delete(key); else sel.add(key);
+  state.prestMonths = (sel.size === avail.length) ? null : sel;
+  render();
+}
+function setAllMonthSel(selectAll) { state.prestMonths = selectAll ? null : new Set(); render(); }
+// null = todos; senão a lista de meses selecionados que ainda existem no período
+function effectiveMonthSel(avail) {
+  if (state.prestMonths === null) return null;
+  const list = avail.filter(k => state.prestMonths.has(k));
+  if (list.length === 0 && state.prestMonths.size > 0) return null; // seleção antiga fora do período atual
+  return list;
+}
+function monthMultiSelectHtml(avail) {
+  const sel = effectiveMonthSel(avail);
+  const isAll = sel === null;
+  const label = isAll ? 'Todos os meses' : (sel.length === 0 ? 'Nenhum mês' : (sel.length === 1 ? monthFull(sel[0]) : sel.length + ' meses'));
+  let s = '<div style="position:relative;display:inline-block;">';
+  s += '<button type="button" class="filter-select ms-trigger" aria-label="Meses" onclick="event.stopPropagation();toggleMonthDropdown()">' + esc(label) + ' <span style="font-size:10px;color:var(--ink-mute);">▾</span></button>';
+  if (state.monthDropdownOpen) {
+    s += '<div class="ms-backdrop" onclick="closeMonthDropdown()"></div>';
+    s += '<div class="ms-panel ms-panel-right" onclick="event.stopPropagation()">';
+    s += '<label class="ms-item ms-item-all"><input type="checkbox" ' + (isAll ? 'checked' : '') + ' onchange="setAllMonthSel(this.checked)"> Todos os meses</label>';
+    avail.slice().reverse().forEach(k => {
+      const checked = isAll || sel.indexOf(k) >= 0;
+      s += '<label class="ms-item"><input type="checkbox" ' + (checked ? 'checked' : '') + ' onchange="toggleMonthSel(\'' + k + '\')"> ' + esc(monthFull(k)) + '</label>';
+    });
+    s += '</div>';
+  }
+  s += '</div>';
+  return s;
+}
+
+function periodControlHtml() {
+  let s = '<div class="period-group"><span class="filter-label">Período (vencimento)</span>';
+  s += '<select class="filter-select" onchange="setPeriodPreset(this.value)">';
+  PERIOD_PRESETS.forEach(([val,label]) => {
+    s += '<option value="' + val + '"' + (val===state.periodPreset?' selected':'') + '>' + esc(label) + '</option>';
+  });
+  s += '</select>';
+  if (state.periodPreset === 'personalizado') {
+    s += '<input type="date" class="filter-select" aria-label="Data inicial" value="' + esc(state.dateFrom) + '" onchange="setDateFrom(this.value)">';
+    s += '<span class="range-text">até</span>';
+    s += '<input type="date" class="filter-select" aria-label="Data final" value="' + esc(state.dateTo) + '" onchange="setDateTo(this.value)">';
+  } else if (state.periodPreset !== 'todo') {
+    s += '<span class="range-text">' + esc(fmtRangeText()) + '</span>';
+  }
+  s += '</div>';
+  return s;
+}
+
+function monthShort(key) { return MONTH_LABELS[parseInt(key.slice(5,7),10) - 1]; }
+function monthFull(key) { return monthShort(key) + '/' + key.slice(0,4); }
+function monthKeysFor(list) {
+  const keys = list.map(e => (e.vencimento||'').slice(0,7)).filter(k => k.length === 7).sort();
+  if (!keys.length) return [];
+  let y = parseInt(keys[0].slice(0,4),10), m = parseInt(keys[0].slice(5,7),10);
+  const ey = parseInt(keys[keys.length-1].slice(0,4),10), em = parseInt(keys[keys.length-1].slice(5,7),10);
+  const out = [];
+  while (y < ey || (y === ey && m <= em)) {
+    out.push(y + '-' + pad2(m));
+    m++; if (m > 12) { m = 1; y++; }
+  }
+  return out;
+}
+function fmtCompact(v) {
+  const n = (x) => x.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+  if (v >= 1e6) return n(v/1e6) + ' mi';
+  if (v >= 1e3) return n(v/1e3) + ' mil';
+  return n(v);
+}
+function niceMax(max) {
+  const p = Math.pow(10, Math.floor(Math.log10(max)));
+  const c = [1, 2, 2.5, 5, 10];
+  for (let i = 0; i < c.length; i++) { if (c[i] * p >= max) return c[i] * p; }
+  return 10 * p;
+}
+function barPath(x, y, w, h, r) {
+  r = Math.max(0, Math.min(r, h, w/2));
+  return 'M' + x + ',' + (y+h) + ' V' + (y+r) + ' Q' + x + ',' + y + ' ' + (x+r) + ',' + y +
+         ' H' + (x+w-r) + ' Q' + (x+w) + ',' + y + ' ' + (x+w) + ',' + (y+r) + ' V' + (y+h) + ' Z';
+}
+
+// items: [{key, value}]; o: {w,h,padL,padR,padT,padB,ticks,focusable,label}
+function barsSvg(items, o) {
+  const W = o.w, H = o.h, padL = o.padL, padR = o.padR, padT = o.padT, padB = o.padB;
+  const n = items.length;
+  const rawMax = Math.max(1, ...items.map(i => i.value));
+  const yMax = o.ticks ? niceMax(rawMax) : rawMax;
+  const innerW = W - padL - padR, innerH = H - padT - padB, base = padT + innerH;
+  const slot = innerW / n;
+  let bw = Math.min(24, slot - 4); if (bw < 2) bw = Math.max(1, slot - 2);
+  const multiYear = items.length && items[0].key.slice(0,4) !== items[n-1].key.slice(0,4);
+  const step = Math.max(1, Math.ceil(30 / slot));
+  let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(o.label) + '" style="width:100%;height:auto;display:block;overflow:visible">';
+  if (o.ticks) {
+    [0.5, 1].forEach(f => {
+      const y = base - innerH * f;
+      s += '<line class="ax-grid" x1="' + padL + '" x2="' + (W - padR) + '" y1="' + y + '" y2="' + y + '"/>';
+      s += '<text class="ax-text" x="' + (padL - 6) + '" y="' + (y + 3.5) + '" text-anchor="end">' + fmtCompact(yMax * f) + '</text>';
+    });
+    s += '<text class="ax-text" x="' + (padL - 6) + '" y="' + (base + 3.5) + '" text-anchor="end">0</text>';
+  }
+  s += '<line class="ax-base" x1="' + padL + '" x2="' + (W - padR) + '" y1="' + base + '" y2="' + base + '"/>';
+  let peakIdx = -1, peakVal = 0;
+  items.forEach((it, i) => { if (it.value > peakVal) { peakVal = it.value; peakIdx = i; } });
+  items.forEach((it, i) => {
+    const x = padL + i * slot + (slot - bw) / 2;
+    const bh = (it.value / yMax) * innerH;
+    const y = base - bh;
+    s += '<g class="col"' + (o.focusable ? ' tabindex="0"' : '') + ' data-tip-a="' + esc(monthFull(it.key)) + '" data-tip-v="' + esc(currency(it.value)) + '">';
+    s += '<rect class="hit" x="' + (padL + i * slot) + '" y="' + padT + '" width="' + slot + '" height="' + innerH + '" fill="transparent"/>';
+    if (it.value > 0) s += '<path class="bar-mark" d="' + barPath(x, y, bw, bh, 4) + '"/>';
+    s += '</g>';
+    const cx = padL + i * slot + slot / 2;
+    const jan = it.key.slice(5,7) === '01';
+    if (i % step === 0) s += '<text class="ax-text" x="' + cx + '" y="' + (base + 13) + '" text-anchor="middle">' + monthShort(it.key) + '</text>';
+    if (multiYear && (i === 0 || jan)) s += '<text class="ax-text" x="' + cx + '" y="' + (base + 25) + '" text-anchor="middle" style="font-weight:600">' + it.key.slice(0,4) + '</text>';
+  });
+  if (peakIdx >= 0) {
+    const it = items[peakIdx];
+    const bh = (it.value / yMax) * innerH;
+    let cx = padL + peakIdx * slot + slot / 2;
+    cx = Math.max(padL + 16, Math.min(W - padR - 16, cx));
+    s += '<text class="ax-val" x="' + cx + '" y="' + (base - bh - 5) + '" text-anchor="middle">' + fmtCompact(it.value) + '</text>';
+  }
+  s += '</svg>';
+  return s;
+}
+
+function monthlyChartHtml(months, totals) {
+  if (!months.length) return '<div class="empty-note">Sem dados no período.</div>';
+  const items = months.map(k => ({ key: k, value: totals[k] || 0 }));
+  return barsSvg(items, { w: 760, h: 250, padL: 44, padR: 8, padT: 22, padB: 30, ticks: true, focusable: true, label: 'Gasto total por mês' });
+}
+
+function perPrestadorMonthlyHtml(months, byPrestador, perPrest) {
+  if (!months.length || !byPrestador.length) return '<div class="empty-note">Sem dados no período.</div>';
+  if (state.monthViewMode === 'tabela') {
+    let t = '<div class="mini-table-scroll" style="max-height:420px"><table class="pivot"><thead><tr><th>Transportadora</th>';
+    months.forEach(k => { t += '<th>' + esc(monthFull(k)) + '</th>'; });
+    t += '<th>Total</th></tr></thead><tbody>';
+    const colTotals = {}; let grand = 0;
+    byPrestador.forEach(({name, total}) => {
+      t += '<tr><td>' + esc(name) + '</td>';
+      months.forEach(k => {
+        const v = (perPrest[name] && perPrest[name][k]) || 0;
+        colTotals[k] = (colTotals[k] || 0) + v;
+        t += v ? '<td>' + currency(v) + '</td>' : '<td class="zero">—</td>';
+      });
+      t += '<td style="font-weight:600">' + currency(total) + '</td></tr>';
+      grand += total;
+    });
+    t += '</tbody><tfoot><tr><td>Total</td>';
+    months.forEach(k => { t += '<td>' + currency(colTotals[k] || 0) + '</td>'; });
+    t += '<td>' + currency(grand) + '</td></tr></tfoot></table></div>';
+    return t;
+  }
+  let g = '<div class="mm-grid">';
+  byPrestador.forEach(({name, total}) => {
+    const items = months.map(k => ({ key: k, value: (perPrest[name] && perPrest[name][k]) || 0 }));
+    g += '<div class="mm-card"><div class="mm-head"><div class="mm-name">' + iconFor(name) + '<span>' + esc(name) + '</span></div>';
+    g += '<div class="mm-total">' + currency(total) + '</div></div>';
+    g += barsSvg(items, { w: 280, h: 132, padL: 4, padR: 4, padT: 18, padB: 28, ticks: false, focusable: false, label: 'Gasto mensal de ' + name });
+    g += '</div>';
+  });
+  g += '</div>';
+  return g;
+}
+
+// ----- tooltip global (um só elemento, valores via textContent) -----
+let tipEl = null;
+function ensureTip() {
+  if (tipEl) return tipEl;
+  tipEl = document.createElement('div');
+  tipEl.className = 'tip';
+  const v = document.createElement('span'); v.className = 'tip-v';
+  const a = document.createElement('span'); a.className = 'tip-a';
+  tipEl.appendChild(v); tipEl.appendChild(a);
+  document.body.appendChild(tipEl);
+  return tipEl;
+}
+function hideTip() { if (tipEl) tipEl.style.display = 'none'; }
+function showTip(target, x, y) {
+  const t = ensureTip();
+  t.querySelector('.tip-v').textContent = target.getAttribute('data-tip-v') || '';
+  t.querySelector('.tip-a').textContent = target.getAttribute('data-tip-a') || '';
+  t.style.display = 'block';
+  const w = t.offsetWidth, hh = t.offsetHeight;
+  let left = Math.min(x + 14, window.innerWidth - w - 8);
+  let top = y - hh - 12; if (top < 8) top = y + 18;
+  t.style.left = Math.max(8, left) + 'px';
+  t.style.top = top + 'px';
+}
+document.addEventListener('pointermove', function(e) {
+  const t = e.target && e.target.closest ? e.target.closest('[data-tip-v]') : null;
+  if (t) showTip(t, e.clientX, e.clientY); else hideTip();
+});
+document.addEventListener('focusin', function(e) {
+  const t = e.target && e.target.closest ? e.target.closest('[data-tip-v]') : null;
+  if (t) { const r = t.getBoundingClientRect(); showTip(t, r.left + r.width / 2, r.top); }
+});
+document.addEventListener('focusout', hideTip);
+
+function filteredExpenses() {
+  const range = periodRange();
+  return state.expenses.filter(e => {
+    const v = e.vencimento || '';
+    if (range[0] && (!v || v < range[0])) return false;
+    if (range[1] && (!v || v > range[1])) return false;
+    if (state.filterPrestadores && !state.filterPrestadores.has(e.prestador)) return false;
+    return true;
+  });
+}
+
+function togglePrestadorDropdown() { state.prestadorDropdownOpen = !state.prestadorDropdownOpen; render(); }
+function closePrestadorDropdown() { if (state.prestadorDropdownOpen) { state.prestadorDropdownOpen = false; render(); } }
+function toggleFilterPrestador(name) {
+  const opts = prestadorOptions();
+  const sel = state.filterPrestadores ? new Set(state.filterPrestadores) : new Set(opts);
+  if (sel.has(name)) sel.delete(name); else sel.add(name);
+  state.filterPrestadores = (sel.size === opts.length) ? null : sel;
+  render();
+}
+function setAllFilterPrestadores(selectAll) {
+  state.filterPrestadores = selectAll ? null : new Set();
+  render();
+}
+
+async function handleDelete(id) {
+  const it = state.expenses.find(e => e.id === id);
+  if (!confirm('Excluir este lançamento' + (it ? ' (' + it.prestador + ', ' + currency(it.valor) + ')' : '') + '? Não dá pra desfazer.')) return;
+  try {
+    await state.ref.child(id).remove();
+    if (it && it.anexo && it.anexo.path) firebase.storage().ref(it.anexo.path).delete().catch(() => {});
+  }
+  catch(e) { setState({ error: 'Não foi possível excluir. Tente novamente.' }); }
+}
+async function toggleStatus(item) {
+  try { await state.ref.child(item.id).update({ status: item.status === 'Pago' ? 'Pendente' : 'Pago' }); }
+  catch(e) { console.error(e); }
+}
+function openNewForm() {
+  setState({ showForm:true, editingId:null, form:{...EMPTY_FORM}, attachment:null, error:'', autofillNote:'' });
+}
+function openEditForm(item) {
+  setState({
+    showForm:true, editingId:item.id, error:'', autofillNote:'',
+    form: {
+      prestador:item.prestador||'', vencimento:item.vencimento||'', nfatura:item.nfatura||'',
+      valor: item.valor!=null ? String(item.valor) : '', dataEnvio:item.dataEnvio||'',
+      obs:item.obs||'', status:item.status||'Pendente',
+    },
+    attachment: item.anexo || null,
+  });
+}
+function closeForm() {
+  setState({ showForm:false, editingId:null, form:{...EMPTY_FORM}, attachment:null, error:'', autofillNote:'' });
+}
+function updateFormField(field, value) {
+  // Não chama render() aqui: os campos de texto são não-controlados (o navegador
+  // mantém o valor digitado). Re-renderizar a cada tecla fazia o campo perder o
+  // foco e só deixava digitar um caractere por vez.
+  state.form[field] = value;
+}
+
+async function handleFileChange(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { setState({ error: 'Arquivo muito grande (máximo 10 MB).' }); return; }
+  setState({ attachUploading:true, error:'', autofillNote:'' });
+
+  // Sobe o anexo e, em paralelo, tenta ler o PDF para autopreencher o formulário.
+  const path = 'frete/' + Date.now() + '_' + file.name.replace(/[^A-Za-z0-9._-]+/g, '_');
+  const sref = firebase.storage().ref(path);
+  const uploadPromise = sref.put(file).then(() => sref.getDownloadURL()).then(url => ({ path, url })).catch(err => { console.error(err); return null; });
+  const autofillPromise = (file.type === 'application/pdf') ? tryAutofillFromPdf(file) : Promise.resolve(null);
+
+  const [res, autofill] = await Promise.all([uploadPromise, autofillPromise]);
+
+  if (!res) {
+    setState({ attachUploading:false, error:'Falha ao anexar o arquivo.' });
+    return;
+  }
+
+  const patch = { attachment: { path: res.path, url: res.url, name: file.name }, attachUploading:false };
+  if (autofill && autofill.filledFields.length > 0) {
+    Object.assign(state.form, autofill.values);
+    patch.autofillNote = 'Preenchido automaticamente a partir do PDF (' + autofill.filledFields.join(', ') + ') — confira antes de salvar.';
+  } else if (file.type === 'application/pdf') {
+    patch.autofillNote = '';
+  }
+  setState(patch);
+}
+
+// Tenta extrair transportadora/vencimento/nº fatura/valor de uma fatura ou nota
+// fiscal de serviço em PDF. É uma leitura heurística baseada em padrões comuns de
+// texto (não há um layout único entre transportadoras), então só preenche campos
+// que ainda estiverem vazios e sempre pede para o usuário conferir os valores.
+async function tryAutofillFromPdf(file) {
+  try {
+    if (!window.pdfjsLib) return null;
+    const buf = await file.arrayBuffer();
+    const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+    let text = '';
+    for (let i = 1; i <= Math.min(pdf.numPages, 5); i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += ' ' + content.items.map(it => it.str).join(' ');
+    }
+    text = text.replace(/\s+/g, ' ').trim();
+    if (!text) return null;
+
+    const values = {};
+    const filledFields = [];
+
+    // Valor (R$): prioriza "valor total/do frete/a pagar/líquido", senão pega o maior valor em R$ do texto
+    let valorMatch = text.match(/(?:VALOR\s+(?:TOTAL|L[IÍ]QUIDO|DO\s+FRETE|A\s+PAGAR|DA\s+NOTA)[^\d]{0,15})(R?\$?\s?[\d.]{1,12},\d{2})/i);
+    if (!valorMatch) {
+      const all = [...text.matchAll(/R\$\s?([\d.]{1,12},\d{2})/g)].map(m => m[1]);
+      if (all.length) {
+        const nums = all.map(s => parseFloat(s.replace(/\./g,'').replace(',','.')));
+        const maxIdx = nums.indexOf(Math.max(...nums));
+        valorMatch = [null, all[maxIdx]];
+      }
+    }
+    if (valorMatch && !state.form.valor) {
+      const raw = valorMatch[1].replace(/^R\$?\s?/,'');
+      const num = parseFloat(raw.replace(/\./g,'').replace(',','.'));
+      if (!isNaN(num) && num > 0) { values.valor = String(num.toFixed(2)).replace('.', ','); filledFields.push('valor'); }
+    }
+
+    // Vencimento
+    const vencMatch = text.match(/VENC(?:IMENTO)?[^\d]{0,10}(\d{2}\/\d{2}\/\d{4})/i);
+    if (vencMatch && !state.form.vencimento) {
+      const [d,m,y] = vencMatch[1].split('/');
+      values.vencimento = y + '-' + m + '-' + d;
+      filledFields.push('vencimento');
+    }
+
+    // Nº da fatura / nota fiscal
+    const nfMatch = text.match(/N[ºO°]?\s*(?:DA\s*)?(?:FATURA|NOTA\s*FISCAL|NF-?E?)[^\d]{0,10}(\d{2,12})/i);
+    if (nfMatch && !state.form.nfatura) {
+      values.nfatura = nfMatch[1];
+      filledFields.push('nº da fatura');
+    }
+
+    // Transportadora / prestador (razão social, quando reconhecível no início do documento)
+    const prestMatch = text.match(/(?:RAZ[ÃA]O\s+SOCIAL|EMITENTE|PRESTADOR)[:\s]{0,5}([A-ZÀ-Ú][A-ZÀ-Ú\s&.,-]{4,50})/i);
+    if (prestMatch && !state.form.prestador) {
+      values.prestador = prestMatch[1].trim().replace(/\s{2,}/g,' ');
+      filledFields.push('transportadora');
+    }
+
+    if (filledFields.length === 0) return null;
+    return { values, filledFields };
+  } catch (err) {
+    console.error('Falha ao ler PDF para autopreenchimento', err);
+    return null;
+  }
+}
+
+async function handleSubmit(e) {
+  e.preventDefault();
+  const f = state.form;
+  if (!f.prestador || !f.vencimento || !f.valor) {
+    setState({ error: 'Preencha ao menos transportadora, vencimento e valor.' });
+    return;
+  }
+  if (!(parseBRL(f.valor) > 0)) { setState({ error: 'Valor inválido. Use o formato 3.150,00.' }); return; }
+  const body = {
+    prestador: f.prestador.trim(),
+    vencimento: f.vencimento,
+    nfatura: (f.nfatura||'').trim(),
+    valor: parseBRL(f.valor),
+    dataEnvio: f.dataEnvio || null,
+    obs: (f.obs||'').trim(),
+    status: f.status,
+    anexo: state.attachment || null,
+  };
+  setState({ saving:true });
+  try {
+    if (state.editingId) {
+      await state.ref.child(state.editingId).set(body);
+    } else {
+      await state.ref.push(body);
+    }
+    setState({ saving:false, showForm:false, editingId:null, form:{...EMPTY_FORM}, attachment:null, error:'' });
+  } catch (err) {
+    console.error(err);
+    setState({ saving:false, error:'Não foi possível salvar. Tente novamente.' });
+  }
+}
+
+function openExportModal() {
+  const opts = prestadorOptions();
+  const sel = state.filterPrestadores ? new Set(state.filterPrestadores) : new Set(opts);
+  setState({ showExportModal:true, exportSelected: sel, exportError:'' });
+}
+function closeExportModal() {
+  setState({ showExportModal:false, exportSelected:null, exportError:'' });
+}
+function toggleExportPrestador(name) {
+  if (state.exportSelected.has(name)) state.exportSelected.delete(name); else state.exportSelected.add(name);
+  render();
+}
+function toggleExportAll(checked) {
+  const opts = prestadorOptions();
+  state.exportSelected = checked ? new Set(opts) : new Set();
+  render();
+}
+async function doExport() {
+  if (!window.XLSX) { setState({ exportError:'Biblioteca de exportação não carregou. Tente novamente.' }); return; }
+  const sel = state.exportSelected;
+  if (!sel || sel.size === 0) { setState({ exportError:'Selecione ao menos uma transportadora.' }); return; }
+  setState({ exporting:true, exportError:'' });
+  try {
+    const rows = filteredExpenses()
+      .filter(e => sel.has(e.prestador))
+      .slice()
+      .sort((a,b) => (a.vencimento||'').localeCompare(b.vencimento||''))
+      .map(e => ({
+        'Transportadora': e.prestador || '',
+        'Vencimento': e.vencimento ? fmtDate(e.vencimento) : '',
+        'Nº Fatura': e.nfatura || '',
+        'Valor (R$)': Number(e.valor) || 0,
+        'Data de Envio': e.dataEnvio ? fmtDate(e.dataEnvio) : '',
+        'Status': e.status || 'Pendente',
+        'Observações': e.obs || '',
+      }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{wch:26},{wch:12},{wch:12},{wch:13},{wch:12},{wch:11},{wch:40}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Lançamentos');
+    const stamp = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, 'gastos-frete-' + stamp + '.xlsx');
+    setState({ exporting:false, showExportModal:false, exportSelected:null });
+  } catch (err) {
+    console.error(err);
+    setState({ exporting:false, exportError:'Não foi possível exportar. Tente novamente.' });
+  }
+}
+
+function render() {
+  hideTip();
+  const root = document.getElementById('root');
+  if (state.loading) { root.innerHTML = '<div class="loading-screen">Carregando lançamentos…</div>'; return; }
+  if (state.dbUnavailable) {
+    root.innerHTML = '<div class="unavailable-banner">Não consegui acessar os lançamentos. Confira se você está no grupo certo e recarregue a página (Ctrl+F5).</div>';
+    return;
+  }
+
+  const filtered = filteredExpenses();
+  const totalGeral = filtered.reduce((s,e) => s + (Number(e.valor)||0), 0);
+
+  const months = monthKeysFor(filtered);
+  const monthTotals = {};
+  const perPrest = {};
+  filtered.forEach(e => {
+    const k = (e.vencimento || '').slice(0,7);
+    if (k.length !== 7) return;
+    const val = Number(e.valor) || 0;
+    monthTotals[k] = (monthTotals[k] || 0) + val;
+    const nm = e.prestador || 'Não informado';
+    if (!perPrest[nm]) perPrest[nm] = {};
+    perPrest[nm][k] = (perPrest[nm][k] || 0) + val;
+  });
+
+  const prestMap = {};
+  filtered.forEach(e => { const key = e.prestador || 'Não informado'; prestMap[key] = (prestMap[key]||0) + (Number(e.valor)||0); });
+  const byPrestador = Object.entries(prestMap).sort((a,b) => b[1]-a[1]).map(([name,total]) => ({name,total}));
+  const maxPrest = byPrestador.length ? byPrestador[0].total : 1;
+  const pendentesCount = filtered.filter(e => e.status === 'Pendente').length;
+
+  // Box "Gasto por transportadora / modal": tem seu próprio seletor de mês
+  const boxSel = effectiveMonthSel(months);
+  const boxMap = {};
+  filtered.forEach(e => {
+    if (boxSel !== null && boxSel.indexOf((e.vencimento || '').slice(0,7)) < 0) return;
+    const key = e.prestador || 'Não informado';
+    boxMap[key] = (boxMap[key] || 0) + (Number(e.valor) || 0);
+  });
+  const boxList = Object.entries(boxMap).sort((a,b) => b[1]-a[1]).map(([name,total]) => ({name,total}));
+  const maxBox = boxList.length ? boxList[0].total : 1;
+  const boxTotal = boxList.reduce((s,x) => s + x.total, 0);
+
+  const pOpts = prestadorOptions();
+
+  let html = '';
+  html += '<div class="header">';
+  html += '  <div class="header-left">';
+  html += '    <div class="logo-box">' + ICONS.truck + '</div>';
+  html += '    <div><div class="header-title sg">Controle de Gastos com Frete</div><div class="header-sub">Transportadoras, motoboys e frete aéreo</div></div>';
+  html += '  </div>';
+  html += '  <button class="btn-primary" onclick="openNewForm()">' + ICONS.plus + ' Lançar gasto</button>';
+  html += '</div>';
+
+  html += '<div class="tabs">';
+  html += tabBtn('painel', ICONS.grid, 'Painel');
+  html += tabBtn('lancamentos', ICONS.list, 'Lançamentos');
+  html += '</div>';
+
+  html += '<div class="filters">';
+  html += periodControlHtml();
+  html += prestadorMultiSelectHtml(pOpts);
+  html += '<button class="btn-secondary" onclick="openExportModal()">' + ICONS.download + ' Exportar Excel</button>';
+  if (state.saving) html += '<span class="saving-note">Salvando…</span>';
+  html += '</div>';
+
+  if (state.tab === 'painel') {
+    html += '<div class="panel-wrap">';
+    html += '<div class="cards-grid">';
+    html += cardHtml('Total no período', currency(totalGeral));
+    html += cardHtml('Lançamentos', String(filtered.length));
+    html += cardHtml('Transportadoras ativas', String(byPrestador.length));
+    html += cardHtml('Pendentes de pagamento', String(pendentesCount));
+    html += '</div>';
+
+    html += '<div class="box"><div class="box-title">Gasto por mês</div>';
+    html += monthlyChartHtml(months, monthTotals);
+    html += '</div>';
+
+    html += '<div class="box"><div class="box-title" style="justify-content:space-between;flex-wrap:wrap;gap:10px;"><span>Gasto por mês de cada transportadora</span>';
+    html += '<div class="seg"><button type="button" class="seg-btn' + (state.monthViewMode==='graficos'?' active':'') + '" onclick="setMonthViewMode(\'graficos\')">Gráficos</button>';
+    html += '<button type="button" class="seg-btn' + (state.monthViewMode==='tabela'?' active':'') + '" onclick="setMonthViewMode(\'tabela\')">Tabela</button></div></div>';
+    if (state.monthViewMode === 'graficos') html += '<div class="box-sub">Cada gráfico usa escala própria; passe o mouse sobre uma barra para ver o valor do mês.</div>';
+    html += perPrestadorMonthlyHtml(months, byPrestador, perPrest);
+    html += '</div>';
+
+    html += '<div class="box"><div class="box-title" style="justify-content:space-between;flex-wrap:wrap;gap:10px;"><span>Gasto por transportadora / modal</span>';
+    html += monthMultiSelectHtml(months);
+    html += '</div>';
+    if (boxSel !== null && boxSel.length === 0) {
+      html += '<div class="empty-note">Selecione ao menos um mês.</div>';
+    } else if (boxList.length === 0) {
+      html += '<div class="empty-note">Sem dados no período.</div>';
+    } else {
+      html += '<div class="box-sub">' + (boxSel === null ? 'Total do período' : (boxSel.length === 1 ? 'Total em ' + esc(monthFull(boxSel[0])) : 'Total em ' + boxSel.length + ' meses selecionados')) + ': ' + currency(boxTotal) + '</div>';
+      boxList.forEach(({name,total}) => {
+        html += '<div class="bar-row">';
+        html += '<div class="bar-label">' + iconFor(name) + '<span>' + esc(name) + '</span></div>';
+        html += '<div class="bar-track"><div class="bar-fill" style="width:' + (total/maxBox*100) + '%;background:' + colorFor(name) + '"></div></div>';
+        html += '<div class="bar-value">' + currency(total) + '</div>';
+        html += '</div>';
+      });
+    }
+    html += '</div>';
+
+    html += '<div class="box"><div class="box-title">Pedidos lançados</div>';
+    const panelList = filtered.slice().sort((a,b) => (b.vencimento||'').localeCompare(a.vencimento||''));
+    if (panelList.length === 0) {
+      html += '<div class="empty-note">Sem lançamentos no período.</div>';
+    } else {
+      html += '<div class="mini-table-scroll"><table class="mini-table"><thead><tr>' +
+        ['Transportadora','Vencimento','Nº Fatura','Valor','Status'].map(h=>'<th>'+h+'</th>').join('') +
+        '</tr></thead><tbody>';
+      panelList.forEach(e => {
+        const statusClass = e.status === 'Pago' ? 'status-pago' : 'status-pendente';
+        html += '<tr>';
+        html += '<td style="font-weight:500">' + esc(e.prestador) + '</td>';
+        html += '<td>' + fmtDate(e.vencimento) + '</td>';
+        html += '<td>' + esc(e.nfatura || '\u2014') + '</td>';
+        html += '<td style="font-weight:600">' + currency(e.valor) + '</td>';
+        html += '<td><span class="status-pill ' + statusClass + '">' + esc(e.status || 'Pendente') + '</span></td>';
+        html += '</tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+    html += '</div>';
+
+    html += '</div>';
+  } else {
+    html += '<div class="table-wrap"><div class="table-scroll"><table>';
+    html += '<thead><tr>' + ['Transportadora','Vencimento','Nº Fatura','Valor','Envio','Status','Obs','Anexo',''].map(h=>'<th>'+h+'</th>').join('') + '</tr></thead><tbody>';
+    const sorted = filtered.slice().sort((a,b) => (b.vencimento||'').localeCompare(a.vencimento||''));
+    if (sorted.length === 0) {
+      html += '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--ink-mute);">Nenhum lançamento encontrado para os filtros selecionados.</td></tr>';
+    } else {
+      sorted.forEach(e => {
+        const statusClass = e.status === 'Pago' ? 'status-pago' : 'status-pendente';
+        html += '<tr>';
+        html += '<td style="font-weight:500">' + esc(e.prestador) + '</td>';
+        html += '<td>' + fmtDate(e.vencimento) + '</td>';
+        html += '<td>' + esc(e.nfatura || '—') + '</td>';
+        html += '<td style="font-weight:600">' + currency(e.valor) + '</td>';
+        html += '<td>' + fmtDate(e.dataEnvio) + '</td>';
+        html += '<td><button class="status-pill ' + statusClass + '" onclick=\'toggleStatusById(' + jsq(e.id) + ')\'>' + esc(e.status || 'Pendente') + '</button></td>';
+        html += '<td class="obs-cell" title="' + esc(e.obs) + '">' + esc(e.obs || '—') + '</td>';
+        html += '<td>' + (e.anexo ? '<span class="anexo-actions" title="' + esc(e.anexo.name || '') + '"><button type="button" class="link-btn" onclick=\'openAnexo(' + jsq(e.id) + ')\'>Abrir</button><button type="button" class="link-btn" onclick=\'downloadAnexo(' + jsq(e.id) + ')\'>Baixar</button></span>' : '—') + '</td>';
+        html += '<td style="white-space:nowrap">';
+        html += '<button class="icon-btn edit" onclick=\'editById(' + jsq(e.id) + ')\' aria-label="Editar">' + ICONS.pencil + '</button>';
+        html += '<button class="icon-btn del" onclick=\'deleteById(' + jsq(e.id) + ')\' aria-label="Excluir">' + ICONS.trash + '</button>';
+        html += '</td>';
+        html += '</tr>';
+      });
+    }
+    html += '</tbody></table></div></div>';
+  }
+
+  if (state.showForm) {
+    html += formModalHtml();
+  }
+  if (state.showExportModal) {
+    html += exportModalHtml();
+  }
+  if (state.toast) html += '<div class="toast" role="status">' + esc(state.toast) + '</div>';
+
+  root.innerHTML = html;
+}
+
+function tabBtn(id, icon, label) {
+  return '<button class="tab-btn' + (state.tab===id?' active':'') + '" onclick=\'setState({tab:' + jsq(id) + '})\'>' + icon + ' ' + label + '</button>';
+}
+function selectHtml(name, options, value, onchange) {
+  let s = '<select class="filter-select" onchange="' + onchange + '">';
+  options.forEach(([val,label]) => {
+    s += '<option value="' + esc(val) + '"' + (val===value?' selected':'') + '>' + esc(label) + '</option>';
+  });
+  s += '</select>';
+  return s;
+}
+function prestadorMultiSelectHtml(opts) {
+  const selSet = state.filterPrestadores;
+  const isAll = selSet === null;
+  const count = isAll ? opts.length : selSet.size;
+  const label = isAll
+    ? 'Todas as transportadoras'
+    : (count === 0 ? 'Nenhuma transportadora' : (count === 1 ? [...selSet][0] : count + ' transportadoras'));
+  let html = '<div style="position:relative;display:inline-block;">';
+  html += '<button type="button" class="filter-select ms-trigger" onclick="event.stopPropagation();togglePrestadorDropdown()">' + esc(label) + ' <span style="font-size:10px;color:var(--ink-mute);">\u25BE</span></button>';
+  if (state.prestadorDropdownOpen) {
+    html += '<div class="ms-backdrop" onclick="closePrestadorDropdown()"></div>';
+    html += '<div class="ms-panel" onclick="event.stopPropagation()">';
+    html += '<label class="ms-item ms-item-all"><input type="checkbox" ' + (isAll?'checked':'') + ' onchange="setAllFilterPrestadores(this.checked)"> Todas</label>';
+    if (opts.length === 0) {
+      html += '<div class="empty-note">Nenhuma transportadora lançada ainda.</div>';
+    } else {
+      opts.forEach(name => {
+        const checked = isAll || selSet.has(name);
+        html += '<label class="ms-item"><input type="checkbox" ' + (checked?'checked':'') + ' onchange=\'toggleFilterPrestador(' + jsq(name) + ')\'> ' + esc(name) + '</label>';
+      });
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+function cardHtml(label, value) {
+  return '<div class="card"><div class="card-label">' + label + '</div><div class="card-value sg">' + value + '</div></div>';
+}
+
+function formModalHtml() {
+  const f = state.form;
+  const editing = !!state.editingId;
+  const opts = prestadorOptions();
+  let m = '<div class="modal-overlay" onclick="if(event.target===this) closeForm()">';
+  m += '<form class="modal" onsubmit="handleSubmit(event)">';
+  m += '<div class="modal-head"><div class="modal-title sg">' + (editing ? 'Editar lançamento' : 'Novo lançamento') + '</div>';
+  m += '<button type="button" class="modal-close" onclick="closeForm()">' + ICONS.x + '</button></div>';
+  m += '<div class="form-col">';
+
+  m += '<label class="field">Transportadora / prestador *<input list="prestador-list" value="' + esc(f.prestador) + '" oninput="updateFormField(\'prestador\', this.value)" placeholder="Ex: TRANS MODEL, ATIVA, CORREIOS…"></label>';
+  m += '<datalist id="prestador-list">' + opts.map(p => '<option value="' + esc(p) + '">').join('') + '</datalist>';
+
+  m += '<div class="field-row">';
+  m += '<label class="field">Vencimento *<input type="date" value="' + esc(f.vencimento) + '" oninput="updateFormField(\'vencimento\', this.value)"></label>';
+  m += '<label class="field">Data do envio<input type="date" value="' + esc(f.dataEnvio) + '" oninput="updateFormField(\'dataEnvio\', this.value)"></label>';
+  m += '</div>';
+
+  m += '<div class="field-row">';
+  m += '<label class="field">Nº da fatura / nota<input value="' + esc(f.nfatura) + '" oninput="updateFormField(\'nfatura\', this.value)"></label>';
+  m += '<label class="field">Valor (R$) *<input type="text" inputmode="decimal" value="' + esc(f.valor) + '" oninput="updateFormField(\'valor\', this.value)" placeholder="0,00"></label>';
+  m += '</div>';
+
+  m += '<label class="field">Status<select onchange="updateFormField(\'status\', this.value)">';
+  m += '<option value="Pendente"' + (f.status==='Pendente'?' selected':'') + '>Pendente</option>';
+  m += '<option value="Pago"' + (f.status==='Pago'?' selected':'') + '>Pago</option>';
+  m += '</select></label>';
+
+  m += '<label class="field">Observações<textarea rows="2" oninput="updateFormField(\'obs\', this.value)">' + esc(f.obs) + '</textarea></label>';
+
+  m += '<label class="field">Anexar fatura ou nota fiscal (PDF ou imagem)<input type="file" accept=".pdf,image/*" onchange="handleFileChange(event)"></label>';
+  m += '<div style="font-size:11.5px;color:var(--ink-mute);margin-top:-8px;">Anexando um PDF, tentamos preencher automaticamente valor, vencimento e nº da fatura.</div>';
+  if (state.attachUploading) m += '<div class="attach-uploading">Enviando e analisando o anexo…</div>';
+  if (state.attachment && !state.attachUploading) m += '<div class="attach-note">' + esc(state.attachment.name) + ' anexado</div>';
+  if (state.autofillNote) m += '<div class="autofill-note">' + esc(state.autofillNote) + '</div>';
+
+  if (state.error) m += '<div class="error-text">' + esc(state.error) + '</div>';
+
+  m += '<button type="submit" class="btn-submit">' + (editing ? 'Salvar alterações' : 'Salvar lançamento') + '</button>';
+  m += '</div></form></div>';
+  return m;
+}
+
+function exportModalHtml() {
+  const opts = prestadorOptions();
+  const sel = state.exportSelected || new Set(opts);
+  let m = '<div class="modal-overlay" onclick="if(event.target===this) closeExportModal()">';
+  m += '<div class="modal">';
+  m += '<div class="modal-head"><div class="modal-title sg">Exportar para Excel</div>';
+  m += '<button type="button" class="modal-close" onclick="closeExportModal()">' + ICONS.x + '</button></div>';
+  m += '<div class="form-col">';
+  m += '<div style="font-size:12.5px;color:var(--ink-soft)">Selecione as transportadoras a incluir na planilha (respeita o período selecionado):</div>';
+  m += '<label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding-bottom:6px;border-bottom:1px solid var(--border);">';
+  m += '<input type="checkbox" ' + (sel.size===opts.length && opts.length>0 ? 'checked' : '') + ' onchange="toggleExportAll(this.checked)"> Selecionar todas';
+  m += '</label>';
+  m += '<div style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px;">';
+  opts.forEach(name => {
+    m += '<label style="display:flex;align-items:center;gap:8px;font-size:13px;">';
+    m += '<input type="checkbox" ' + (sel.has(name) ? 'checked' : '') + ' onchange=\'toggleExportPrestador(' + jsq(name) + ')\'> ' + esc(name);
+    m += '</label>';
+  });
+  if (opts.length === 0) m += '<div class="empty-note">Nenhum lançamento disponível.</div>';
+  m += '</div>';
+  if (state.exportError) m += '<div class="error-text">' + esc(state.exportError) + '</div>';
+  m += '<button type="button" class="btn-submit" onclick="doExport()" ' + (state.exporting?'disabled':'') + '>' + (state.exporting ? 'Gerando planilha…' : 'Exportar ' + sel.size + (sel.size===1?' transportadora':' transportadoras')) + '</button>';
+  m += '</div></div></div>';
+  return m;
+}
+
+function onFilterChange(key, value) { state[key] = value; render(); }
+function deleteById(id) { handleDelete(id); }
+function editById(id) { const item = state.expenses.find(e => e.id === id); if (item) openEditForm(item); }
+function toggleStatusById(id) { const item = state.expenses.find(e => e.id === id); if (item) toggleStatus(item); }
+
+window.setState = setState;
+window.openNewForm = openNewForm;
+window.closeForm = closeForm;
+window.updateFormField = updateFormField;
+window.handleFileChange = handleFileChange;
+window.handleSubmit = handleSubmit;
+window.onFilterChange = onFilterChange;
+window.deleteById = deleteById;
+window.editById = editById;
+window.toggleStatusById = toggleStatusById;
+window.openExportModal = openExportModal;
+window.closeExportModal = closeExportModal;
+window.toggleExportPrestador = toggleExportPrestador;
+window.toggleExportAll = toggleExportAll;
+window.doExport = doExport;
+window.setPeriodPreset = setPeriodPreset;
+window.setDateFrom = setDateFrom;
+window.setDateTo = setDateTo;
+window.setMonthViewMode = setMonthViewMode;
+window.openAnexo = openAnexo;
+window.downloadAnexo = downloadAnexo;
+window.toggleMonthDropdown = toggleMonthDropdown;
+window.closeMonthDropdown = closeMonthDropdown;
+window.toggleMonthSel = toggleMonthSel;
+window.setAllMonthSel = setAllMonthSel;
+window.togglePrestadorDropdown = togglePrestadorDropdown;
+window.closePrestadorDropdown = closePrestadorDropdown;
+window.toggleFilterPrestador = toggleFilterPrestador;
+window.setAllFilterPrestadores = setAllFilterPrestadores;
+
+window.__startApp = init;
+if (window.__gateOk) init();
+</script>
+</body>
+</html>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-storage-compat.min.js"></script>
+<script>
+(function(){
+  /* CADEADO PADRÃO DA ESTANTE. Só esta linha muda (o ✎ Editar troca ela). */
+  var GRUPOS_PERMITIDOS = ["PCP"];
+  var firebaseConfig = {
+    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+    authDomain: "stinpharma-qualidade.firebaseapp.com",
+    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+    projectId: "stinpharma-qualidade",
+    storageBucket: "stinpharma-qualidade.firebasestorage.app",
+    messagingSenderId: "422803826984",
+    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+    measurementId: "G-6C0TLHH2VP"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  function norm(x){ return String(x).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().trim(); }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  function liberar(){
+    var st = document.getElementById('__gateStyle');
+    var ov = document.getElementById('__gateOverlay');
+    if(st) st.remove();
+    if(ov) ov.remove();
+    window.__gateOk = true;
+    if(window.__startApp) window.__startApp();
+  }
+  function negar(msg){
+    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Estante</a>';
+  }
+  var jaResolveu = false;
+  setTimeout(function(){
+    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
+  }, 10000);
+  firebase.auth().onAuthStateChanged(function(user){
+    jaResolveu = true;
+    if(!user){ negar('Você precisa entrar pela Estante.'); return; }
+    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
+      var dados = snap.val() || {};
+      var meus = (dados.grupos || []).map(norm);
+      var permitido = dados.admin === true || GRUPOS_PERMITIDOS.some(function(g){ return meus.indexOf(norm(g)) !== -1; });
+      if(permitido){ liberar(); return; }
+      negar('Você não tem permissão pra acessar este app.<br><span style="font-size:12px;">Seus grupos: ' + esc((dados.grupos||[]).join(', ') || 'nenhum') + '<br>Grupos com acesso: ' + esc(GRUPOS_PERMITIDOS.join(', ')) + '</span>');
+    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
+  });
+})();
+</script>
+</body></html>
