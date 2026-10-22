@@ -226,7 +226,7 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const fmtInt = n => (n||0).toLocaleString('pt-BR');
 const pctTxt = p => p==null ? '—' : p.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});
-function norm(s){ return String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim(); }
+function norm(s){ return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim(); }
 function txt(v,n){ n=n||60; if(v==null) return ''; return String(v).replace(/\s+/g,' ').trim().slice(0,n); }
 function pad(n){ return String(n).padStart(2,'0'); }
 function ymd(y,m,d){ const t=new Date(Date.UTC(y,m-1,d)); if(t.getUTCFullYear()!==y||t.getUTCMonth()!==m-1||t.getUTCDate()!==d) return null; return ''+y+pad(m)+pad(d); }
@@ -275,7 +275,8 @@ const CARRIERS = {
       });
       return [...out.values()];
     },
-    excluded: r => /entregue ao remetente|estornad|cancelad|devolvid/i.test(r.st),
+    // status finalizadores: não entram no SLA nem nos atrasados em aberto
+    excluded: r => /entregue ao remetente|estornad|cancelad|devolvid|suspensao de entrega|baixado.{0,4} pela unidade postadora/.test(norm(r.st)),
     delivered: r => !!r.ent && /entregue ao destinat|caixa de correios inteligente/i.test(r.st),
     prevOf: r => addBD(dn(r.base), (r.prazo||0)+1), // +1 dia útil após o prazo dos Correios
   },
@@ -440,7 +441,7 @@ function render(){
   document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.tab===S.tab?'true':'false'));
   document.querySelectorAll('#gran button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.g===S.gran?'true':'false'));
   if(S.tab==='geral') renderGeral(); else renderCarrier(S.tab);
-  $('#foot').innerHTML = '% no prazo = entregues no prazo ÷ (entregues no prazo + entregues com atraso + atrasados em aberto). Pedidos em andamento (previsão ainda não venceu) ficam fora da conta. Os períodos e gráficos usam a data de previsão de entrega; semanas de segunda a domingo. Meta: '+META+'%. A situação de cada transportadora é calculada até a data mais recente do relatório importado; previsões depois dessa data contam como em andamento. Correios: dias úteis sem sábados, domingos e feriados nacionais; devolvidos ao remetente, cancelados e estornados não entram no SLA. Dados compartilhados com o time (salvos no banco da Central de Apps).';
+  $('#foot').innerHTML = '% no prazo = entregues no prazo ÷ (entregues no prazo + entregues com atraso + atrasados em aberto). Pedidos em andamento (previsão ainda não venceu) ficam fora da conta. Os períodos e gráficos usam a data de previsão de entrega; semanas de segunda a domingo. Meta: '+META+'%. A situação de cada transportadora é calculada até a data mais recente do relatório importado; previsões depois dessa data contam como em andamento. Correios: dias úteis sem sábados, domingos e feriados nacionais; devolvidos ao remetente, cancelados, estornados, com suspensão de entrega solicitada e baixados pela unidade postadora não entram no SLA. Dados compartilhados com o time (salvos no banco da Central de Apps).';
 }
 
 function renderGeral(){
@@ -526,10 +527,18 @@ function renderCarrier(car){
   const ufTbl='<div class="tscroll" style="max-height:360px"><table><thead><tr><th>UF</th><th class="n">Pedidos</th><th class="n">Fora do prazo</th><th class="n">% no prazo</th></tr></thead><tbody>'+
     (ufs.map(x=>'<tr><td>'+esc(x.u)+'</td><td class="n">'+fmtInt(x.s.base)+'</td><td class="n">'+fmtInt(x.s.fora)+'</td><td class="n"><span class="chip '+level(x.s.pct)+'">'+pctTxt(x.s.pct)+'%</span></td></tr>').join('')||'<tr><td colspan="4" class="empty">Sem dados.</td></tr>')+'</tbody></table></div>';
 
-  // atrasados em aberto (base toda)
-  const top=openAll.slice(0,8).map(d=>'<tr><td class="mono">'+esc(d.r.nf||'—')+'</td><td>'+esc(d.r.dest)+'</td><td>'+esc(d.r.cid)+'/'+esc(d.r.uf)+'</td><td class="mono">'+fmtDN(d.prev)+'</td><td class="n"><span class="chip '+(d.dias>7?'crit':'warn')+'">'+d.dias+' d</span></td></tr>').join('');
+  // atrasados em aberto (base toda) — com status atual e, nos Correios, o código de rastreio
+  const isC = car==='correios';
+  const top=openAll.slice(0,8).map(d=>'<tr>'+
+      (isC?'<td class="mono">'+esc(d.r.id||'—')+'</td>':'')+
+      '<td class="mono">'+esc(d.r.nf||'—')+'</td>'+
+      '<td>'+esc(d.r.dest)+'</td>'+
+      '<td>'+esc(d.r.cid)+'/'+esc(d.r.uf)+'</td>'+
+      '<td class="mono">'+fmtDN(d.prev)+'</td>'+
+      '<td style="font-size:12.5px;color:var(--ink-2)">'+esc(d.r.st||'—')+'</td>'+
+      '<td class="n"><span class="chip '+(d.dias>7?'crit':'warn')+'">'+d.dias+' d</span></td></tr>').join('');
   const openBox='<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><h2>Atrasados em aberto agora</h2><p class="sub">Toda a base, sem filtro de período · '+fmtInt(openAll.length)+' pedidos sem entrega com previsão vencida</p></div>'+(openAll.length?'<button class="btn" data-list="openall" id="btnOpenAll">Ver todos</button>':'')+'</div>'+
-    (top?'<div class="tscroll" style="max-height:none"><table><thead><tr><th>NF</th><th>Destinatário</th><th>'+C.placeLabel+'/UF</th><th>Previsão</th><th class="n">Atraso</th></tr></thead><tbody>'+top+'</tbody></table></div>':'<div class="empty">Nenhum pedido atrasado em aberto.</div>')+'</div>';
+    (top?'<div class="tscroll" style="max-height:none"><table><thead><tr>'+(isC?'<th>Rastreio</th>':'')+'<th>NF</th><th>Destinatário</th><th>'+C.placeLabel+'/UF</th><th>Previsão</th><th>Status atual</th><th class="n">Atraso</th></tr></thead><tbody>'+top+'</tbody></table></div>':'<div class="empty">Nenhum pedido atrasado em aberto.</div>')+'</div>';
 
   // Ativa: divergência com a classificação da própria Ativa
   let flag='';
