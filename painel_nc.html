@@ -111,7 +111,7 @@ main{padding:28px clamp(16px,3vw,40px) 64px;min-width:0}
 .dup{padding:10px 14px;border-radius:12px;background:color-mix(in srgb,var(--warn) 16%,transparent);border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);font-size:13.5px}
 
 /* ---------- planilha ---------- */
-.filters{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(5,minmax(0,1fr)) repeat(2,minmax(0,.9fr)) auto;gap:8px;padding:12px;margin-bottom:12px;align-items:end}
+.filters{display:grid;grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:8px;padding:12px;margin-bottom:12px;align-items:end}
 .filters .in{min-height:38px;font-size:14px;padding:0 8px}.filters select.in{padding-right:26px}
 .meta{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 2px 10px;color:var(--mut);font-size:13.5px}
 .tw{overflow:auto;border-radius:var(--r);max-height:calc(100dvh - 300px);min-height:200px}
@@ -127,6 +127,15 @@ td.prod{min-width:260px;max-width:340px}td:nth-child(5){min-width:150px}td:nth-c
 td.prod small{display:block;color:var(--mut)}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--line);white-space:nowrap}
 .pill.t{background:var(--acc);color:var(--accInk)}
+.pill.g-c{background:color-mix(in srgb,var(--bad) 20%,transparent);color:var(--bad)}
+.pill.g-m{background:color-mix(in srgb,var(--warn) 22%,transparent);color:var(--warn)}
+.pill.g-n{background:color-mix(in srgb,var(--info) 18%,transparent);color:var(--info)}
+.pill.fv{background:var(--bad);color:#fff}
+.cls{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.cls small{font-size:12px;color:var(--mut);white-space:normal}
+tr.alerta td:first-child{box-shadow:inset 3px 0 0 var(--bad)}
+.fvnote{padding:10px 14px;border-radius:12px;background:color-mix(in srgb,var(--bad) 12%,transparent);border:1px solid color-mix(in srgb,var(--bad) 40%,transparent);font-size:13.5px}
+.hint{font-size:12.5px;color:var(--mut);margin-top:4px}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--faint);display:inline-block}
 .st{min-height:30px;padding:0 26px 0 10px;font-size:12.5px;font-weight:600;border-radius:99px;background-position:right 9px center}
 .acts{display:flex;gap:2px;justify-content:flex-end}
@@ -136,7 +145,7 @@ td.prod small{display:block;color:var(--mut)}
 /* ---------- dashboard ---------- */
 .dfil{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .dfil .in{min-height:38px;width:auto;font-size:14px}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:14px;margin-bottom:14px}
 .drop{display:flex;flex-direction:column;align-items:center;gap:4px;padding:18px;border:1.5px dashed var(--line2);border-radius:12px;text-align:center;cursor:pointer;color:var(--mut);transition:border-color 160ms var(--ease),background-color 160ms var(--ease)}
 .field>label.drop{font-size:13.5px;font-weight:400;letter-spacing:0;color:var(--mut)}.field>label.drop b{color:var(--ink);font-weight:600}.drop u{color:var(--ink)}.drop small{font-size:12px}
 .drop.over{border-color:var(--ink);background:color-mix(in srgb,var(--ink) 5%,transparent)}
@@ -297,6 +306,14 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
             <div class="field"><label for="fVend">Vendedor(a) <b>*</b></label><select id="fVend" class="in" required></select><div class="errmsg"></div></div>
             <div class="field"><label for="fMot">Motivo <b>*</b></label><select id="fMot" class="in" required></select><div id="fArea" class="mut" style="font-size:12.5px"></div><div class="errmsg"></div></div>
           </div>
+          <div class="g2">
+            <div class="field"><label for="fClasse">Tipo de não conformidade <b>*</b></label><select id="fClasse" class="in" required></select><div id="fClasseDesc" class="hint"></div><div class="errmsg"></div></div>
+            <div class="field"><span class="lbl">Gravidade <b style="color:var(--bad)">*</b></span>
+              <div class="seg full" id="fGrav" role="group" aria-label="Gravidade"></div><div id="fGravDesc" class="hint"></div><div class="errmsg" id="gravErr"></div></div>
+          </div>
+          <div class="field"><span class="lbl">Suspeita de reação adversa (Farmacovigilância)?</span>
+            <div class="seg" id="fFv" role="group" aria-label="Farmacovigilância"><button type="button" data-v="0" aria-pressed="true">Não</button><button type="button" data-v="1" aria-pressed="false">Sim</button></div>
+            <div id="fvNote" class="fvnote" hidden style="margin-top:8px"><b>Atenção:</b> o cliente relatou reação após usar? Avise a Farmacovigilância além de lançar a NC. A mesma reclamação pode ser NC e FV ao mesmo tempo.</div></div>
           <div class="field">
             <span class="lbl">Produtos e quantidades <b style="color:var(--bad)">*</b></span>
             <div id="items" class="items"></div>
@@ -337,6 +354,9 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
         <div class="field"><label for="pMot">Motivo</label><select id="pMot" class="in"></select></div>
         <div class="field"><label for="pArea">Área</label><select id="pArea" class="in"></select></div>
         <div class="field"><label for="pTipo">Devolução</label><select id="pTipo" class="in"><option value="">Todas</option><option>Total</option><option>Parcial</option></select></div>
+        <div class="field"><label for="pClasse">Tipo de NC</label><select id="pClasse" class="in"></select></div>
+        <div class="field"><label for="pGrav">Gravidade</label><select id="pGrav" class="in"></select></div>
+        <div class="field"><label for="pFv">Farmacovigilância</label><select id="pFv" class="in"><option value="">Todas</option><option value="1">Só suspeita de FV</option></select></div>
         <div class="field"><label for="pSt">Status</label><select id="pSt" class="in"></select></div>
         <div class="field"><label for="pDe">De</label><input id="pDe" class="in" type="date"></div>
         <div class="field"><label for="pAte">Até</label><input id="pAte" class="in" type="date"></div>
@@ -405,8 +425,8 @@ const GRUPOS_SAC=['SAC'];   // lançam e editam NCs
 const GRUPOS_VER=['NC'];    // só visualizam planilha e dashboard
 const S={user:null,papel:null,ncs:[],cfg:{vendedores:[],produtos:[],motivos:[],status:['Aberto','Em tratativa','Reenviado','Bonificado','Finalizado']},
   view:'lancar',editId:null,dupAck:false,files:[],
-  f:{q:'',vend:'',mot:'',area:'',tipo:'',st:'',de:'',ate:''},sort:{k:'data',d:-1},page:1,
-  dash:{range:'90',de:'',ate:'',m:{motivo:'qtd',area:'qtd',produto:'qtd',vendedor:'qtd'},more:{}},cad:'vendedores'};
+  f:{q:'',vend:'',mot:'',area:'',tipo:'',st:'',classe:'',grav:'',fv:'',de:'',ate:''},sort:{k:'data',d:-1},page:1,
+  dash:{range:'90',de:'',ate:'',m:{motivo:'qtd',area:'qtd',produto:'qtd',vendedor:'qtd',classe:'qtd'},more:{}},cad:'vendedores'};
 const FINAL=()=>S.cfg.status.includes('Finalizado')?'Finalizado':S.cfg.status[S.cfg.status.length-1];
 const isOpen=n=>(n.status||'')!==FINAL();
 const nAnx=n=>Object.keys(n.anexosMeta||{}).length;
@@ -414,6 +434,11 @@ const ageDays=n=>Math.max(0,Math.floor((Date.now()-new Date((n.data||today())+'T
 const ageTxt=n=>{const d=ageDays(n);return d===0?'aberta hoje':d===1?'aberta há 1 dia':`aberta há ${d} dias`};
 const dtTxt=ms=>ms?new Date(ms).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
 const areaOf=n=>(S.cfg.motivos.find(m=>m.n===n)||{}).a||'';
+const CLASSES=[['Aspecto físico','Alteração de cor, cheiro, textura ou aparência'],['Embalagem','Caixa danificada, lacre rompido, frasco quebrado ou vazando'],['Quantidade','Comprimidos faltando, cartela incompleta ou volume abaixo do informado'],['Rotulagem','Lote ilegível, validade incorreta ou informações divergentes'],['Integridade do produto','Comprimidos quebrados, cápsulas abertas ou esfareladas'],['Contaminação','Partículas, sujeira, corpo estranho ou suspeita de contaminação'],['Dispositivo de administração','Spray que não funciona, conta-gotas defeituoso, seringa com falha'],['Conservação e transporte','Suspeita de temperatura inadequada ou armazenamento incorreto'],['Processo ou atendimento','Falha no procedimento interno, registro incorreto ou descumprimento de requisito']];
+const GRAVS=[['Crítica','c','Pode colocar a saúde do paciente em risco grave (ex.: suspeita de contaminação de injetável)'],['Maior','m','Falha significativa que pode comprometer a qualidade ou o uso (ex.: quantidade incorreta)'],['Menor','n','Falha de baixo impacto, sem comprometer qualidade ou segurança (ex.: defeito estético secundário)']];
+const gravCls=g=>(GRAVS.find(x=>x[0]===g)||[])[1]||'';
+const classeDesc=c=>(CLASSES.find(x=>x[0]===c)||[])[1]||'';
+const clsPills=n=>[n.gravidade?`<span class="pill g-${gravCls(n.gravidade)}">${esc(n.gravidade)}</span>`:'',n.fv?'<span class="pill fv">Suspeita de FV</span>':''].join(' ');
 const AREAS_PAD=['Transporte','Expedição','Qualidade do produto','Cliente / prescrição'];
 const canWrite=()=>S.papel==='admin'||S.papel==='sac';
 const isAdmin=()=>S.papel==='admin';
@@ -486,12 +511,16 @@ function fillSelects(){
   $('#emptyCfg').hidden=!!(S.cfg.vendedores.length&&S.cfg.produtos.length&&S.cfg.motivos.length);
   const vs=[...S.cfg.vendedores].sort((a,b)=>a.localeCompare(b,'pt-BR'));
   setSel($('#fVend'),opts(vs,'Selecione…'));setSel($('#fMot'),motOpts('Selecione…'));
-  setSel($('#pVend'),opts(vs,'Todos'));setSel($('#pMot'),motOpts('Todos'));setSel($('#pArea'),opts(areasList(),'Todas'));showArea();setSel($('#pSt'),opts(S.cfg.status,'Todos'));
+  setSel($('#pVend'),opts(vs,'Todos'));setSel($('#pMot'),motOpts('Todos'));setSel($('#pArea'),opts(areasList(),'Todas'));showArea();setSel($('#pSt'),opts(S.cfg.status,'Todos'));setSel($('#fClasse'),opts(CLASSES.map(c=>c[0]),'Selecione…'));setSel($('#pClasse'),opts(CLASSES.map(c=>c[0]).concat(['(sem classificação)']),'Todos'));setSel($('#pGrav'),opts(GRAVS.map(g=>g[0]).concat(['(sem classificação)']),'Todas'));showClasse();
   $('#dlProd').innerHTML=S.cfg.produtos.map(p=>`<option value="${esc(p.n)}">${esc(p.c)}</option>`).join('');
 }
 
 /* ============================ formulário ============================ */
 let tipo='Total';
+let grav='',fv=false;
+function showClasse(){$('#fClasseDesc').textContent=classeDesc($('#fClasse').value)}
+function setGrav(v){grav=v;$$('#fGrav button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));$('#fGravDesc').textContent=(GRAVS.find(x=>x[0]===v)||[])[2]||'';$('#gravErr').textContent=''}
+function setFv(v){fv=!!v;$$('#fFv button').forEach(b=>b.setAttribute('aria-pressed',(b.dataset.v==='1')===fv));$('#fvNote').hidden=!fv}
 function showArea(){const a=areaOf($('#fMot').value);$('#fArea').textContent=a?'Área responsável: '+a:''}
 function itemRow(v={}){
   const d=document.createElement('div');d.className='item';
@@ -507,7 +536,7 @@ function resetForm(keepDate){
   const dt=keepDate?$('#fData').value:today();
   $('#ncForm').reset();$('#fData').value=dt||today();
   $('#items').innerHTML='';$('#items').append(itemRow());
-  setTipo('Total');
+  setTipo('Total');setGrav('');setFv(false);showClasse();
   S.editId=null;S.dupAck=false;$('#dupBox').hidden=true;S.files=[];renderFiles();
   $('#formTitle').textContent='Lançar NC';$('#btnSave').textContent='Lançar NC';$('#btnCancelEdit').hidden=true;$('#stHint').hidden=false;
   $$('.in.err').forEach(e=>e.classList.remove('err'));$$('.errmsg').forEach(e=>e.textContent='');
@@ -524,6 +553,11 @@ function validate(){
   if(!$('#fCli').value.trim())flag($('#fCli'),'Informe o cliente');
   if(!$('#fVend').value)flag($('#fVend'),'Escolha o vendedor');
   if(!$('#fMot').value)flag($('#fMot'),'Escolha o motivo');
+  const legado=S.editId&&!(S.ncs.find(x=>x.id===S.editId)||{}).classe;
+  if(!legado){
+    if(!$('#fClasse').value)flag($('#fClasse'),'Escolha o tipo de não conformidade');
+    if(!grav){ok=false;$('#gravErr').textContent='Escolha a gravidade'}
+  }
   const itens=[];
   $$('.item').forEach(row=>{
     const ip=row.querySelector('.ip'),iq=row.querySelector('.iq'),p=findProd(ip.value),q=parseInt(iq.value,10);
@@ -547,7 +581,7 @@ async function submitForm(e){
       b.textContent=`Já existe NC lançada com a NF ${nf} (${brDate(dup.data)}, ${dup.vendedor}). Se for outro item/devolução da mesma NF, clique em Lançar de novo para confirmar.`;return}
   }
   const rec={data:$('#fData').value,nf,pedido:$('#fPed').value.trim(),cliente:$('#fCli').value.trim().toUpperCase(),vendedor:$('#fVend').value,
-    itens,qtdTotal:itens.reduce((a,b)=>a+b.q,0),valorNF:parseMoney($('#fVal').value),motivo:$('#fMot').value,area:areaOf($('#fMot').value),tipo,obs:$('#fObs').value.trim()};
+    itens,qtdTotal:itens.reduce((a,b)=>a+b.q,0),valorNF:parseMoney($('#fVal').value),motivo:$('#fMot').value,area:areaOf($('#fMot').value),tipo,classe:$('#fClasse').value||null,gravidade:grav||null,fv,obs:$('#fObs').value.trim()};
   const btn=$('#btnSave');btn.disabled=true;
   const files=S.files.slice();
   try{
@@ -572,7 +606,7 @@ function editNc(id){
   ensure($('#fVend'),n.vendedor);ensure($('#fMot'),n.motivo);
   $('#items').innerHTML='';(n.itens.length?n.itens:[{}]).forEach(i=>$('#items').append(itemRow(i)));
   $('#fVal').value=(+n.valorNF||0).toLocaleString('pt-BR',{minimumFractionDigits:2});
-  setTipo(n.tipo||'Total');$('#fObs').value=n.obs||'';showArea();
+  setTipo(n.tipo||'Total');$('#fObs').value=n.obs||'';showArea();$('#fClasse').value=n.classe||'';showClasse();setGrav(n.gravidade||'');setFv(n.fv);
   $('#formTitle').textContent='Editar NC';$('#btnSave').textContent='Salvar alterações';$('#btnCancelEdit').hidden=false;
   $('#stHint').hidden=true;renderFiles();
 }
@@ -658,6 +692,7 @@ function renderSheet(n,anx){
       <section><dl class="kv">
         <dt>Cliente</dt><dd>${esc(n.cliente)}</dd><dt>Vendedor(a)</dt><dd>${esc(n.vendedor)}</dd>
         <dt>Motivo</dt><dd>${esc(n.motivo)}</dd><dt>Área</dt><dd>${esc(n.area||areaOf(n.motivo)||'—')}</dd>
+        <dt>Tipo de NC</dt><dd>${esc(n.classe||'—')}</dd><dt>Gravidade</dt><dd>${clsPills(n)||'—'}</dd>
         <dt>Devolução</dt><dd><span class="pill${n.tipo==='Total'?' t':''}">${esc(n.tipo)}</span></dd>
         <dt>Valor da NF</dt><dd class="num">${BRL(n.valorNF)}</dd>
         <dt>Lançada por</dt><dd>${esc(n.criadoPor||'—')}<br><span class="mut" style="font-size:12.5px">${dtTxt(n.criadoEm)}</span></dd></dl></section>
@@ -677,16 +712,19 @@ function applyFilters(f){
     if(f.vend&&n.vendedor!==f.vend)return false;
     if(f.mot&&n.motivo!==f.mot)return false;
     if(f.area&&(n.area||areaOf(n.motivo))!==f.area)return false;
+    if(f.classe&&(f.classe==='(sem classificação)'?!!n.classe:n.classe!==f.classe))return false;
+    if(f.grav&&(f.grav==='(sem classificação)'?!!n.gravidade:n.gravidade!==f.grav))return false;
+    if(f.fv&&!n.fv)return false;
     if(f.noev&&nAnx(n))return false;
     if(f.tipo&&n.tipo!==f.tipo)return false;
     if(f.st&&(n.status||'')!==f.st)return false;
     if(f.de&&n.data<f.de)return false;
     if(f.ate&&n.data>f.ate)return false;
-    if(q&&!norm([n.nf,n.pedido,n.cliente,n.vendedor,n.motivo,prodText(n),n.obs].join(' ')).includes(q))return false;
+    if(q&&!norm([n.nf,n.pedido,n.cliente,n.vendedor,n.motivo,n.classe,n.gravidade,n.fv?'farmacovigilancia fv':'',prodText(n),n.obs].join(' ')).includes(q))return false;
     return true;
   });
 }
-const COLS=[['data','Data'],['nf','NF'],['pedido','Pedido'],['cliente','Cliente'],['vendedor','Vendedor(a)'],['produtos','Produtos'],['valorNF','Valor NF','r'],['motivo','Motivo'],['area','Área'],['tipo','Devolução'],['status','Status'],['_','','r']];
+const COLS=[['data','Data'],['nf','NF'],['pedido','Pedido'],['cliente','Cliente'],['vendedor','Vendedor(a)'],['produtos','Produtos'],['valorNF','Valor NF','r'],['motivo','Motivo'],['area','Área'],['classe','Tipo de NC'],['tipo','Devolução'],['status','Status'],['_','','r']];
 const PAGE=50;
 function renderTable(){
   const list=applyFilters(S.f),k=S.sort.k,d=S.sort.d;
@@ -698,11 +736,12 @@ function renderTable(){
   const rows=list.slice((S.page-1)*PAGE,S.page*PAGE);
   $('#tbl thead').innerHTML='<tr>'+COLS.map(([id,l,c])=>`<th data-k="${id}" class="${c||''}"${k===id?` aria-sort="${d>0?'ascending':'descending'}"`:''}>${l}${k===id?`<span class="ar">${d>0?'↑':'↓'}</span>`:''}</th>`).join('')+'</tr>';
   const stSel=n=>canWrite()?`<select class="in st" data-id="${n.id}" aria-label="Status">${S.cfg.status.concat(S.cfg.status.includes(n.status)||!n.status?[]:[n.status]).map(s=>`<option${s===n.status?' selected':''}>${esc(s)}</option>`).join('')}</select>`:`<span class="pill">${esc(n.status||'—')}</span>`;
-  $('#tbl tbody').innerHTML=rows.map(n=>`<tr data-id="${n.id}">
-    <td class="num" style="white-space:nowrap">${brDate(n.data)}</td><td class="num">${esc(n.nf)}${nAnx(n)?`<span class="ev">${nAnx(n)} anexo${nAnx(n)>1?'s':''}</span>`:'<span class="ev no">sem evidência</span>'}</td><td class="num">${esc(n.pedido)}</td>
+  $('#tbl tbody').innerHTML=rows.map(n=>`<tr data-id="${n.id}"${n.fv||n.gravidade==='Crítica'?' class="alerta"':''}>
+    <td class="num" style="white-space:nowrap">${brDate(n.data)}</td><td class="num">${esc(n.nf)}${(n.gravidade||n.fv)?`<div class="cls" style="margin-top:4px">${clsPills(n)}</div>`:''}${nAnx(n)?`<span class="ev">${nAnx(n)} anexo${nAnx(n)>1?'s':''}</span>`:'<span class="ev no">sem evidência</span>'}</td><td class="num">${esc(n.pedido)}</td>
     <td>${esc(n.cliente)}</td><td>${esc(n.vendedor)}</td>
     <td class="prod">${n.itens.map(i=>`${esc(i.n)} <span class="mut num">× ${i.q}</span>`).join('<br>')}${n.obs?`<small>${esc(n.obs)}</small>`:''}</td>
     <td class="r num" style="white-space:nowrap">${BRL(n.valorNF)}</td><td>${esc(n.motivo)}</td><td>${esc(n.area||areaOf(n.motivo))}</td>
+    <td>${n.classe?esc(n.classe):'<span class="mut">—</span>'}</td>
     <td><span class="pill${n.tipo==='Total'?' t':''}">${esc(n.tipo)}</span></td><td>${stSel(n)}${isOpen(n)?`<small class="mut age">${ageTxt(n)}</small>`:''}</td>
     <td class="r"><div class="acts"><button class="btn ghost sm" data-open="${n.id}">Abrir</button>${canWrite()?`<button class="btn ghost sm" data-edit="${n.id}">Editar</button>`:''}${isAdmin()?`<button class="btn ghost sm danger" data-del="${n.id}">Excluir</button>`:''}</div></td></tr>`).join('');
   $('#pEmpty').hidden=rows.length>0;
@@ -715,8 +754,8 @@ function renderTable(){
 function exportData(){
   const list=applyFilters(S.f).sort((a,b)=>b.data.localeCompare(a.data));
   const ncs=list.map(n=>({'Data':brDate(n.data),'NF':n.nf,'Pedido':n.pedido,'Cliente':n.cliente,'Vendedor(a)':n.vendedor,'Produtos':n.itens.map(i=>`${i.n} (${i.q})`).join(' | '),
-    'Qtd total':n.qtdTotal??n.itens.reduce((a,b)=>a+b.q,0),'Valor NF':+n.valorNF||0,'Motivo':n.motivo,'Área':n.area||areaOf(n.motivo),'Devolução':n.tipo,'Status':n.status||'','Anexos':nAnx(n),'Finalizada em':n.fimEm?new Date(n.fimEm).toLocaleDateString('pt-BR'):'','Observação':n.obs||'','Lançado por':n.criadoPor||''}));
-  const itens=list.flatMap(n=>n.itens.map(i=>({'Data':brDate(n.data),'NF':n.nf,'Pedido':n.pedido,'Vendedor(a)':n.vendedor,'Cód. produto':i.c,'Produto':i.n,'Qtd':i.q,'Motivo':n.motivo,'Área':n.area||areaOf(n.motivo),'Devolução':n.tipo})));
+    'Qtd total':n.qtdTotal??n.itens.reduce((a,b)=>a+b.q,0),'Valor NF':+n.valorNF||0,'Motivo':n.motivo,'Área':n.area||areaOf(n.motivo),'Tipo de NC':n.classe||'','Gravidade':n.gravidade||'','Suspeita de FV':n.fv?'Sim':'Não','Devolução':n.tipo,'Status':n.status||'','Anexos':nAnx(n),'Finalizada em':n.fimEm?new Date(n.fimEm).toLocaleDateString('pt-BR'):'','Observação':n.obs||'','Lançado por':n.criadoPor||''}));
+  const itens=list.flatMap(n=>n.itens.map(i=>({'Data':brDate(n.data),'NF':n.nf,'Pedido':n.pedido,'Vendedor(a)':n.vendedor,'Cód. produto':i.c,'Produto':i.n,'Qtd':i.q,'Motivo':n.motivo,'Área':n.area||areaOf(n.motivo),'Tipo de NC':n.classe||'','Gravidade':n.gravidade||'','Suspeita de FV':n.fv?'Sim':'Não','Devolução':n.tipo})));
   return {ncs,itens};
 }
 const download=(blob,name)=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)};
@@ -758,24 +797,28 @@ function renderDash(animate){
   const D=S.dash,{de,ate}=dashRange();
   $$('#dRange button').forEach(b=>b.setAttribute('aria-pressed',D.range===b.dataset.r));
   $('#dDe').value=de||'';$('#dAte').value=ate||'';
-  const list=applyFilters({q:'',vend:'',mot:'',area:'',tipo:'',st:'',de,ate});
+  const list=applyFilters({q:'',vend:'',mot:'',area:'',tipo:'',st:'',classe:'',grav:'',fv:'',de,ate});
   $('#dSub').textContent=de?`${brDate(de)} a ${brDate(ate)}`:`Todo o histórico até ${brDate(ate)}`;
   const tot=list.length,val=list.reduce((a,n)=>a+(+n.valorNF||0),0),un=list.reduce((a,n)=>a+n.itens.reduce((x,i)=>x+i.q,0),0),par=list.filter(n=>n.tipo==='Parcial').length,tt=tot-par;
   const pct=x=>tot?Math.round(x/tot*100):0;
+  const crit=list.filter(n=>n.gravidade==='Crítica').length,nfv=list.filter(n=>n.fv).length,semcl=list.filter(n=>!n.classe).length;
   const ab=list.filter(isOpen).length,fin=list.filter(n=>n.fimEm&&n.criadoEm),avg=fin.length?fin.reduce((a,n)=>a+(n.fimEm-n.criadoEm),0)/fin.length/864e5:0,ev=list.filter(n=>nAnx(n)).length;
   $('#kpis').innerHTML=`
     <div class="card kpi"><div class="k">NCs no período</div><div class="v">${INT(tot)}</div><div class="s">${tot?`${(tot/Math.max(1,monthsSpan(list))).toFixed(1).replace('.',',')} por mês · ${pct(ev)}% com evidência`:'—'}</div></div>
     <div class="card kpi"><div class="k">Em aberto</div><div class="v">${INT(ab)}</div><div class="s">${fin.length?`Média de ${avg.toFixed(1).replace('.',',')} dias até finalizar`:'Nenhuma finalizada no período'}</div></div>
     <div class="card kpi"><div class="k">Valor das NFs devolvidas</div><div class="v">${BRL(val)}</div><div class="s">${tot?`Ticket médio ${BRL(val/tot)}`:'—'}</div></div>
     <div class="card kpi"><div class="k">Unidades devolvidas</div><div class="v">${INT(un)}</div><div class="s">${tot?`${(un/tot).toFixed(1).replace('.',',')} por NC`:'—'}</div></div>
+    <div class="card kpi"><div class="k">Críticas · Suspeitas de FV</div><div class="v"><span style="color:${crit?'var(--bad)':'inherit'}">${INT(crit)}</span> <span class="mut" style="font-size:18px;font-weight:600">· ${INT(nfv)}</span></div><div class="s">${semcl?`${INT(semcl)} NC${semcl>1?'s':''} antiga${semcl>1?'s':''} sem classificação`:'Todas classificadas'}</div></div>
     <div class="card kpi"><div class="k">Total × Parcial</div><div class="v">${pct(tt)}% <span class="mut" style="font-size:18px;font-weight:600">/ ${pct(par)}%</span></div><div class="s">${INT(tt)} totais · ${INT(par)} parciais</div><div class="split"><i style="width:${pct(tt)}%"></i><i style="width:${pct(par)}%"></i></div></div>`;
-  const mot=agg(list,n=>[[n.motivo,0]],D.m.motivo),are=agg(list,n=>[[n.area||areaOf(n.motivo)||'Sem área',0]],D.m.area),pro=agg(list,n=>n.itens.map(i=>[i.n,i.q]),D.m.produto),ven=agg(list,n=>[[n.vendedor,0]],D.m.vendedor);
+  const mot=agg(list,n=>[[n.motivo,0]],D.m.motivo),are=agg(list,n=>[[n.area||areaOf(n.motivo)||'Sem área',0]],D.m.area),pro=agg(list,n=>n.itens.map(i=>[i.n,i.q]),D.m.produto),ven=agg(list,n=>[[n.vendedor,0]],D.m.vendedor),cla=agg(list,n=>[[n.classe||'Sem classificação',0]],D.m.classe),gra=agg(list,n=>[[n.gravidade||'Sem classificação',0]],'qtd');
   const top3=mot.slice().sort((a,b)=>b.qtd-a.qtd).slice(0,3).reduce((a,b)=>a+b.qtd,0);
   const seg=(id,a,b,c)=>`<div class="seg" data-m="${id}">${[[a,'qtd'],[b,c]].map(([l,v])=>`<button data-v="${v}" aria-pressed="${D.m[id]===v}">${l}</button>`).join('')}</div>`;
   const months=agg(list,n=>[[n.data.slice(0,7),0]],'qtd').sort((a,b)=>a.k.localeCompare(b.k)),mx=Math.max(...months.map(x=>x.qtd),1);
   $('#dgrid').innerHTML=`
    <div class="card panel"><div class="ph"><div><h3>Principais motivos</h3><p>${tot?`Os 3 maiores somam ${pct(top3)}% das NCs.`:''}</p></div>${seg('motivo','NCs','Valor','val')}</div>${barsHtml(mot,D.m.motivo,tot||1,'motivo')}</div>
    <div class="card panel"><div class="ph"><div><h3>Por área</h3><p>De onde vem o problema: transporte, expedição, qualidade ou cliente.</p></div>${seg('area','NCs','Valor','val')}</div>${barsHtml(are,D.m.area,tot||1,'area')}</div>
+   <div class="card panel"><div class="ph"><div><h3>Por tipo de NC</h3><p>O que aconteceu com o produto, pela classificação de qualidade.</p></div>${seg('classe','NCs','Valor','val')}</div>${barsHtml(cla,D.m.classe,tot||1,'classe')}</div>
+   <div class="card panel"><div class="ph"><div><h3>Por gravidade</h3><p>Crítica pode ser risco à saúde do paciente.</p></div></div>${barsHtml(gra,'qtd',tot||1,'grav')}</div>
    <div class="card panel"><div class="ph"><div><h3>Produtos mais devolvidos</h3><p>NCs em que o produto aparece, ou unidades.</p></div>${seg('produto','NCs','Unidades','un')}</div>${barsHtml(pro,D.m.produto,tot||1,'produto')}</div>
    <div class="card panel"><div class="ph"><div><h3>Vendedores</h3><p>Quem mais gera NC no período.</p></div>${seg('vendedor','NCs','Valor','val')}</div>${barsHtml(ven,D.m.vendedor,tot||1,'vendedor')}</div>
    <div class="card panel wide"><div class="ph"><div><h3>Evolução mensal</h3><p>Quantidade de NCs por mês.</p></div></div>${months.length?`<div class="evo">${months.map((x,i)=>`<div class="col"><em>${x.qtd}</em><span class="b" style="--h:${(x.qtd/mx*100).toFixed(1)}%;--i:${i}"></span><small>${monthLbl(x.k)}</small></div>`).join('')}</div>`:'<p class="mut">Sem dados no período.</p>'}</div>`;
@@ -833,6 +876,10 @@ function bind(){
   $$('.nav button').forEach(b=>b.onclick=()=>go(b.dataset.go));
   $('#ncForm').addEventListener('submit',submitForm);
   $('#addItem').onclick=()=>{const r=itemRow();$('#items').append(r);r.querySelector('.ip').focus()};
+  $('#fGrav').innerHTML=GRAVS.map(g=>`<button type="button" data-v="${g[0]}" aria-pressed="false">${g[0]}</button>`).join('');
+  $('#fGrav').onclick=e=>{const b=e.target.closest('button');if(b)setGrav(b.dataset.v)};
+  $('#fFv').onclick=e=>{const b=e.target.closest('button');if(b)setFv(b.dataset.v==='1')};
+  $('#fClasse').addEventListener('change',showClasse);
   $('#fTipo').onclick=e=>{const b=e.target.closest('button');if(b)setTipo(b.dataset.v)};
   $('#fVal').oninput=e=>maskMoney(e.target);
   $('#fMot').addEventListener('change',showArea);
@@ -840,9 +887,9 @@ function bind(){
   $('#btnCancelEdit').onclick=()=>{resetForm();go('planilha')};
   $('#ncForm').addEventListener('input',e=>{e.target.classList.remove('err');const m=e.target.closest('.field')?.querySelector('.errmsg');if(m)m.textContent='';$('#itemsErr').textContent='';if(e.target.id==='fNf'){S.dupAck=false;$('#dupBox').hidden=true}});
   // planilha
-  const fmap={pQ:'q',pVend:'vend',pMot:'mot',pArea:'area',pTipo:'tipo',pSt:'st',pDe:'de',pAte:'ate'};
+  const fmap={pQ:'q',pVend:'vend',pMot:'mot',pArea:'area',pTipo:'tipo',pClasse:'classe',pGrav:'grav',pFv:'fv',pSt:'st',pDe:'de',pAte:'ate'};
   Object.entries(fmap).forEach(([id,k])=>$('#'+id).addEventListener('input',e=>{S.f[k]=e.target.value;S.page=1;renderTable()}));
-  $('#pClear').onclick=()=>{S.f={q:'',vend:'',mot:'',area:'',tipo:'',st:'',de:'',ate:''};$('#pNoEv').setAttribute('aria-pressed','false');Object.keys(fmap).forEach(id=>$('#'+id).value='');S.page=1;renderTable()};
+  $('#pClear').onclick=()=>{S.f={q:'',vend:'',mot:'',area:'',tipo:'',st:'',classe:'',grav:'',fv:'',de:'',ate:''};$('#pNoEv').setAttribute('aria-pressed','false');Object.keys(fmap).forEach(id=>$('#'+id).value='');S.page=1;renderTable()};
   $('#tbl').addEventListener('click',async e=>{
     const th=e.target.closest('th');if(th&&th.dataset.k&&th.dataset.k!=='_'){const k=th.dataset.k;S.sort=S.sort.k===k?{k,d:-S.sort.d}:{k,d:k==='data'||k==='valorNF'?-1:1};renderTable();return}
     const ed=e.target.closest('[data-edit]');if(ed)return editNc(ed.dataset.edit);
@@ -893,10 +940,10 @@ function bind(){
     const sg=e.target.closest('.seg[data-m] button');if(sg){S.dash.m[sg.parentNode.dataset.m]=sg.dataset.v;renderDash(true);return}
     const mo=e.target.closest('[data-more]');if(mo){const id=mo.dataset.more;S.dash.more[id]=!S.dash.more[id];renderDash(false);return}
     const br=e.target.closest('.bar');if(br){
-      const {de,ate}=dashRange();const map={motivo:'mot',vendedor:'vend',area:'area'};
-      S.f={q:'',vend:'',mot:'',area:'',tipo:'',st:'',de:de||'',ate:ate||''};
+      const {de,ate}=dashRange();const map={motivo:'mot',vendedor:'vend',area:'area',classe:'classe',grav:'grav'};
+      S.f={q:'',vend:'',mot:'',area:'',tipo:'',st:'',classe:'',grav:'',fv:'',de:de||'',ate:ate||''};
       if(br.dataset.f==='produto')S.f.q=br.dataset.v;else S.f[map[br.dataset.f]]=br.dataset.v;
-      $('#pQ').value=S.f.q;$('#pVend').value=S.f.vend;$('#pMot').value=S.f.mot;$('#pArea').value=S.f.area;$('#pTipo').value='';$('#pSt').value='';$('#pDe').value=S.f.de;$('#pAte').value=S.f.ate;S.page=1;go('planilha')}
+      $('#pQ').value=S.f.q;$('#pVend').value=S.f.vend;$('#pMot').value=S.f.mot;$('#pArea').value=S.f.area;$('#pTipo').value='';$('#pSt').value='';$('#pClasse').value=S.f.classe;$('#pGrav').value=S.f.grav;$('#pFv').value='';$('#pDe').value=S.f.de;$('#pAte').value=S.f.ate;S.page=1;go('planilha')}
   });
   // cadastros
   $('#cadTabs').onclick=e=>{const b=e.target.closest('button');if(b){S.cad=b.dataset.k;renderCad()}};
