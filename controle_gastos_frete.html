@@ -327,6 +327,9 @@ const state = {
   monthDropdownOpen: false,
   filterPrestadores: null, // null = todas selecionadas; Set() = filtro ativo
   prestadorDropdownOpen: false,
+  importPlan: null,
+  importing: false,
+  importError: '',
   showExportModal: false,
   exportSelected: null,
   exporting: false,
@@ -845,6 +848,98 @@ async function handleSubmit(e) {
   }
 }
 
+/* ---------- Importar Excel (mesmo formato do "Exportar Excel") ---------- */
+function normHead(s) { return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+function parseDateAny(v) {
+  if (v == null || v === '') return null;
+  if (v instanceof Date && !isNaN(v)) return v.getFullYear() + '-' + pad2(v.getMonth()+1) + '-' + pad2(v.getDate());
+  if (typeof v === 'number' && window.XLSX && XLSX.SSF) { const d = XLSX.SSF.parse_date_code(v); return d ? d.y + '-' + pad2(d.m) + '-' + pad2(d.d) : null; }
+  const s = String(v).trim(); let m;
+  if ((m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/))) return m[3] + '-' + pad2(+m[2]) + '-' + pad2(+m[1]);
+  if ((m = s.match(/^(\d{4})-(\d{2})-(\d{2})/))) return m[1] + '-' + m[2] + '-' + m[3];
+  return null;
+}
+function lancKey(r) { return [String(r.prestador||'').trim().toUpperCase(), r.vencimento || '', String(r.nfatura||'').trim(), (Number(r.valor)||0).toFixed(2)].join('|'); }
+async function handleImportFile(e) {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  if (!window.XLSX) { showToast('Biblioteca de Excel não carregou. Recarregue a página.'); return; }
+  try {
+    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
+    if (!rows.length) { showToast('A planilha está vazia.'); return; }
+    const pick = (row, name) => { const k = Object.keys(row).find(c => { const n = normHead(c); return name === 'valor' ? n.indexOf('valor') === 0 : n === name; }); return k ? row[k] : ''; };
+    const novos = [], atualizar = []; let invalidas = 0, iguais = 0;
+    // lançamentos já existentes, agrupados pela chave (suporta repetidos legítimos)
+    const existentes = new Map();
+    state.expenses.forEach(x => { const k = lancKey(x); if (!existentes.has(k)) existentes.set(k, []); existentes.get(k).push(x); });
+    rows.forEach(row => {
+      const r = {
+        prestador: String(pick(row, 'transportadora') || '').trim(),
+        vencimento: parseDateAny(pick(row, 'vencimento')),
+        nfatura: String(pick(row, 'nfatura') || '').trim(),
+        valor: typeof pick(row, 'valor') === 'number' ? pick(row, 'valor') : parseBRL(pick(row, 'valor')),
+        dataEnvio: parseDateAny(pick(row, 'datadeenvio')),
+        status: /pago/i.test(String(pick(row, 'status'))) && !/pend/i.test(String(pick(row, 'status'))) ? 'Pago' : 'Pendente',
+        obs: String(pick(row, 'observacoes') || '').trim(),
+      };
+      if (!r.prestador || !r.vencimento || !(r.valor > 0)) { invalidas++; return; }
+      const lista = existentes.get(lancKey(r));
+      const ex = lista && lista.length ? lista.shift() : null;
+      if (!ex) { novos.push(r); return; }
+      const patch = {};
+      if ((ex.status || 'Pendente') !== r.status) patch.status = r.status;
+      if ((ex.obs || '') !== r.obs) patch.obs = r.obs;
+      if (r.dataEnvio && (ex.dataEnvio || '') !== r.dataEnvio) patch.dataEnvio = r.dataEnvio;
+      if (Object.keys(patch).length) atualizar.push({ id: ex.id, patch, de: ex }); else iguais++;
+    });
+    setState({ importPlan: { novos, atualizar, iguais, invalidas, total: rows.length, soma: novos.reduce((s, x) => s + x.valor, 0), nome: file.name }, importError: '' });
+  } catch (err) {
+    console.error(err);
+    showToast('Não consegui ler essa planilha.');
+  }
+}
+function closeImport() { setState({ importPlan: null, importError: '' }); }
+async function confirmImport() {
+  const pl = state.importPlan; if (!pl) return;
+  setState({ importing: true, importError: '' });
+  try {
+    const upd = {};
+    pl.novos.forEach(r => {
+      const body = { prestador: r.prestador, vencimento: r.vencimento, nfatura: r.nfatura, valor: r.valor, obs: r.obs, status: r.status };
+      if (r.dataEnvio) body.dataEnvio = r.dataEnvio;
+      upd[state.ref.push().key] = body;
+    });
+    pl.atualizar.forEach(a => Object.keys(a.patch).forEach(k => { upd[a.id + '/' + k] = a.patch[k]; }));
+    await state.ref.update(upd);
+    setState({ importing: false, importPlan: null });
+    showToast('Importação concluída: ' + pl.novos.length + ' novos, ' + pl.atualizar.length + ' atualizados.');
+  } catch (err) {
+    console.error(err);
+    setState({ importing: false, importError: 'Não foi possível importar. Tente novamente.' });
+  }
+}
+function importModalHtml() {
+  const p = state.importPlan;
+  let m = '<div class="modal-overlay" onclick="if(event.target===this) closeImport()"><div class="modal">';
+  m += '<div class="modal-head"><div class="modal-title sg">Importar do Excel</div><button type="button" class="modal-close" onclick="closeImport()">' + ICONS.x + '</button></div>';
+  m += '<div class="form-col">';
+  m += '<div style="font-size:12.5px;color:var(--ink-soft)">Arquivo: <b>' + esc(p.nome) + '</b> · ' + p.total + ' linhas</div>';
+  m += '<div style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;">';
+  m += '<div><b>' + p.novos.length + '</b> lançamentos novos (' + currency(p.soma) + ')</div>';
+  m += '<div><b>' + p.atualizar.length + '</b> já existem e serão atualizados (status, observação ou data de envio)</div>';
+  m += '<div><b>' + p.iguais + '</b> já existem e estão iguais</div>';
+  if (p.invalidas) m += '<div style="color:var(--danger,#B0562D)"><b>' + p.invalidas + '</b> linhas ignoradas (faltou transportadora, vencimento ou valor)</div>';
+  m += '</div>';
+  m += '<div style="font-size:12px;color:var(--ink-mute)">Nada é apagado: lançamentos que não estão na planilha continuam como estão. Anexos (PDF) não vêm no Excel.</div>';
+  if (state.importError) m += '<div class="error-text">' + esc(state.importError) + '</div>';
+  const nada = p.novos.length + p.atualizar.length === 0;
+  m += '<button type="button" class="btn-submit" onclick="confirmImport()" ' + ((state.importing || nada) ? 'disabled' : '') + '>' + (state.importing ? 'Importando…' : (nada ? 'Nada a importar' : 'Importar agora')) + '</button>';
+  m += '</div></div></div>';
+  return m;
+}
+
 function openExportModal() {
   const opts = prestadorOptions();
   const sel = state.filterPrestadores ? new Set(state.filterPrestadores) : new Set(opts);
@@ -957,6 +1052,7 @@ function render() {
   html += periodControlHtml();
   html += prestadorMultiSelectHtml(pOpts);
   html += '<button class="btn-secondary" onclick="openExportModal()">' + ICONS.download + ' Exportar Excel</button>';
+  html += '<button class="btn-secondary" onclick="document.getElementById(\'importFile\').click()">Importar Excel</button><input type="file" id="importFile" accept=".xlsx,.xls" hidden onchange="handleImportFile(event)">';
   if (state.saving) html += '<span class="saving-note">Salvando…</span>';
   html += '</div>';
 
@@ -1053,6 +1149,7 @@ function render() {
   if (state.showForm) {
     html += formModalHtml();
   }
+  if (state.importPlan) html += importModalHtml();
   if (state.showExportModal) {
     html += exportModalHtml();
   }
@@ -1187,6 +1284,9 @@ window.deleteById = deleteById;
 window.editById = editById;
 window.toggleStatusById = toggleStatusById;
 window.openExportModal = openExportModal;
+window.handleImportFile = handleImportFile;
+window.closeImport = closeImport;
+window.confirmImport = confirmImport;
 window.closeExportModal = closeExportModal;
 window.toggleExportPrestador = toggleExportPrestador;
 window.toggleExportAll = toggleExportAll;
