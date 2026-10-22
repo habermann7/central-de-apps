@@ -173,5 +173,15 @@
       "SAC"
     ],
     "category": "SAC"
+  },
+  {
+    "title": "Controle gastos FRETE",
+    "description": "",
+    "file": "controle_gastos_frete.html",
+    "icon": "🧩",
+    "color": "#D9A15A",
+    "grupos": [
+      "PCP"
+    ]
   }
 ]
