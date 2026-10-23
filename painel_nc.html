@@ -172,7 +172,33 @@ dialog.sheet[open]{animation:slide 280ms var(--ease)}
 .tl li::after{content:"";position:absolute;left:8px;top:17px;bottom:0;width:1px;background:var(--line2)}
 .tl li:last-child::after{display:none}.tl li span{color:var(--mut);font-size:12.5px}
 .sh-f{padding:14px 24px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end}
-@media (max-width:820px){dialog.sheet{width:100vw;border-radius:0}.kv{grid-template-columns:110px 1fr}}
+dialog.sheet.wide{width:min(880px,100vw)}
+.shtabs{display:flex;gap:2px;padding:10px 24px 0;border-bottom:1px solid var(--line)}
+.shtabs button{position:relative;min-height:40px;padding:0 14px;border:0;background:transparent;color:var(--mut);font-weight:600;cursor:pointer;transition:color 160ms var(--ease)}
+.shtabs button[aria-selected=true]{color:var(--ink)}
+.shtabs button[aria-selected=true]::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;border-radius:2px;background:var(--ink)}
+.shtabs .tg{margin-left:6px;font-size:11px;padding:2px 7px;border-radius:99px;background:var(--line);color:var(--mut)}
+.steps{display:flex;gap:6px;flex-wrap:wrap}
+.steps span{font-size:12px;font-weight:600;padding:5px 10px;border-radius:99px;background:var(--line);color:var(--mut)}
+.steps span.ok{background:var(--acc);color:var(--accInk)}
+.fvsec{display:grid;gap:12px;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--glass2)}
+.fvsec>h5{font-size:13px;font-weight:700;letter-spacing:.02em;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.fvsec>h5 small{font-weight:500;color:var(--mut);font-size:12px}
+.fvsec[data-locked]{opacity:.78}
+.chk{display:grid;gap:2px}
+.chk label{display:flex;gap:10px;align-items:flex-start;padding:7px 8px;border-radius:9px;font-size:13.5px;cursor:pointer;transition:background-color 120ms var(--ease)}
+@media (hover:hover){.chk label:hover{background:var(--line)}}
+.chk input{width:18px;height:18px;margin-top:1px;accent-color:var(--ink);flex:none}
+.lotes{display:grid;gap:8px}
+.lote{display:grid;grid-template-columns:minmax(0,1fr) 150px 150px;gap:8px;align-items:end}
+.lote .nm{font-size:13.5px;padding-bottom:11px}
+.fotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.fotos label{position:relative;border-radius:10px;overflow:hidden;border:2px solid transparent;cursor:pointer}
+.fotos label:has(input:checked){border-color:var(--ink)}
+.fotos img{width:100%;height:90px;object-fit:cover;display:block}
+.fotos input{position:absolute;top:6px;left:6px;width:18px;height:18px;accent-color:var(--ink)}
+.sig{display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:8px;align-items:end}
+@media (max-width:820px){dialog.sheet{width:100vw;border-radius:0}.lote,.sig{grid-template-columns:1fr}.kv{grid-template-columns:110px 1fr}}
 .kpi{padding:18px 20px}
 .kpi .k{font-size:12.5px;font-weight:600;color:var(--mut)}
 .kpi .v{font-size:30px;font-weight:700;letter-spacing:-.02em;margin-top:4px;font-variant-numeric:tabular-nums}
@@ -342,7 +368,7 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
         <div class="field"><label for="pAte">Até</label><input id="pAte" class="in" type="date"></div>
         <button class="btn ghost" id="pClear">Limpar</button>
       </div>
-      <div class="meta"><span style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span id="pCount"></span><button class="btn sm ghost" id="pNoEv" aria-pressed="false">Só sem evidência</button></span><span id="pSum" class="num"></span></div>
+      <div class="meta"><span style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span id="pCount"></span><button class="btn sm ghost" id="pNoEv" aria-pressed="false">Só sem evidência</button><button class="btn sm ghost" id="pFv" aria-pressed="false">Formulário GQ 17-1 pendente</button></span><span id="pSum" class="num"></span></div>
       <div class="card tw"><table id="tbl"><thead></thead><tbody></tbody></table><div id="pEmpty" class="empty" hidden>Nenhuma NC com esses filtros.</div></div>
       <div class="pager" id="pager"></div>
     </section>
@@ -403,6 +429,7 @@ const P='painelNC';
 /* Grupos da Estante (centralApps/usuarios/{uid}/grupos). Admin da Estante = admin aqui. */
 const GRUPOS_SAC=['SAC'];   // lançam e editam NCs
 const GRUPOS_VER=['NC'];    // só visualizam planilha e dashboard
+const GRUPOS_FV=['FARMACOVIGILANCIA']; // farmacêutica: preenche investigação e fechamento do REG GQ 17-1
 const S={user:null,papel:null,ncs:[],cfg:{vendedores:[],produtos:[],motivos:[],status:['Aberto','Em tratativa','Reenviado','Bonificado','Finalizado']},
   view:'lancar',editId:null,dupAck:false,files:[],
   f:{q:'',vend:'',mot:'',area:'',tipo:'',st:'',de:'',ate:''},sort:{k:'data',d:-1},page:1,
@@ -417,6 +444,8 @@ const areaOf=n=>(S.cfg.motivos.find(m=>m.n===n)||{}).a||'';
 const AREAS_PAD=['Transporte','Expedição','Qualidade do produto','Cliente / prescrição'];
 const canWrite=()=>S.papel==='admin'||S.papel==='sac';
 const isAdmin=()=>S.papel==='admin';
+const canFv=()=>S.papel==='admin'||S.fvFlag===true;
+const canForm=()=>canWrite()||canFv();
 let db=null,auth=null;
 
 /* ============================ camada de dados ============================ */
@@ -451,7 +480,7 @@ function afterData(cfgChanged){
   if(S.view==='planilha')renderTable();
   if(S.view==='dash')renderDash(false);
   if(S.view==='cad')renderCad();
-  if(sheetId&&$('#sheet').open){const n=S.ncs.find(x=>x.id===sheetId);if(n)renderSheet(n,sheetAnx);else closeSheet()}
+  if(sheetId&&$('#sheet').open&&!(sheetTab==='form'&&fvDirty)){const n=S.ncs.find(x=>x.id===sheetId);if(n)renderSheet(n,sheetAnx);else closeSheet()}
 }
 function startFirebaseListeners(){
   db.ref(P+'/ncs').on('value',s=>{S.ncs=toList(s.val());afterData(false)},e=>toast('Sem permissão para ler as NCs',true));
@@ -625,10 +654,10 @@ function renderFiles(){
 const dataToBlob=d=>fetch(d).then(r=>r.blob());
 
 /* ============================ ficha da NC ============================ */
-let sheetId=null,sheetAnx=null;
-async function openSheet(id){
+let sheetId=null,sheetAnx=null,sheetTab='resumo',fvDirty=false;
+async function openSheet(id,opts){
   const n=S.ncs.find(x=>x.id===id);if(!n)return;
-  sheetId=id;sheetAnx=null;renderSheet(n,null);
+  sheetId=id;sheetAnx=null;fvDirty=false;sheetTab=opts&&opts.tab||'resumo';renderSheet(n,null);
   const d=$('#sheet');if(!d.open)d.showModal();
   await loadSheetAnx(id);
 }
@@ -636,8 +665,10 @@ async function loadSheetAnx(id){
   try{const a=await API.loadAnexos(id);if(sheetId===id){sheetAnx=a;const n=S.ncs.find(x=>x.id===id);if(n)renderSheet(n,a)}}
   catch(e){if(sheetId===id){sheetAnx={};toast('Não consegui carregar as evidências',true)}}
 }
-function closeSheet(){sheetId=null;sheetAnx=null;const d=$('#sheet');if(d.open)d.close()}
+function closeSheet(){sheetId=null;sheetAnx=null;fvDirty=false;const d=$('#sheet');if(d.open)d.close()}
 function renderSheet(n,anx){
+  $('#sheet').classList.toggle('wide',sheetTab==='form');
+  if(sheetTab==='form')return renderFvSheet(n,anx);
   const st=n.status||'—',open=isOpen(n);
   const hist=Object.values(n.hist||{}).sort((a,b)=>(a.em||0)-(b.em||0));
   if(!hist.length&&n.criadoEm)hist.push({st:'Lançada',por:n.criadoPor,em:n.criadoEm});
@@ -654,6 +685,7 @@ function renderSheet(n,anx){
       <div class="mut" style="font-size:13.5px">Pedido ${esc(n.pedido)} · ${brDate(n.data)}</div>
       <div class="sh-st">${stCtl}<span class="mut">${open?ageTxt(n):'finalizada'+(n.fimEm?' em '+dtTxt(n.fimEm):'')}</span></div></div>
       <button class="btn ghost" data-close aria-label="Fechar ficha" style="width:40px;padding:0">✕</button></header>
+    ${sheetTabs(n)}
     <div class="sh-b">
       <section><dl class="kv">
         <dt>Cliente</dt><dd>${esc(n.cliente)}</dd><dt>Vendedor(a)</dt><dd>${esc(n.vendedor)}</dd>
@@ -669,6 +701,144 @@ function renderSheet(n,anx){
     <footer class="sh-f"><button class="btn" data-close>Fechar</button>${canWrite()?`<button class="btn pri" data-edit="${n.id}">Editar dados</button>`:''}</footer>`;
 }
 
+
+/* ============================ formulário REG GQ 17-1 (farmacovigilância) ============================
+   SAC abre e preenche a abertura; grupo FARMACOVIGILANCIA preenche investigação → fechamento.
+   O PDF sai no layout do REG GQ 17-1 (Revisão 00) para impressão e assinatura à mão. */
+const STIN_LOGO='data:image/png;base64,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';
+const FV_CHECKS=['Lote do medicamento;','Se o medicamento dispensado foi o correto, na dosagem correta;','Se a embalagem estava íntegra;','Laudos de controle de qualidade das matérias-primas;','Se a Ficha de Pesagem ou Ordem de Manipulação utilizadas foi a correta;','Condições da manipulação, exemplo: risco de ter havido mistura de matéria prima ou produto durante a manipulação;','Resultado de Controle de qualidade do produto acabado;','Condições e tempo de armazenagem na farmácia;','Condições e tempo de armazenagem no cliente;','Se o cliente manuseou adequadamente (Ex: exposto ao calor excessivo no carro, próximo a janelas ou outra fonte de calor; exposto à umidade, por exemplo guardando no banheiro etc.);','Se o uso foi conforme prescrito;','Histórico de reclamação do mesmo lote;','Outras observações pertinentes ao desvio reclamado.'];
+const FV_MEIOS=['WhatsApp','Telefone','E-mail','Presencial','Representante'];
+const g=(o,path)=>path.split('.').reduce((a,k)=>a==null?undefined:a[k],o);
+function fvSteps(fv){
+  if(!fv)return [];
+  const inv=Object.values(fv.checks||{}).some(Boolean)||!!(fv.resultado||'').trim()||!!(fv.invObs||'').trim();
+  return [['Abertura',true],['Investigação',inv],['Ações',!!(fv.correcao||'').trim()],['Retorno ao cliente',!!g(fv,'retorno.data')],['Fechamento',!!(g(fv,'ass.fec.data')&&g(fv,'ass.fec.nome'))]];
+}
+function fvEtapa(fv){if(!fv)return '';const s=fvSteps(fv);const i=s.findIndex(x=>!x[1]);return i<0?'Fechado':s[i][0]}
+function sheetTabs(n){
+  if(!n.fv&&!canForm())return '';
+  return `<div class="shtabs" role="tablist"><button role="tab" data-tab="resumo" aria-selected="${sheetTab==='resumo'}">Resumo</button><button role="tab" data-tab="form" aria-selected="${sheetTab==='form'}">Formulário GQ 17-1${n.fv?`<span class="tg">${esc(fvEtapa(n.fv))}</span>`:''}</button></div>`;
+}
+function renderFvSheet(n,anx){
+  const fv=n.fv,canA=canWrite(),canI=canFv();
+  const head=`<header class="sh-h"><div><span class="mut" style="font-size:12.5px">REG GQ 17-1 · Formulário de farmacovigilância</span><h3>NF ${esc(n.nf)}</h3>
+      <div class="mut" style="font-size:13.5px">Pedido ${esc(n.pedido)} · ${esc(n.cliente)}</div></div>
+      <button class="btn ghost" data-close aria-label="Fechar ficha" style="width:40px;padding:0">✕</button></header>${sheetTabs(n)}`;
+  if(!fv){
+    $('#sheetBody').innerHTML=head+`<div class="sh-b"><div class="fvsec" style="text-align:center;padding:32px 20px"><h5 style="justify-content:center">Esta NC ainda não tem formulário de farmacovigilância</h5>
+      <p class="mut" style="font-size:13.5px;max-width:46ch;margin:0 auto">Abra quando a NC precisar de investigação (reação, sem efeito, problema no produto…). Os dados da NC já vêm preenchidos.</p>
+      ${canForm()?'<div><button class="btn pri" data-fvopen>Abrir formulário</button></div>':''}</div></div>
+      <footer class="sh-f"><button class="btn" data-close>Fechar</button></footer>`;
+    return;
+  }
+  const dis=ok=>ok?'':' disabled';
+  const v=path=>esc(g(fv,path)??'');
+  const imgs=anx?Object.entries(anx).filter(([k,a])=>isImg(a.tipo)&&safeData(a.data)):[];
+  const outros=anx?Object.entries(anx).filter(([k,a])=>!isImg(a.tipo)):[];
+  const steps=fvSteps(fv).map(([l,ok])=>`<span class="${ok?'ok':''}">${ok?'✓ ':''}${l}</span>`).join('');
+  $('#sheetBody').innerHTML=head+`<div class="sh-b" id="fvForm">
+    <div class="steps">${steps}</div>
+    <section class="fvsec"${canA?'':' data-locked'}><h5>Abertura <small>${canA?'SAC':'preenchido pelo SAC'}</small></h5>
+      <div class="g2"><div class="field"><label>Data</label><input class="in" value="${brDate(n.data)}" disabled></div>
+        <div class="field"><label>Responsável pela abertura do formulário</label><input class="in" data-f="responsavel" value="${v('responsavel')}"${dis(canA)}></div></div>
+      <div class="field"><label>Nome (completo)</label><input class="in" data-f="nome" value="${v('nome')}"${dis(canA)}></div>
+      <div class="g3"><div class="field"><label>Nº do pedido</label><input class="in" value="${esc(n.pedido)}" disabled></div><div class="field"><label>NF</label><input class="in" value="${esc(n.nf)}" disabled></div>
+        <div class="field"><label>Representante</label><input class="in" data-f="representante" value="${v('representante')}"${dis(canA)}></div></div>
+      <div class="field"><span class="lbl">Produtos — lote e validade</span><div class="lotes">${n.itens.map((it,i)=>`<div class="lote"><span class="nm">${esc(it.n)} <span class="mut">× ${it.q}</span></span>
+        <div class="field"><label>Lote</label><input class="in" data-f="lotes.${i}.lote" value="${v('lotes.'+i+'.lote')}"${dis(canA)}></div>
+        <div class="field"><label>Validade</label><input class="in" type="date" data-f="lotes.${i}.val" value="${v('lotes.'+i+'.val')}"${dis(canA)}></div></div>`).join('')}</div></div>
+      <div class="field"><label>Relato da reclamação</label><textarea class="in" rows="4" data-f="relato"${dis(canA)}>${v('relato')}</textarea></div>
+      <div class="field"><span class="lbl">Fotos que vão no PDF ${anx?`(${imgs.length})`:''}</span>${anx==null?'<p class="mut" style="font-size:13px">Carregando evidências…</p>':imgs.length?`<div class="fotos">${imgs.map(([k,a])=>`<label title="${esc(a.nome)}"><input type="checkbox" data-foto="${k}"${g(fv,'fotosOff.'+k)?'':' checked'}${dis(canA)}><img src="${esc(safeData(a.data))}" alt="${esc(a.nome)}"></label>`).join('')}</div>`:'<p class="mut" style="font-size:13px">Nenhuma foto anexada. Adicione na aba Resumo → Evidências.</p>'}
+        ${outros.length?`<p class="mut" style="font-size:12.5px">Também listados no PDF: ${outros.map(([k,a])=>esc(a.nome)).join(', ')}</p>`:''}</div>
+    </section>
+    <section class="fvsec"${canI?'':' data-locked'}><h5>Investigação <small>${canI?'farmacovigilância':'preenchido pela farmacovigilância'}</small></h5>
+      <div class="chk">${FV_CHECKS.map((t,i)=>`<label><input type="checkbox" data-f="checks.c${i}"${g(fv,'checks.c'+i)?' checked':''}${dis(canI)}><span>${esc(t)}</span></label>`).join('')}</div>
+      <div class="field"><label>Observações da investigação</label><textarea class="in" rows="2" data-f="invObs"${dis(canI)}>${v('invObs')}</textarea></div>
+    </section>
+    <section class="fvsec"${canI?'':' data-locked'}><h5>2 · Resultado da investigação / motivo do desvio</h5><textarea class="in" rows="3" data-f="resultado"${dis(canI)}>${v('resultado')}</textarea></section>
+    <section class="fvsec"${canI?'':' data-locked'}><h5>Correção / ações tomadas</h5><textarea class="in" rows="3" data-f="correcao"${dis(canI)}>${v('correcao')}</textarea></section>
+    <section class="fvsec"${canI?'':' data-locked'}><h5>Retorno ao cliente</h5>
+      <div class="g3"><div class="field"><label>Realizado por</label><input class="in" data-f="retorno.por" value="${v('retorno.por')}"${dis(canI)}></div>
+        <div class="field"><label>Data</label><input class="in" type="date" data-f="retorno.data" value="${v('retorno.data')}"${dis(canI)}></div>
+        <div class="field"><label>Meio de contato</label><input class="in" list="dlMeios" data-f="retorno.meio" value="${v('retorno.meio')}"${dis(canI)}></div></div>
+      <datalist id="dlMeios">${FV_MEIOS.map(m=>`<option value="${m}">`).join('')}</datalist></section>
+    <section class="fvsec"${canI?'':' data-locked'}><h5>Outras ações necessárias</h5><textarea class="in" rows="2" data-f="outras"${dis(canI)}>${v('outras')}</textarea></section>
+    <section class="fvsec"${canI?'':' data-locked'}><h5>Responsáveis <small>assinatura à mão no PDF impresso</small></h5>
+      ${[['farm','Farmacêutica comercial'],['com','Setor comercial'],['fec','Responsável pelo fechamento']].map(([k,l])=>`<div class="sig"><div class="field"><label>${l}</label><input class="in" data-f="ass.${k}.nome" value="${v('ass.'+k+'.nome')}"${dis(canI)}></div><div class="field"><label>Data</label><input class="in" type="date" data-f="ass.${k}.data" value="${v('ass.'+k+'.data')}"${dis(canI)}></div></div>`).join('')}
+      <p class="mut" style="font-size:12.5px">Ao preencher o <b>Responsável pelo fechamento</b> com data, a NC é finalizada automaticamente.</p></section>
+    ${fv.atualizadoEm?`<p class="mut" style="font-size:12.5px">Última atualização: ${esc(fv.atualizadoPor||'')} · ${dtTxt(fv.atualizadoEm)}</p>`:''}
+  </div>
+  <footer class="sh-f"><button class="btn" data-close>Fechar</button><button class="btn" data-fvpdf>Gerar PDF</button>${canA||canI?'<button class="btn pri" data-fvsave>Salvar formulário</button>':''}</footer>`;
+}
+async function fvOpen(n){
+  const fv={abertoPor:S.user.email,abertoEm:Date.now(),responsavel:S.userName||S.user.email,nome:n.cliente||'',representante:n.vendedor||'',relato:n.obs||'',atualizadoPor:S.user.email,atualizadoEm:Date.now()};
+  await db.ref(P+'/ncs/'+n.id+'/fv').set(fv);
+}
+function fvCollect(n){
+  const fv=JSON.parse(JSON.stringify(n.fv||{})),set=(o,path,val)=>{const ks=path.split('.');let x=o;ks.slice(0,-1).forEach(k=>x=x[k]=x[k]&&typeof x[k]==='object'?x[k]:{});x[ks.at(-1)]=val};
+  $$('#fvForm [data-f]').forEach(el=>{if(el.disabled)return;set(fv,el.dataset.f,el.type==='checkbox'?el.checked:el.value.trim())});
+  $$('#fvForm [data-foto]').forEach(el=>{if(el.disabled)return;set(fv,'fotosOff.'+el.dataset.foto,!el.checked)});
+  fv.atualizadoPor=S.user.email;fv.atualizadoEm=Date.now();
+  return fv;
+}
+async function fvSave(){
+  const n=S.ncs.find(x=>x.id===sheetId);if(!n||!n.fv)return;
+  const fv=fvCollect(n);
+  try{
+    await db.ref(P+'/ncs/'+n.id+'/fv').set(fv);fvDirty=false;
+    const s=Object.fromEntries(fvSteps(fv));let msg='Formulário salvo';
+    if(s['Fechamento']&&isOpen(n)){await API.setStatus(n.id,FINAL());msg='Formulário fechado · NC finalizada'}
+    else if(s['Investigação']&&n.status===S.cfg.status[0]&&S.cfg.status.includes('Em tratativa')){await API.setStatus(n.id,'Em tratativa');msg='Formulário salvo · NC em tratativa'}
+    toast(msg);
+  }catch(e){console.error(e);toast('Sem permissão para salvar esta parte do formulário',true)}
+}
+/* ---------- PDF (janela de impressão no layout do REG GQ 17-1) ---------- */
+function fvPrintHtml(n,fv,anx){
+  const e=s=>esc(s??''),br=s=>e(s).replace(/\n/g,'<br>'),d=s=>s?brDate(s):'____/____/______',L=s=>s&&String(s).trim()?br(s):'&nbsp;';
+  const imgs=Object.entries(anx||{}).filter(([k,a])=>isImg(a.tipo)&&safeData(a.data)&&!g(fv,'fotosOff.'+k)).sort((a,b)=>(a[1].em||0)-(b[1].em||0));
+  const outros=Object.values(anx||{}).filter(a=>!isImg(a.tipo));
+  const prod=n.itens.map((it,i)=>{const l=g(fv,'lotes.'+i)||{};return `${e(it.n)}${l.lote?` / LOTE ${e(l.lote)}`:''}${l.val?` / VALIDADE ${brDate(l.val)}`:''} / Qtde: ${it.q}`}).join('<br>');
+  const sig=(lbl,k)=>`<tr><td class="sg"><b>${lbl}:</b> ${e(g(fv,'ass.'+k+'.nome'))}<span class="dt"><b>DATA:</b> ${d(g(fv,'ass.'+k+'.data'))}</span><div class="ln">Assinatura</div></td></tr>`;
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>REG GQ 17-1 - NF ${e(n.nf)} - ${e(fv.nome||n.cliente)}</title><style>
+  @page{size:A4;margin:36mm 14mm 18mm 14mm;
+    @top-left{content:url(${STIN_LOGO});width:43mm;padding:0;border:1px solid #000;border-right:0;vertical-align:middle;text-align:center;margin:9mm 0 5mm}
+    @top-center{content:"REG GQ 17-1 Formulário de farmacovigilância";width:96mm;padding:0;border:1px solid #000;font:bold 10pt Arial,Helvetica,sans-serif;vertical-align:middle;text-align:center;margin:9mm 0 5mm}
+    @top-right{content:"Página " counter(page) " de " counter(pages);width:43mm;padding:0;border:1px solid #000;border-left:0;font:10pt Arial,Helvetica,sans-serif;vertical-align:middle;text-align:center;margin:9mm 0 5mm}
+    @bottom-left{content:"Revisão 00";font:9pt Arial,Helvetica,sans-serif}}
+  *{box-sizing:border-box}body{margin:0;font:10pt/1.35 Arial,Helvetica,sans-serif;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  table{width:100%;border-collapse:collapse;margin:0 0 3mm}td{border:1px solid #000;padding:4px 6px;vertical-align:top}
+  tr,.fig{break-inside:avoid}.h{background:#d9d9d9;font-weight:bold;font-size:9pt;padding:3px 6px}
+  .box{min-height:12mm}.fotos{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}.fig{width:calc(33.33% - 3px)}.fig img{width:100%;max-height:70mm;object-fit:contain;display:block}
+  ul{list-style:none;margin:2px 0 0;padding:0 0 0 14px}li{margin:1px 0;padding-left:16px;text-indent:-16px}.cb{display:inline-block;width:11px;font-size:11pt;line-height:1}
+  .sg{padding:6px}.dt{float:right}.ln{margin-top:12mm;border-top:1px solid #000;width:70mm;font-size:8pt;text-align:center;padding-top:1px}
+  .note{font-size:8.5pt;color:#333}
+  </style></head><body>
+  <table><tr><td style="width:50%"><b>Data:</b> ${brDate(n.data)}</td><td><b>Responsável pela abertura do formulário:</b> ${e(fv.responsavel)}</td></tr>
+    <tr><td colspan="2"><b>Nome (completo):</b> ${e(fv.nome)}</td></tr>
+    <tr><td colspan="2"><b>Nº do pedido:</b> ${e(n.pedido)} &nbsp; <b>NF:</b> ${e(n.nf)}<br><b>REPRESENTANTE:</b> ${e(fv.representante)}</td></tr></table>
+  <table><tr><td>${prod}
+    ${imgs.length?`<div class="fotos">${imgs.map(([k,a])=>`<div class="fig"><img src="${esc(safeData(a.data))}" alt=""></div>`).join('')}</div>`:''}
+    ${outros.length?`<div class="note">Documentos anexados no Painel NC: ${outros.map(a=>e(a.nome)).join(', ')}</div>`:''}
+    <p style="margin:4px 0 0">${br(fv.relato)}</p></td></tr></table>
+  <table><tr><td class="h">INVESTIGAÇÃO</td></tr><tr><td>Verificar:<ul>${FV_CHECKS.map((t,i)=>`<li><span class="cb">${g(fv,'checks.c'+i)?'☒':'☐'}</span> ${e(t)}</li>`).join('')}</ul>${(fv.invObs||'').trim()?`<p style="margin:4px 0 0"><b>Observações:</b> ${br(fv.invObs)}</p>`:''}</td></tr></table>
+  <table><tr><td class="h">2 RESULTADO DA INVESTIGAÇÃO / MOTIVO DO DESVIO</td></tr><tr><td class="box">${L(fv.resultado)}</td></tr></table>
+  <table><tr><td class="h">CORREÇÃO/ AÇÕES TOMADAS</td></tr><tr><td class="box">${L(fv.correcao)}</td></tr></table>
+  <table><tr><td><b>RETORNO AO CLIENTE:</b><br><b>Realizado por:</b> ${e(g(fv,'retorno.por'))||'______________________________'} &nbsp;&nbsp; <b>Data:</b> ${d(g(fv,'retorno.data'))}<br><b>Meio de contato:</b> ${e(g(fv,'retorno.meio'))||'______________________________'}</td></tr></table>
+  <table><tr><td class="h">OUTRAS AÇÕES NECESSÁRIAS</td></tr><tr><td class="box">${L(fv.outras)}</td></tr></table>
+  <table>${sig('FARMACÊUTICA COMERCIAL','farm')}${sig('SETOR COMERCIAL','com')}${sig('RESPONSÁVEL PELO FECHAMENTO','fec')}</table>
+  </body></html>`;
+}
+async function fvPdf(){
+  const n=S.ncs.find(x=>x.id===sheetId);if(!n||!n.fv)return;
+  const w=window.open('','_blank');if(!w)return toast('O navegador bloqueou a janela. Libere pop-ups para este site.',true);
+  w.document.write('<p style="font:14px Arial;padding:24px">Gerando o formulário…</p>');
+  const fv=fvDirty?fvCollect(n):n.fv;
+  let anx=sheetAnx;if(!anx){try{anx=await API.loadAnexos(n.id)}catch(e){anx={}}}
+  w.document.open();w.document.write(fvPrintHtml(n,fv,anx));w.document.close();
+  await Promise.all([...w.document.images].map(i=>i.decode?i.decode().catch(()=>{}):0));
+  setTimeout(()=>{w.focus();w.print()},150);
+}
+
 /* ============================ filtros + planilha ============================ */
 const prodText=n=>n.itens.map(i=>`${i.n} (${i.q})`).join(' · ');
 function applyFilters(f){
@@ -678,6 +848,7 @@ function applyFilters(f){
     if(f.mot&&n.motivo!==f.mot)return false;
     if(f.area&&(n.area||areaOf(n.motivo))!==f.area)return false;
     if(f.noev&&nAnx(n))return false;
+    if(f.fvp&&!(n.fv&&fvEtapa(n.fv)!=='Fechado'))return false;
     if(f.tipo&&n.tipo!==f.tipo)return false;
     if(f.st&&(n.status||'')!==f.st)return false;
     if(f.de&&n.data<f.de)return false;
@@ -699,7 +870,7 @@ function renderTable(){
   $('#tbl thead').innerHTML='<tr>'+COLS.map(([id,l,c])=>`<th data-k="${id}" class="${c||''}"${k===id?` aria-sort="${d>0?'ascending':'descending'}"`:''}>${l}${k===id?`<span class="ar">${d>0?'↑':'↓'}</span>`:''}</th>`).join('')+'</tr>';
   const stSel=n=>canWrite()?`<select class="in st" data-id="${n.id}" aria-label="Status">${S.cfg.status.concat(S.cfg.status.includes(n.status)||!n.status?[]:[n.status]).map(s=>`<option${s===n.status?' selected':''}>${esc(s)}</option>`).join('')}</select>`:`<span class="pill">${esc(n.status||'—')}</span>`;
   $('#tbl tbody').innerHTML=rows.map(n=>`<tr data-id="${n.id}">
-    <td class="num" style="white-space:nowrap">${brDate(n.data)}</td><td class="num">${esc(n.nf)}${nAnx(n)?`<span class="ev">${nAnx(n)} anexo${nAnx(n)>1?'s':''}</span>`:'<span class="ev no">sem evidência</span>'}</td><td class="num">${esc(n.pedido)}</td>
+    <td class="num" style="white-space:nowrap">${brDate(n.data)}</td><td class="num">${esc(n.nf)}${nAnx(n)?`<span class="ev">${nAnx(n)} anexo${nAnx(n)>1?'s':''}</span>`:'<span class="ev no">sem evidência</span>'}${n.fv?`<span class="ev" title="Formulário de farmacovigilância">GQ 17-1 · ${esc(fvEtapa(n.fv))}</span>`:''}</td><td class="num">${esc(n.pedido)}</td>
     <td>${esc(n.cliente)}</td><td>${esc(n.vendedor)}</td>
     <td class="prod">${n.itens.map(i=>`${esc(i.n)} <span class="mut num">× ${i.q}</span>`).join('<br>')}${n.obs?`<small>${esc(n.obs)}</small>`:''}</td>
     <td class="r num" style="white-space:nowrap">${BRL(n.valorNF)}</td><td>${esc(n.motivo)}</td><td>${esc(n.area||areaOf(n.motivo))}</td>
@@ -715,7 +886,7 @@ function renderTable(){
 function exportData(){
   const list=applyFilters(S.f).sort((a,b)=>b.data.localeCompare(a.data));
   const ncs=list.map(n=>({'Data':brDate(n.data),'NF':n.nf,'Pedido':n.pedido,'Cliente':n.cliente,'Vendedor(a)':n.vendedor,'Produtos':n.itens.map(i=>`${i.n} (${i.q})`).join(' | '),
-    'Qtd total':n.qtdTotal??n.itens.reduce((a,b)=>a+b.q,0),'Valor NF':+n.valorNF||0,'Motivo':n.motivo,'Área':n.area||areaOf(n.motivo),'Devolução':n.tipo,'Status':n.status||'','Anexos':nAnx(n),'Finalizada em':n.fimEm?new Date(n.fimEm).toLocaleDateString('pt-BR'):'','Observação':n.obs||'','Lançado por':n.criadoPor||''}));
+    'Qtd total':n.qtdTotal??n.itens.reduce((a,b)=>a+b.q,0),'Valor NF':+n.valorNF||0,'Motivo':n.motivo,'Área':n.area||areaOf(n.motivo),'Devolução':n.tipo,'Status':n.status||'','Anexos':nAnx(n),'Formulário GQ 17-1':n.fv?fvEtapa(n.fv):'','Finalizada em':n.fimEm?new Date(n.fimEm).toLocaleDateString('pt-BR'):'','Observação':n.obs||'','Lançado por':n.criadoPor||''}));
   const itens=list.flatMap(n=>n.itens.map(i=>({'Data':brDate(n.data),'NF':n.nf,'Pedido':n.pedido,'Vendedor(a)':n.vendedor,'Cód. produto':i.c,'Produto':i.n,'Qtd':i.q,'Motivo':n.motivo,'Área':n.area||areaOf(n.motivo),'Devolução':n.tipo})));
   return {ncs,itens};
 }
@@ -731,7 +902,7 @@ async function exportXlsx(){
   const {ncs,itens}=exportData();if(!ncs.length)return toast('Nada para exportar',true);
   try{await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js')}catch(e){return toast('Não consegui carregar o gerador de Excel. Use o CSV.',true)}
   const wb=XLSX.utils.book_new(),w1=XLSX.utils.json_to_sheet(ncs),w2=XLSX.utils.json_to_sheet(itens);
-  w1['!cols']=[10,10,10,34,28,60,9,13,34,20,11,14,8,13,30,26].map(wch=>({wch}));w2['!cols']=[10,10,10,28,14,50,7,34,20,11].map(wch=>({wch}));
+  w1['!cols']=[10,10,10,34,28,60,9,13,34,20,11,14,8,18,13,30,26].map(wch=>({wch}));w2['!cols']=[10,10,10,28,14,50,7,34,20,11].map(wch=>({wch}));
   XLSX.utils.book_append_sheet(wb,w1,'NCs');XLSX.utils.book_append_sheet(wb,w2,'Itens');
   XLSX.writeFile(wb,`ncs_${today()}.xlsx`);
 }
@@ -842,7 +1013,7 @@ function bind(){
   // planilha
   const fmap={pQ:'q',pVend:'vend',pMot:'mot',pArea:'area',pTipo:'tipo',pSt:'st',pDe:'de',pAte:'ate'};
   Object.entries(fmap).forEach(([id,k])=>$('#'+id).addEventListener('input',e=>{S.f[k]=e.target.value;S.page=1;renderTable()}));
-  $('#pClear').onclick=()=>{S.f={q:'',vend:'',mot:'',area:'',tipo:'',st:'',de:'',ate:''};$('#pNoEv').setAttribute('aria-pressed','false');Object.keys(fmap).forEach(id=>$('#'+id).value='');S.page=1;renderTable()};
+  $('#pClear').onclick=()=>{S.f={q:'',vend:'',mot:'',area:'',tipo:'',st:'',de:'',ate:''};$('#pNoEv').setAttribute('aria-pressed','false');$('#pFv').setAttribute('aria-pressed','false');Object.keys(fmap).forEach(id=>$('#'+id).value='');S.page=1;renderTable()};
   $('#tbl').addEventListener('click',async e=>{
     const th=e.target.closest('th');if(th&&th.dataset.k&&th.dataset.k!=='_'){const k=th.dataset.k;S.sort=S.sort.k===k?{k,d:-S.sort.d}:{k,d:k==='data'||k==='valorNF'?-1:1};renderTable();return}
     const ed=e.target.closest('[data-edit]');if(ed)return editNc(ed.dataset.edit);
@@ -853,6 +1024,7 @@ function bind(){
   });
   $('#tbl').addEventListener('change',async e=>{const s=e.target.closest('select.st');if(!s)return;
     try{await API.setStatus(s.dataset.id,s.value);toast('Status atualizado')}catch(err){toast('Sem permissão',true);renderTable()}});
+  $('#pFv').onclick=e=>{S.f.fvp=!S.f.fvp;e.currentTarget.setAttribute('aria-pressed',!!S.f.fvp);S.page=1;renderTable()};
   $('#pNoEv').onclick=e=>{S.f.noev=!S.f.noev;e.currentTarget.setAttribute('aria-pressed',!!S.f.noev);S.page=1;renderTable()};
   // evidências no formulário
   const drop=$('#drop');
@@ -865,7 +1037,11 @@ function bind(){
   // ficha
   const sh=$('#sheet');
   sh.addEventListener('click',async e=>{
-    if(e.target===sh||e.target.closest('[data-close]'))return closeSheet();
+    if(e.target===sh||e.target.closest('[data-close]')){if(fvDirty&&!await ask('Sair sem salvar?','Há alterações no formulário que ainda não foram salvas.','Sair sem salvar'))return;return closeSheet()}
+    const tb=e.target.closest('[data-tab]');if(tb){if(fvDirty&&tb.dataset.tab!=='form'&&!await ask('Sair sem salvar?','Há alterações no formulário que ainda não foram salvas.','Sair sem salvar'))return;fvDirty=false;sheetTab=tb.dataset.tab;const n=S.ncs.find(x=>x.id===sheetId);if(n)renderSheet(n,sheetAnx);return}
+    if(e.target.closest('[data-fvopen]')){const n=S.ncs.find(x=>x.id===sheetId);if(n){try{await fvOpen(n);toast('Formulário aberto com os dados da NC')}catch(err){toast('Sem permissão',true)}}return}
+    if(e.target.closest('[data-fvsave]'))return fvSave();
+    if(e.target.closest('[data-fvpdf]'))return fvPdf();
     const ed=e.target.closest('[data-edit]');if(ed){const id=ed.dataset.edit;closeSheet();return editNc(id)}
     if(e.target.closest('[data-addev]'))return $('#shFiles').click();
     const k=(e.target.closest('[data-openev],[data-dl],[data-rmev]')||{}).dataset;if(!k||!sheetAnx)return;
@@ -876,13 +1052,15 @@ function bind(){
     if(k.dl)return download(blob,a.nome);
     const u=URL.createObjectURL(blob);window.open(u,'_blank','noopener');setTimeout(()=>URL.revokeObjectURL(u),60000);
   });
-  sh.addEventListener('change',async e=>{
+  sh.addEventListener('input',e=>{if(e.target.closest('#fvForm'))fvDirty=true});
+  sh.addEventListener('change',async e=>{if(e.target.closest('#fvForm'))fvDirty=true;
     if(e.target.id==='shSt'){try{await API.setStatus(sheetId,e.target.value);toast('Status atualizado')}catch(err){toast('Sem permissão',true)}}
     if(e.target.id==='shFiles'){const id=sheetId,fs=await prepFiles([...e.target.files]);e.target.value='';if(!fs.length)return;
       toast(`Enviando ${fs.length} evidência${fs.length>1?'s':''}…`);
       try{const fail=await API.saveAnexos(id,fs);toast(fail?`${fail} anexo(s) não subiram`:'Evidência adicionada',!!fail);await loadSheetAnx(id)}catch(err){toast('Sem permissão',true)}}
   });
-  sh.addEventListener('close',()=>{sheetId=null;sheetAnx=null});
+  sh.addEventListener('close',()=>{sheetId=null;sheetAnx=null;fvDirty=false});
+  sh.addEventListener('cancel',async e=>{if(fvDirty){e.preventDefault();if(await ask('Sair sem salvar?','Há alterações no formulário que ainda não foram salvas.','Sair sem salvar'))closeSheet()}});
   $('#pager').onclick=e=>{const b=e.target.closest('[data-pg]');if(b){S.page+=+b.dataset.pg;renderTable();$('.tw').scrollTo({top:0})}};
   $('#expCsv').onclick=exportCsv;$('#expXlsx').onclick=exportXlsx;
   // dashboard
@@ -914,10 +1092,10 @@ function bind(){
 function enter(user,papel){
   S.user=user;S.papel=papel;
   $('#noaccess').hidden=true;$('#app').hidden=false;
-  $('#meMail').textContent=user.email||'';$('#mePapel').textContent=({admin:'Administrador',sac:'SAC',viewer:'Somente leitura'})[papel]||papel;
+  $('#meMail').textContent=user.email||'';$('#mePapel').textContent=(({admin:'Administrador',sac:'SAC',fv:'Farmacovigilância',viewer:'Somente leitura'})[papel]||papel)+(papel==='sac'&&S.fvFlag?' · Farmacovigilância':'');
   $('[data-go=lancar]').hidden=!canWrite();$('#navCad').hidden=!isAdmin();
   resetForm();fillSelects();
-  const h=location.hash.slice(1);go(VIEWS.includes(h)?h:(canWrite()?'lancar':'dash'));
+  const h=location.hash.slice(1);go(VIEWS.includes(h)?h:(canWrite()?'lancar':canFv()?'planilha':'dash'));
 }
 /* Inicia só depois do cadeado da Estante liberar (mesmo gancho dos outros apps). */
 let started=false;
@@ -929,7 +1107,8 @@ function start(){
     db.ref('centralApps/usuarios/'+u.uid).once('value').then(snap=>{
       const d=snap.val()||{},g=(d.grupos||[]).map(norm);
       const has=l=>l.some(x=>g.includes(norm(x)));
-      const papel=d.admin===true?'admin':has(GRUPOS_SAC)?'sac':has(GRUPOS_VER)?'viewer':null;
+      const papel=d.admin===true?'admin':has(GRUPOS_SAC)?'sac':has(GRUPOS_FV)?'fv':has(GRUPOS_VER)?'viewer':null;
+      S.fvFlag=has(GRUPOS_FV);S.userName=d.nome||'';
       if(!papel){$('#app').hidden=true;$('#noaccess').hidden=false;return}
       enter({email:u.email||d.email||''},papel);startFirebaseListeners();
     }).catch(()=>toast('Não foi possível checar sua permissão. Recarregue.',true));
@@ -950,7 +1129,7 @@ boot();
 <script>
 (function(){
   /* CADEADO PADRÃO DA ESTANTE. Só esta linha muda (o ✎ Editar troca ela). */
-  var GRUPOS_PERMITIDOS = ["SAC"];
+  var GRUPOS_PERMITIDOS = ["SAC","FARMACOVIGILANCIA"];
   var firebaseConfig = {
     apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
     authDomain: "stinpharma-qualidade.firebaseapp.com",
