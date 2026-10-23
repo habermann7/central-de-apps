@@ -1093,6 +1093,18 @@
     'PA04050001':'GELADO','PA04050002':'GELADO','PA04050003':'GELADO','PA04050004':'GELADO'
   };
   var DEFAULT_FALLBACK = 'SECO';
+  // Produtos que SEMPRE são GELADO, mesmo que a aba "grupo" da planilha esqueça ou diga SECO.
+  // Para incluir outro: acrescentar o código aqui, no mesmo formato.
+  var SEMPRE_GELADO = {
+    'PA04030001':'GELADO',  // AMP LATANOPROSTA 0,05MG 1ML
+    'PA04030002':'GELADO',  // FR OCITOCINA 10UI - 1ML
+    'PA04030009':'GELADO',  // AMP LATANOPROSTA 0,05MG 1ML
+    'PA04030010':'GELADO',  // FR GHK-CU 50MG/3ML
+    'PA04040001':'GELADO',  // FR SEMAGLUTIDA 1,3MG/ML 4ML
+    'PA04040002':'GELADO',  // FR SEMAGLUTIDA 2MG/ML 4ML
+    'PA04040003':'GELADO',  // FR SEMAGLUTIDA 4MG/1,6ML
+    'PA04040004':'GELADO'   // FR LIRAGLUTIDA 48MG/2,4ML
+  };
 
   var state = {
     records: [],
@@ -1298,6 +1310,7 @@
     if(Object.keys(groupMap).length === 0){
       groupMap = Object.assign({}, DEFAULT_GROUP_MAP);
     }
+    Object.keys(SEMPRE_GELADO).forEach(function(c){ groupMap[c] = SEMPRE_GELADO[c]; });
     state.groupMap = groupMap;
     state.fallbackGroup = fallbackGroup;
 
