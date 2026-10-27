@@ -552,7 +552,7 @@ function startFirebaseListeners(){
 const VIEWS=['lancar','planilha','dash','cad'];
 function go(v,opts={}){
   if(v==='lancar'&&!canWrite())v='dash';
-  if(v==='cad'&&!isAdmin())v='dash';
+  if(v==='cad'&&!canWrite())v='dash';
   S.view=v;
   $$('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));
   $$('.nav button').forEach(b=>{if(b.dataset.go===v)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
@@ -847,7 +847,7 @@ function renderSheet(n,anx){
     if(!l.length)return '<p class="mut" style="font-size:13px">Nenhuma evidência anexada ainda.</p>';
     return `<div class="evs">${l.map(([k,a])=>`<div class="evc">${isImg(a.tipo)&&safeData(a.data)?`<img src="${esc(safeData(a.data))}" alt="${esc(a.nome)}" data-openev="${k}">`:`<button class="pv" data-openev="${k}" aria-label="Abrir ${esc(a.nome)}">${fileIcon(a.tipo)}</button>`}
       <div class="m2"><b title="${esc(a.nome)}">${esc(a.nome)}</b><span>${fmtSize(a.tam||0)} · ${esc((a.por||'').split('@')[0])}</span></div>
-      <div class="a2"><button class="btn ghost sm" data-openev="${k}">Abrir</button><button class="btn ghost sm" data-dl="${k}">Baixar</button>${isAdmin()?`<button class="btn ghost sm danger" data-rmev="${k}">Remover</button>`:''}</div></div>`).join('')}</div>`})();
+      <div class="a2"><button class="btn ghost sm" data-openev="${k}">Abrir</button><button class="btn ghost sm" data-dl="${k}">Baixar</button>${canWrite()?`<button class="btn ghost sm danger" data-rmev="${k}">Remover</button>`:''}</div></div>`).join('')}</div>`})();
   const nEv=anx==null?nAnx(n):Object.keys(anx).length;
   $('#sheetBody').innerHTML=`
     <header class="sh-h"><div><span class="mut" style="font-size:12.5px">Nota fiscal</span><h3>NF ${esc(n.nf)}</h3>
@@ -1068,7 +1068,7 @@ function renderTable(){
     <td class="prod">${n.itens.map(i=>`${esc(i.n)} <span class="mut num">× ${i.q}</span>`).join('<br>')}${n.obs?`<small>${esc(n.obs)}</small>`:''}</td>
     <td class="r num" style="white-space:nowrap">${money(n.valorNF)}</td><td>${esc(n.motivo)}</td><td>${esc(n.area||areaOf(n.motivo))}</td>
     <td><span class="pill${n.tipo==='Total'?' t':''}">${esc(n.tipo)}</span></td><td>${stSel(n)}${isOpen(n)?`<small class="mut age">${ageTxt(n)}</small>`:''}</td>
-    <td class="r"><div class="acts"><button class="btn ghost sm" data-open="${n.id}">Abrir</button>${canWrite()?`<button class="btn ghost sm" data-edit="${n.id}">Editar</button>`:''}${isAdmin()?`<button class="btn ghost sm danger" data-del="${n.id}">Excluir</button>`:''}</div></td></tr>`).join('');
+    <td class="r"><div class="acts"><button class="btn ghost sm" data-open="${n.id}">Abrir</button>${canWrite()?`<button class="btn ghost sm" data-edit="${n.id}">Editar</button>`:''}${canWrite()?`<button class="btn ghost sm danger" data-del="${n.id}">Excluir</button>`:''}</div></td></tr>`).join('');
   $('#pEmpty').hidden=rows.length>0;
   $('#pCount').textContent=`${INT(list.length)} NC${list.length===1?'':'s'}${list.length!==S.ncs.length?` (de ${INT(S.ncs.length)})`:''}`;
   $('#pSum').textContent='Valor das NFs: '+BRL(list.reduce((a,n)=>a+(+n.valorNF||0),0));
@@ -1207,7 +1207,7 @@ async function importSeed(obj){
 }
 let seeding=false;
 async function maybeSeed(c){
-  if(!isAdmin()||seeding||(c&&c.vendedores&&c.produtos&&c.motivos))return;
+  if(!canWrite()||seeding||(c&&c.vendedores&&c.produtos&&c.motivos))return;
   seeding=true;
   try{const r=await fetch('seed_nc.json',{cache:'no-store'});if(!r.ok)throw 0;const o=await r.json();
     for(const k of ['vendedores','produtos','motivos','status'])if(!(c&&c[k]))await API.setCfg(k,o[k]);
@@ -1271,7 +1271,7 @@ function bind(){
     if(e.target.closest('[data-addev]'))return $('#shFiles').click();
     const k=(e.target.closest('[data-openev],[data-dl],[data-rmev]')||{}).dataset;if(!k||!sheetAnx)return;
     const key=k.openev||k.dl||k.rmev,a=sheetAnx[key];if(!a)return;
-    if(k.rmev){if(await ask('Remover evidência?',`${a.nome} será apagado desta NC.`,'Remover')){try{await API.delAnexo(sheetId,key);toast('Evidência removida');await loadSheetAnx(sheetId)}catch(err){toast('Só o administrador remove evidências',true)}}return}
+    if(k.rmev){if(await ask('Remover evidência?',`${a.nome} será apagado desta NC.`,'Remover')){try{await API.delAnexo(sheetId,key);toast('Evidência removida');await loadSheetAnx(sheetId)}catch(err){toast('Sem permissão para remover evidências',true)}}return}
     const d=safeData(a.data);if(!d)return toast('Arquivo inválido',true);
     const blob=await dataToBlob(d);
     if(k.dl||!/^(image\/(png|jpe?g|gif|webp)|application\/pdf)$/i.test(blob.type))return download(blob,a.nome);
@@ -1323,7 +1323,7 @@ function enter(user,papel){
   S.user=user;S.papel=papel;
   $('#noaccess').hidden=true;$('#app').hidden=false;
   $('#meMail').textContent=user.email||'';$('#mePapel').textContent=(({admin:'Administrador',sac:'SAC',fv:'Farmacovigilância',viewer:'Somente leitura'})[papel]||papel)+(papel==='sac'&&S.fvFlag?' · Farmacovigilância':'');
-  $('[data-go=lancar]').hidden=!canWrite();$('#navCad').hidden=!isAdmin();
+  $('[data-go=lancar]').hidden=!canWrite();$('#navCad').hidden=!canWrite();
   buildFvFields();resetForm();fillSelects();
   const h=location.hash.slice(1);go(VIEWS.includes(h)?h:(canWrite()?'lancar':canFv()?'planilha':'dash'));
 }
