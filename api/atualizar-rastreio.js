@@ -33,6 +33,12 @@ const STATUS_ENTREGUE = [
 
 // Status que não vão mudar mais — não faz sentido continuar gastando consulta
 // com eles. "Entregue" já para de ser consultado (acima); esses aqui também.
+function norm(t){ return String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(); }
+function ehEntregue(status){
+  const n = norm(status);
+  return STATUS_ENTREGUE.some((e) => norm(e) === n) || n.startsWith('objeto entregue');
+}
+
 const STATUS_MORTOS = [
   'Etiqueta Expirada',
   'Erro Geraçâo PPN',
@@ -42,6 +48,9 @@ const STATUS_MORTOS = [
 // para de tentar esse código — provavelmente é lixo (etiqueta nunca postada,
 // código digitado errado etc), não vale continuar gastando consulta com ele.
 const LIMITE_TENTATIVAS_SEM_SUCESSO = 5;
+// Depois de travar nas tentativas, dá mais uma chance a cada 3 dias (os Correios
+// às vezes demoram a "enxergar" um objeto recém-postado).
+const REPESCAGEM_MS = 3 * 24 * 60 * 60 * 1000;
 
 // A API dos Correios não aceita vários códigos separados por vírgula na mesma
 // consulta (confirmado: ela trata a lista toda como se fosse 1 código só e
@@ -73,25 +82,44 @@ function partesDe(lista, tamanho) {
   return grupos;
 }
 
-async function consultarUmCodigo(codigo) {
+async function consultarUmCodigo(codigo, tentativa = 1) {
   const url =
     'https://api.correios.com.br/srorastro/v1/objetos/' +
     encodeURIComponent(codigo) +
     '?resultado=U&idioma=pt-BR';
 
-  const resposta = await fetch(url, {
-    headers: {
-      Authorization: 'Bearer ' + process.env.CORREIOS_CHAVE_ACESSO,
-      'Accept-Language': 'pt-BR',
-    },
-  });
-
-  if (!resposta.ok) {
-    const textoErro = await resposta.text().catch(() => '');
-    return { codigo, ok: false, erro: 'HTTP ' + resposta.status + (textoErro ? ' — ' + textoErro.slice(0, 200) : '') };
+  let resposta;
+  try {
+    resposta = await fetch(url, {
+      headers: {
+        Authorization: 'Bearer ' + process.env.CORREIOS_CHAVE_ACESSO,
+        'Accept-Language': 'pt-BR',
+      },
+    });
+  } catch (e) {
+    // erro de rede: tenta mais 1 vez; se persistir, é temporário (não conta como falha do código)
+    if (tentativa < 2) return consultarUmCodigo(codigo, tentativa + 1);
+    return { codigo, ok: false, temporario: true, erro: 'rede: ' + e.message };
   }
 
-  const dados = await resposta.json();
+  if (!resposta.ok) {
+    // 429 (muita consulta) e 5xx (Correios fora) são temporários: espera um pouco e tenta de novo
+    if ((resposta.status === 429 || resposta.status >= 500) && tentativa < 3) {
+      await new Promise((r) => setTimeout(r, 800 * tentativa));
+      return consultarUmCodigo(codigo, tentativa + 1);
+    }
+    const textoErro = await resposta.text().catch(() => '');
+    const temporario = resposta.status === 429 || resposta.status >= 500 || resposta.status === 401 || resposta.status === 403;
+    return {
+      codigo, ok: false, temporario,
+      erro: 'HTTP ' + resposta.status + (textoErro ? ' — ' + textoErro.slice(0, 200) : ''),
+    };
+  }
+
+  let dados;
+  try { dados = await resposta.json(); } catch (e) {
+    return { codigo, ok: false, temporario: true, erro: 'resposta inválida' };
+  }
   const objetos = dados.objetos || dados.objeto || [];
   const objeto = objetos[0];
   if (!objeto) return { codigo, ok: false, erro: 'resposta sem objeto', dadosCrus: dados };
@@ -101,7 +129,15 @@ async function consultarUmCodigo(codigo) {
     return { codigo, ok: false, erro: objeto.mensagem || 'sem eventos', dadosCrus: dados };
   }
 
-  return { codigo, ok: true, evento: eventos[0], dtPrevista: objeto.dtPrevista || null, dadosCrus: dados };
+  // O evento mais recente é o de maior data (não confia só na posição na lista)
+  let maisRecente = eventos[0];
+  let melhor = Date.parse(extrairDataEvento(maisRecente) || '') || 0;
+  for (const ev of eventos) {
+    const t = Date.parse(extrairDataEvento(ev) || '') || 0;
+    if (t > melhor) { melhor = t; maisRecente = ev; }
+  }
+
+  return { codigo, ok: true, evento: maisRecente, dtPrevista: objeto.dtPrevista || null, dadosCrus: dados };
 }
 
 export default async function handler(req, res) {
@@ -145,9 +181,13 @@ export default async function handler(req, res) {
 
     const pendentes = Object.keys(todos).filter((chave) => {
       const p = todos[chave];
-      if (STATUS_ENTREGUE.includes(p.status)) return false;
+      if (!p || typeof p !== 'object') return false;
+      if (ehEntregue(p.status)) return false;
       if (STATUS_MORTOS.includes(p.status)) return false;
-      if ((p.tentativasSemSucesso || 0) >= LIMITE_TENTATIVAS_SEM_SUCESSO) return false;
+      if ((p.tentativasSemSucesso || 0) >= LIMITE_TENTATIVAS_SEM_SUCESSO) {
+        // travado: só reconsulta se já passou o prazo da repescagem
+        if (Date.now() - (p.ultimaTentativaEm || 0) < REPESCAGEM_MS) return false;
+      }
       return true;
     });
 
@@ -156,7 +196,8 @@ export default async function handler(req, res) {
     // mesmos primeiros da lista são escolhidos de novo — muita coisa em trânsito
     // não muda de status de uma consulta pra outra, então o resto nunca era
     // alcançado. Assim, cada execução sempre avança pros próximos.
-    pendentes.sort((a, b) => (todos[a].atualizadoEm || 0) - (todos[b].atualizadoEm || 0));
+    const ultima = (k) => Math.max(todos[k].atualizadoEm || 0, todos[k].ultimaTentativaEm || 0);
+    pendentes.sort((a, b) => ultima(a) - ultima(b));
 
     if (pendentes.length === 0) {
       return res.status(200).json({ mensagem: 'Nada pendente pra atualizar', atualizados: 0 });
@@ -182,7 +223,7 @@ export default async function handler(req, res) {
 
     for (const rodada of rodadas) {
       const resultados = await Promise.all(
-        rodada.map((chave) => consultarUmCodigo(codigoPorChave[chave]).then((r) => ({ chave, ...r })))
+        rodada.map((chave) => consultarUmCodigo(codigoPorChave[chave]).catch((e) => ({ codigo: codigoPorChave[chave], ok: false, temporario: true, erro: e.message })).then((r) => ({ chave, ...r })))
       );
 
       const updates = {};
@@ -191,12 +232,16 @@ export default async function handler(req, res) {
         if (!r.ok) {
           if (r.erro) semEvento++;
           if (erros.length < 15 && r.erro) erros.push(r.codigo + ': ' + r.erro);
+          // erro temporário (Correios fora, limite de consultas, rede) NÃO pune o código
+          if (r.temporario) continue;
           const tentativasAtuais = (todos[r.chave] && todos[r.chave].tentativasSemSucesso) || 0;
           updates[CAMINHO_PEDIDOS + '/' + r.chave + '/tentativasSemSucesso'] = tentativasAtuais + 1;
+          updates[CAMINHO_PEDIDOS + '/' + r.chave + '/ultimaTentativaEm'] = Date.now();
           continue;
         }
         if (!amostraUltimoEvento) amostraUltimoEvento = r.evento;
-        updates[CAMINHO_PEDIDOS + '/' + r.chave + '/status'] = r.evento.descricao || r.evento.msg || '';
+        updates[CAMINHO_PEDIDOS + '/' + r.chave + '/status'] = String(r.evento.descricao || r.evento.msg || '').trim();
+        if (r.evento.codigo) updates[CAMINHO_PEDIDOS + '/' + r.chave + '/codigoEvento'] = r.evento.codigo + (r.evento.tipo ? '-' + r.evento.tipo : '');
         const dataEvento = extrairDataEvento(r.evento);
         if (dataEvento) {
           updates[CAMINHO_PEDIDOS + '/' + r.chave + '/dataEvento'] = dataEvento;
