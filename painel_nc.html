@@ -423,7 +423,7 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
           <div id="dupBox" class="dup" hidden></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn pri" type="submit" id="btnSave">Lançar NC</button>
-            <button class="btn" type="button" id="btnFvPdf" hidden>Gerar PDF</button>
+            <button class="btn" type="button" id="btnFvPdf" disabled title="Disponível depois de lançar a NC">Gerar PDF</button>
             <button class="btn" type="button" id="btnClear">Limpar</button>
             <button class="btn ghost" type="button" id="btnCancelEdit" hidden>Cancelar edição</button>
           </div>
@@ -569,7 +569,7 @@ function applyCfg(c){
 }
 function afterData(cfgChanged){
   if(cfgChanged)fillSelects();
-  renderLast();
+  renderLast();renderPdfBtn();
   if(S.view==='planilha')renderTable();
   if(S.view==='dash')renderDash(false);
   if(S.view==='cad')renderCad();
@@ -620,7 +620,7 @@ const fvAbertHtml=()=>`<section class="fvsec"><h5>Abertura <small>SAC</small></h
   <p class="mut" style="font-size:12.5px">Cliente, vendedor, relato, lote e validade já vêm dos campos preenchidos acima. As fotos anexadas em “Evidências” vão no PDF.</p></section>`;
 function buildFvFields(){$('#fvFields').innerHTML=fvAbertHtml()+fvInvHtml({},canFv())}
 function setFv(on){
-  const c=$('#fvOn');c.checked=on;$('#fvFields').hidden=!on;$('#items').classList.toggle('fv',on);$('#btnFvPdf').hidden=!on;renderFotoBar();
+  const c=$('#fvOn');c.checked=on;$('#fvFields').hidden=!on;$('#items').classList.toggle('fv',on);renderFotoBar();renderPdfBtn();
   if(on){const r=$('#fvFields [data-f=responsavel]');if(r&&!r.value)r.value=S.userName||(S.user&&S.user.email)||''}
 }
 function fillFvForm(fv){$$('#fvFields [data-f]').forEach(el=>{const v=g(fv,el.dataset.f);if(el.type==='checkbox')el.checked=!!v;else el.value=v==null?'':v})}
@@ -660,7 +660,7 @@ function resetForm(keepDate){
   S.editId=null;S.dupAck=false;$('#dupBox').hidden=true;S.files=[];S.fotoLay=null;renderFiles();
   setFv(false);const fo=$('#fvOn');fo.disabled=false;fo.removeAttribute('title');
   $('#formTitle').textContent='Lançar NC';$('#btnSave').textContent='Lançar NC';$('#btnCancelEdit').hidden=true;$('#stHint').hidden=false;
-  $$('.in.err').forEach(e=>e.classList.remove('err'));$$('.errmsg').forEach(e=>e.textContent='');
+  $$('.in.err').forEach(e=>e.classList.remove('err'));$$('.errmsg').forEach(e=>e.textContent='');renderPdfBtn();
 }
 function bad(el,msg){
   const box=el.closest('.field');el.classList.add('err');const m=box&&box.querySelector('.errmsg');if(m)m.textContent=msg;return false;
@@ -724,7 +724,7 @@ async function submitForm(e){
           try{await API.upd(id,{'fv/fotos':nf})}catch(e2){console.error(e2)}}}}
     if(fail)toast(`NC salva, mas ${fail} anexo(s) não subiram. Abra a NC e tente de novo.`,true);
     else toast(S.editId?'NC atualizada':files.length?'NC lançada com evidências':'NC lançada');
-    resetForm(true);
+    S.lastNc=id;resetForm(true);
   }catch(err){console.error(err);toast('Não consegui salvar. Confira sua permissão.',true);btn.textContent=S.editId?'Salvar alterações':'Lançar NC'}
   btn.disabled=false;
 }
@@ -739,7 +739,7 @@ function editNc(id){
   setTipo(n.tipo||'Total');$('#fObs').value=n.obs||'';showArea();
   if(n.fv){setFv(true);fillFvForm(n.fv);S.fotoLay=n.fv.fotos?fotoLayOf(n.fv):null;const c=$('#fvOn');c.disabled=true;c.title='O formulário já foi aberto nesta NC'}
   $('#formTitle').textContent='Editar NC';$('#btnSave').textContent='Salvar alterações';$('#btnCancelEdit').hidden=false;
-  $('#stHint').hidden=true;renderFiles();
+  $('#stHint').hidden=true;renderFiles();renderPdfBtn();
 }
 function renderLast(){
   const box=$('#lastList');if(!box)return;
@@ -1166,15 +1166,20 @@ async function fvPdf(){
   const fv=fvDirty?fvCollect(n):n.fv;
   return pdfWindow(async()=>{let anx=sheetAnx;if(!anx){try{anx=await API.loadAnexos(n.id)}catch(e){anx={}}}return {n,fv,anx}});
 }
-/* PDF direto da tela de lançar: usa o que está preenchido agora, sem precisar salvar antes */
-async function fvPdfNew(){
-  const itens=validate();if(!itens)return toast('Confira os campos em vermelho antes de gerar o PDF',true);
-  const rec=readRec(itens),editId=S.editId,cur=editId?(S.ncs.find(x=>x.id===editId)||{}):null,files=S.files.slice();
-  const fv=collectFv(cur,rec);
+/* PDF só depois de lançar: usa os dados já salvos da última NC lançada (ou da NC que está sendo editada) */
+function renderPdfBtn(){
+  const b=$('#btnFvPdf');if(!b)return;
+  const id=S.editId||S.lastNc,n=id?S.ncs.find(x=>x.id===id):null,ok=!!(n&&n.fv);
+  b.disabled=!ok;b.textContent=ok?`Gerar PDF · NF ${n.nf}`:'Gerar PDF';
+  b.title=ok?(S.editId?'Gera o PDF com os dados já salvos desta NC':'PDF da última NC lançada'):(n?'Esta NC não tem formulário de farmacovigilância':'Disponível depois de lançar a NC');
+}
+async function fvPdfSaved(){
+  const id=S.editId||S.lastNc;if(!id)return;
   return pdfWindow(async()=>{
-    let old={};if(editId){try{old=await API.loadAnexos(editId)}catch(e){}}
-    const anx={...old};files.forEach((f,i)=>{anx['~'+f.uid]={nome:f.nome,tipo:f.type,data:f.data,em:Date.now()+i}});
-    return {n:rec,fv,anx};
+    let n=null;for(let i=0;i<14&&!(n&&n.fv);i++){n=S.ncs.find(x=>x.id===id);if(!(n&&n.fv))await new Promise(r=>setTimeout(r,150))}
+    if(!n||!n.fv)throw new Error('NC sem formulário');
+    let anx={};try{anx=await API.loadAnexos(id)}catch(e){}
+    return {n,fv:n.fv,anx};
   });
 }
 
@@ -1376,7 +1381,8 @@ function bind(){
   $('#btnClear').onclick=()=>resetForm();
   $('#fvOn').onchange=e=>setFv(e.target.checked);
   $('#ncForm').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'&&(e.target.closest('#fvBox')||e.target.matches('.il,.iv')))e.preventDefault()});
-  $('#btnFvPdf').onclick=fvPdfNew;$('#btnFotoLay').onclick=openFotoLayoutNew;
+  $('#btnFvPdf').onclick=fvPdfSaved;
+  $('#ncForm').addEventListener('input',()=>{if(!S.editId&&S.lastNc){S.lastNc=null;renderPdfBtn()}});$('#btnFotoLay').onclick=openFotoLayoutNew;
   $('#btnCancelEdit').onclick=()=>{resetForm();go('planilha')};
   $('#ncForm').addEventListener('input',e=>{e.target.classList.remove('err');const m=e.target.closest('.field')?.querySelector('.errmsg');if(m)m.textContent='';$('#itemsErr').textContent='';if(e.target.id==='fNf'){S.dupAck=false;$('#dupBox').hidden=true}});
   // planilha
