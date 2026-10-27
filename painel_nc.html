@@ -252,6 +252,9 @@ dialog.sheet.wide{width:min(880px,100vw)}
 .list{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--glass2)}
 .li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 8px 7px 14px;border-top:1px solid var(--line);font-size:13.5px}
 .li:first-child{border-top:0}
+.li .ed{display:flex;gap:8px;align-items:center;flex:1;min-width:0;flex-wrap:wrap}
+.li .ed .in{min-height:36px;flex:1;min-width:160px}
+.li .bts{display:flex;gap:4px;flex:none}
 .li code{color:var(--mut);font-size:12px;margin-right:10px}
 
 /* ---------- misc ---------- */
@@ -1044,8 +1047,33 @@ function renderCad(){
   $('#cadBody').innerHTML=`
     <div class="addrow">${k==='produtos'?'<input class="in" id="cadC" placeholder="Código (ex.: PA04030002)" style="max-width:200px;flex:none">':k==='motivos'?`<select class="in" id="cadA" style="max-width:240px;flex:none">${opts(areasList())}</select>`:''}<input class="in" id="cadN" placeholder="${k==='produtos'?'Nome do produto':k==='vendedores'?'Nome do vendedor(a)':'Novo motivo'}"><button class="btn pri" id="cadAdd">Adicionar</button></div>
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><input class="in" id="cadQ" type="search" placeholder="Filtrar…" value="${esc(($('#cadQ')||{}).value||'')}" style="max-width:300px;min-height:38px"><span class="mut num" style="font-size:13px">${INT(items.length)} itens</span></div>
-    <div class="list">${view.length?view.slice(0,400).map(x=>`<div class="li"><span>${x.c?`<code>${esc(x.c)}</code>`:''}${esc(x.n)}</span><button class="btn ghost sm danger" data-rm="${esc(k==='produtos'?x.c:x.n)}">Remover</button></div>`).join(''):'<div class="empty">Lista vazia. Use “Carregar listas iniciais”.</div>'}${view.length>400?'<div class="li mut">Mostrando 400 — use o filtro.</div>':''}</div>`;
+    <div class="list">${view.length?view.slice(0,400).map(x=>{const id=k==='produtos'?x.c:x.n;
+      if(S.cadEdit===id)return `<div class="li"><div class="ed">${k==='produtos'?`<code>${esc(x.c)}</code>`:''}<input class="in" id="cadEN" value="${esc(x.n)}" aria-label="Novo nome">${k==='motivos'?`<select class="in" id="cadEA" style="max-width:220px;flex:none" aria-label="Área">${opts(areasList())}</select>`:''}</div><div class="bts"><button class="btn pri sm" data-sv>Salvar</button><button class="btn ghost sm" data-cn>Cancelar</button></div></div>`;
+      return `<div class="li"><span>${x.c?`<code>${esc(x.c)}</code>`:''}${esc(x.n)}</span><div class="bts"><button class="btn ghost sm" data-ed="${esc(id)}">Renomear</button><button class="btn ghost sm danger" data-rm="${esc(id)}">Remover</button></div></div>`}).join(''):'<div class="empty">Lista vazia. Use “Carregar listas iniciais”.</div>'}${view.length>400?'<div class="li mut">Mostrando 400 — use o filtro.</div>':''}</div>`;
   if(keep==='cadQ'){const e=$('#cadQ');e.focus();e.setSelectionRange(e.value.length,e.value.length)}
+  if(S.cadEdit!=null){const en=$('#cadEN');if(en){if(k==='motivos'){const m=S.cfg.motivos.find(z=>z.n===S.cadEdit);if(m&&$('#cadEA'))$('#cadEA').value=m.a||''}if(keep!=='cadEN'){en.focus();en.select()}}}
+}
+/* Renomear: troca o nome na lista e também nas NCs já lançadas (tudo numa gravação só) */
+async function cadRename(){
+  const k=S.cad,old=S.cadEdit,nn=($('#cadEN').value||'').replace(/\s+/g,' ').trim().toUpperCase();
+  if(!nn)return toast('Digite o nome',true);
+  const arr=S.cfg[k].slice(),up={};
+  const nm=x=>k==='vendedores'?x:x.n;
+  if(k==='produtos'){
+    const it=arr.find(p=>p.c===old);if(!it)return;
+    if(arr.some(p=>p.c!==old&&norm(p.n)===norm(nn)))return toast('Já existe um produto com esse nome',true);
+    it.n=nn;
+    S.ncs.forEach(n=>(n.itens||[]).forEach((i,ix)=>{if(i.c===old&&i.n!==nn)up['ncs/'+n.id+'/itens/'+ix+'/n']=nn}));
+  }else{
+    const ix=arr.findIndex(x=>nm(x)===old);if(ix<0)return;
+    if(arr.some((x,j)=>j!==ix&&norm(nm(x))===norm(nn)))return toast('Já existe na lista',true);
+    if(k==='motivos'){const a=$('#cadEA').value,o=areasList();arr[ix]={n:nn,a};arr.sort((x,y)=>o.indexOf(x.a)-o.indexOf(y.a));
+      S.ncs.forEach(n=>{if(n.motivo===old){up['ncs/'+n.id+'/motivo']=nn;if(a)up['ncs/'+n.id+'/area']=a}})}
+    else{arr[ix]=nn;arr.sort((a,b)=>a.localeCompare(b,'pt-BR'));S.ncs.forEach(n=>{if(n.vendedor===old)up['ncs/'+n.id+'/vendedor']=nn})}
+  }
+  const nNc=k==='produtos'?new Set(Object.keys(up).map(x=>x.split('/')[1])).size:Object.keys(up).filter(x=>!x.endsWith('/area')).length;
+  up['config/'+k]=arr;
+  try{await db.ref(P).update(up);S.cadEdit=null;renderCad();toast(nNc?`Renomeado · ${nNc} NC${nNc>1?'s':''} atualizada${nNc>1?'s':''}`:'Renomeado')}catch(e){console.error(e);toast('Sem permissão',true)}
 }
 async function cadAdd(){
   const k=S.cad,n=$('#cadN').value.replace(/\s+/g,' ').trim();if(!n)return;
@@ -1160,10 +1188,15 @@ function bind(){
       $('#pQ').value=S.f.q;$('#pVend').value=S.f.vend;$('#pMot').value=S.f.mot;$('#pArea').value=S.f.area;$('#pTipo').value='';$('#pSt').value='';$('#pDe').value=S.f.de;$('#pAte').value=S.f.ate;S.page=1;go('planilha')}
   });
   // cadastros
-  $('#cadTabs').onclick=e=>{const b=e.target.closest('button');if(b){S.cad=b.dataset.k;renderCad()}};
-  $('#cadBody').addEventListener('click',e=>{if(e.target.id==='cadAdd')cadAdd();const r=e.target.closest('[data-rm]');if(r)cadRemove(r.dataset.rm)});
+  $('#cadTabs').onclick=e=>{const b=e.target.closest('button');if(b){S.cad=b.dataset.k;S.cadEdit=null;renderCad()}};
+  $('#cadBody').addEventListener('click',e=>{if(e.target.id==='cadAdd')cadAdd();const r=e.target.closest('[data-rm]');if(r)cadRemove(r.dataset.rm);
+    const ed=e.target.closest('[data-ed]');if(ed){S.cadEdit=ed.dataset.ed;renderCad()}
+    if(e.target.closest('[data-cn]')){S.cadEdit=null;renderCad()}
+    if(e.target.closest('[data-sv]'))cadRename()});
   $('#cadBody').addEventListener('input',e=>{if(e.target.id==='cadQ')renderCad()});
-  $('#cadBody').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.id==='cadN'||e.target.id==='cadC')){e.preventDefault();cadAdd()}});
+  $('#cadBody').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.id==='cadN'||e.target.id==='cadC')){e.preventDefault();cadAdd()}
+    if(e.key==='Enter'&&e.target.id==='cadEN'){e.preventDefault();cadRename()}
+    if(e.key==='Escape'&&S.cadEdit!=null){S.cadEdit=null;renderCad()}});
   $('#cadLoad').onclick=loadSeedFile;
   $('#seedFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{await importSeed(JSON.parse(await f.text()))}catch(err){toast('Arquivo inválido',true)}e.target.value=''};
   $('#cadDown').onclick=()=>download(new Blob([JSON.stringify({...S.cfg},null,1)],{type:'application/json'}),`listas_nc_${today()}.json`);
