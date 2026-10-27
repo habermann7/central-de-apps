@@ -414,10 +414,11 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
             <div id="fileList" class="files"></div>
             <div class="fotobar" id="fotoBar" hidden><span id="fotoBarTx"></span><button type="button" class="btn sm" id="btnFotoLay">Editar layout das fotos no PDF</button></div>
           </div>
-          <h4 class="stp"><i>4</i>Farmacovigilância <small>só se a NC precisar de investigação</small></h4>
+          <h4 class="stp"><i>4</i>Farmacovigilância <small>opcional · só preencha se a NC precisar de investigação</small></h4>
           <section class="fvbox" id="fvBox">
-            <label class="fvtoggle"><input type="checkbox" id="fvOn"><span><b>Formulário de farmacovigilância (REG GQ 17-1)</b><small>Ligue quando a NC precisar de investigação (reação, sem efeito, problema no produto…). Preencha tudo aqui e gere o PDF no fim.</small></span></label>
-            <div id="fvFields" hidden></div>
+            <input type="checkbox" id="fvOn" hidden tabindex="-1" aria-hidden="true">
+            <div><b style="font-size:14px">Formulário de farmacovigilância (REG GQ 17-1)</b><p class="mut" id="fvState" style="font-size:12.5px;margin-top:2px"></p></div>
+            <div id="fvFields"></div>
           </section>
           <p class="mut" style="font-size:12.5px;margin-top:-6px" id="stHint">A NC entra como <b>Aberto</b>. O status muda depois, na planilha ou na ficha da NC.</p>
           <div id="dupBox" class="dup" hidden></div>
@@ -477,7 +478,7 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
 </div>
 
 <dialog id="sheet" class="sheet" aria-label="Ficha da NC"><div class="sh" id="sheetBody"></div></dialog>
-<dialog id="dlg"><h3 id="dlgT"></h3><p class="mut" id="dlgP"></p><div class="row"><button class="btn" id="dlgNo">Cancelar</button><button class="btn pri" id="dlgYes">Confirmar</button></div></dialog>
+<dialog id="dlg"><h3 id="dlgT"></h3><p class="mut" id="dlgP"></p><input class="in" id="dlgIn" hidden autocomplete="off" style="margin-top:12px"><div class="row"><button class="btn" id="dlgNo">Cancelar</button><button class="btn pri" id="dlgYes">Confirmar</button></div></dialog>
 <dialog id="flDlg" aria-labelledby="flT"><div class="fl-h"><div class="fl-ht"><h3 id="flT">Layout das fotos no PDF</h3>
   <div class="seg" id="flMode" role="group" aria-label="Modo"><button type="button" data-mode="lista" aria-pressed="true">Lista automática</button><button type="button" data-mode="livre" aria-pressed="false">Folha livre (colagem)</button></div></div>
   <p class="mut" id="flHint"></p></div>
@@ -516,6 +517,8 @@ const toast=(msg,bad)=>{const t=document.createElement('div');t.className='toast
   setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),220)},2600)};
 const ask=(title,text,yes='Confirmar')=>new Promise(res=>{const d=$('#dlg');$('#dlgT').textContent=title;$('#dlgP').textContent=text;$('#dlgYes').textContent=yes;
   const done=v=>{d.close();res(v)};$('#dlgYes').onclick=()=>done(true);$('#dlgNo').onclick=()=>done(false);d.oncancel=()=>res(false);d.showModal()});
+const askText=(title,text,val,yes='Salvar')=>new Promise(res=>{const d=$('#dlg'),i=$('#dlgIn');$('#dlgT').textContent=title;$('#dlgP').textContent=text;$('#dlgYes').textContent=yes;i.hidden=false;i.value=val||'';
+  const done=v=>{i.hidden=true;d.close();res(v)};$('#dlgYes').onclick=()=>done(i.value);$('#dlgNo').onclick=()=>done(null);d.oncancel=()=>{i.hidden=true;res(null)};i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();done(i.value)}};d.showModal();i.focus();i.select()});
 
 /* ============================ estado ============================ */
 const P='painelNC';
@@ -558,6 +561,9 @@ const API={
     return fail;
   },
   async loadAnexos(id){return (await db.ref(P+'/anexos/'+id).once('value')).val()||{}},
+  async replAnexo(id,k,f,old){const meta={nome:f.nome,tipo:f.type,tam:f.size,por:old.por||S.user.email,em:old.em||Date.now()};
+    await db.ref(P).update({['anexos/'+id+'/'+k]:{...meta,data:f.data},['ncs/'+id+'/anexosMeta/'+k]:meta})},
+  async renAnexo(id,k,nome){await db.ref(P).update({['anexos/'+id+'/'+k+'/nome']:nome,['ncs/'+id+'/anexosMeta/'+k+'/nome']:nome})},
   async delAnexo(id,k){await db.ref(P+'/anexos/'+id+'/'+k).remove();await db.ref(P+'/ncs/'+id+'/anexosMeta/'+k).remove()},
   async setCfg(key,arr){await db.ref(P+'/config/'+key).set(arr)}
 };
@@ -619,9 +625,17 @@ const fvAbertHtml=()=>`<section class="fvsec"><h5>Abertura <small>SAC</small></h
   <div class="field"><label>Responsável pela abertura do formulário</label><input class="in" data-f="responsavel" autocomplete="off"></div>
   <p class="mut" style="font-size:12.5px">Cliente, vendedor, relato, lote e validade já vêm dos campos preenchidos acima. As fotos anexadas em “Evidências” vão no PDF.</p></section>`;
 function buildFvFields(){$('#fvFields').innerHTML=fvAbertHtml()+fvInvHtml({},canFv())}
+/* O formulário não precisa ser "ligado": fica sempre à mostra e só é salvo se algum campo for preenchido (ou se a NC já tinha formulário) */
+const fvFilled=()=>$$('#fvFields [data-f]').some(el=>el.dataset.f!=='responsavel'&&!el.disabled&&(el.type==='checkbox'?el.checked:el.value.trim()!==''));
+function syncFv(){
+  const c=$('#fvOn');c.checked=!!(S.fvKeep||fvFilled());
+  const st=$('#fvState');if(st)st.textContent=S.fvKeep?'Esta NC já tem formulário. As alterações são salvas junto com ela.':c.checked?'✓ O formulário será salvo junto com esta NC.':'Nada preenchido aqui: a NC é lançada sem formulário. Dá pra abrir depois pela ficha da NC.';
+  renderFotoBar();renderPdfBtn();
+}
 function setFv(on){
-  const c=$('#fvOn');c.checked=on;$('#fvFields').hidden=!on;$('#items').classList.toggle('fv',on);renderFotoBar();renderPdfBtn();
+  S.fvKeep=!!on;
   if(on){const r=$('#fvFields [data-f=responsavel]');if(r&&!r.value)r.value=S.userName||(S.user&&S.user.email)||''}
+  syncFv();
 }
 function fillFvForm(fv){$$('#fvFields [data-f]').forEach(el=>{const v=g(fv,el.dataset.f);if(el.type==='checkbox')el.checked=!!v;else el.value=v==null?'':v})}
 function collectFv(oldNc,rec){
@@ -658,7 +672,7 @@ function resetForm(keepDate){
   $('#items').innerHTML='';$('#items').append(itemRow());
   setTipo('Total');
   S.editId=null;S.dupAck=false;$('#dupBox').hidden=true;S.files=[];S.fotoLay=null;renderFiles();
-  setFv(false);const fo=$('#fvOn');fo.disabled=false;fo.removeAttribute('title');
+  S.fvKeep=false;{const r=$('#fvFields [data-f=responsavel]');if(r)r.value=S.userName||(S.user&&S.user.email)||''}syncFv();
   $('#formTitle').textContent='Lançar NC';$('#btnSave').textContent='Lançar NC';$('#btnCancelEdit').hidden=true;$('#stHint').hidden=false;
   $$('.in.err').forEach(e=>e.classList.remove('err'));$$('.errmsg').forEach(e=>e.textContent='');renderPdfBtn();
 }
@@ -737,7 +751,8 @@ function editNc(id){
   $('#items').innerHTML='';(n.itens.length?n.itens:[{}]).forEach((i,ix)=>$('#items').append(itemRow({...i,lote:g(n.fv,'lotes.'+ix+'.lote')||i.lote||'',val:g(n.fv,'lotes.'+ix+'.val')||i.val||''})));
   $('#fVal').value=+n.valorNF>0?(+n.valorNF).toLocaleString('pt-BR',{minimumFractionDigits:2}):'';
   setTipo(n.tipo||'Total');$('#fObs').value=n.obs||'';showArea();
-  if(n.fv){setFv(true);fillFvForm(n.fv);S.fotoLay=n.fv.fotos?fotoLayOf(n.fv):null;const c=$('#fvOn');c.disabled=true;c.title='O formulário já foi aberto nesta NC'}
+  if(n.fv){S.fvKeep=true;fillFvForm(n.fv);S.fotoLay=n.fv.fotos?fotoLayOf(n.fv):null}
+  syncFv();
   $('#formTitle').textContent='Editar NC';$('#btnSave').textContent='Salvar alterações';$('#btnCancelEdit').hidden=false;
   $('#stHint').hidden=true;renderFiles();renderPdfBtn();
 }
@@ -764,6 +779,12 @@ async function compressImage(f){
   c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
   const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);
   const data=c.toDataURL('image/jpeg',.82);return {data,type:'image/jpeg',size:Math.round((data.length-23)*.75)};
+}
+async function rotateImage(src){
+  const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=src});
+  const c=document.createElement('canvas');c.width=img.height;c.height=img.width;const x=c.getContext('2d');
+  x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.translate(c.width/2,c.height/2);x.rotate(Math.PI/2);x.drawImage(img,-img.width/2,-img.height/2);
+  const data=c.toDataURL('image/jpeg',.88);return {data,type:'image/jpeg',size:Math.round((data.length-23)*.75)};
 }
 async function prepFiles(list,already=0){
   const out=[];
@@ -935,8 +956,8 @@ function fotoEditor(items,lay0){
 function renderFotoBar(){
   const bar=$('#fotoBar');if(!bar)return;
   const cur=S.editId?Object.values((S.ncs.find(n=>n.id===S.editId)||{}).anexosMeta||{}).filter(a=>isImg(a.tipo)).length:0;
-  const n=cur+S.files.filter(f=>isImg(f.type)).length,on=$('#fvOn')&&$('#fvOn').checked;
-  bar.hidden=!(on&&n>0);if(bar.hidden)return;
+  const n=cur+S.files.filter(f=>isImg(f.type)).length;
+  bar.hidden=!(n>0);if(bar.hidden)return;
   $('#fotoBarTx').innerHTML=`<b>${n} foto${n>1?'s':''}</b> vão no PDF · ${S.fotoLay?(S.fotoLay.mode==='livre'?'folha livre (colagem)':'layout personalizado'):'tamanho médio, 2 por linha'}`;
 }
 async function openFotoLayoutNew(){
@@ -967,7 +988,7 @@ function renderFiles(){
 const dataToBlob=d=>fetch(d).then(r=>r.blob());
 
 /* ============================ ficha da NC ============================ */
-let sheetId=null,sheetAnx=null,sheetTab='resumo',fvDirty=false,sheetLay=null;
+let sheetId=null,sheetAnx=null,sheetTab='resumo',fvDirty=false,sheetLay=null,repKey=null;
 async function openSheet(id,opts){
   const n=S.ncs.find(x=>x.id===id);if(!n)return;
   sheetId=id;sheetAnx=null;fvDirty=false;sheetLay=null;sheetTab=opts&&opts.tab||'resumo';renderSheet(n,null);
@@ -991,7 +1012,7 @@ function renderSheet(n,anx){
     if(!l.length)return '<p class="mut" style="font-size:13px">Nenhuma evidência anexada ainda.</p>';
     return `<div class="evs">${l.map(([k,a])=>`<div class="evc">${isImg(a.tipo)&&safeData(a.data)?`<img src="${esc(safeData(a.data))}" alt="${esc(a.nome)}" data-openev="${k}">`:`<button class="pv" data-openev="${k}" aria-label="Abrir ${esc(a.nome)}">${fileIcon(a.tipo)}</button>`}
       <div class="m2"><b title="${esc(a.nome)}">${esc(a.nome)}</b><span>${fmtSize(a.tam||0)} · ${esc((a.por||'').split('@')[0])}</span></div>
-      <div class="a2"><button class="btn ghost sm" data-openev="${k}">Abrir</button><button class="btn ghost sm" data-dl="${k}">Baixar</button>${canWrite()?`<button class="btn ghost sm danger" data-rmev="${k}">Remover</button>`:''}</div></div>`).join('')}</div>`})();
+      <div class="a2"><button class="btn ghost sm" data-openev="${k}">Abrir</button><button class="btn ghost sm" data-dl="${k}">Baixar</button>${canWrite()?`<button class="btn ghost sm" data-repev="${k}">Substituir</button><button class="btn ghost sm" data-renev="${k}">Renomear</button>${isImg(a.tipo)?`<button class="btn ghost sm" data-rotev="${k}" title="Gira a foto 90° para a direita">Girar</button>`:''}<button class="btn ghost sm danger" data-rmev="${k}">Remover</button>`:''}</div></div>`).join('')}</div>`})();
   const nEv=anx==null?nAnx(n):Object.keys(anx).length;
   $('#sheetBody').innerHTML=`
     <header class="sh-h"><div><span class="mut" style="font-size:12.5px">Nota fiscal</span><h3>NF ${esc(n.nf)}</h3>
@@ -1008,7 +1029,7 @@ function renderSheet(n,anx){
         <dt>Lançada por</dt><dd>${esc(n.criadoPor||'—')}<br><span class="mut" style="font-size:12.5px">${dtTxt(n.criadoEm)}</span></dd></dl></section>
       <section><h4>Produtos</h4><div class="its">${n.itens.map(i=>`<div><span>${esc(i.n)}</span><b class="num">× ${i.q}</b></div>`).join('')}</div></section>
       ${n.obs?`<section><h4>Observação</h4><p style="font-size:14px;white-space:pre-wrap">${esc(n.obs)}</p></section>`:''}
-      <section><h4><span>Evidências (${nEv})</span>${canWrite()?`<button class="btn sm" data-addev>+ Adicionar</button><input type="file" id="shFiles" multiple hidden accept=".pdf,image/*,.xlsx,.xls,.csv,.docx,.doc,.eml,.msg,.txt">`:''}</h4>${items}</section>
+      <section><h4><span>Evidências (${nEv})</span>${canWrite()?`<button class="btn sm" data-addev>+ Adicionar</button><input type="file" id="shRep" hidden accept=".pdf,image/*,.xlsx,.xls,.csv,.docx,.doc,.eml,.msg,.txt"><input type="file" id="shFiles" multiple hidden accept=".pdf,image/*,.xlsx,.xls,.csv,.docx,.doc,.eml,.msg,.txt">`:''}</h4>${items}</section>
       <section><h4>Histórico</h4><ol class="tl">${hist.map(x=>`<li><b>${esc(x.st)}</b><span>${esc(x.por||'')} · ${dtTxt(x.em)}</span></li>`).join('')}${n.editadoEm?`<li><b>Última edição</b><span>${esc(n.editadoPor||'')} · ${dtTxt(n.editadoEm)}</span></li>`:''}</ol></section>
     </div>
     <footer class="sh-f"><button class="btn" data-close>Fechar</button>${canWrite()?`<button class="btn pri" data-edit="${n.id}">Editar dados</button>`:''}</footer>`;
@@ -1379,7 +1400,7 @@ function bind(){
   $('#fMot').addEventListener('change',showArea);
   $('#fVend').addEventListener('change',()=>{const el=$('#fVend'),t=norm(el.value);if(!t)return;const ex=findVend(el.value);if(ex){el.value=ex;return}const m=S.cfg.vendedores.filter(v=>norm(v).includes(t));if(m.length===1)el.value=m[0]});
   $('#btnClear').onclick=()=>resetForm();
-  $('#fvOn').onchange=e=>setFv(e.target.checked);
+  $('#fvFields').addEventListener('input',syncFv);$('#fvFields').addEventListener('change',syncFv);
   $('#ncForm').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'&&(e.target.closest('#fvBox')||e.target.matches('.il,.iv')))e.preventDefault()});
   $('#btnFvPdf').onclick=fvPdfSaved;
   $('#ncForm').addEventListener('input',()=>{if(!S.editId&&S.lastNc){S.lastNc=null;renderPdfBtn()}});$('#btnFotoLay').onclick=openFotoLayoutNew;
@@ -1422,8 +1443,15 @@ function bind(){
     if(e.target.closest('[data-fvpdf]'))return fvPdf();
     const ed=e.target.closest('[data-edit]');if(ed){const id=ed.dataset.edit;closeSheet();return editNc(id)}
     if(e.target.closest('[data-addev]'))return $('#shFiles').click();
-    const k=(e.target.closest('[data-openev],[data-dl],[data-rmev]')||{}).dataset;if(!k||!sheetAnx)return;
-    const key=k.openev||k.dl||k.rmev,a=sheetAnx[key];if(!a)return;
+    const k=(e.target.closest('[data-openev],[data-dl],[data-rmev],[data-repev],[data-renev],[data-rotev]')||{}).dataset;if(!k||!sheetAnx)return;
+    const key=k.openev||k.dl||k.rmev||k.repev||k.renev||k.rotev,a=sheetAnx[key];if(!a)return;
+    if(k.repev){repKey=key;$('#shRep').click();return}
+    if(k.renev){let nn=await askText('Renomear arquivo','Novo nome do arquivo (a extensão é mantida se você não digitar)',a.nome);if(nn==null)return;
+      nn=nn.replace(/[\u0000-\u001f\/\\]/g,'').replace(/\s+/g,' ').trim().slice(0,120);if(!nn||nn===a.nome)return;
+      const ext=(a.nome.match(/\.[A-Za-z0-9]{1,5}$/)||[''])[0];if(ext&&!/\.[A-Za-z0-9]{1,5}$/.test(nn))nn+=ext;
+      try{await API.renAnexo(sheetId,key,nn);toast('Arquivo renomeado');await loadSheetAnx(sheetId)}catch(err){toast('Sem permissão para alterar evidências',true)}return}
+    if(k.rotev){const d0=safeData(a.data);if(!d0)return toast('Arquivo inválido',true);
+      try{const r=await rotateImage(d0);await API.replAnexo(sheetId,key,{nome:r.type!==a.tipo?a.nome.replace(/\.[^.]+$/,'')+'.jpg':a.nome,...r},a);toast('Foto girada');await loadSheetAnx(sheetId)}catch(err){console.error(err);toast('Não consegui girar a foto',true)}return}
     if(k.rmev){if(await ask('Remover evidência?',`${a.nome} será apagado desta NC.`,'Remover')){try{await API.delAnexo(sheetId,key);toast('Evidência removida');await loadSheetAnx(sheetId)}catch(err){toast('Sem permissão para remover evidências',true)}}return}
     const d=safeData(a.data);if(!d)return toast('Arquivo inválido',true);
     const blob=await dataToBlob(d);
@@ -1433,6 +1461,8 @@ function bind(){
   sh.addEventListener('input',e=>{if(e.target.closest('#fvForm'))fvDirty=true});
   sh.addEventListener('change',async e=>{if(e.target.closest('#fvForm'))fvDirty=true;
     if(e.target.id==='shSt'){try{await API.setStatus(sheetId,e.target.value);toast('Status atualizado')}catch(err){toast('Sem permissão',true)}}
+    if(e.target.id==='shRep'){const id=sheetId,key=repKey,old=sheetAnx&&sheetAnx[key],fs=await prepFiles([...e.target.files]);e.target.value='';if(!fs.length||!old||!key)return;
+      toast('Substituindo arquivo…');try{await API.replAnexo(id,key,fs[0],old);toast('Arquivo substituído');await loadSheetAnx(id)}catch(err){console.error(err);toast('Sem permissão para alterar evidências',true)}return}
     if(e.target.id==='shFiles'){const id=sheetId,fs=await prepFiles([...e.target.files]);e.target.value='';if(!fs.length)return;
       toast(`Enviando ${fs.length} evidência${fs.length>1?'s':''}…`);
       try{const fail=await API.saveAnexos(id,fs);toast(fail?`${fail} anexo(s) não subiram`:'Evidência adicionada',!!fail);await loadSheetAnx(id)}catch(err){toast('Sem permissão',true)}}
