@@ -204,10 +204,13 @@ dialog.sheet.wide{width:min(880px,100vw)}
 .fvtoggle span{display:grid;gap:2px;font-size:14px}
 .fvtoggle small{color:var(--mut);font-size:12.5px}
 #fvFields{display:grid;gap:14px}
+.stp{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;letter-spacing:.02em;margin:6px 0 -4px}
+.stp i{font-style:normal;display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--bg,#fff);font-size:12px;font-weight:700}
+.stp small{font-weight:500;color:var(--mut);font-size:12px}
+.stp:not(:first-child){padding-top:14px;border-top:1px solid var(--line)}
 .opt{font-weight:500;color:var(--faint)}
-.items:not(.fv) .fvonly{display:none}
-.items.fv .item{grid-template-columns:90px minmax(0,1fr) minmax(0,1fr) 40px;padding-bottom:10px;border-bottom:1px dashed var(--line)}
-.items.fv .item>.field:first-child{grid-column:1/-1}
+.items .item{grid-template-columns:90px minmax(0,1fr) minmax(0,1fr) 40px;padding-bottom:10px;border-bottom:1px dashed var(--line)}
+.items .item>.field:first-child{grid-column:1/-1}
 @media (max-width:820px){dialog.sheet{width:100vw;border-radius:0}.lote,.sig{grid-template-columns:1fr}.kv{grid-template-columns:110px 1fr}}
 .kpi{padding:18px 20px}
 .kpi .k{font-size:12.5px;font-weight:600;color:var(--mut)}
@@ -323,35 +326,39 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
       <div id="emptyCfg" class="banner" hidden style="margin:0 0 16px">As listas de vendedores, produtos e motivos ainda não foram configuradas. Peça a um administrador abrir o Painel NC uma vez (elas carregam sozinhas).</div>
       <div class="lg">
         <form id="ncForm" class="card form" novalidate>
+          <h4 class="stp"><i>1</i>Nota fiscal e cliente</h4>
           <div class="g3">
             <div class="field"><label for="fData">Data <b>*</b></label><input id="fData" class="in" type="date" required></div>
             <div class="field"><label for="fNf">Nº da NF <b>*</b></label><input id="fNf" class="in num" inputmode="numeric" autocomplete="off" required><div class="errmsg"></div></div>
             <div class="field"><label for="fPed">Nº do pedido <b>*</b></label><input id="fPed" class="in num" inputmode="numeric" autocomplete="off" required><div class="errmsg"></div></div>
           </div>
-          <div class="field"><label for="fCli">Cliente <b>*</b></label><input id="fCli" class="in" autocomplete="off" required><div class="errmsg"></div></div>
           <div class="g2">
-            <div class="field"><label for="fVend">Vendedor(a) <b>*</b></label><select id="fVend" class="in" required></select><div class="errmsg"></div></div>
-            <div class="field"><label for="fMot">Motivo <b>*</b></label><select id="fMot" class="in" required></select><div id="fArea" class="mut" style="font-size:12.5px"></div><div class="errmsg"></div></div>
+            <div class="field"><label for="fCli">Cliente <b>*</b></label><input id="fCli" class="in" autocomplete="off" required><div class="errmsg"></div></div>
+            <div class="field"><label for="fVend">Vendedor(a) / representante <b>*</b></label><select id="fVend" class="in" required></select><div class="errmsg"></div></div>
           </div>
+          <h4 class="stp"><i>2</i>Produtos <small>produto, quantidade, lote e validade</small></h4>
           <div class="field">
-            <span class="lbl">Produtos e quantidades <b style="color:var(--bad)">*</b></span>
             <div id="items" class="items"></div>
             <div><button type="button" class="btn sm" id="addItem">+ Adicionar produto</button></div>
             <div class="errmsg" id="itemsErr"></div>
-            <div class="mut" id="fvLoteHint" hidden style="font-size:12.5px">Com o formulário ligado, cada produto também pede <b>lote</b> e <b>validade</b>.</div>
           </div>
+          <h4 class="stp"><i>3</i>Devolução e relato</h4>
           <div class="g2">
-            <div class="field"><label for="fVal">Valor da NF (R$) <span class="opt">· opcional</span></label><input id="fVal" class="in num" inputmode="numeric" placeholder="0,00" autocomplete="off"><div class="errmsg"></div></div>
+            <div class="field"><label for="fMot">Motivo <b>*</b></label><select id="fMot" class="in" required></select><div id="fArea" class="mut" style="font-size:12.5px"></div><div class="errmsg"></div></div>
             <div class="field"><span class="lbl">Devolução <b style="color:var(--bad)">*</b></span>
               <div class="seg full" id="fTipo" role="group" aria-label="Tipo de devolução"><button type="button" data-v="Total" aria-pressed="true">Total</button><button type="button" data-v="Parcial" aria-pressed="false">Parcial</button></div>
             </div>
           </div>
-          <div class="field"><label for="fObs">Observação</label><textarea id="fObs" class="in" rows="2" placeholder="O que o cliente relatou, o que foi combinado…"></textarea></div>
+          <div class="g2">
+            <div class="field"><label for="fVal">Valor da NF (R$) <span class="opt">· opcional</span></label><input id="fVal" class="in num" inputmode="numeric" placeholder="0,00" autocomplete="off"><div class="errmsg"></div></div>
+          </div>
+          <div class="field"><label for="fObs">Relato da reclamação / observação</label><textarea id="fObs" class="in" rows="4" placeholder="O que o cliente relatou, o que foi combinado… Se o formulário de farmacovigilância estiver ligado, este texto vai como “Relato da reclamação”."></textarea></div>
           <div class="field"><span class="lbl">Evidências — pedido de venda, fotos, prints</span>
             <label class="drop" id="drop"><input type="file" id="fFiles" multiple accept=".pdf,image/*,.xlsx,.xls,.csv,.docx,.doc,.eml,.msg,.txt" hidden>
               <b>Arraste os arquivos aqui</b><span>ou <u>escolha no computador</u> · também dá pra colar um print (Ctrl+V)</span><small>PDF, imagem, Excel ou Word · até 4 MB cada · fotos são comprimidas</small></label>
             <div id="fileList" class="files"></div>
           </div>
+          <h4 class="stp"><i>4</i>Farmacovigilância <small>só se a NC precisar de investigação</small></h4>
           <section class="fvbox" id="fvBox">
             <label class="fvtoggle"><input type="checkbox" id="fvOn"><span><b>Formulário de farmacovigilância (REG GQ 17-1)</b><small>Ligue quando a NC precisar de investigação (reação, sem efeito, problema no produto…). Preencha tudo aqui e gere o PDF no fim.</small></span></label>
             <div id="fvFields" hidden></div>
@@ -540,21 +547,23 @@ function fillSelects(){
 let tipo='Total',LOTES=[];
 /* Bloco do formulário REG GQ 17-1 dentro da tela de lançar */
 const fvAbertHtml=()=>`<section class="fvsec"><h5>Abertura <small>SAC</small></h5>
-  <div class="g2"><div class="field"><label>Responsável pela abertura do formulário</label><input class="in" data-f="responsavel" autocomplete="off"></div>
-    <div class="field"><label>Nome (completo)</label><input class="in" data-f="nome" autocomplete="off" placeholder="Se ficar vazio, usa o campo Cliente"></div></div>
-  <div class="field"><label>Representante</label><input class="in" data-f="representante" autocomplete="off" placeholder="Se ficar vazio, usa o Vendedor(a)"></div>
-  <div class="field"><label>Relato da reclamação</label><textarea class="in" rows="4" data-f="relato" placeholder="Se ficar vazio, usa a Observação"></textarea></div>
-  <p class="mut" style="font-size:12.5px">Lote e validade ficam na linha de cada produto, lá em cima. As fotos anexadas em “Evidências” vão no PDF.</p></section>`;
+  <div class="field"><label>Responsável pela abertura do formulário</label><input class="in" data-f="responsavel" autocomplete="off"></div>
+  <p class="mut" style="font-size:12.5px">Cliente, vendedor, relato, lote e validade já vêm dos campos preenchidos acima. As fotos anexadas em “Evidências” vão no PDF.</p></section>`;
 function buildFvFields(){$('#fvFields').innerHTML=fvAbertHtml()+fvInvHtml({},canFv())}
 function setFv(on){
-  const c=$('#fvOn');c.checked=on;$('#fvFields').hidden=!on;$('#items').classList.toggle('fv',on);$('#fvLoteHint').hidden=!on;$('#btnFvPdf').hidden=!on;
+  const c=$('#fvOn');c.checked=on;$('#fvFields').hidden=!on;$('#items').classList.toggle('fv',on);$('#btnFvPdf').hidden=!on;
   if(on){const r=$('#fvFields [data-f=responsavel]');if(r&&!r.value)r.value=S.userName||(S.user&&S.user.email)||''}
 }
 function fillFvForm(fv){$$('#fvFields [data-f]').forEach(el=>{const v=g(fv,el.dataset.f);if(el.type==='checkbox')el.checked=!!v;else el.value=v==null?'':v})}
-function collectFv(cur,rec){
-  const fv=fvCollect({fv:cur||{}},'#fvFields');
+function collectFv(oldNc,rec){
+  const oldFv=(oldNc&&oldNc.fv)||{};
+  const fv=fvCollect({fv:oldFv},'#fvFields');
   fv.lotes=rec.itens.map((_,i)=>({lote:(LOTES[i]||{}).lote||'',val:(LOTES[i]||{}).val||''}));
-  fv.nome=fv.nome||rec.cliente;fv.representante=fv.representante||rec.vendedor;fv.relato=fv.relato||rec.obs||'';
+  /* nome/representante/relato seguem Cliente/Vendedor/Observação; só mantém o que alguém já personalizou na ficha */
+  [['nome','cliente'],['representante','vendedor'],['relato','obs']].forEach(([k,src])=>{
+    const atual=oldFv[k],base=oldNc?oldNc[src]:undefined;
+    fv[k]=(!atual||atual===base)?(rec[src]||''):atual;
+  });
   if(!fv.abertoPor){fv.abertoPor=S.user.email;fv.abertoEm=Date.now()}
   if(!fv.responsavel)fv.responsavel=S.userName||S.user.email;
   return fv;
@@ -564,8 +573,8 @@ function itemRow(v={}){
   const d=document.createElement('div');d.className='item';
   d.innerHTML=`<div class="field"><input class="in ip" list="dlProd" placeholder="Digite para buscar o produto…" aria-label="Produto" autocomplete="off" value="${esc(v.n||'')}"><div class="errmsg"></div></div>
   <div class="field"><input class="in num iq" type="number" min="1" step="1" inputmode="numeric" placeholder="Qtd" aria-label="Quantidade" value="${v.q||''}"></div>
-  <div class="field fvonly"><input class="in il" placeholder="Lote" aria-label="Lote" autocomplete="off" value="${esc(v.lote||'')}"></div>
-  <div class="field fvonly"><input class="in iv" type="date" aria-label="Validade" title="Validade" value="${esc(v.val||'')}"></div>
+  <div class="field"><input class="in il" placeholder="Lote" aria-label="Lote" autocomplete="off" value="${esc(v.lote||'')}"></div>
+  <div class="field"><input class="in iv" type="date" aria-label="Validade" title="Validade" value="${esc(v.val||'')}"></div>
   <button type="button" class="btn ghost x" aria-label="Remover produto">✕</button>`;
   d.querySelector('.x').onclick=()=>{if($$('.item').length>1)d.remove();else{d.querySelector('.ip').value='';d.querySelector('.iq').value='';d.querySelectorAll('.il,.iv').forEach(e=>e.value='')}};
   return d;
@@ -600,7 +609,7 @@ function validate(){
     if(!ip.value.trim()&&!iq.value&&$$('.item').length>1)return;
     if(!p){flag(ip,ip.value.trim()?'Escolha um produto da lista':'Escolha o produto');return}
     if(!(q>0)){flag(iq,'');$('#itemsErr').textContent='Informe a quantidade de cada produto';return}
-    itens.push({c:p.c,n:p.n,q});LOTES.push({lote:row.querySelector('.il').value.trim(),val:row.querySelector('.iv').value});
+    const lote=row.querySelector('.il').value.trim(),val=row.querySelector('.iv').value,it={c:p.c,n:p.n,q};if(lote)it.lote=lote;if(val)it.val=val;itens.push(it);LOTES.push({lote,val});
   });
   if(first)first.focus();
   return ok?itens:null;
@@ -621,7 +630,7 @@ async function submitForm(e){
   }
   const rec=readRec(itens,nf);
   let fvObj=null,cur=null;
-  if($('#fvOn').checked){cur=S.editId?(S.ncs.find(x=>x.id===S.editId)||{}):null;fvObj=collectFv(cur&&cur.fv,rec)}
+  if($('#fvOn').checked){cur=S.editId?(S.ncs.find(x=>x.id===S.editId)||{}):null;fvObj=collectFv(cur,rec)}
   const btn=$('#btnSave');btn.disabled=true;
   const files=S.files.slice();
   try{
@@ -646,7 +655,7 @@ function editNc(id){
   $('#fData').value=n.data;$('#fNf').value=n.nf;$('#fPed').value=n.pedido;$('#fCli').value=n.cliente;
   const ensure=(sel,val)=>{if(![...sel.options].some(o=>o.value===val))sel.append(new Option(val+' (fora da lista)',val));sel.value=val};
   ensure($('#fVend'),n.vendedor);ensure($('#fMot'),n.motivo);
-  $('#items').innerHTML='';(n.itens.length?n.itens:[{}]).forEach((i,ix)=>$('#items').append(itemRow({...i,lote:g(n.fv,'lotes.'+ix+'.lote'),val:g(n.fv,'lotes.'+ix+'.val')})));
+  $('#items').innerHTML='';(n.itens.length?n.itens:[{}]).forEach((i,ix)=>$('#items').append(itemRow({...i,lote:g(n.fv,'lotes.'+ix+'.lote')||i.lote||'',val:g(n.fv,'lotes.'+ix+'.val')||i.val||''})));
   $('#fVal').value=+n.valorNF>0?(+n.valorNF).toLocaleString('pt-BR',{minimumFractionDigits:2}):'';
   setTipo(n.tipo||'Total');$('#fObs').value=n.obs||'';showArea();
   if(n.fv){setFv(true);fillFvForm(n.fv);const c=$('#fvOn');c.disabled=true;c.title='O formulário já foi aberto nesta NC'}
@@ -811,8 +820,8 @@ function renderFvSheet(n,anx){
       <div class="g3"><div class="field"><label>Nº do pedido</label><input class="in" value="${esc(n.pedido)}" disabled></div><div class="field"><label>NF</label><input class="in" value="${esc(n.nf)}" disabled></div>
         <div class="field"><label>Representante</label><input class="in" data-f="representante" value="${v('representante')}"${dis(canA)}></div></div>
       <div class="field"><span class="lbl">Produtos — lote e validade</span><div class="lotes">${n.itens.map((it,i)=>`<div class="lote"><span class="nm">${esc(it.n)} <span class="mut">× ${it.q}</span></span>
-        <div class="field"><label>Lote</label><input class="in" data-f="lotes.${i}.lote" value="${v('lotes.'+i+'.lote')}"${dis(canA)}></div>
-        <div class="field"><label>Validade</label><input class="in" type="date" data-f="lotes.${i}.val" value="${v('lotes.'+i+'.val')}"${dis(canA)}></div></div>`).join('')}</div></div>
+        <div class="field"><label>Lote</label><input class="in" data-f="lotes.${i}.lote" value="${v('lotes.'+i+'.lote')||esc(it.lote||'')}"${dis(canA)}></div>
+        <div class="field"><label>Validade</label><input class="in" type="date" data-f="lotes.${i}.val" value="${v('lotes.'+i+'.val')||esc(it.val||'')}"${dis(canA)}></div></div>`).join('')}</div></div>
       <div class="field"><label>Relato da reclamação</label><textarea class="in" rows="4" data-f="relato"${dis(canA)}>${v('relato')}</textarea></div>
       <div class="field"><span class="lbl">Fotos que vão no PDF ${anx?`(${imgs.length})`:''}</span>${anx==null?'<p class="mut" style="font-size:13px">Carregando evidências…</p>':imgs.length?`<div class="fotos">${imgs.map(([k,a])=>`<label title="${esc(a.nome)}"><input type="checkbox" data-foto="${k}"${g(fv,'fotosOff.'+k)?'':' checked'}${dis(canA)}><img src="${esc(safeData(a.data))}" alt="${esc(a.nome)}"></label>`).join('')}</div>`:'<p class="mut" style="font-size:13px">Nenhuma foto anexada. Adicione na aba Resumo → Evidências.</p>'}
         ${outros.length?`<p class="mut" style="font-size:12.5px">Também listados no PDF: ${outros.map(([k,a])=>esc(a.nome)).join(', ')}</p>`:''}</div>
@@ -853,7 +862,7 @@ function fvPrintHtml(n,fv,anx){
   const e=s=>esc(s??''),br=s=>e(s).replace(/\n/g,'<br>'),d=s=>s?brDate(s):'____/____/______',L=s=>s&&String(s).trim()?br(s):'&nbsp;';
   const imgs=Object.entries(anx||{}).filter(([k,a])=>isImg(a.tipo)&&safeData(a.data)&&!g(fv,'fotosOff.'+k)).sort((a,b)=>(a[1].em||0)-(b[1].em||0));
   const outros=Object.values(anx||{}).filter(a=>!isImg(a.tipo));
-  const prod=n.itens.map((it,i)=>{const l=g(fv,'lotes.'+i)||{};return `${e(it.n)}${l.lote?` / LOTE ${e(l.lote)}`:''}${l.val?` / VALIDADE ${brDate(l.val)}`:''} / Qtde: ${it.q}`}).join('<br>');
+  const prod=n.itens.map((it,i)=>{const l0=g(fv,'lotes.'+i)||{},l={lote:l0.lote||it.lote,val:l0.val||it.val};return `${e(it.n)}${l.lote?` / LOTE ${e(l.lote)}`:''}${l.val?` / VALIDADE ${brDate(l.val)}`:''} / Qtde: ${it.q}`}).join('<br>');
   const sig=(lbl,k)=>`<tr><td class="sg"><b>${lbl}:</b> ${e(g(fv,'ass.'+k+'.nome'))}<span class="dt"><b>DATA:</b> ${d(g(fv,'ass.'+k+'.data'))}</span><div class="ln">Assinatura</div></td></tr>`;
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>REG GQ 17-1 - NF ${e(n.nf)} - ${e(fv.nome||n.cliente)}</title><style>
   @page{size:A4;margin:36mm 14mm 18mm 14mm;
@@ -900,7 +909,7 @@ async function fvPdf(){
 /* PDF direto da tela de lançar: usa o que está preenchido agora, sem precisar salvar antes */
 async function fvPdfNew(){
   const itens=validate();if(!itens)return toast('Confira os campos em vermelho antes de gerar o PDF',true);
-  const rec=readRec(itens),editId=S.editId,cur=editId?(S.ncs.find(x=>x.id===editId)||{}).fv:null,files=S.files.slice();
+  const rec=readRec(itens),editId=S.editId,cur=editId?(S.ncs.find(x=>x.id===editId)||{}):null,files=S.files.slice();
   const fv=collectFv(cur,rec);
   return pdfWindow(async()=>{
     let old={};if(editId){try{old=await API.loadAnexos(editId)}catch(e){}}
