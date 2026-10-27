@@ -206,9 +206,33 @@ dialog.sheet.wide{width:min(880px,100vw)}
 #fvFields{display:grid;gap:14px}
 .fotobar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px dashed var(--line2);border-radius:12px;background:var(--glass2);font-size:13px;margin-top:8px}
 .fotobar span{flex:1;min-width:180px}
-#flDlg{width:min(1040px,calc(100vw - 24px));height:min(88vh,820px);padding:0;overflow:hidden}
+#flDlg{width:min(1180px,calc(100vw - 24px));height:min(92vh,860px);padding:0;overflow:hidden}
 #flDlg[open]{display:flex;flex-direction:column}
 .fl-h{padding:18px 22px 10px}.fl-h p{font-size:13px}
+.fl-ht{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}.fl-ht h3{margin:0}
+.fl-b2{flex:1;min-height:0;display:grid;grid-template-columns:200px minmax(0,1fr) 250px;gap:14px;padding:0 22px}
+.lv-tray,.lv-side{overflow:auto;min-height:0}.lv-tray .fl-pvh small{font-weight:400}
+.lv-tl{display:grid;gap:6px}
+.lv-t{display:grid;grid-template-columns:54px minmax(0,1fr);gap:8px;align-items:center;padding:5px;border:1px solid var(--line);border-radius:10px;background:var(--glass2);cursor:pointer;text-align:left;font:inherit;color:inherit}
+.lv-t img{width:54px;height:42px;object-fit:cover;border-radius:6px;display:block}.lv-t b{font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lv-t small{font-size:11px;color:var(--mut)}
+.lv-t.on{border-color:var(--ink)}.lv-t.out{opacity:.65}
+.lv-mid{display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;gap:8px}
+.lv-tabs{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.lv-tabs .btn[aria-pressed=true]{background:var(--ink);color:var(--bg,#fff);border-color:var(--ink)}
+.lv-wrap{min-height:0;overflow:auto;display:grid;place-items:start center;background:color-mix(in srgb,var(--ink) 6%,transparent);border-radius:10px;padding:8px}
+.lv-hold{position:relative}
+.lv-page{position:absolute;left:0;top:0;width:182mm;height:240mm;background:#fff;color:#000;box-shadow:0 2px 14px rgba(0,0,0,.25);transform-origin:0 0;outline:none;background-image:linear-gradient(#0000000d 1px,transparent 1px),linear-gradient(90deg,#0000000d 1px,transparent 1px);background-size:10mm 10mm}
+.lcell{position:absolute;overflow:hidden}.lcell img{position:absolute;left:50%;top:50%;display:block;max-width:none;user-select:none;-webkit-user-drag:none;pointer-events:none}
+.lv-page .lcell{outline:1px solid rgba(0,0,0,.3);background:#f1f1f1;cursor:move;touch-action:none;overflow:visible}
+.lv-page .lcell .clip{position:absolute;inset:0;overflow:hidden}
+.lv-page .lcell.sel{outline:2px solid #2563eb}
+.hd{position:absolute;width:calc(12px*var(--s,1));height:calc(12px*var(--s,1));background:#fff;border:calc(2px*var(--s,1)) solid #2563eb;border-radius:3px;z-index:3;touch-action:none}
+.hd[data-h=nw]{left:calc(-6px*var(--s,1));top:calc(-6px*var(--s,1));cursor:nwse-resize}.hd[data-h=n]{left:calc(50% - 6px*var(--s,1));top:calc(-6px*var(--s,1));cursor:ns-resize}.hd[data-h=ne]{right:calc(-6px*var(--s,1));top:calc(-6px*var(--s,1));cursor:nesw-resize}
+.hd[data-h=e]{right:calc(-6px*var(--s,1));top:calc(50% - 6px*var(--s,1));cursor:ew-resize}.hd[data-h=se]{right:calc(-6px*var(--s,1));bottom:calc(-6px*var(--s,1));cursor:nwse-resize}.hd[data-h=s]{left:calc(50% - 6px*var(--s,1));bottom:calc(-6px*var(--s,1));cursor:ns-resize}
+.hd[data-h=sw]{left:calc(-6px*var(--s,1));bottom:calc(-6px*var(--s,1));cursor:nesw-resize}.hd[data-h=w]{left:calc(-6px*var(--s,1));top:calc(50% - 6px*var(--s,1));cursor:ew-resize}
+.lv-side{display:grid;gap:12px;align-content:start;font-size:13px}.lv-side h4{font-size:13px}.lv-side label{display:grid;gap:4px;font-size:12.5px;color:var(--mut)}
+.lv-side input[type=range]{width:100%;accent-color:var(--ink)}.lv-side .seg button{flex:1}.lv-side .bt{display:flex;gap:6px;flex-wrap:wrap}
+@media(max-width:900px){.fl-b2{grid-template-columns:1fr;overflow:auto}.lv-tray,.lv-side{overflow:visible}.lv-wrap{min-height:420px}}
 .fl-b{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;padding:0 22px}
 .fl-list{overflow:auto;display:grid;gap:8px;align-content:start;padding:2px 4px 8px 0}
 .fl-c{display:grid;grid-template-columns:26px 74px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:12px;background:var(--glass2);cursor:grab}
@@ -365,7 +389,7 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
           </div>
           <div class="g2">
             <div class="field"><label for="fCli">Cliente <b>*</b></label><input id="fCli" class="in" autocomplete="off" required><div class="errmsg"></div></div>
-            <div class="field"><label for="fVend">Vendedor(a) / representante <b>*</b></label><select id="fVend" class="in" required></select><div class="errmsg"></div></div>
+            <div class="field"><label for="fVend">Vendedor(a) / representante <b>*</b></label><input id="fVend" class="in" list="dlVend" placeholder="Digite o nome…" autocomplete="off" required><div class="errmsg"></div></div>
           </div>
           <h4 class="stp"><i>2</i>Produtos <small>produto, quantidade, lote e validade</small></h4>
           <div class="field">
@@ -454,13 +478,21 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
 
 <dialog id="sheet" class="sheet" aria-label="Ficha da NC"><div class="sh" id="sheetBody"></div></dialog>
 <dialog id="dlg"><h3 id="dlgT"></h3><p class="mut" id="dlgP"></p><div class="row"><button class="btn" id="dlgNo">Cancelar</button><button class="btn pri" id="dlgYes">Confirmar</button></div></dialog>
-<dialog id="flDlg" aria-labelledby="flT"><div class="fl-h"><h3 id="flT">Layout das fotos no PDF</h3><p class="mut">Arraste os cartões (ou use ↑ ↓) para mudar a ordem, escolha o tamanho de cada foto e desmarque as que não devem ir. A prévia mostra como fica na folha.</p></div>
-<div class="fl-b"><div id="flList" class="fl-list"></div><div class="fl-pv"><div class="fl-pvh">Prévia da folha (aproximada)</div><div id="flPrev" class="fl-page"></div></div></div>
-<div class="fl-f"><div class="fl-tools"><span class="mut">Todas:</span><button type="button" class="btn sm" data-all="p">Pequenas</button><button type="button" class="btn sm" data-all="m">Médias</button><button type="button" class="btn sm" data-all="g">Grandes</button>
+<dialog id="flDlg" aria-labelledby="flT"><div class="fl-h"><div class="fl-ht"><h3 id="flT">Layout das fotos no PDF</h3>
+  <div class="seg" id="flMode" role="group" aria-label="Modo"><button type="button" data-mode="lista" aria-pressed="true">Lista automática</button><button type="button" data-mode="livre" aria-pressed="false">Folha livre (colagem)</button></div></div>
+  <p class="mut" id="flHint"></p></div>
+<div class="fl-b" id="flBLista"><div id="flList" class="fl-list"></div><div class="fl-pv"><div class="fl-pvh">Prévia da folha (aproximada)</div><div id="flPrev" class="fl-page"></div></div></div>
+<div class="fl-b2" id="flBLivre" hidden>
+  <aside class="lv-tray"><div class="fl-pvh">Fotos <small>clique para pôr ou tirar da folha</small></div><div id="lvTray" class="lv-tl"></div></aside>
+  <section class="lv-mid"><div class="lv-tabs" id="lvTabs"></div><div class="lv-wrap" id="lvWrap"><div class="lv-hold" id="lvHold"><div class="lv-page" id="lvPage" tabindex="0"></div></div></div></section>
+  <aside class="lv-side" id="lvSide"></aside>
+</div>
+<div class="fl-f"><div class="fl-tools" id="flToolsLista"><span class="mut">Todas:</span><button type="button" class="btn sm" data-all="p">Pequenas</button><button type="button" class="btn sm" data-all="m">Médias</button><button type="button" class="btn sm" data-all="g">Grandes</button>
 <label style="margin-left:8px">Posição <select id="flPos" class="in"><option value="apos">Logo após o relato</option><option value="fim">No fim do formulário (página nova)</option></select></label></div>
+<div class="fl-tools" id="flToolsLivre" hidden><label>Modelo <select id="lvTpl" class="in"><option value="t1">1 por folha</option><option value="t2v">2 por folha (uma em cima da outra)</option><option value="t2h">2 por folha (lado a lado)</option><option value="t3">1 grande + 2 pequenas</option><option value="t4">4 por folha (2×2)</option><option value="t6">6 por folha (2×3)</option></select></label><button type="button" class="btn sm" id="lvAuto">Distribuir todas as fotos</button></div>
 <div class="row"><button type="button" class="btn" id="flNo">Cancelar</button><button type="button" class="btn pri" id="flYes">Aplicar</button></div></div></dialog>
 <div id="toasts" aria-live="polite"></div>
-<datalist id="dlProd"></datalist>
+<datalist id="dlProd"></datalist><datalist id="dlVend"></datalist>
 
 <script>
 (()=>{
@@ -575,7 +607,7 @@ function areasList(){return [...new Set(AREAS_PAD.concat(S.cfg.motivos.map(m=>m.
 function fillSelects(){
   $('#emptyCfg').hidden=!!(S.cfg.vendedores.length&&S.cfg.produtos.length&&S.cfg.motivos.length);
   const vs=[...S.cfg.vendedores].sort((a,b)=>a.localeCompare(b,'pt-BR'));
-  setSel($('#fVend'),opts(vs,'Selecione…'));setSel($('#fMot'),motOpts('Selecione…'));
+  $('#dlVend').innerHTML=vs.map(v=>`<option value="${esc(v)}"></option>`).join('');setSel($('#fMot'),motOpts('Selecione…'));
   setSel($('#pVend'),opts(vs,'Todos'));setSel($('#pMot'),motOpts('Todos'));setSel($('#pArea'),opts(areasList(),'Todas'));showArea();setSel($('#pSt'),opts(S.cfg.status,'Todos'));
   $('#dlProd').innerHTML=S.cfg.produtos.map(p=>`<option value="${esc(p.n)}">${esc(p.c)}</option>`).join('');
 }
@@ -617,6 +649,7 @@ function itemRow(v={}){
   d.querySelector('.x').onclick=()=>{if($$('.item').length>1)d.remove();else{d.querySelector('.ip').value='';d.querySelector('.iq').value='';d.querySelectorAll('.il,.iv').forEach(e=>e.value='')}};
   return d;
 }
+const findVend=name=>{const n=norm(name);return n?S.cfg.vendedores.find(v=>norm(v)===n):null};
 const findProd=name=>{const n=norm(name);return S.cfg.produtos.find(p=>norm(p.n)===n||norm(p.c+' '+p.n)===n)};
 function setTipo(v){tipo=v;$$('#fTipo button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v))}
 function resetForm(keepDate){
@@ -639,7 +672,8 @@ function validate(){
   if(!$('#fNf').value.trim())flag($('#fNf'),'Informe a NF');
   if(!$('#fPed').value.trim())flag($('#fPed'),'Informe o pedido');
   if(!$('#fCli').value.trim())flag($('#fCli'),'Informe o cliente');
-  if(!$('#fVend').value)flag($('#fVend'),'Escolha o vendedor');
+  {const vi=$('#fVend'),txt=vi.value.trim(),orig=S.editId?(S.ncs.find(x=>x.id===S.editId)||{}).vendedor:null,vv=findVend(txt)||(orig&&txt===orig?orig:null);
+   if(!txt)flag(vi,'Digite o vendedor');else if(!vv)flag(vi,'Escolha um vendedor da lista');else vi.value=vv}
   if(!$('#fMot').value)flag($('#fMot'),'Escolha o motivo');
   const itens=[];
   $$('.item').forEach(row=>{
@@ -682,9 +716,11 @@ async function submitForm(e){
     let fail=0;
     if(files.length){btn.textContent=`Enviando ${files.length} evidência${files.length>1?'s':''}…`;fail=await API.saveAnexos(id,files);
       if(fvObj&&fvObj.fotos){const km=API.keyMap||{},f0=fvObj.fotos,tmp=k=>k[0]==='~';
-        if([...(f0.ord||[]),...Object.keys(f0.tam||{}),...Object.keys(f0.off||{})].some(tmp)){
-          const m=k=>tmp(k)?km[k]:k,nf={pos:f0.pos,ord:(f0.ord||[]).map(m).filter(Boolean)},mm=o=>{const r={};Object.keys(o||{}).forEach(k=>{const x=m(k);if(x)r[x]=o[k]});return Object.keys(r).length?r:null};
-          const t=mm(f0.tam),o=mm(f0.off);if(t)nf.tam=t;if(o)nf.off=o;
+        if([...(f0.ord||[]),...Object.keys(f0.tam||{}),...Object.keys(f0.off||{}),...Object.keys(f0.box||{})].some(tmp)){
+          const m=k=>tmp(k)?km[k]:k,mm=o=>{const r={};Object.keys(o||{}).forEach(k=>{const x=m(k);if(x)r[x]=o[k]});return Object.keys(r).length?r:null};
+          const nf={pos:f0.pos,ord:(f0.ord||[]).map(m).filter(Boolean)};
+          if(f0.mode){nf.mode=f0.mode;nf.pages=f0.pages}
+          [['tam',f0.tam],['off',f0.off],['box',f0.box]].forEach(([n,o])=>{const r=mm(o);if(r)nf[n]=r});
           try{await API.upd(id,{'fv/fotos':nf})}catch(e2){console.error(e2)}}}}
     if(fail)toast(`NC salva, mas ${fail} anexo(s) não subiram. Abra a NC e tente de novo.`,true);
     else toast(S.editId?'NC atualizada':files.length?'NC lançada com evidências':'NC lançada');
@@ -697,7 +733,7 @@ function editNc(id){
   go('lancar');resetForm();S.editId=id;
   $('#fData').value=n.data;$('#fNf').value=n.nf;$('#fPed').value=n.pedido;$('#fCli').value=n.cliente;
   const ensure=(sel,val)=>{if(![...sel.options].some(o=>o.value===val))sel.append(new Option(val+' (fora da lista)',val));sel.value=val};
-  ensure($('#fVend'),n.vendedor);ensure($('#fMot'),n.motivo);
+  $('#fVend').value=n.vendedor;ensure($('#fMot'),n.motivo);
   $('#items').innerHTML='';(n.itens.length?n.itens:[{}]).forEach((i,ix)=>$('#items').append(itemRow({...i,lote:g(n.fv,'lotes.'+ix+'.lote')||i.lote||'',val:g(n.fv,'lotes.'+ix+'.val')||i.val||''})));
   $('#fVal').value=+n.valorNF>0?(+n.valorNF).toLocaleString('pt-BR',{minimumFractionDigits:2}):'';
   setTipo(n.tipo||'Total');$('#fObs').value=n.obs||'';showArea();
@@ -748,8 +784,23 @@ async function prepFiles(list,already=0){
 let UID=0;
 const FOTO_SZ={p:{l:'Pequena',w:'calc(33.33% - 3px)',h:52},m:{l:'Média',w:'calc(50% - 3px)',h:92},g:{l:'Grande',w:'100%',h:160},f:{l:'Pág. inteira',w:'100%',h:228}};
 const FOTO_DEF='m';
-const fotoLayOf=fv=>{const f=(fv&&fv.fotos)||null;return {pos:f&&f.pos==='fim'?'fim':'apos',ord:f?Object.values(f.ord||{}):[],tam:{...((f&&f.tam)||{})},off:f?{...(f.off||{})}:{...((fv&&fv.fotosOff)||{})}}};
-const fotoLayOut=l=>{const o={pos:l.pos,ord:l.ord.slice()},tam={},off={};Object.keys(l.tam).forEach(k=>{if(FOTO_SZ[l.tam[k]])tam[k]=l.tam[k]});Object.keys(l.off).forEach(k=>{if(l.off[k])off[k]=true});if(Object.keys(tam).length)o.tam=tam;if(Object.keys(off).length)o.off=off;return o};
+const fotoLayOf=fv=>{const f=(fv&&fv.fotos)||null,box={};
+  if(f&&f.box)Object.keys(f.box).forEach(k=>{const b=f.box[k];if(b&&typeof b==='object')box[k]={...b}});
+  return {mode:f&&f.mode==='livre'?'livre':'lista',pos:f&&f.pos==='fim'?'fim':'apos',ord:f?Object.values(f.ord||{}):[],tam:{...((f&&f.tam)||{})},off:f?{...(f.off||{})}:{...((fv&&fv.fotosOff)||{})},pages:Math.max(1,+(f&&f.pages)||1),box}};
+const fotoLayOut=l=>{const o={pos:l.pos,ord:l.ord.slice()},tam={},off={};
+  Object.keys(l.tam).forEach(k=>{if(FOTO_SZ[l.tam[k]])tam[k]=l.tam[k]});Object.keys(l.off).forEach(k=>{if(l.off[k])off[k]=true});
+  if(Object.keys(tam).length)o.tam=tam;if(Object.keys(off).length)o.off=off;
+  if(l.mode==='livre'){o.mode='livre';o.pages=l.pages;const bx={},r1=n=>Math.round((+n||0)*10)/10;
+    Object.keys(l.box||{}).forEach(k=>{const b=l.box[k];if(!b)return;bx[k]={p:b.p|0,x:r1(b.x),y:r1(b.y),w:r1(b.w),h:r1(b.h),fit:b.fit==='cover'?'cover':'contain',z:Math.min(3,Math.max(1,+b.z||1)),dx:Math.round(+b.dx||0),dy:Math.round(+b.dy||0),r:(((+b.r||0)%360)+360)%360}});
+    if(Object.keys(bx).length)o.box=bx}
+  return o};
+/* ---- folha livre: caixas em mm dentro da área útil da folha A4 (182 x 240 mm) ---- */
+const FL_W=182,FL_H=240,MMPX=96/25.4;
+const rotOf=b=>(((+b.r||0)%360)+360)%360;
+const cellSty=b=>`left:${b.x}mm;top:${b.y}mm;width:${b.w}mm;height:${b.h}mm`;
+const imgSty=b=>{const sw=rotOf(b)%180===90;return `width:${sw?b.h:b.w}mm;height:${sw?b.w:b.h}mm;object-fit:${b.fit==='cover'?'cover':'contain'};transform:translate(-50%,-50%) translate(${((+b.dx||0)*b.w/100).toFixed(2)}mm,${((+b.dy||0)*b.h/100).toFixed(2)}mm) rotate(${rotOf(b)}deg) scale(${b.z||1})`};
+const fotoCellHtml=(b,src,attrs='',inner='')=>`<div class="lcell" ${attrs} style="${cellSty(b)}"><img src="${src}" alt="" style="${imgSty(b)}">${inner}</div>`;
+const FL_TPL={t1:{l:'1 por folha',c:[[0,0,182,240]]},t2v:{l:'2 por folha (uma em cima da outra)',c:[[0,0,182,118],[0,122,182,118]]},t2h:{l:'2 por folha (lado a lado)',c:[[0,0,89,240],[93,0,89,240]]},t3:{l:'1 grande + 2 pequenas',c:[[0,0,182,118],[0,122,89,118],[93,122,89,118]]},t4:{l:'4 por folha (2×2)',c:[[0,0,89,118],[93,0,89,118],[0,122,89,118],[93,122,89,118]]},t6:{l:'6 por folha (2×3)',c:[[0,0,89,77.3],[93,0,89,77.3],[0,81.3,89,77.3],[93,81.3,89,77.3],[0,162.6,89,77.4],[93,162.6,89,77.4]]}};
 function fotoOrdered(anx,lay){
   const all=Object.entries(anx||{}).filter(([k,a])=>isImg(a.tipo)&&safeData(a.data)).sort((a,b)=>(a[1].em||0)-(b[1].em||0));
   const pos=k=>{const i=lay.ord.indexOf(k);return i<0?1e6:i};
@@ -757,10 +808,15 @@ function fotoOrdered(anx,lay){
 }
 const fotoTam=(lay,k)=>FOTO_SZ[lay.tam[k]]?lay.tam[k]:FOTO_DEF;
 function fotoEditor(items,lay0){
-  return new Promise(res=>{
+  return new Promise(async res=>{
     const d=$('#flDlg'),byK=Object.fromEntries(items);
-    const L={pos:lay0.pos,ord:items.map(x=>x[0]),tam:{...lay0.tam},off:{...lay0.off}};let drag=null;
-    const draw=()=>{
+    const L={mode:lay0.mode||'lista',pos:lay0.pos,ord:items.map(x=>x[0]),tam:{...lay0.tam},off:{...lay0.off},pages:Math.max(1,lay0.pages||1),box:{}};
+    Object.keys(lay0.box||{}).forEach(k=>{if(byK[k])L.box[k]={...lay0.box[k]}});
+    L.pages=Math.max(L.pages,...Object.values(L.box).map(b=>(b.p|0)+1),1);
+    const ratio={};await Promise.all(items.map(([k,a])=>new Promise(ok=>{const i=new Image();i.onload=()=>{ratio[k]=(i.naturalWidth||4)/(i.naturalHeight||3);ok()};i.onerror=()=>{ratio[k]=4/3;ok()};i.src=safeData(a.data)})));
+    let drag=null,cur=0,sel=null,scale=1;
+    /* ---------- modo lista ---------- */
+    const drawLista=()=>{
       $('#flList').innerHTML=L.ord.map((k,i)=>{const a=byK[k],t=fotoTam(L,k),off=!!L.off[k];
         return `<div class="fl-c${off?' off':''}" draggable="true" data-i="${i}"><span class="fl-n">${i+1}</span><img src="${esc(safeData(a.data))}" alt="" draggable="false">
           <div class="fl-m"><b title="${esc(a.nome)}">${esc(a.nome)}</b><div class="seg" role="group" aria-label="Tamanho">${Object.entries(FOTO_SZ).map(([s,z])=>`<button type="button" data-sz="${s}" data-k="${esc(k)}" aria-pressed="${t===s}">${z.l}</button>`).join('')}</div>
@@ -770,21 +826,109 @@ function fotoEditor(items,lay0){
       $('#flPrev').innerHTML=(L.pos==='apos'?'<div class="fl-txt">Dados, produtos e relato da reclamação…</div>':'')+(inc.length?inc.map(k=>{const t=fotoTam(L,k),z=FOTO_SZ[t];return `<div class="fl-fig${t==='f'?' pg':''}" style="width:${z.w}"><img src="${esc(safeData(byK[k].data))}" alt="" style="max-height:${Math.round(z.h*1.9)}px"></div>`}).join(''):'<p style="color:#888;font-size:12px">Nenhuma foto selecionada.</p>')+(L.pos==='fim'?'<div class="fl-txt" style="margin-top:6px">(as fotos entram depois das assinaturas, em página nova)</div>':'');
       $('#flPos').value=L.pos;
     };
+    /* ---------- folha livre ---------- */
+    const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+    const placeDefault=(k,p)=>{const r=ratio[k]||1.33;let w=88,h=w/r;if(h>110){h=110;w=h*r}const n=Object.values(L.box).filter(b=>b.p===p).length,o=(n%6)*6;
+      L.box[k]={p,x:+clamp((FL_W-w)/2+o-15,0,FL_W-w).toFixed(1),y:+clamp(20+o,0,FL_H-h).toFixed(1),w:+w.toFixed(1),h:+h.toFixed(1),fit:'contain',z:1,dx:0,dy:0,r:0}};
+    const fitScale=()=>{const wr=$('#lvWrap'),hold=$('#lvHold'),pg=$('#lvPage');if(!wr||wr.clientWidth<50)return;
+      scale=Math.max(.2,Math.min((wr.clientWidth-18)/(FL_W*MMPX),(wr.clientHeight-18)/(FL_H*MMPX),1.6));
+      hold.style.width=FL_W*MMPX*scale+'px';hold.style.height=FL_H*MMPX*scale+'px';pg.style.transform=`scale(${scale})`;pg.style.setProperty('--s',String(1/scale))};
+    const onPage=k=>L.box[k]&&L.box[k].p===cur;
+    const drawTray=()=>{$('#lvTray').innerHTML=L.ord.map(k=>{const a=byK[k],b=L.box[k];return `<button type="button" class="lv-t${b&&b.p===cur?' on':''}${b?'':' out'}" data-tg="${esc(k)}" title="${esc(a.nome)}"><img src="${esc(safeData(a.data))}" alt=""><span><b>${esc(a.nome)}</b><small>${b?(b.p===cur?`Nesta folha · clique p/ tirar`:`Folha ${b.p+1} · clique p/ trazer`):'Fora do PDF · clique p/ pôr'}</small></span></button>`}).join('')};
+    const drawTabs=()=>{$('#lvTabs').innerHTML=Array.from({length:L.pages},(_,i)=>`<button type="button" class="btn sm" data-pg="${i}" aria-pressed="${i===cur}">Folha ${i+1}</button>`).join('')+`<button type="button" class="btn sm ghost" data-addpg>+ Folha</button>${L.pages>1?'<button type="button" class="btn sm ghost danger" data-delpg>Excluir esta folha</button>':''}`};
+    const drawPage=()=>{
+      const ks=L.ord.filter(onPage);
+      $('#lvPage').innerHTML=ks.map(k=>{const b=L.box[k],on=sel===k;
+        return `<div class="lcell${on?' sel':''}" data-k="${esc(k)}" style="${cellSty(b)}"><div class="clip"><img src="${esc(safeData(byK[k].data))}" alt="" style="${imgSty(b)}"></div>${on?['nw','n','ne','e','se','s','sw','w'].map(h=>`<i class="hd" data-h="${h}"></i>`).join(''):''}</div>`}).join('')||'<p style="position:absolute;inset:0;display:grid;place-items:center;color:#999;font-size:13px;text-align:center;padding:20px">Folha vazia.<br>Clique numa foto da lista ao lado, ou use “Distribuir todas as fotos”.</p>';
+      fitScale();
+    };
+    const drawSide=()=>{
+      const b=sel&&L.box[sel];
+      $('#lvSide').innerHTML=b?`<div><h4>${esc(byK[sel].nome)}</h4><p class="mut" style="font-size:12px">Arraste a foto para mover e as bolinhas para mudar o tamanho. Setas do teclado ajustam de 1 em 1 mm.</p></div>
+        <div><span class="lbl">Ajuste dentro do quadro</span><div class="seg full" role="group"><button type="button" data-fit="contain" aria-pressed="${b.fit!=='cover'}">Inteira</button><button type="button" data-fit="cover" aria-pressed="${b.fit==='cover'}">Preencher</button></div></div>
+        <label>Zoom: <b id="vZ">${Math.round((b.z||1)*100)}%</b><input type="range" min="100" max="300" step="5" value="${Math.round((b.z||1)*100)}" data-rg="z"></label>
+        <label>Mover imagem ← →<input type="range" min="-100" max="100" step="1" value="${b.dx||0}" data-rg="dx"></label>
+        <label>Mover imagem ↑ ↓<input type="range" min="-100" max="100" step="1" value="${b.dy||0}" data-rg="dy"></label>
+        <div class="bt"><button type="button" class="btn sm" data-act="rot">↻ Girar</button><button type="button" class="btn sm" data-act="full">Ocupar a folha</button><button type="button" class="btn sm" data-act="front">Trazer p/ frente</button><button type="button" class="btn sm danger" data-act="del">Tirar da folha</button></div>`
+        :`<div><h4>Como usar</h4><p class="mut" style="font-size:12.5px">Clique numa foto da folha para editar. Escolha um <b>modelo</b> embaixo e clique em <b>Distribuir todas as fotos</b> para montar a colagem de uma vez, e depois ajuste do seu jeito.</p><p class="mut" style="font-size:12.5px;margin-top:8px">As fotos ficam em folhas próprias, depois das assinaturas do formulário.</p></div>`;
+    };
+    const drawLivre=()=>{drawTray();drawTabs();drawPage();drawSide()};
+    const cellEl=k=>$('#lvPage .lcell[data-k="'+CSS.escape(k)+'"]');
+    const paint=k=>{const el=cellEl(k),b=L.box[k];if(!el)return;el.style.cssText=cellSty(b);el.querySelector('img').style.cssText=imgSty(b)};
+    const dist=tpl=>{const cells=FL_TPL[tpl].c,ks=L.ord.filter(k=>!L.off[k]);L.box={};let pg=0;
+      ks.forEach((k,i)=>{const [x,y,w,h]=cells[i%cells.length];pg=Math.floor(i/cells.length);L.box[k]={p:pg,x,y,w,h,fit:'contain',z:1,dx:0,dy:0,r:0}});
+      L.pages=Math.max(1,pg+1);cur=0;sel=null;drawLivre()};
+    const hint=()=>{$('#flHint').textContent=L.mode==='livre'?'Monte cada folha do seu jeito: arraste, redimensione, dê zoom ou gire. O que estiver na folha sai assim no PDF.':'Arraste os cartões (ou use ↑ ↓) para mudar a ordem, escolha o tamanho de cada foto e desmarque as que não devem ir.'};
+    const setMode=m=>{L.mode=m;$$('#flMode button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===m));
+      $('#flBLista').hidden=m!=='lista';$('#flBLivre').hidden=m!=='livre';$('#flToolsLista').hidden=m!=='lista';$('#flToolsLivre').hidden=m!=='livre';hint();
+      if(m==='livre'){if(!Object.keys(L.box).length){$('#lvTpl').value='t2v';dist('t2v')}else{drawLivre();requestAnimationFrame(fitScale)}}else drawLista()};
     const done=v=>{d.close();res(v)};
+    /* ---------- eventos ---------- */
+    let act=null;
+    const mmAt=e=>{const r=$('#lvPage').getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*FL_W,y:(e.clientY-r.top)/r.height*FL_H}};
+    const snaps=k=>{const b=L.box[k],xs=[0,FL_W/2,FL_W],ys=[0,FL_H/2,FL_H];Object.keys(L.box).forEach(o=>{const c=L.box[o];if(o===k||c.p!==cur)return;xs.push(c.x,c.x+c.w,c.x+c.w/2);ys.push(c.y,c.y+c.h,c.y+c.h/2)});return {xs,ys}};
+    const snap=(v,arr)=>{let best=v,bd=1.6;arr.forEach(a=>{const dd=Math.abs(a-v);if(dd<bd){bd=dd;best=a}});return best};
+    const page=()=>$('#lvPage');
+    d.onpointerdown=e=>{
+      const pg=e.target.closest&&e.target.closest('#lvPage');if(!pg)return;
+      const hd=e.target.closest('.hd'),ce=e.target.closest('.lcell');
+      if(!ce){sel=null;drawPage();drawSide();return}
+      const k=ce.dataset.k;if(sel!==k){sel=k;drawPage();drawSide()}
+      const m=mmAt(e);act={k,h:hd?hd.dataset.h:null,m,b:{...L.box[k]},sn:snaps(k)};
+      try{pg.setPointerCapture(e.pointerId)}catch(_){}try{pg.focus({preventScroll:true})}catch(_){}e.preventDefault();
+    };
+    d.onpointermove=e=>{
+      if(!act)return;const b=L.box[act.k],o=act.b,m=mmAt(e),dx=m.x-act.m.x,dy=m.y-act.m.y,MIN=15;
+      if(!act.h){let x=clamp(o.x+dx,0,FL_W-o.w),y=clamp(o.y+dy,0,FL_H-o.h);
+        const sx=[snap(x,act.sn.xs),snap(x+o.w,act.sn.xs)-o.w,snap(x+o.w/2,act.sn.xs)-o.w/2].reduce((p,c)=>Math.abs(c-x)<Math.abs(p-x)?c:p,x),sy=[snap(y,act.sn.ys),snap(y+o.h,act.sn.ys)-o.h,snap(y+o.h/2,act.sn.ys)-o.h/2].reduce((p,c)=>Math.abs(c-y)<Math.abs(p-y)?c:p,y);
+        b.x=+clamp(sx,0,FL_W-o.w).toFixed(1);b.y=+clamp(sy,0,FL_H-o.h).toFixed(1)}
+      else{let x1=o.x,y1=o.y,x2=o.x+o.w,y2=o.y+o.h;const h=act.h;
+        if(h.includes('w'))x1=clamp(snap(o.x+dx,act.sn.xs),0,x2-MIN);if(h.includes('e'))x2=clamp(snap(o.x+o.w+dx,act.sn.xs),x1+MIN,FL_W);
+        if(h.includes('n'))y1=clamp(snap(o.y+dy,act.sn.ys),0,y2-MIN);if(h.includes('s'))y2=clamp(snap(o.y+o.h+dy,act.sn.ys),y1+MIN,FL_H);
+        b.x=+x1.toFixed(1);b.y=+y1.toFixed(1);b.w=+(x2-x1).toFixed(1);b.h=+(y2-y1).toFixed(1)}
+      paint(act.k);
+    };
+    d.onpointerup=d.onpointercancel=()=>{if(act){act=null;drawSide()}};
+    d.onkeydown=e=>{
+      if(L.mode!=='livre'||!sel||!L.box[sel]||(e.target.matches&&e.target.matches('input,select,textarea')))return;
+      const b=L.box[sel],st=e.shiftKey?5:1;let ok=true;
+      if(e.key==='ArrowLeft')b.x=clamp(b.x-st,0,FL_W-b.w);else if(e.key==='ArrowRight')b.x=clamp(b.x+st,0,FL_W-b.w);else if(e.key==='ArrowUp')b.y=clamp(b.y-st,0,FL_H-b.h);else if(e.key==='ArrowDown')b.y=clamp(b.y+st,0,FL_H-b.h);
+      else if(e.key==='Delete'||e.key==='Backspace'){delete L.box[sel];sel=null;drawLivre()}else ok=false;
+      if(ok){e.preventDefault();if(sel)paint(sel)}
+    };
+    d.oninput=e=>{const rg=e.target.dataset&&e.target.dataset.rg;if(!rg||!sel)return;const b=L.box[sel],v=+e.target.value;
+      if(rg==='z'){b.z=v/100;const z=$('#vZ');if(z)z.textContent=v+'%'}else b[rg]=v;paint(sel)};
     d.onclick=e=>{
-      const sz=e.target.closest('[data-sz]');if(sz){L.tam[sz.dataset.k]=sz.dataset.sz;draw();return}
-      const up=e.target.closest('[data-up]'),dn=e.target.closest('[data-dn]');
-      if(up){const i=+up.dataset.up;[L.ord[i-1],L.ord[i]]=[L.ord[i],L.ord[i-1]];draw();return}
-      if(dn){const i=+dn.dataset.dn;[L.ord[i+1],L.ord[i]]=[L.ord[i],L.ord[i+1]];draw();return}
-      const al=e.target.closest('[data-all]');if(al){L.ord.forEach(k=>L.tam[k]=al.dataset.all);draw();return}
-      if(e.target.id==='flYes')done(L);if(e.target.id==='flNo')done(null)};
-    d.onchange=e=>{if(e.target.dataset&&e.target.dataset.inc){L.off[e.target.dataset.inc]=!e.target.checked;draw()}if(e.target.id==='flPos'){L.pos=e.target.value;draw()}};
+      const t=e.target,sz=t.closest('[data-sz]');if(sz){L.tam[sz.dataset.k]=sz.dataset.sz;drawLista();return}
+      const up=t.closest('[data-up]'),dn=t.closest('[data-dn]');
+      if(up){const i=+up.dataset.up;[L.ord[i-1],L.ord[i]]=[L.ord[i],L.ord[i-1]];drawLista();return}
+      if(dn){const i=+dn.dataset.dn;[L.ord[i+1],L.ord[i]]=[L.ord[i],L.ord[i+1]];drawLista();return}
+      const al=t.closest('[data-all]');if(al){L.ord.forEach(k=>L.tam[k]=al.dataset.all);drawLista();return}
+      const md=t.closest('[data-mode]');if(md){setMode(md.dataset.mode);return}
+      const tg=t.closest('[data-tg]');if(tg){const k=tg.dataset.tg,b=L.box[k];
+        if(b&&b.p===cur){delete L.box[k];if(sel===k)sel=null}else if(b){b.p=cur}else placeDefault(k,cur);
+        if(L.box[k]&&b===undefined)sel=k;drawLivre();return}
+      const pg=t.closest('[data-pg]');if(pg){cur=+pg.dataset.pg;sel=null;drawLivre();return}
+      if(t.closest('[data-addpg]')){L.pages++;cur=L.pages-1;sel=null;drawLivre();return}
+      if(t.closest('[data-delpg]')){Object.keys(L.box).forEach(k=>{const b=L.box[k];if(b.p===cur)delete L.box[k];else if(b.p>cur)b.p--});L.pages--;cur=Math.min(cur,L.pages-1);sel=null;drawLivre();return}
+      const ft=t.closest('[data-fit]');if(ft&&sel){L.box[sel].fit=ft.dataset.fit;paint(sel);drawSide();return}
+      const ac=t.closest('[data-act]');if(ac&&sel){const b=L.box[sel],a=ac.dataset.act;
+        if(a==='rot'){b.r=(rotOf(b)+90)%360;paint(sel)}
+        else if(a==='full'){Object.assign(b,{x:0,y:0,w:FL_W,h:FL_H});paint(sel)}
+        else if(a==='front'){L.ord=L.ord.filter(x=>x!==sel).concat(sel);drawPage()}
+        else if(a==='del'){delete L.box[sel];sel=null;drawLivre()}
+        return}
+      if(t.id==='lvAuto'){dist($('#lvTpl').value);return}
+      if(t.id==='flYes')done(L);if(t.id==='flNo')done(null)};
+    d.onchange=e=>{if(e.target.dataset&&e.target.dataset.inc){L.off[e.target.dataset.inc]=!e.target.checked;drawLista()}if(e.target.id==='flPos'){L.pos=e.target.value;drawLista()}};
     d.ondragstart=e=>{const c=e.target.closest&&e.target.closest('.fl-c');if(c){drag=+c.dataset.i;e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',String(drag))}catch(_){}}};
     d.ondragover=e=>{const c=e.target.closest&&e.target.closest('.fl-c');if(drag!=null&&c){e.preventDefault();$$('.fl-c.over').forEach(x=>x.classList.remove('over'));c.classList.add('over')}};
-    d.ondrop=e=>{const c=e.target.closest&&e.target.closest('.fl-c');if(drag!=null&&c){e.preventDefault();const j=+c.dataset.i,[k]=L.ord.splice(drag,1);L.ord.splice(j,0,k);drag=null;draw()}};
+    d.ondrop=e=>{const c=e.target.closest&&e.target.closest('.fl-c');if(drag!=null&&c){e.preventDefault();const j=+c.dataset.i,[k]=L.ord.splice(drag,1);L.ord.splice(j,0,k);drag=null;drawLista()}};
     d.ondragend=()=>{drag=null;$$('.fl-c.over').forEach(x=>x.classList.remove('over'))};
     d.oncancel=e=>{e.preventDefault();done(null)};
-    draw();d.showModal();
+    const onRs=()=>{if(d.open&&L.mode==='livre')fitScale()};window.addEventListener('resize',onRs);
+    d.addEventListener('close',()=>window.removeEventListener('resize',onRs),{once:true});
+    setMode(L.mode);d.showModal();if(L.mode==='livre')requestAnimationFrame(()=>{fitScale()});
   });
 }
 /* barra "Editar layout das fotos" na tela de lançar */
@@ -793,7 +937,7 @@ function renderFotoBar(){
   const cur=S.editId?Object.values((S.ncs.find(n=>n.id===S.editId)||{}).anexosMeta||{}).filter(a=>isImg(a.tipo)).length:0;
   const n=cur+S.files.filter(f=>isImg(f.type)).length,on=$('#fvOn')&&$('#fvOn').checked;
   bar.hidden=!(on&&n>0);if(bar.hidden)return;
-  $('#fotoBarTx').innerHTML=`<b>${n} foto${n>1?'s':''}</b> vão no PDF · ${S.fotoLay?'layout personalizado':'tamanho médio, 2 por linha'}`;
+  $('#fotoBarTx').innerHTML=`<b>${n} foto${n>1?'s':''}</b> vão no PDF · ${S.fotoLay?(S.fotoLay.mode==='livre'?'folha livre (colagem)':'layout personalizado'):'tamanho médio, 2 por linha'}`;
 }
 async function openFotoLayoutNew(){
   const editId=S.editId,cur=editId?(S.ncs.find(x=>x.id===editId)||{}):null;
@@ -807,9 +951,9 @@ function fotoSumHtml(anx,lay,canEdit){
   if(anx==null)return '<p class="mut" style="font-size:13px">Carregando evidências…</p>';
   const all=fotoOrdered(anx,lay);
   if(!all.length)return '<p class="mut" style="font-size:13px">Nenhuma foto anexada. Adicione na aba Resumo → Evidências.</p>';
-  const inc=all.filter(([k])=>!lay.off[k]);
-  return `<div class="fsum">${inc.map(([k,a])=>`<figure title="${esc(a.nome)}"><img src="${esc(safeData(a.data))}" alt=""><figcaption>${FOTO_SZ[fotoTam(lay,k)].l}</figcaption></figure>`).join('')}</div>
-    <p class="mut" style="font-size:12.5px;margin:6px 0">${inc.length} de ${all.length} foto${all.length>1?'s':''} no PDF · ${lay.pos==='fim'?'no fim do formulário':'logo após o relato'}</p>
+  const inc=lay.mode==='livre'?all.filter(([k])=>lay.box[k]):all.filter(([k])=>!lay.off[k]);
+  return `<div class="fsum">${inc.map(([k,a])=>`<figure title="${esc(a.nome)}"><img src="${esc(safeData(a.data))}" alt=""><figcaption>${lay.mode==='livre'?'Folha '+((lay.box[k].p|0)+1):FOTO_SZ[fotoTam(lay,k)].l}</figcaption></figure>`).join('')}</div>
+    <p class="mut" style="font-size:12.5px;margin:6px 0">${inc.length} de ${all.length} foto${all.length>1?'s':''} no PDF · ${lay.mode==='livre'?`folha livre em ${new Set(inc.map(([k])=>lay.box[k].p)).size} folha(s), depois das assinaturas`:lay.pos==='fim'?'no fim do formulário':'logo após o relato'}</p>
     ${canEdit?'<div><button type="button" class="btn sm" data-fotolay>Editar layout das fotos</button></div>':''}`;
 }
 async function addFiles(list){if(!list||!list.length)return;S.files=S.files.concat(await prepFiles([...list],S.files.length));renderFiles()}
@@ -972,8 +1116,10 @@ async function fvSave(){
 /* ---------- PDF (janela de impressão no layout do REG GQ 17-1) ---------- */
 function fvPrintHtml(n,fv,anx){
   const e=s=>esc(s??''),br=s=>e(s).replace(/\n/g,'<br>'),d=s=>s?brDate(s):'____/____/______',L=s=>s&&String(s).trim()?br(s):'&nbsp;';
-  const lay=fotoLayOf(fv),imgs=fotoOrdered(anx,lay).filter(([k])=>!lay.off[k]);
-  const evid=imgs.length?`<div class="evid${lay.pos==='fim'?' fim':''}"><div class="h">EVIDÊNCIAS (FOTOS)</div><div class="fotos">${imgs.map(([k,a])=>{const t=fotoTam(lay,k),z=FOTO_SZ[t];return `<div class="fig${t==='f'?' pg':''}" style="width:${z.w}"><img src="${esc(safeData(a.data))}" alt="" style="max-height:${z.h}mm"></div>`}).join('')}</div></div>`:'';
+  const lay=fotoLayOf(fv),livre=lay.mode==='livre',imgs=livre?[]:fotoOrdered(anx,lay).filter(([k])=>!lay.off[k]),fim=livre||lay.pos==='fim';
+  let evidL='';
+  if(livre){const pgs=Array.from({length:lay.pages},()=>[]);fotoOrdered(anx,lay).forEach(([k,a])=>{const b=lay.box[k];if(b&&pgs[b.p|0])pgs[b.p|0].push(fotoCellHtml(b,esc(safeData(a.data))))});evidL=pgs.filter(x=>x.length).map(h=>`<div class="lv">${h.join('')}</div>`).join('')}
+  const evid=livre?evidL:imgs.length?`<div class="evid${lay.pos==='fim'?' fim':''}"><div class="h">EVIDÊNCIAS (FOTOS)</div><div class="fotos">${imgs.map(([k,a])=>{const t=fotoTam(lay,k),z=FOTO_SZ[t];return `<div class="fig${t==='f'?' pg':''}" style="width:${z.w}"><img src="${esc(safeData(a.data))}" alt="" style="max-height:${z.h}mm"></div>`}).join('')}</div></div>`:'';
   const outros=Object.values(anx||{}).filter(a=>!isImg(a.tipo));
   const prod=n.itens.map((it,i)=>{const l0=g(fv,'lotes.'+i)||{},l={lote:l0.lote||it.lote,val:l0.val||it.val};return `${e(it.n)}${l.lote?` / LOTE ${e(l.lote)}`:''}${l.val?` / VALIDADE ${brDate(l.val)}`:''} / Qtde: ${it.q}`}).join('<br>');
   const sig=(lbl,k)=>`<tr><td class="sg"><b>${lbl}:</b> ${e(g(fv,'ass.'+k+'.nome'))}<span class="dt"><b>DATA:</b> ${d(g(fv,'ass.'+k+'.data'))}</span><div class="ln">Assinatura</div></td></tr>`;
@@ -986,7 +1132,7 @@ function fvPrintHtml(n,fv,anx){
   *{box-sizing:border-box}body{margin:0;font:10pt/1.35 Arial,Helvetica,sans-serif;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   table{width:100%;border-collapse:collapse;margin:0 0 3mm}td{border:1px solid #000;padding:4px 6px;vertical-align:top}
   tr,.fig{break-inside:avoid}tr.brk{break-inside:auto}.h{background:#d9d9d9;font-weight:bold;font-size:9pt;padding:3px 6px}
-  .box{min-height:12mm}.evid{border:1px solid #000;margin:0 0 3mm}.evid.fim{break-before:page}.evid .h{break-after:avoid}.evid .fotos{display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start;padding:4px}.fig img{width:100%;display:block;object-fit:contain}.fig.pg{break-before:page;break-after:page}
+  .box{min-height:12mm}.evid{border:1px solid #000;margin:0 0 3mm}.evid.fim{break-before:page}.lv{position:relative;width:182mm;height:240mm;overflow:hidden;break-before:page}.lcell{position:absolute;overflow:hidden}.lcell img{position:absolute;left:50%;top:50%;display:block;max-width:none}.evid .h{break-after:avoid}.evid .fotos{display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start;padding:4px}.fig img{width:100%;display:block;object-fit:contain}.fig.pg{break-before:page;break-after:page}
   ul{list-style:none;margin:2px 0 0;padding:0 0 0 14px}li{margin:1px 0;padding-left:16px;text-indent:-16px}.cb{display:inline-block;width:11px;font-size:11pt;line-height:1}
   .sg{padding:6px}.dt{float:right}.ln{margin-top:12mm;border-top:1px solid #000;width:70mm;font-size:8pt;text-align:center;padding-top:1px}
   .note{font-size:8.5pt;color:#333}
@@ -997,14 +1143,14 @@ function fvPrintHtml(n,fv,anx){
   <table><tr class="brk"><td>${prod}
     ${outros.length?`<div class="note">Documentos anexados no Painel NC: ${outros.map(a=>e(a.nome)).join(', ')}</div>`:''}
     <p style="margin:4px 0 0">${br(fv.relato)}</p></td></tr></table>
-  ${lay.pos==='fim'?'':evid}
+  ${fim?'':evid}
   <table><tr><td class="h">INVESTIGAÇÃO</td></tr><tr><td>Verificar:<ul>${FV_CHECKS.map((t,i)=>`<li><span class="cb">${g(fv,'checks.c'+i)?'☒':'☐'}</span> ${e(t)}</li>`).join('')}</ul>${(fv.invObs||'').trim()?`<p style="margin:4px 0 0"><b>Observações:</b> ${br(fv.invObs)}</p>`:''}</td></tr></table>
   <table><tr><td class="h">2 RESULTADO DA INVESTIGAÇÃO / MOTIVO DO DESVIO</td></tr><tr><td class="box">${L(fv.resultado)}</td></tr></table>
   <table><tr><td class="h">CORREÇÃO/ AÇÕES TOMADAS</td></tr><tr><td class="box">${L(fv.correcao)}</td></tr></table>
   <table><tr><td><b>RETORNO AO CLIENTE:</b><br><b>Realizado por:</b> ${e(g(fv,'retorno.por'))||'______________________________'} &nbsp;&nbsp; <b>Data:</b> ${d(g(fv,'retorno.data'))}<br><b>Meio de contato:</b> ${e(g(fv,'retorno.meio'))||'______________________________'}</td></tr></table>
   <table><tr><td class="h">OUTRAS AÇÕES NECESSÁRIAS</td></tr><tr><td class="box">${L(fv.outras)}</td></tr></table>
   <table>${sig('FARMACÊUTICA COMERCIAL','farm')}${sig('SETOR COMERCIAL','com')}${sig('RESPONSÁVEL PELO FECHAMENTO','fec')}</table>
-  ${lay.pos==='fim'?evid:''}
+  ${fim?evid:''}
   </body></html>`;
 }
 async function pdfWindow(build){
@@ -1226,6 +1372,7 @@ function bind(){
   $('#fTipo').onclick=e=>{const b=e.target.closest('button');if(b)setTipo(b.dataset.v)};
   $('#fVal').oninput=e=>maskMoney(e.target);
   $('#fMot').addEventListener('change',showArea);
+  $('#fVend').addEventListener('change',()=>{const el=$('#fVend'),t=norm(el.value);if(!t)return;const ex=findVend(el.value);if(ex){el.value=ex;return}const m=S.cfg.vendedores.filter(v=>norm(v).includes(t));if(m.length===1)el.value=m[0]});
   $('#btnClear').onclick=()=>resetForm();
   $('#fvOn').onchange=e=>setFv(e.target.checked);
   $('#ncForm').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'&&(e.target.closest('#fvBox')||e.target.matches('.il,.iv')))e.preventDefault()});
