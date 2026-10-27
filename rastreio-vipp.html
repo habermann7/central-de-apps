@@ -1253,7 +1253,22 @@ function debounce(fn, ms){
   };
 }
 
-function bucketFor(status){ return Object.prototype.hasOwnProperty.call(STATUS_MAP,status) ? STATUS_MAP[status] : "aguardando"; }
+// Classifica o status mesmo que o texto venha um pouco diferente do cadastrado
+// (maiúscula, acento, texto a mais no final). Só cai em "aguardando" se não reconhecer nada.
+function _norm(t){ return String(t==null?"":t).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim(); }
+var STATUS_MAP_NORM = (function(){ var m={}; Object.keys(STATUS_MAP).forEach(function(k){ m[_norm(k)]=STATUS_MAP[k]; }); return m; })();
+function bucketFor(status){
+  if(Object.prototype.hasOwnProperty.call(STATUS_MAP,status)) return STATUS_MAP[status];
+  var n=_norm(status);
+  if(!n) return "aguardando";
+  if(Object.prototype.hasOwnProperty.call(STATUS_MAP_NORM,n)) return STATUS_MAP_NORM[n];
+  if(n.indexOf("objeto entregue")===0) return "entregue";
+  if(n.indexOf("aguardando retirada")>-1 || n.indexOf("disponivel para retirada")>-1 || n.indexOf("retirada em")>-1) return "retirada";
+  if(n.indexOf("nao entregue")>-1 || n.indexOf("entrega nao efetuada")>-1 || n.indexOf("tentativa de entrega")>-1 || n.indexOf("destinatario ausente")>-1 || n.indexOf("carteiro nao atendido")>-1 || n.indexOf("devolvido")>-1 || n.indexOf("devolucao")>-1 || n.indexOf("recusado")>-1 || n.indexOf("endereco insuficiente")>-1 || n.indexOf("endereco inexistente")>-1 || n.indexOf("endereco incorreto")>-1 || n.indexOf("mudou")>-1) return "naoentregue";
+  if(n.indexOf("extravi")>-1 || n.indexOf("roubo")>-1 || n.indexOf("roubad")>-1 || n.indexOf("apreend")>-1 || n.indexOf("fiscaliza")>-1 || n.indexOf("etiqueta expirada")>-1 || n.indexOf("erro ")===0 || n.indexOf("divergente")>-1 && n.indexOf("nao divergente")<0) return "problema";
+  if(n.indexOf("objeto postado")===0 || n.indexOf("transferencia")>-1 || n.indexOf("encaminhado")>-1 || n.indexOf("saiu para entrega")>-1 || n.indexOf("em transito")>-1 || n.indexOf("ainda nao chegou")>-1 || n.indexOf("recebido")>-1 || n.indexOf("chegou")>-1 || n.indexOf("postado")>-1 || n.indexOf("conferido")>-1 || n.indexOf("tratamento")>-1 || n.indexOf("distribuicao")>-1 || n.indexOf("nao divergente")>-1) return "transito";
+  return "aguardando";
+}
 function escapeHtml(str){ return String(str == null ? "" : str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
 function chaveSegura(codigo){ return String(codigo).replace(/[.#$\[\]\/]/g, ""); }
 function fmtMoney(v){ return (v||0).toLocaleString('pt-BR', {style:'currency', currency:'BRL'}); }
