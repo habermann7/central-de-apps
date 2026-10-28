@@ -87,6 +87,8 @@ main{padding:28px clamp(16px,4vw,48px) 96px;max-width:1100px;width:100%}
 .drop.on{background:var(--infoBg);border-color:var(--info)}
 .lb{max-width:min(92vw,980px);width:auto;padding:12px;text-align:center}
 .lb img{max-width:100%;max-height:74vh;border-radius:10px;display:block;margin:0 auto}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px;flex:none}
+.seg button{display:inline-flex;align-items:center}
 /* componentes */
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);background:var(--card2);border-radius:var(--r2);padding:8px 13px;font-weight:600;cursor:pointer;transition:transform .12s var(--ease),background .15s var(--ease),opacity .15s}
@@ -258,7 +260,10 @@ const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const DIA=864e5;
-const STATUS={mapeamento:['Mapeamento',''],producao:['Em Produção','ok'],andamento:['Em Andamento','info'],homologacao:['Em Homologação','warn'],suporte:['Suporte','sup'],concluido:['Concluído',''],paralisado:['Paralisado','bad']};
+/* [nome, classe antiga, cor do status]. A cor do STATUS (identidade) é diferente da cor do ANDAMENTO (vermelho/amarelo/verde). */
+const STATUS={mapeamento:['Mapeamento','','#64748b'],producao:['Em Produção','ok','#4f46e5'],andamento:['Em Andamento','info','#2563eb'],homologacao:['Em Homologação','warn','#ea580c'],suporte:['Suporte','sup','#9333ea'],concluido:['Concluído','','#0d9488'],paralisado:['Paralisado','bad','#78716c']};
+const stCor=k=>(STATUS[k]||STATUS.mapeamento)[2];
+const stChip=k=>{const [l,,c]=STATUS[k]||STATUS.mapeamento;return `<span class="chip" style="background:color-mix(in srgb,${c} 15%,transparent);color:${c}">${l}</span>`;};
 const ORDEM_STATUS=['andamento','producao','homologacao','mapeamento','suporte','concluido','paralisado'];
 /* % que cada status assume ao ser escolhido (dá pra ajustar depois no controle). Paralisado não tem %: é caso à parte. */
 const PRESET={mapeamento:10,producao:30,andamento:50,homologacao:80,concluido:100,suporte:90};
@@ -370,12 +375,11 @@ function renderSafe(){
 }
 
 function projRow(p,extra){
-  const [lab,cls]=STATUS[p.status]||STATUS.mapeamento;
   const prox=(p.proximaAcao||'').trim();
-  return `<button class="item" data-act="abrir" data-id="${p.id}">
+  return `<button class="item" data-act="abrir" data-id="${p.id}" style="border-left:4px solid ${stCor(p.status)}">
     <div class="grow"><div class="t">${esc(p.nome)}</div>
     <div class="s">${prox?'→ '+esc(prox):'<span style="color:var(--bad)">definir próxima ação</span>'}</div></div>
-    ${extra||''}${prazoChip(p.prazo)}<span class="chip ${cls}">${lab}</span></button>`;
+    ${extra||''}${prazoChip(p.prazo)}${stChip(p.status)}</button>`;
 }
 
 function vHoje(){
@@ -407,14 +411,14 @@ function vProjetos(){
   return `<div class="vh"><div><h2>Projetos</h2><p>${ativos().length} ativos · ${lista('projetos').length} no total</p></div>
     <div class="seg" role="group" aria-label="Filtro">${[['ativos','Ativos'],['todos','Todos'],['concluidos','Concluídos']].map(([k,l])=>`<button data-act="filtro" data-v="${k}" aria-pressed="${S.filtro===k}">${l}</button>`).join('')}</div></div>
   <form class="card row" data-form="novo-projeto"><input type="text" id="npNome" placeholder="Novo projeto… (Enter para criar)" autocomplete="off"><button class="btn pri" type="submit">Criar</button></form>
-  ${grupos.length?grupos.map(([st,arr])=>`<div class="sec"><h3>${STATUS[st][0]} <span class="chip">${arr.length}</span></h3><div class="grid3">${arr.map(cardProj).join('')}</div></div>`).join(''):'<div class="empty sec">Nada aqui ainda. Crie o primeiro projeto acima.</div>'}`;
+  ${grupos.length?grupos.map(([st,arr])=>`<div class="sec"><h3><i class="dot" style="background:${stCor(st)}"></i>${STATUS[st][0]} <span class="chip">${arr.length}</span></h3><div class="grid3">${arr.map(cardProj).join('')}</div></div>`).join(''):'<div class="empty sec">Nada aqui ainda. Crie o primeiro projeto acima.</div>'}`;
 }
 function cardProj(p){
   const prox=(p.proximaAcao||'').trim();
   const nn=lista('notas').filter(n=>n.projetoId===p.id).length;
-  return `<div class="card pc" data-act="abrir" data-id="${p.id}" tabindex="0" role="button">
+  return `<div class="card pc" data-act="abrir" data-id="${p.id}" tabindex="0" role="button" style="border-left:4px solid ${stCor(p.status)}">
     <div class="row" style="justify-content:space-between;align-items:flex-start"><h3>${esc(p.nome)}</h3>${prazoChip(p.prazo)}</div>
-    <div class="next${prox?'':' none'}">${prox?'→ '+esc(prox):'Definir próxima ação'}</div>
+    ${(p.status==='concluido'&&(!prox||prox==='—'))?'':`<div class="next${prox?'':' none'}">${prox?'→ '+esc(prox):'Definir próxima ação'}</div>`}
     <div class="bar"><i style="width:${Math.min(100,+p.progresso||0)}%;background:${corP(p)}"></i></div>
     <div class="row hint" style="justify-content:space-between"><span class="num" style="color:${corP(p)};font-weight:650">${p.status==='paralisado'?'parado em '+(+p.progresso||0)+'%':(+p.progresso||0)+'%'}</span><span>${nn?nn+' nota'+(nn>1?'s':'')+' · ':''}mexido ${ago(p.atualizadoEm||p.criadoEm)}</span></div></div>`;
 }
@@ -430,7 +434,7 @@ function vProjeto(id){
   <div class="ed">
     <input type="text" class="tt" data-keep data-f="nome" data-id="${id}" value="${esc(p.nome)}" aria-label="Nome do projeto">
     <div class="row wrap">
-      <div class="seg" role="group" aria-label="Status">${Object.entries(STATUS).map(([k,[l]])=>`<button data-act="status" data-id="${id}" data-v="${k}" aria-pressed="${p.status===k}">${l}</button>`).join('')}</div>
+      <div class="seg" role="group" aria-label="Status">${Object.entries(STATUS).map(([k,[l,,c]])=>`<button data-act="status" data-id="${id}" data-v="${k}" aria-pressed="${p.status===k}" style="${p.status===k?`background:color-mix(in srgb,${c} 16%,var(--card2));color:${c};box-shadow:inset 0 0 0 1.5px ${c}`:''}"><i class="dot" style="background:${c}"></i>${l}</button>`).join('')}</div>
       <div style="width:170px"><input type="date" data-keep data-f="prazo" data-id="${id}" value="${esc(p.prazo||'')}" aria-label="Prazo"></div>
     </div>
     <div class="card"><label class="f" for="pa">Próxima ação — o que eu faço agora?</label>
