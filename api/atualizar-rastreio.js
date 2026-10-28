@@ -185,6 +185,10 @@ export default async function handler(req, res) {
       if (ehEntregue(p.status)) return false;
       if (STATUS_MORTOS.includes(p.status)) return false;
       const ns = norm(p.status);
+      if (ns.startsWith('etiqueta emitida')) {
+        const d = Date.parse(p.dataEvento || p.dataPostagem || '');
+        if (d && Date.now() - d > 10 * 86400000) return false; // etiqueta vencida (10 dias)
+      }
       if (ns.startsWith('etiqueta expirada') || ns.startsWith('etiqueta cancelada') || ns.includes('liberado(s) para download')) return false;
       if ((p.tentativasSemSucesso || 0) >= LIMITE_TENTATIVAS_SEM_SUCESSO) {
         // travado: só reconsulta se já passou o prazo da repescagem
