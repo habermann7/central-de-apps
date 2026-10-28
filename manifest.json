@@ -133,13 +133,13 @@
   },
   {
     "title": "SLA Transportadoras",
-    "category": "Testes",
+    "category": "PCP",
     "description": "",
     "file": "sla_transportadoras.html",
     "icon": "⏱️",
     "color": "#3F8E8A",
     "grupos": [
-      "TESTES"
+      "PCP"
     ]
   },
   {
