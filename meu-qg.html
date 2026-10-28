@@ -25,6 +25,7 @@
     --bad:#e0766c;--badBg:rgba(224,118,108,.15);--info:#7aa9d6;--infoBg:rgba(122,169,214,.15);
     --shadow:0 1px 0 rgba(255,255,255,.05) inset,0 10px 32px rgba(0,0,0,.35);
   }
+  .chip.sup{color:#b49ae0}
 }
 *{box-sizing:border-box;margin:0}
 html{-webkit-text-size-adjust:100%}
@@ -104,7 +105,7 @@ label.f{display:block;font-size:12px;font-weight:600;color:var(--mut);margin:0 0
 .grid3{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
 .chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:2px 9px;border-radius:99px;background:var(--line);color:var(--mut);white-space:nowrap}
 .chip.ok{background:var(--okBg);color:var(--ok)}.chip.warn{background:var(--warnBg);color:var(--warn)}
-.chip.bad{background:var(--badBg);color:var(--bad)}.chip.info{background:var(--infoBg);color:var(--info)}
+.chip.bad{background:var(--badBg);color:var(--bad)}.chip.sup{background:rgba(124,92,181,.14);color:#7a5cb5}.chip.info{background:var(--infoBg);color:var(--info)}
 .seg{display:inline-flex;background:var(--line);border-radius:var(--r2);padding:3px;gap:2px;flex-wrap:wrap}
 .seg button{border:0;background:none;padding:6px 12px;border-radius:8px;font-weight:600;color:var(--mut);cursor:pointer;transition:background .15s var(--ease),transform .12s var(--ease)}
 .seg button:active{transform:scale(.97)}
@@ -257,8 +258,10 @@ const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const DIA=864e5;
-const STATUS={mapeamento:['Mapeamento',''],producao:['Em Produção','ok'],andamento:['Em Andamento','info'],homologacao:['Em Homologação','warn'],paralisado:['Paralisado','bad'],concluido:['Concluído','']};
-const ORDEM_STATUS=['andamento','producao','homologacao','mapeamento','paralisado','concluido'];
+const STATUS={mapeamento:['Mapeamento',''],producao:['Em Produção','ok'],andamento:['Em Andamento','info'],homologacao:['Em Homologação','warn'],concluido:['Concluído',''],suporte:['Suporte','sup'],paralisado:['Paralisado','bad']};
+const ORDEM_STATUS=['andamento','producao','homologacao','mapeamento','suporte','concluido','paralisado'];
+/* % que cada status assume ao ser escolhido (dá pra ajustar depois no controle). Paralisado não tem %: é caso à parte. */
+const PRESET={mapeamento:10,producao:30,andamento:50,homologacao:80,concluido:100,suporte:100};
 const MOV=['andamento','producao','homologacao']; /* "em movimento": entram nos alertas e nas próximas ações */
 const LEGADO={ideia:'mapeamento',fazendo:'andamento',parado:'paralisado'}; /* nomes antigos, convertidos ao ler */
 const VIEWS=['hoje','projetos','notas','aguardando','caixa','revisao','membros'];
@@ -268,6 +271,7 @@ let db=null;
 /* ---------- utilitários ---------- */
 /* Andamento: vermelho até 20%, amarelo até 70%, verde acima disso */
 const corProg=v=>{v=+v||0;return v<=20?'var(--bad)':v<=70?'var(--warn)':'var(--ok)';};
+const corP=p=>p.status==='paralisado'?'var(--faint)':corProg(p.progresso);
 const PES=()=>'meuQG/'+S.uid;
 /* inbox e config são sempre pessoais; o resto vive no espaço escolhido (Pessoal ou um espaço de time) */
 const baseDe=p=>{const k=(p||'').split('/')[0];return(!p||k==='inbox'||k==='config'||S.ws==='pessoal')?PES():'qgEspacos/'+S.ws+'/dados';};
@@ -306,7 +310,7 @@ const nomeProj=id=>(obj('projetos')[id]||{}).nome||'';
 const ativos=()=>lista('projetos').filter(p=>p.status!=='concluido');
 const semProxima=()=>lista('projetos').filter(p=>MOV.includes(p.status)&&!(p.proximaAcao||'').trim());
 const parados=()=>lista('projetos').filter(p=>MOV.includes(p.status)&&dias(p.atualizadoEm||p.criadoEm||now())>=7);
-const prazosPerto=()=>lista('projetos').filter(p=>p.status!=='concluido'&&p.prazo&&prazoDias(p.prazo)!=null&&prazoDias(p.prazo)<=7).sort((a,b)=>a.prazo.localeCompare(b.prazo));
+const prazosPerto=()=>lista('projetos').filter(p=>!['concluido','paralisado','suporte'].includes(p.status)&&p.prazo&&prazoDias(p.prazo)!=null&&prazoDias(p.prazo)<=7).sort((a,b)=>a.prazo.localeCompare(b.prazo));
 const agAbertos=()=>lista('aguardando').filter(a=>!a.feito).sort((a,b)=>(a.desde||0)-(b.desde||0));
 const agVelhos=()=>agAbertos().filter(a=>dias(a.desde||now())>=7);
 const inbox=()=>lista('inbox').sort((a,b)=>(b.criadoEm||0)-(a.criadoEm||0));
@@ -411,8 +415,8 @@ function cardProj(p){
   return `<div class="card pc" data-act="abrir" data-id="${p.id}" tabindex="0" role="button">
     <div class="row" style="justify-content:space-between;align-items:flex-start"><h3>${esc(p.nome)}</h3>${prazoChip(p.prazo)}</div>
     <div class="next${prox?'':' none'}">${prox?'→ '+esc(prox):'Definir próxima ação'}</div>
-    <div class="bar"><i style="width:${Math.min(100,+p.progresso||0)}%;background:${corProg(p.progresso)}"></i></div>
-    <div class="row hint" style="justify-content:space-between"><span class="num" style="color:${corProg(p.progresso)};font-weight:650">${+p.progresso||0}%</span><span>${nn?nn+' nota'+(nn>1?'s':'')+' · ':''}mexido ${ago(p.atualizadoEm||p.criadoEm)}</span></div></div>`;
+    <div class="bar"><i style="width:${Math.min(100,+p.progresso||0)}%;background:${corP(p)}"></i></div>
+    <div class="row hint" style="justify-content:space-between"><span class="num" style="color:${corP(p)};font-weight:650">${p.status==='paralisado'?'parado em '+(+p.progresso||0)+'%':(+p.progresso||0)+'%'}</span><span>${nn?nn+' nota'+(nn>1?'s':'')+' · ':''}mexido ${ago(p.atualizadoEm||p.criadoEm)}</span></div></div>`;
 }
 
 function vProjeto(id){
@@ -434,9 +438,10 @@ function vProjeto(id){
     <div class="grid2">
       <div class="card"><label class="f" for="op">Onde parei</label>
         <textarea id="op" data-keep data-f="ondeParei" data-id="${id}" placeholder="Em que ponto está? O que falta?" style="min-height:110px">${esc(p.ondeParei||'')}</textarea></div>
-      <div class="card"><label class="f" for="pr">Andamento: <span class="num" id="prv" style="color:${corProg(p.progresso)}">${+p.progresso||0}%</span></label>
-        <input id="pr" type="range" min="0" max="100" step="5" value="${+p.progresso||0}" data-keep data-f="progresso" data-id="${id}" style="width:100%;accent-color:${corProg(p.progresso)}">
-        <div class="bar" style="margin-top:10px"><i id="prb" style="width:${+p.progresso||0}%;background:${corProg(p.progresso)}"></i></div>
+      <div class="card"><label class="f" for="pr">Andamento: <span class="num" id="prv" style="color:${corP(p)}">${p.status==='paralisado'?'parado em '+(+p.progresso||0)+'%':(+p.progresso||0)+'%'}</span></label>
+        <input id="pr" type="range" min="0" max="100" step="5" value="${+p.progresso||0}" data-keep data-f="progresso" data-id="${id}" style="width:100%;accent-color:${corP(p)}"${p.status==='paralisado'?' disabled':''}>
+        <div class="bar" style="margin-top:10px"><i id="prb" style="width:${+p.progresso||0}%;background:${corP(p)}"></i></div>
+        ${p.status==='paralisado'?'<p class="hint" style="margin-top:10px">Paralisado fica fora da régua de %. Ao escolher outro status, o andamento volta a valer.</p>':''}
         <p class="hint" style="margin-top:12px">Criado em ${fmtData(p.criadoEm||now())}${p.por&&nomeDe(p.por)?' por '+esc(nomeDe(p.por)):''} · mexido ${ago(p.atualizadoEm||p.criadoEm)}${p.concluidoEm?' · concluído em '+fmtData(p.concluidoEm):''}</p></div>
     </div>
     <div class="sec"><h3>Diário de andamento</h3>
@@ -621,7 +626,7 @@ function capturar(txt){
 /* ---------- ações ---------- */
 function novoProjeto(nome,extra){
   const id=newId();
-  set('projetos/'+id,Object.assign(autor(),{nome,status:'mapeamento',progresso:0,proximaAcao:'',ondeParei:'',prazo:'',criadoEm:now(),atualizadoEm:now()},extra||{}));
+  set('projetos/'+id,Object.assign(autor(),{nome,status:'mapeamento',progresso:PRESET.mapeamento,proximaAcao:'',ondeParei:'',prazo:'',criadoEm:now(),atualizadoEm:now()},extra||{}));
   return id;
 }
 function novaNota(projetoId,extra){
@@ -650,7 +655,8 @@ document.addEventListener('click',e=>{
     case 'filtro': S.filtro=b.dataset.v; render(false); break;
     case 'status': {
       const ex={status:b.dataset.v};
-      if(b.dataset.v==='concluido'){ex.progresso=100;ex.concluidoEm=now();} else ex.concluidoEm=null;
+      if(PRESET[b.dataset.v]!=null)ex.progresso=PRESET[b.dataset.v];
+      if(b.dataset.v==='concluido'){ex.concluidoEm=now();} else ex.concluidoEm=null;
       tocaProjeto(id,ex); break; }
     case 'del-proj': if(confirm('Excluir este projeto? As notas dele ficam, só perdem a ligação.')){
       lista('notas').filter(n=>n.projetoId===id).forEach(n=>upd('notas/'+n.id,{projetoId:''}));
@@ -731,7 +737,7 @@ document.addEventListener('submit',e=>{
   if(k==='captura-hoje'){ if(capturar(val('#capH')))f.reset(); }
   else if(k==='captura'){ if(capturar(val('#capC')))f.reset(); }
   else if(k==='captura-modal'){ if(capturar(val('#capM')))fechaModal(); }
-  else if(k==='novo-projeto'){ const n=val('#npNome'); if(!n)return; const id=novoProjeto(n,{status:'andamento'}); abrirProjeto(id); setTimeout(()=>{const x=$('#pa');if(x)x.focus();},40); }
+  else if(k==='novo-projeto'){ const n=val('#npNome'); if(!n)return; const id=novoProjeto(n); abrirProjeto(id); setTimeout(()=>{const x=$('#pa');if(x)x.focus();},40); }
   else if(k==='diario'){ const t=val('#dIn'); if(!t)return; const id=f.dataset.id; set('projetos/'+id+'/diario/'+newId(),{txt:t,t:now()}); tocaProjeto(id); f.reset(); }
   else if(k==='link'){ const t=val('#lT'); let u=val('#lU'); if(!u)return; if(!/^https?:\/\//i.test(u))u='https://'+u; set('projetos/'+f.dataset.id+'/links/'+newId(),{t:t||u,u}); f.reset(); }
   else if(k==='novo-espaco'){ const n=val('#neNome'); if(!n)return; const eid=db.ref('qgEspacos').push().key; fechaModal();
