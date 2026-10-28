@@ -43,7 +43,7 @@ h1,h2,h3{font-weight:650;letter-spacing:-.01em;text-wrap:balance}
 .shell{display:grid;grid-template-columns:232px 1fr;min-height:100dvh}
 .side{position:sticky;top:0;height:100dvh;padding:22px 14px;display:flex;flex-direction:column;gap:4px;border-right:1px solid var(--line)}
 .brand{font-size:18px;font-weight:700;letter-spacing:-.02em;padding:0 10px 14px}
-.brand small{display:block;font-size:12px;font-weight:500;color:var(--mut);letter-spacing:0;margin-top:2px}
+.brand small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;font-size:12px;font-weight:500;color:var(--mut);letter-spacing:0;margin-top:2px}
 .nav{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:0;border-radius:var(--r2);background:none;cursor:pointer;text-align:left;color:var(--mut);font-weight:550;transition:background .15s var(--ease),color .15s var(--ease),transform .12s var(--ease)}
 .nav:hover{background:var(--line)}
 .nav:active{transform:scale(.97)}
@@ -185,8 +185,8 @@ kbd{font:600 11px ui-monospace,monospace;border:1px solid var(--line2);border-bo
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
 <script>
 (function(){
-  /* CADEADO PADRÃO DA ESTANTE. Só esta linha muda (o ✎ Editar troca ela). Vazio = só administrador. */
-  var GRUPOS_PERMITIDOS = ["PMO"];
+  /* CADEADO PADRÃO DA ESTANTE. Só esta linha muda (o ✎ Editar troca ela). "*" = qualquer pessoa cadastrada na Estante (os dados continuam protegidos por espaço). */
+  var GRUPOS_PERMITIDOS = ["*"];
   var firebaseConfig = {
     apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
     authDomain: "stinpharma-qualidade.firebaseapp.com",
@@ -224,7 +224,8 @@ kbd{font:600 11px ui-monospace,monospace;border:1px solid var(--line2);border-bo
       if(dados.gruposMap && typeof dados.gruposMap === 'object'){ Object.keys(dados.gruposMap).forEach(function(k){ if(dados.gruposMap[k]) lista.push(k); }); }
       var chave = function(x){ return norm(x).replace(/[^A-Z0-9]/g,'_'); };
       var meus = lista.map(chave);
-      var permitido = dados.admin === true || GRUPOS_PERMITIDOS.some(function(g){ return meus.indexOf(chave(g)) !== -1; });
+      var cadastrado = Object.keys(dados).length > 0;
+      var permitido = dados.admin === true || (GRUPOS_PERMITIDOS.indexOf('*') !== -1 && cadastrado) || GRUPOS_PERMITIDOS.some(function(g){ return meus.indexOf(chave(g)) !== -1; });
       if(permitido){ liberar(); return; }
       negar('Você não tem permissão pra acessar este app.<br><span style="font-size:12px;">Seus grupos: ' + esc(lista.join(', ') || 'nenhum') + '<br>Grupos com acesso: ' + esc(GRUPOS_PERMITIDOS.join(', ') || 'só administrador') + '</span>');
     }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
@@ -242,7 +243,7 @@ const DIA=864e5;
 const STATUS={ideia:['Ideia','info'],fazendo:['Fazendo','ok'],parado:['Parado','warn'],concluido:['Concluído','']};
 const ORDEM_STATUS=['fazendo','parado','ideia','concluido'];
 const VIEWS=['hoje','projetos','notas','aguardando','caixa','revisao','membros'];
-const S={uid:null,email:'',nome:'',ws:'pessoal',esp:{},dir:{},d:{projetos:{},notas:{},aguardando:{},inbox:{},config:{}},view:'hoje',proj:null,nota:null,filtro:'ativos',busca:'',notaProj:'',verFeitos:false};
+const S={uid:null,email:'',nome:'',ws:'pessoal',esp:{},dir:{},dirAdm:{},d:{projetos:{},notas:{},aguardando:{},inbox:{},config:{}},view:'hoje',proj:null,nota:null,filtro:'ativos',busca:'',notaProj:'',verFeitos:false};
 let db=null;
 
 /* ---------- utilitários ---------- */
@@ -251,9 +252,10 @@ const PES=()=>'meuQG/'+S.uid;
 const baseDe=p=>{const k=(p||'').split('/')[0];return(!p||k==='inbox'||k==='config'||S.ws==='pessoal')?PES():'qgEspacos/'+S.ws+'/dados';};
 const R=p=>db.ref(baseDe(p)+(p?'/'+p:''));
 const newId=()=>db.ref(PES()).push().key;
+const DIR=()=>Object.assign({},S.dir,S.dirAdm);
 const espAtual=()=>S.ws==='pessoal'?null:S.esp[S.ws]||null;
 const ehDono=()=>{const e=espAtual();return !!e&&e.dono===S.uid;};
-const nomeDe=u=>{if(u===S.uid)return 'você';const e=espAtual();return (e&&e.nomes&&e.nomes[u])||(S.dir[u]&&S.dir[u].nome)||'';};
+const nomeDe=u=>{if(u===S.uid)return 'você';const e=espAtual();return (e&&e.nomes&&e.nomes[u])||(DIR()[u]&&DIR()[u].nome)||'';};
 const autor=()=>S.ws==='pessoal'?{}:{por:S.uid};
 const now=()=>Date.now();
 const obj=k=>{ if(k==='inbox'||k==='config'||S.ws==='pessoal')return S.d[k]||{}; const e=S.esp[S.ws]; return (e&&e.dados&&e.dados[k])||{}; };
@@ -484,15 +486,15 @@ function vNotas(){
 function vMembros(){
   const e=espAtual(); const dono=ehDono();
   const ms=Object.keys(e.membros||{}).sort((a,b)=>(a===e.dono?-1:b===e.dono?1:0));
-  const candidatos=Object.keys(S.dir).filter(u=>!(e.membros||{})[u]).sort((a,b)=>(S.dir[a].nome||'').localeCompare(S.dir[b].nome||''));
+  const candidatos=Object.keys(DIR()).filter(u=>!(e.membros||{})[u]).sort((a,b)=>(DIR()[a].nome||'').localeCompare(DIR()[b].nome||''));
   return `<div class="vh"><div><h2>${esc(e.nome||'Espaço')}</h2><p>Espaço compartilhado · todos os membros veem e editam projetos, notas e pendências daqui.</p></div></div>
   ${dono?`<form class="card row wrap" data-form="renomear-espaco"><input type="text" id="enome" value="${esc(e.nome||'')}" aria-label="Nome do espaço" style="flex:1;min-width:180px"><button class="btn" type="submit">Renomear</button></form>`:''}
   <div class="sec"><h3>Membros <span class="chip">${ms.length}</span></h3><div class="list">
-    ${ms.map(u=>`<div class="item" style="cursor:default"><div class="grow"><div class="t">${esc(nomeDe(u)||(S.dir[u]&&S.dir[u].email)||u)}${u===S.uid?' (você)':''}</div><div class="s">${esc((S.dir[u]&&S.dir[u].email)||'')}</div></div>
+    ${ms.map(u=>`<div class="item" style="cursor:default"><div class="grow"><div class="t">${esc(nomeDe(u)||(DIR()[u]&&DIR()[u].email)||u)}${u===S.uid?' (você)':''}</div><div class="s">${esc((DIR()[u]&&DIR()[u].email)||'')}</div></div>
       <span class="chip ${u===e.dono?'info':''}">${u===e.dono?'Dono':'Membro'}</span>
       ${dono&&u!==e.dono?`<button class="btn ghost sm bad" data-act="rm-membro" data-id="${u}">Remover</button>`:''}</div>`).join('')}</div></div>
   ${dono?`<div class="sec"><h3>Adicionar pessoa</h3>
-    ${candidatos.length?`<form class="card row wrap" data-form="add-membro"><select id="amSel" style="flex:1;min-width:200px" aria-label="Pessoa">${candidatos.map(u=>`<option value="${u}">${esc(S.dir[u].nome||S.dir[u].email||u)}${S.dir[u].email?' — '+esc(S.dir[u].email):''}</option>`).join('')}</select><button class="btn pri" type="submit">Adicionar</button></form>`:'<div class="empty">Ninguém para adicionar ainda. A pessoa aparece aqui depois de abrir este app uma vez.</div>'}</div>`:''}
+    ${candidatos.length?`<form class="card row wrap" data-form="add-membro"><select id="amSel" style="flex:1;min-width:200px" aria-label="Pessoa">${candidatos.map(u=>`<option value="${u}">${esc(DIR()[u].nome||DIR()[u].email||u)}${DIR()[u].email?' — '+esc(DIR()[u].email):''}</option>`).join('')}</select><button class="btn pri" type="submit">Adicionar</button></form>`:'<div class="empty">Ninguém para adicionar ainda. Pessoas que ainda não abriram este app só aparecem aqui para administradores.</div>'}</div>`:''}
   <div class="sec row">${dono?`<button class="btn bad" data-act="del-espaco">Excluir este espaço</button>`:`<button class="btn bad" data-act="sair-espaco">Sair deste espaço</button>`}</div>`;
 }
 function vRevisao(){
@@ -624,7 +626,7 @@ document.addEventListener('submit',e=>{
     db.ref().update({['qgEspacos/'+eid+'/nome']:n,['qgEspacos/'+eid+'/dono']:S.uid,['qgEspacos/'+eid+'/membros/'+S.uid]:true,['qgEspacos/'+eid+'/nomes/'+S.uid]:S.nome||S.email,['qgIndice/'+S.uid+'/'+eid]:true})
       .then(()=>{ ligaEsp(eid); S.ws=eid; S.view='membros'; render(true); toast('Espaço criado. Adicione as pessoas.'); }).catch(erroSalvar); }
   else if(k==='renomear-espaco'){ const n=val('#enome'); if(n)db.ref('qgEspacos/'+S.ws+'/nome').set(n).then(()=>toast('Renomeado')).catch(erroSalvar); }
-  else if(k==='add-membro'){ const u=$('#amSel').value; if(!u)return; const eid=S.ws,d=S.dir[u]||{};
+  else if(k==='add-membro'){ const u=$('#amSel').value; if(!u)return; const eid=S.ws,d=DIR()[u]||{};
     db.ref().update({['qgEspacos/'+eid+'/membros/'+u]:true,['qgEspacos/'+eid+'/nomes/'+u]:d.nome||d.email||'',['qgIndice/'+u+'/'+eid]:true}).then(()=>toast('Pessoa adicionada')).catch(erroSalvar); }
   else if(k==='aguardando'){ const q=val('#agQ'),o=val('#agO'); if(!q&&!o)return; const sp=$('#agP',f); const pid=f.dataset.proj||(sp?sp.value:'');
     set('aguardando/'+newId(),Object.assign(autor(),{quem:q,oque:o,projetoId:pid||'',desde:now(),feito:false})); if(pid)tocaProjeto(pid); f.reset(); toast('Adicionado'); }
@@ -670,6 +672,7 @@ function start(){
     render(true);
     const nomeBase=(S.email||'').split('@')[0];
     db.ref('centralApps/usuarios/'+u.uid).once('value').then(sn=>{ const d=sn.val()||{}; S.nome=d.nome||nomeBase;
+      if(d.admin===true)db.ref('centralApps/usuarios').once('value').then(all=>{ const v=all.val()||{}; S.dirAdm={}; Object.keys(v).forEach(k=>{ const x=v[k]||{}; S.dirAdm[k]={nome:x.nome||(x.email||'').split('@')[0],email:x.email||''}; }); if(S.view==='membros')renderSafe(); }).catch(()=>{});
       db.ref('qgDiretorio/'+u.uid).set({nome:S.nome,email:S.email}).catch(()=>{}); }).catch(()=>{ db.ref('qgDiretorio/'+u.uid).set({nome:nomeBase,email:S.email}).catch(()=>{}); });
     db.ref('qgDiretorio').on('value',sn=>{ S.dir=sn.val()||{}; if(S.view==='membros')renderSafe(); },()=>{});
     db.ref('qgIndice/'+u.uid).on('value',sn=>{
