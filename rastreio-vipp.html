@@ -1261,7 +1261,7 @@ var STATUS_MAP_NORM = (function(){ var m={}; Object.keys(STATUS_MAP).forEach(fun
 // Os pedidos continuam no banco, só não aparecem nem entram nas contas.
 function statusIgnorado(status){
   var n=_norm(status);
-  return n.indexOf("etiqueta expirada")===0 || n.indexOf("etiqueta cancelada pelo sistema de captacao")===0;
+  return n.indexOf("etiqueta expirada")===0 || n.indexOf("etiqueta cancelada")===0 || n.indexOf("liberado(s) para download")>-1;
 }
 function bucketFor(status){
   if(Object.prototype.hasOwnProperty.call(STATUS_MAP,status)) return STATUS_MAP[status];
