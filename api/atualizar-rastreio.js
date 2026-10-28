@@ -184,6 +184,8 @@ export default async function handler(req, res) {
       if (!p || typeof p !== 'object') return false;
       if (ehEntregue(p.status)) return false;
       if (STATUS_MORTOS.includes(p.status)) return false;
+      const ns = norm(p.status);
+      if (ns.startsWith('etiqueta expirada') || ns.startsWith('etiqueta cancelada pelo sistema de captacao')) return false;
       if ((p.tentativasSemSucesso || 0) >= LIMITE_TENTATIVAS_SEM_SUCESSO) {
         // travado: só reconsulta se já passou o prazo da repescagem
         if (Date.now() - (p.ultimaTentativaEm || 0) < REPESCAGEM_MS) return false;
