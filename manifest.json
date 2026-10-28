@@ -184,5 +184,15 @@
       "PCP"
     ],
     "category": "PCP"
+  },
+  {
+    "title": "Central de Projetos",
+    "description": "",
+    "file": "meu-qg.html",
+    "icon": "🧩",
+    "color": "#4d9fff",
+    "grupos": [
+      "PMO"
+    ]
   }
 ]
