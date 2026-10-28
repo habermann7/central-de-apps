@@ -242,7 +242,6 @@ html[data-motion=off] *,html[data-motion=off] *::before,html[data-motion=off] *:
     <div class="ws" id="wsList"></div>
     <button class="nav" data-go="hoje"><span class="ic">◉</span>Hoje</button>
     <button class="nav" data-go="projetos"><span class="ic">▤</span>Projetos</button>
-    <button class="nav" data-go="notas"><span class="ic">✎</span>Notas</button>
     <button class="nav" data-go="membros" id="navMem" hidden><span class="ic">👥</span>Membros</button>
     <div class="sp"></div>
     <div class="foot">
@@ -469,7 +468,7 @@ function vHoje(){
   const h=new Date().getHours();
   const sauda=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
   return `<div class="vh"><div><h2>${sauda}</h2><p>${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · ${esc(wsLabel(S.ws))}</p></div></div>
-  <section class="qg-intro" aria-label="Seu ritmo"><div><small>Menos ruído. Mais direção.</small><h3>Uma coisa de cada vez.</h3><p>Capture uma ideia. Escolha o próximo passo.</p><button class="btn sm ghost" data-go="revisao" style="margin:8px 0 0 -10px">Revisão semanal →</button></div><div class="qg-orbit" aria-hidden="true"><span>✳</span></div></section>
+  <section class="qg-intro" aria-label="Seu ritmo"><div><small>Menos ruído. Mais direção.</small><h3>Uma coisa de cada vez.</h3><p>Capture uma ideia. Escolha o próximo passo.</p><div class="row" style="gap:2px;margin:8px 0 0 -10px"><button class="btn sm ghost" data-go="notas">Notas →</button><button class="btn sm ghost" data-go="revisao">Revisão semanal →</button></div></div><div class="qg-orbit" aria-hidden="true"><span>✳</span></div></section>
   ${revisaoVencida()?`<div class="banner">Revisão semanal pendente <button class="btn sm" data-go="revisao">Fazer agora</button></div>`:''}
   <form class="card" data-form="captura-hoje"><label class="f" for="capH">Anotar rápido (vai pra Caixa, você organiza depois)</label>
     <div class="row"><input id="capH" type="text" class="big" placeholder="Ideia, tarefa, lembrete…" autocomplete="off" style="flex:1"><button class="btn pri" type="submit">Anotar</button></div></form>
