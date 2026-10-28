@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
+<script>try{var a=localStorage.getItem('qg-ambiente')||(matchMedia('(prefers-color-scheme: dark)').matches?'noite':'areia');document.documentElement.setAttribute('data-ambiente',a)}catch(e){}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Meu QG</title>
@@ -25,8 +26,8 @@
     --bad:#e0766c;--badBg:rgba(224,118,108,.15);--info:#7aa9d6;--infoBg:rgba(122,169,214,.15);
     --shadow:0 1px 0 rgba(255,255,255,.05) inset,0 10px 32px rgba(0,0,0,.35);
   }
-  .chip.sup{color:#b49ae0}
 }
+:root[data-ambiente=noite] .chip.sup{color:#c4b0ec}
 *{box-sizing:border-box;margin:0}
 html{-webkit-text-size-adjust:100%}
 body{
@@ -90,9 +91,9 @@ main{padding:34px clamp(18px,4vw,56px) 110px;max-width:1120px;width:100%;min-wid
 .lb{max-width:min(92vw,980px);width:auto;padding:12px;text-align:center}
 .lb img{max-width:100%;max-height:74vh;border-radius:10px;display:block;margin:0 auto}
 .chip.stc{background:color-mix(in srgb,var(--c) 16%,transparent);color:color-mix(in srgb,var(--c) 62%,#000)}
-@media (prefers-color-scheme:dark){.chip.stc{color:color-mix(in srgb,var(--c) 70%,#fff)}}
+:root[data-ambiente=noite] .chip.stc{color:color-mix(in srgb,var(--c) 55%,#fff)}
 .seg button.stsel[aria-pressed=true]{background:color-mix(in srgb,var(--c) 16%,var(--card2));color:color-mix(in srgb,var(--c) 62%,#000);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--c) 70%,transparent)}
-@media (prefers-color-scheme:dark){.seg button.stsel[aria-pressed=true]{color:color-mix(in srgb,var(--c) 70%,#fff)}}
+:root[data-ambiente=noite] .seg button.stsel[aria-pressed=true]{color:color-mix(in srgb,var(--c) 55%,#fff)}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px;flex:none}
 .seg button{display:inline-flex;align-items:center}
 .pipe{display:flex;align-items:flex-start;overflow-x:auto;padding:6px 2px 4px;scrollbar-width:none}
@@ -192,6 +193,29 @@ kbd{font:600 11px ui-monospace,monospace;border:1px solid var(--line2);border-bo
   main{padding-top:20px}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Ambiente — luz suave, ritmo tranquilo */
+:root{color-scheme:light;--bg:#eeede6;--bg2:#f1f2eb;--card:rgba(255,255,250,.88);--card2:#fffef9;--ink:#263e35;--mut:#52625a;--faint:#66756c;--line:rgba(46,73,57,.12);--line2:rgba(46,73,57,.23);--acc:#38644f;--accInk:#fffef8;--info:#386b60;--infoBg:#386b6018;--ok:#327353;--warn:#94601c;--bad:#ac4d42;--shadow:0 2px 3px #283c3003,0 12px 36px #283c3007;--glow:#b7cdb0;--glow2:#e6c8a1}
+:root[data-ambiente=noite]{color-scheme:dark;--bg:#15241f;--bg2:#20342b;--card:rgba(32,51,43,.94);--card2:#253b31;--ink:#e5eee4;--mut:#b2c2b6;--faint:#9aaa9e;--line:#c5ddc017;--line2:#c5ddc033;--acc:#bed8ac;--accInk:#203529;--info:#a4cfc1;--infoBg:#a4cfc118;--ok:#9bcea8;--warn:#e2ba79;--bad:#eda69d;--shadow:0 12px 35px #07110d22;--glow:#365c45;--glow2:#555438}
+body{background:var(--bg);isolation:isolate;line-height:1.55}
+body::before,body::after{content:"";position:fixed;pointer-events:none;z-index:-1;width:min(80vw,1000px);height:80vh;border-radius:50%;background:radial-gradient(ellipse,var(--glow),transparent 67%);opacity:.48;top:-28vh;right:-12vw;animation:qg-drift 28s ease-in-out infinite alternate}
+body::after{background:radial-gradient(ellipse,var(--glow2),transparent 68%);top:auto;right:auto;left:2vw;bottom:-40vh;animation-duration:36s;animation-direction:alternate-reverse}
+@keyframes qg-drift{to{transform:translate(-5vw,7vh) scale(1.1)}}
+.shell{grid-template-columns:252px minmax(0,1fr)}
+.side{margin:20px 0 20px 20px;top:20px;height:calc(100dvh - 40px);padding:24px 14px;border-radius:24px;backdrop-filter:blur(20px)}
+.brand{font-size:24px;padding:0 10px 24px;letter-spacing:-1px}.brand::before{content:"◈";display:inline-grid;place-items:center;background:var(--acc);color:var(--accInk);width:32px;height:32px;border-radius:11px;font-size:21px;margin-right:10px;vertical-align:2px}.brand small{font-size:11px;margin-top:9px;letter-spacing:0}
+.nav{padding:12px;min-height:44px}.nav[aria-current=page]{box-shadow:0 5px 14px #38644f17}.nav .ic{font-size:17px}
+main{max-width:1320px;padding:30px clamp(22px,4vw,64px) 110px;margin:0 auto}
+.vh{margin-bottom:25px}.vh h2{font-size:clamp(28px,3vw,40px);font-weight:600;letter-spacing:-1.4px}.vh p{font-size:13px;margin-top:7px}
+.card{border-radius:20px;padding:23px;backdrop-filter:none}.stat{position:relative;padding:21px 23px;overflow:hidden}.stat b{font-size:33px;font-weight:550}.stat span{font-size:12px}.stat::after{content:"";position:absolute;right:20px;top:25px;width:9px;height:9px;background:var(--acc);border-radius:50%;opacity:.5}.stat:nth-child(3)::after{background:var(--warn)}
+.sec{margin-top:30px}.sec>h3{font-size:11px;letter-spacing:.1em;margin-bottom:14px}.item{padding:17px 19px;border-radius:15px;box-shadow:0 3px 14px #283c3003}.item:hover,.pc:hover{background:var(--card2);box-shadow:0 8px 24px #283c300b;transform:translateY(-2px)}.item .s{margin-top:3px}.list{gap:10px}
+.btn{border-radius:12px;min-height:40px}.btn.sm{min-height:32px}.btn.pri{box-shadow:0 4px 12px #38644f16}.big{font-size:19px}.empty{padding:38px 24px;background:var(--card);border-style:dashed;line-height:1.7}.banner{font-size:13px}.fab{border-radius:19px;box-shadow:0 8px 25px #203b3a24}
+.qg-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:30px;flex-wrap:wrap}.qg-caption{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);display:flex;align-items:center;gap:9px}.qg-caption::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--acc)}.qg-controls{display:flex;align-items:center;gap:7px}.qg-controls button{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:7px 12px;font-size:11px;cursor:pointer;min-height:36px}.qg-controls button[aria-pressed=true]{background:var(--acc);color:var(--accInk)}
+.qg-intro{position:relative;overflow:hidden;padding:26px 30px;margin-bottom:24px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(115deg,var(--card2),var(--bg2));min-height:128px;display:flex;align-items:center;justify-content:space-between;gap:24px}.qg-intro small{color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.14em}.qg-intro h3{font-size:24px;font-weight:500;letter-spacing:-.7px;margin-top:6px}.qg-intro p{font-size:12px;color:var(--mut);margin-top:6px}.qg-orbit{width:100px;height:100px;position:relative;flex:none;border:1px solid var(--line2);border-radius:50%;display:grid;place-items:center}.qg-orbit::before{content:"";position:absolute;inset:14px;border:1px solid var(--line2);border-radius:50%}.qg-orbit::after{content:"";position:absolute;inset:-1px;border-radius:50%;background:radial-gradient(circle at 50% 2%,var(--acc) 0 3px,transparent 4px);animation:qg-orbit 50s linear infinite}.qg-orbit span{font-size:28px;color:var(--acc)}@keyframes qg-orbit{to{transform:rotate(360deg)}}
+html[data-motion=off] *,html[data-motion=off] *::before,html[data-motion=off] *::after{animation:none!important;transition:none!important}
+@media(max-width:860px){.shell{grid-template-columns:1fr}.side{margin:0;top:auto;bottom:calc(10px + env(safe-area-inset-bottom));height:auto;padding:6px;left:10px;right:10px;border-radius:22px}.nav{padding:8px 3px;min-height:48px;font-size:10px}.nav .ic{font-size:16px}main{padding:22px 18px 120px}.qg-toolbar{margin-bottom:24px;gap:10px}.qg-caption{font-size:9px}.qg-controls button{padding:7px 10px}.qg-intro{padding:22px;gap:12px}.qg-intro h3{font-size:21px}.qg-orbit{width:65px;height:65px}.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.stat{padding:17px}.grid3{grid-template-columns:minmax(0,1fr)}.card{padding:18px}.row input{min-width:0}.vh h2{font-size:30px}.item{flex-wrap:wrap}.item .grow{min-width:140px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
 </style>
 </head>
 <body>
@@ -217,7 +241,7 @@ kbd{font:600 11px ui-monospace,monospace;border:1px solid var(--line2);border-bo
       <button class="nav" data-act="backup"><span class="ic">⇩</span>Baixar backup</button>
     </div>
   </nav>
-  <main id="main"></main>
+  <main><div class="qg-toolbar"><span class="qg-caption">Seu espaço para clarear as ideias</span><div class="qg-controls" role="group" aria-label="Aparência"><button type="button" id="qgTheme" aria-pressed="false">☾ Noite</button><button type="button" id="qgMotion" aria-pressed="false">Pausar movimento</button></div></div><div id="main"></div></main>
 </div>
 <button class="fab" id="fab" title="Anotar rápido (tecla C)" aria-label="Anotar rápido" hidden>+</button>
 <div id="layer"></div>
@@ -414,6 +438,7 @@ function vHoje(){
   const h=new Date().getHours();
   const sauda=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
   return `<div class="vh"><div><h2>${sauda}</h2><p>${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · ${esc(wsLabel(S.ws))}</p></div></div>
+  <section class="qg-intro" aria-label="Seu ritmo"><div><small>Menos ruído. Mais direção.</small><h3>Uma coisa de cada vez.</h3><p>Capture uma ideia. Escolha o próximo passo.</p></div><div class="qg-orbit" aria-hidden="true"><span>✳</span></div></section>
   ${revisaoVencida()?`<div class="banner">Revisão semanal pendente <button class="btn sm" data-go="revisao">Fazer agora</button></div>`:''}
   <form class="card" data-form="captura-hoje"><label class="f" for="capH">Anotar rápido (vai pra Caixa, você organiza depois)</label>
     <div class="row"><input id="capH" type="text" class="big" placeholder="Ideia, tarefa, lembrete…" autocomplete="off" style="flex:1"><button class="btn pri" type="submit">Anotar</button></div></form>
@@ -540,7 +565,7 @@ async function carregaAnexos(id){
 async function addAnexos(id,files){
   files=[...files]; if(!files.length||!obj('projetos')[id])return;
   const ja=Object.keys((obj('projetos')[id]||{}).anexosMeta||{}).length;
-  const cache=await carregaAnexos(id); const up={}; let n=0;
+  const cache=await carregaAnexos(id); const ups=[]; let n=0;
   for(const f of files){
     if(ja+n>=MAX_FILES*3||n>=MAX_FILES){toast('Máximo de '+MAX_FILES+' arquivos por vez',true);break;}
     const type=f.type||'application/octet-stream',nome=f.name||'print.png';
@@ -550,13 +575,17 @@ async function addAnexos(id,files){
       if(isImg(type)){ r=await compressImage(f); if(r.size>MAX_FILE){toast(nome+': imagem muito grande',true);continue;} r.nome=r.type!==type?nome.replace(/\.[^.]+$/,'')+'.jpg':nome; }
       else{ if(f.size>MAX_FILE){toast(nome+' passa de 4 MB',true);continue;} r={data:await readAsDataURL(f),type,size:f.size,nome}; }
       const k=newId(), meta={nome:r.nome,type:r.type,size:r.size,t:now()}; if(S.ws!=='pessoal')meta.por=S.uid;
-      up['anexos/'+id+'/'+k]=Object.assign({},meta,{data:r.data}); up['projetos/'+id+'/anexosMeta/'+k]=meta;
-      cache[k]=up['anexos/'+id+'/'+k]; n++;
+      const up={}; up['anexos/'+id+'/'+k]=Object.assign({},meta,{data:r.data}); up['projetos/'+id+'/anexosMeta/'+k]=meta;
+      ups.push({up,k}); n++;
     }catch(e){toast('Não consegui ler '+nome,true);}
   }
   if(!n)return;
-  up['projetos/'+id+'/atualizadoEm']=now();
-  guard(db.ref(baseDe('anexos')).update(up)).then(()=>toast(n+(n>1?' arquivos adicionados':' arquivo adicionado')));
+  let ok=0;
+  for(const u of ups){
+    u.up['projetos/'+id+'/atualizadoEm']=now();
+    try{ await db.ref(baseDe('anexos')).update(u.up); cache[u.k]=u.up['anexos/'+id+'/'+u.k]; ok++; }catch(e){ console.error(e); toast('Não consegui salvar '+u.up['anexos/'+id+'/'+u.k].nome,true); }
+  }
+  if(ok)toast(ok+(ok>1?' arquivos adicionados':' arquivo adicionado'));
 }
 function dataToBlob(d){ const [h,b]=d.split(','); const mime=(h.match(/:(.*?);/)||[])[1]||'application/octet-stream'; const bin=atob(b); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i); return new Blob([u],{type:mime}); }
 function baixar(m,d){ const a=document.createElement('a'); a.href=URL.createObjectURL(dataToBlob(d)); a.download=m.nome||'arquivo'; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},800); }
@@ -828,7 +857,7 @@ function start(){
     S.uid=u.uid;S.email=u.email||'';
     $('#meMail').textContent=S.email;
     $('#app').hidden=false;$('#fab').hidden=false;
-    const h=location.hash.slice(1); S.view=VIEWS.includes(h)?h:'hoje';
+    const h=location.hash.slice(1); S.view=VIEWS.includes(h)?h:'hoje'; if(S.view==='membros')S.view='hoje';
     render(true);
     const nomeBase=(S.email||'').split('@')[0];
     db.ref('centralApps/usuarios/'+u.uid).once('value').then(sn=>{ const d=sn.val()||{}; S.nome=d.nome||nomeBase;
@@ -864,6 +893,21 @@ function soltaEsp(id){
 }
 window.__startApp=start;
 if(window.__gateOk)start();
+})();
+</script>
+
+<script>
+(function(){
+ const root=document.documentElement, reduced=matchMedia('(prefers-reduced-motion: reduce)');
+ const read=k=>{try{return localStorage.getItem(k)}catch{return null}},save=(k,v)=>{try{localStorage.setItem(k,v)}catch{}};
+ let theme=read('qg-ambiente')||(matchMedia('(prefers-color-scheme: dark)').matches?'noite':'areia');
+ let motion=read('qg-movimento')||'on';
+ const t=document.getElementById('qgTheme'),m=document.getElementById('qgMotion');
+ function apply(){root.dataset.ambiente=theme;root.dataset.motion=reduced.matches?'off':motion;t.textContent=theme==='noite'?'☀ Areia':'☾ Noite';t.setAttribute('aria-pressed',String(theme==='noite'));m.textContent=root.dataset.motion==='on'?'Pausar movimento':'Ativar movimento';m.setAttribute('aria-pressed',String(root.dataset.motion==='off'));m.disabled=reduced.matches;m.title=reduced.matches?'Movimento desativado pela preferência do dispositivo':'Controlar animações do ambiente'}
+ t.onclick=()=>{theme=theme==='noite'?'areia':'noite';save('qg-ambiente',theme);apply()};
+ m.onclick=()=>{motion=motion==='on'?'off':'on';save('qg-movimento',motion);apply()};
+ reduced.addEventListener('change',apply);apply();
+ document.addEventListener('visibilitychange',()=>{document.getAnimations().forEach(a=>{if(a.animationName==='qg-drift'||a.animationName==='qg-orbit'){if(document.hidden)a.pause();else a.play()}})});
 })();
 </script>
 </body>
