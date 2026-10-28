@@ -59,6 +59,16 @@ main{padding:28px clamp(16px,4vw,48px) 96px;max-width:1100px;width:100%}
 .vh h2{font-size:26px}
 .vh p{color:var(--mut);margin-top:2px}
 
+/* espaços */
+.ws{display:flex;flex-direction:column;gap:2px;margin:0 0 10px;padding:0 0 10px;border-bottom:1px solid var(--line)}
+.ws .lbl{font-size:11px;font-weight:650;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);padding:4px 10px}
+.ws button{display:flex;align-items:center;gap:8px;border:0;background:none;padding:7px 10px;border-radius:9px;cursor:pointer;color:var(--mut);font-weight:550;text-align:left;width:100%;transition:background .15s var(--ease),transform .12s var(--ease)}
+.ws button:hover{background:var(--line)}.ws button:active{transform:scale(.97)}
+.ws button[aria-pressed=true]{background:var(--card2);color:var(--ink);box-shadow:var(--shadow)}
+.ws button span.n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wsbar{display:none;margin-bottom:14px}
+.wsbar select{flex:1;min-width:0}.wsbar .btn{white-space:nowrap}
+.who{font-size:12px;color:var(--faint)}
 /* componentes */
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);background:var(--card2);border-radius:var(--r2);padding:8px 13px;font-weight:600;cursor:pointer;transition:transform .12s var(--ease),background .15s var(--ease),opacity .15s}
@@ -128,7 +138,8 @@ kbd{font:600 11px ui-monospace,monospace;border:1px solid var(--line2);border-bo
 @media (max-width:860px){
   .shell{grid-template-columns:1fr}
   .side{position:fixed;bottom:0;left:0;right:0;top:auto;height:auto;flex-direction:row;padding:6px 8px calc(6px + env(safe-area-inset-bottom));border-right:0;border-top:1px solid var(--line);background:var(--bg);z-index:50;justify-content:space-around;gap:0}
-  .brand,.side .sp,.side .foot{display:none}
+  .brand,.side .sp,.side .foot,.side .ws{display:none}
+  .wsbar{display:flex;gap:8px}
   .nav{flex-direction:column;gap:2px;font-size:11px;padding:6px 4px;text-align:center;justify-content:center;position:relative}
   .nav .badge{position:absolute;top:2px;right:6px;margin:0}
   .fab{bottom:calc(76px + env(safe-area-inset-bottom));right:16px}
@@ -151,12 +162,14 @@ kbd{font:600 11px ui-monospace,monospace;border:1px solid var(--line2);border-bo
 <div class="shell" id="app" hidden>
   <nav class="side" aria-label="Seções">
     <div class="brand">Meu QG<small id="meMail"></small></div>
+    <div class="ws" id="wsList"></div>
     <button class="nav" data-go="hoje"><span class="ic">◉</span>Hoje</button>
     <button class="nav" data-go="projetos"><span class="ic">▤</span>Projetos</button>
     <button class="nav" data-go="notas"><span class="ic">✎</span>Notas</button>
     <button class="nav" data-go="aguardando"><span class="ic">⏳</span>Aguardando<span class="badge" id="bAg" hidden></span></button>
     <button class="nav" data-go="caixa"><span class="ic">⤓</span>Caixa<span class="badge" id="bCx" hidden></span></button>
     <button class="nav" data-go="revisao"><span class="ic">✓</span>Revisão</button>
+    <button class="nav" data-go="membros" id="navMem" hidden><span class="ic">👥</span>Membros</button>
     <div class="sp"></div>
     <div class="foot">
       <button class="nav" data-act="backup"><span class="ic">⇩</span>Baixar backup</button>
@@ -173,7 +186,7 @@ kbd{font:600 11px ui-monospace,monospace;border:1px solid var(--line2);border-bo
 <script>
 (function(){
   /* CADEADO PADRÃO DA ESTANTE. Só esta linha muda (o ✎ Editar troca ela). Vazio = só administrador. */
-  var GRUPOS_PERMITIDOS = ["PMO"];
+  var GRUPOS_PERMITIDOS = [];
   var firebaseConfig = {
     apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
     authDomain: "stinpharma-qualidade.firebaseapp.com",
@@ -228,15 +241,22 @@ const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 const DIA=864e5;
 const STATUS={ideia:['Ideia','info'],fazendo:['Fazendo','ok'],parado:['Parado','warn'],concluido:['Concluído','']};
 const ORDEM_STATUS=['fazendo','parado','ideia','concluido'];
-const VIEWS=['hoje','projetos','notas','aguardando','caixa','revisao'];
-const S={uid:null,email:'',d:{projetos:{},notas:{},aguardando:{},inbox:{},config:{}},view:'hoje',proj:null,nota:null,filtro:'ativos',busca:'',notaProj:'',verFeitos:false};
+const VIEWS=['hoje','projetos','notas','aguardando','caixa','revisao','membros'];
+const S={uid:null,email:'',nome:'',ws:'pessoal',esp:{},dir:{},d:{projetos:{},notas:{},aguardando:{},inbox:{},config:{}},view:'hoje',proj:null,nota:null,filtro:'ativos',busca:'',notaProj:'',verFeitos:false};
 let db=null;
 
 /* ---------- utilitários ---------- */
-const R=p=>db.ref('meuQG/'+S.uid+(p?'/'+p:''));
-const newId=()=>R().push().key;
+const PES=()=>'meuQG/'+S.uid;
+/* inbox e config são sempre pessoais; o resto vive no espaço escolhido (Pessoal ou um espaço de time) */
+const baseDe=p=>{const k=(p||'').split('/')[0];return(!p||k==='inbox'||k==='config'||S.ws==='pessoal')?PES():'qgEspacos/'+S.ws+'/dados';};
+const R=p=>db.ref(baseDe(p)+(p?'/'+p:''));
+const newId=()=>db.ref(PES()).push().key;
+const espAtual=()=>S.ws==='pessoal'?null:S.esp[S.ws]||null;
+const ehDono=()=>{const e=espAtual();return !!e&&e.dono===S.uid;};
+const nomeDe=u=>{if(u===S.uid)return 'você';const e=espAtual();return (e&&e.nomes&&e.nomes[u])||(S.dir[u]&&S.dir[u].nome)||'';};
+const autor=()=>S.ws==='pessoal'?{}:{por:S.uid};
 const now=()=>Date.now();
-const obj=k=>S.d[k]||{};
+const obj=k=>{ if(k==='inbox'||k==='config'||S.ws==='pessoal')return S.d[k]||{}; const e=S.esp[S.ws]; return (e&&e.dados&&e.dados[k])||{}; };
 const lista=(k)=>Object.keys(obj(k)).map(id=>Object.assign({id},obj(k)[id]));
 const dias=ts=>Math.max(0,Math.floor((now()-ts)/DIA));
 function fmtData(ts){const d=new Date(ts);return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
@@ -266,11 +286,12 @@ const prazosPerto=()=>lista('projetos').filter(p=>p.status!=='concluido'&&p.praz
 const agAbertos=()=>lista('aguardando').filter(a=>!a.feito).sort((a,b)=>(a.desde||0)-(b.desde||0));
 const agVelhos=()=>agAbertos().filter(a=>dias(a.desde||now())>=7);
 const inbox=()=>lista('inbox').sort((a,b)=>(b.criadoEm||0)-(a.criadoEm||0));
-const revisaoVencida=()=>{const u=(S.d.config||{}).ultimaRevisao; return !u||dias(u)>=7;};
+const chaveRev=()=>S.ws==='pessoal'?'ultimaRevisao':'ultimaRevisao_'+S.ws;
+const revisaoVencida=()=>{const u=(S.d.config||{})[chaveRev()]; return !u||dias(u)>=7;};
 
 /* ---------- navegação ---------- */
 function go(v,opts){
-  if(!VIEWS.includes(v))v='hoje';
+  if(!VIEWS.includes(v)||(v==='membros'&&S.ws==='pessoal'))v='hoje';
   S.view=v; if(!opts||!opts.keepProj)S.proj=null; if(!opts||!opts.keepNota)S.nota=null;
   history.replaceState(null,'','#'+v);
   render(true);
@@ -279,7 +300,19 @@ function go(v,opts){
 function abrirProjeto(id){ S.view='projetos';S.proj=id;S.nota=null; render(true); window.scrollTo(0,0); }
 
 /* ---------- render ---------- */
+function wsLabel(id){return id==='pessoal'?'🔒 Pessoal':'👥 '+((S.esp[id]||{}).nome||'Espaço');}
+function wsBar(){
+  const ids=['pessoal',...Object.keys(S.esp)];
+  return `<div class="wsbar"><select data-act-change="ws" aria-label="Espaço">${ids.map(i=>`<option value="${i}"${S.ws===i?' selected':''}>${esc(wsLabel(i))}</option>`).join('')}</select><button class="btn" data-act="novo-espaco">+ Espaço</button></div>`;
+}
+function wsList(){
+  const ids=Object.keys(S.esp).sort((a,b)=>(S.esp[a].nome||'').localeCompare(S.esp[b].nome||''));
+  $('#wsList').innerHTML=`<div class="lbl">Espaços</div><button data-act="ws" data-id="pessoal" aria-pressed="${S.ws==='pessoal'}"><span>🔒</span><span class="n">Pessoal</span></button>`+
+   ids.map(i=>`<button data-act="ws" data-id="${i}" aria-pressed="${S.ws===i}"><span>👥</span><span class="n">${esc(S.esp[i].nome||'Espaço')}</span></button>`).join('')+
+   `<button data-act="novo-espaco" style="color:var(--faint)"><span>＋</span><span class="n">Novo espaço</span></button>`;
+}
 function badges(){
+  wsList(); $('#navMem').hidden=S.ws==='pessoal';
   const a=agAbertos().length,c=inbox().length;
   const ba=$('#bAg'),bc=$('#bCx');
   ba.hidden=!a;ba.textContent=a;bc.hidden=!c;bc.textContent=c;
@@ -294,8 +327,10 @@ function render(animate){
   else if(S.view==='notas')html=vNotas();
   else if(S.view==='aguardando')html=vAguardando();
   else if(S.view==='caixa')html=vCaixa();
-  else html=vRevisao();
-  m.innerHTML=`<div class="view"${animate?'':' style="animation:none"'}>${html}</div>`;
+  else if(S.view==='membros'&&espAtual())html=vMembros();
+  else if(S.view==='revisao')html=vRevisao();
+  else html='<div class="empty">Carregando…</div>';
+  m.innerHTML=`<div class="view"${animate?'':' style="animation:none"'}>${wsBar()}${html}</div>`;
 }
 /* Re-render vindo do banco: não atropela quem está digitando. */
 function renderSafe(){
@@ -321,7 +356,7 @@ function vHoje(){
   const atencao=[...new Map([...parados(),...prazosPerto()].map(p=>[p.id,p])).values()];
   const h=new Date().getHours();
   const sauda=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
-  return `<div class="vh"><div><h2>${sauda}</h2><p>${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}</p></div></div>
+  return `<div class="vh"><div><h2>${sauda}</h2><p>${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · ${esc(wsLabel(S.ws))}</p></div></div>
   ${revisaoVencida()?`<div class="banner">Revisão semanal pendente <button class="btn sm" data-go="revisao">Fazer agora</button></div>`:''}
   <form class="card" data-form="captura-hoje"><label class="f" for="capH">Anotar rápido (vai pra Caixa, você organiza depois)</label>
     <div class="row"><input id="capH" type="text" class="big" placeholder="Ideia, tarefa, lembrete…" autocomplete="off" style="flex:1"><button class="btn pri" type="submit">Anotar</button></div></form>
@@ -377,7 +412,7 @@ function vProjeto(id){
       <div class="card"><label class="f" for="pr">Andamento: <span class="num" id="prv">${+p.progresso||0}%</span></label>
         <input id="pr" type="range" min="0" max="100" step="5" value="${+p.progresso||0}" data-keep data-f="progresso" data-id="${id}" style="width:100%;accent-color:var(--acc)">
         <div class="bar" style="margin-top:10px"><i style="width:${+p.progresso||0}%"></i></div>
-        <p class="hint" style="margin-top:12px">Criado em ${fmtData(p.criadoEm||now())} · mexido ${ago(p.atualizadoEm||p.criadoEm)}${p.concluidoEm?' · concluído em '+fmtData(p.concluidoEm):''}</p></div>
+        <p class="hint" style="margin-top:12px">Criado em ${fmtData(p.criadoEm||now())}${p.por&&nomeDe(p.por)?' por '+esc(nomeDe(p.por)):''} · mexido ${ago(p.atualizadoEm||p.criadoEm)}${p.concluidoEm?' · concluído em '+fmtData(p.concluidoEm):''}</p></div>
     </div>
     <div class="sec"><h3>Diário de andamento</h3>
       <form class="row" data-form="diario" data-id="${id}"><input type="text" id="dIn" placeholder="Hoje fiz… (Enter)" autocomplete="off"><button class="btn" type="submit">Registrar</button></form>
@@ -397,7 +432,7 @@ function agRow(a){
   const n=dias(a.desde||now());
   return `<div class="item" style="cursor:default;${a.feito?'opacity:.55':''}">
     <div class="grow"><div class="row" style="gap:6px"><input type="text" data-keep data-ag="quem" data-id="${a.id}" value="${esc(a.quem||'')}" placeholder="De quem" style="max-width:150px;padding:5px 8px" aria-label="De quem"><input type="text" data-keep data-ag="oque" data-id="${a.id}" value="${esc(a.oque||'')}" placeholder="O que espero" style="padding:5px 8px" aria-label="O que espera"></div>
-      <div class="s" style="margin-top:4px">${a.projetoId&&nomeProj(a.projetoId)?'Projeto: '+esc(nomeProj(a.projetoId))+' · ':''}${a.feito?'recebido '+fmtData(a.feitoEm||now()):'desde '+fmtData(a.desde||now())}</div></div>
+      <div class="s" style="margin-top:4px">${a.por&&nomeDe(a.por)?'por '+esc(nomeDe(a.por))+' · ':''}${a.projetoId&&nomeProj(a.projetoId)?'Projeto: '+esc(nomeProj(a.projetoId))+' · ':''}${a.feito?'recebido '+fmtData(a.feitoEm||now()):'desde '+fmtData(a.desde||now())}</div></div>
     ${a.feito?'':`<span class="chip ${n>=7?'warn':''}">${n}d</span>`}
     <button class="btn sm" data-act="${a.feito?'reabrir-ag':'feito-ag'}" data-id="${a.id}">${a.feito?'Reabrir':'Recebi'}</button>
     <button class="btn ghost sm" data-act="del-ag" data-id="${a.id}" aria-label="Apagar">×</button></div>`;
@@ -442,12 +477,26 @@ function vNotas(){
       <input type="text" class="tt" data-keep data-nf="titulo" data-id="${n.id}" value="${esc(n.titulo||'')}" placeholder="Título" aria-label="Título">
       <select data-keep data-nf="projetoId" data-id="${n.id}" aria-label="Projeto da nota"><option value="">Sem projeto</option>${projs.map(p=>`<option value="${p.id}"${n.projetoId===p.id?' selected':''}>${esc(p.nome)}</option>`).join('')}</select>
       <textarea data-keep data-nf="texto" data-id="${n.id}" placeholder="Escreva aqui…" aria-label="Texto">${esc(n.texto||'')}</textarea>
-      <span class="hint">Editada ${ago(n.atualizadoEm)}</span></div>`:'<div class="empty" style="margin-top:6px">Escolha uma nota ou crie uma nova.</div>'}</div>
+      <span class="hint">Editada ${ago(n.atualizadoEm)}${n.por&&nomeDe(n.por)?" · criada por "+esc(nomeDe(n.por)):""}</span></div>`:'<div class="empty" style="margin-top:6px">Escolha uma nota ou crie uma nova.</div>'}</div>
   </div>`;
 }
 
+function vMembros(){
+  const e=espAtual(); const dono=ehDono();
+  const ms=Object.keys(e.membros||{}).sort((a,b)=>(a===e.dono?-1:b===e.dono?1:0));
+  const candidatos=Object.keys(S.dir).filter(u=>!(e.membros||{})[u]).sort((a,b)=>(S.dir[a].nome||'').localeCompare(S.dir[b].nome||''));
+  return `<div class="vh"><div><h2>${esc(e.nome||'Espaço')}</h2><p>Espaço compartilhado · todos os membros veem e editam projetos, notas e pendências daqui.</p></div></div>
+  ${dono?`<form class="card row wrap" data-form="renomear-espaco"><input type="text" id="enome" value="${esc(e.nome||'')}" aria-label="Nome do espaço" style="flex:1;min-width:180px"><button class="btn" type="submit">Renomear</button></form>`:''}
+  <div class="sec"><h3>Membros <span class="chip">${ms.length}</span></h3><div class="list">
+    ${ms.map(u=>`<div class="item" style="cursor:default"><div class="grow"><div class="t">${esc(nomeDe(u)||(S.dir[u]&&S.dir[u].email)||u)}${u===S.uid?' (você)':''}</div><div class="s">${esc((S.dir[u]&&S.dir[u].email)||'')}</div></div>
+      <span class="chip ${u===e.dono?'info':''}">${u===e.dono?'Dono':'Membro'}</span>
+      ${dono&&u!==e.dono?`<button class="btn ghost sm bad" data-act="rm-membro" data-id="${u}">Remover</button>`:''}</div>`).join('')}</div></div>
+  ${dono?`<div class="sec"><h3>Adicionar pessoa</h3>
+    ${candidatos.length?`<form class="card row wrap" data-form="add-membro"><select id="amSel" style="flex:1;min-width:200px" aria-label="Pessoa">${candidatos.map(u=>`<option value="${u}">${esc(S.dir[u].nome||S.dir[u].email||u)}${S.dir[u].email?' — '+esc(S.dir[u].email):''}</option>`).join('')}</select><button class="btn pri" type="submit">Adicionar</button></form>`:'<div class="empty">Ninguém para adicionar ainda. A pessoa aparece aqui depois de abrir este app uma vez.</div>'}</div>`:''}
+  <div class="sec row">${dono?`<button class="btn bad" data-act="del-espaco">Excluir este espaço</button>`:`<button class="btn bad" data-act="sair-espaco">Sair deste espaço</button>`}</div>`;
+}
 function vRevisao(){
-  const u=(S.d.config||{}).ultimaRevisao;
+  const u=(S.d.config||{})[chaveRev()];
   const blocos=[
     ['Caixa de entrada',inbox().length?`<button class="item" data-go="caixa"><div class="grow t">${inbox().length} item(ns) esperando destino</div><span class="chip warn">organizar</span></button>`:''],
     ['Projetos ativos sem próxima ação',semProxima().map(p=>projRow(p)).join('')],
@@ -477,18 +526,18 @@ function capturar(txt){
 /* ---------- ações ---------- */
 function novoProjeto(nome,extra){
   const id=newId();
-  set('projetos/'+id,Object.assign({nome,status:'ideia',progresso:0,proximaAcao:'',ondeParei:'',prazo:'',criadoEm:now(),atualizadoEm:now()},extra||{}));
+  set('projetos/'+id,Object.assign(autor(),{nome,status:'ideia',progresso:0,proximaAcao:'',ondeParei:'',prazo:'',criadoEm:now(),atualizadoEm:now()},extra||{}));
   return id;
 }
 function novaNota(projetoId,extra){
   const id=newId();
-  set('notas/'+id,Object.assign({titulo:'',texto:'',projetoId:projetoId||'',fixada:false,criadoEm:now(),atualizadoEm:now()},extra||{}));
+  set('notas/'+id,Object.assign(autor(),{titulo:'',texto:'',projetoId:projetoId||'',fixada:false,criadoEm:now(),atualizadoEm:now()},extra||{}));
   S.view='notas';S.proj=null;S.nota=id;render(true);
   setTimeout(()=>{const t=$('[data-nf=titulo]');if(t)t.focus();},40);
   return id;
 }
 function backup(){
-  const blob=new Blob([JSON.stringify(S.d,null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({pessoal:S.d,espacos:S.esp},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   const d=new Date();a.download='meu-qg-backup-'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.json';
   document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(a.href);},500);
@@ -525,12 +574,34 @@ document.addEventListener('click',e=>{
     case 'ver-feitos': S.verFeitos=!S.verFeitos; render(false); break;
     case 'cx-nota': { const i=obj('inbox')[id]; if(!i)break; const t=i.texto; novaNota('',{titulo:t.slice(0,60),texto:t.length>60?t:''}); del('inbox/'+id); break; }
     case 'cx-proj': { const i=obj('inbox')[id]; if(!i)break; const pid=novoProjeto(i.texto.slice(0,80)); del('inbox/'+id); toast('Projeto criado'); abrirProjeto(pid); break; }
-    case 'cx-ag': { const i=obj('inbox')[id]; if(!i)break; set('aguardando/'+newId(),{quem:'',oque:i.texto,projetoId:'',desde:now(),feito:false}); del('inbox/'+id); toast('Movido para Aguardando'); break; }
+    case 'cx-ag': { const i=obj('inbox')[id]; if(!i)break; set('aguardando/'+newId(),Object.assign(autor(),{quem:'',oque:i.texto,projetoId:'',desde:now(),feito:false})); del('inbox/'+id); toast('Movido para Aguardando'); break; }
     case 'cx-del': del('inbox/'+id); break;
-    case 'concluir-revisao': upd('config',{ultimaRevisao:now()}); toast('Revisão concluída ✓'); break;
+    case 'concluir-revisao': upd('config',{[chaveRev()]:now()}); toast('Revisão concluída ✓'); break;
     case 'backup': backup(); break;
+    case 'ws': trocaWs(id); break;
+    case 'novo-espaco': abrirNovoEspaco(); break;
+    case 'rm-membro': if(confirm('Remover esta pessoa do espaço?')){const eid=S.ws;
+      db.ref().update({['qgEspacos/'+eid+'/membros/'+id]:null,['qgEspacos/'+eid+'/nomes/'+id]:null,['qgIndice/'+id+'/'+eid]:null}).catch(erroSalvar);} break;
+    case 'sair-espaco': if(confirm('Sair deste espaço? Você perde o acesso ao que está nele.')){const eid=S.ws;
+      db.ref().update({['qgEspacos/'+eid+'/membros/'+S.uid]:null,['qgIndice/'+S.uid+'/'+eid]:null}).then(()=>{delete S.esp[eid];trocaWs('pessoal');}).catch(erroSalvar);} break;
+    case 'del-espaco': if(confirm('Excluir o espaço e TUDO que está nele, para todos os membros? Não dá para desfazer.')){const eid=S.ws,e=espAtual();
+      const u={};['dados','nome','dono','membros','nomes'].forEach(k=>u['qgEspacos/'+eid+'/'+k]=null);
+      Object.keys((e&&e.membros)||{}).forEach(m=>u['qgIndice/'+m+'/'+eid]=null);
+      db.ref().update(u).then(()=>{delete S.esp[eid];desligaEsp(eid);trocaWs('pessoal');}).catch(erroSalvar);} break;
   }
 });
+function erroSalvar(e){ toast('Não consegui salvar. Confira a conexão e as regras do banco.',true); console.error(e); }
+function trocaWs(id){
+  if(id!=='pessoal'&&!S.esp[id])id='pessoal';
+  S.ws=id;S.proj=null;S.nota=null;S.notaProj='';S.busca='';
+  try{localStorage.setItem('meuqg_ws_'+S.uid,id);}catch(_){}
+  if(S.view==='membros'&&id==='pessoal')S.view='hoje';
+  render(true);window.scrollTo(0,0);
+}
+function abrirNovoEspaco(){
+  $('#layer').innerHTML=`<div class="modal" data-act="fecha-modal"><form class="box" data-form="novo-espaco"><label class="f" for="neNome">Nome do espaço</label><input id="neNome" type="text" class="big" placeholder="Ex.: Time Logística" autocomplete="off"><p class="hint" style="margin-top:8px">Um espaço é uma área compartilhada: você escolhe quem entra, e tudo dentro dele é visto e editado por todos os membros.</p><div class="row" style="margin-top:12px;justify-content:flex-end"><button class="btn pri" type="submit">Criar espaço</button></div></form></div>`;
+  setTimeout(()=>{const i=$('#neNome');if(i)i.focus();},30);
+}
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){ fechaModal(); return; }
   if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('tt')){ e.preventDefault(); e.target.blur(); return; }
@@ -549,14 +620,21 @@ document.addEventListener('submit',e=>{
   else if(k==='novo-projeto'){ const n=val('#npNome'); if(!n)return; const id=novoProjeto(n,{status:'fazendo'}); abrirProjeto(id); setTimeout(()=>{const x=$('#pa');if(x)x.focus();},40); }
   else if(k==='diario'){ const t=val('#dIn'); if(!t)return; const id=f.dataset.id; set('projetos/'+id+'/diario/'+newId(),{txt:t,t:now()}); tocaProjeto(id); f.reset(); }
   else if(k==='link'){ const t=val('#lT'); let u=val('#lU'); if(!u)return; if(!/^https?:\/\//i.test(u))u='https://'+u; set('projetos/'+f.dataset.id+'/links/'+newId(),{t:t||u,u}); f.reset(); }
+  else if(k==='novo-espaco'){ const n=val('#neNome'); if(!n)return; const eid=db.ref('qgEspacos').push().key; fechaModal();
+    db.ref().update({['qgEspacos/'+eid+'/nome']:n,['qgEspacos/'+eid+'/dono']:S.uid,['qgEspacos/'+eid+'/membros/'+S.uid]:true,['qgEspacos/'+eid+'/nomes/'+S.uid]:S.nome||S.email,['qgIndice/'+S.uid+'/'+eid]:true})
+      .then(()=>{ ligaEsp(eid); S.ws=eid; S.view='membros'; render(true); toast('Espaço criado. Adicione as pessoas.'); }).catch(erroSalvar); }
+  else if(k==='renomear-espaco'){ const n=val('#enome'); if(n)db.ref('qgEspacos/'+S.ws+'/nome').set(n).then(()=>toast('Renomeado')).catch(erroSalvar); }
+  else if(k==='add-membro'){ const u=$('#amSel').value; if(!u)return; const eid=S.ws,d=S.dir[u]||{};
+    db.ref().update({['qgEspacos/'+eid+'/membros/'+u]:true,['qgEspacos/'+eid+'/nomes/'+u]:d.nome||d.email||'',['qgIndice/'+u+'/'+eid]:true}).then(()=>toast('Pessoa adicionada')).catch(erroSalvar); }
   else if(k==='aguardando'){ const q=val('#agQ'),o=val('#agO'); if(!q&&!o)return; const sp=$('#agP',f); const pid=f.dataset.proj||(sp?sp.value:'');
-    set('aguardando/'+newId(),{quem:q,oque:o,projetoId:pid||'',desde:now(),feito:false}); if(pid)tocaProjeto(pid); f.reset(); toast('Adicionado'); }
+    set('aguardando/'+newId(),Object.assign(autor(),{quem:q,oque:o,projetoId:pid||'',desde:now(),feito:false})); if(pid)tocaProjeto(pid); f.reset(); toast('Adicionado'); }
 });
 
 /* edição de campos (salva ao sair do campo / ao mudar) */
 let nTimer=null;
 document.addEventListener('change',e=>{
   const t=e.target; if(!t.dataset)return;
+  if(t.dataset.actChange==='ws'){ trocaWs(t.value); return; }
   if(t.id==='fNP'){ S.notaProj=t.value; render(false); return; }
   if(t.dataset.f&&t.dataset.id){
     let v=t.value; const f=t.dataset.f;
@@ -590,12 +668,36 @@ function start(){
     $('#app').hidden=false;$('#fab').hidden=false;
     const h=location.hash.slice(1); S.view=VIEWS.includes(h)?h:'hoje';
     render(true);
+    const nomeBase=(S.email||'').split('@')[0];
+    db.ref('centralApps/usuarios/'+u.uid).once('value').then(sn=>{ const d=sn.val()||{}; S.nome=d.nome||nomeBase;
+      db.ref('qgDiretorio/'+u.uid).set({nome:S.nome,email:S.email}).catch(()=>{}); }).catch(()=>{ db.ref('qgDiretorio/'+u.uid).set({nome:nomeBase,email:S.email}).catch(()=>{}); });
+    db.ref('qgDiretorio').on('value',sn=>{ S.dir=sn.val()||{}; if(S.view==='membros')renderSafe(); },()=>{});
+    db.ref('qgIndice/'+u.uid).on('value',sn=>{
+      const ids=Object.keys(sn.val()||{});
+      ids.forEach(ligaEsp);
+      Object.keys(espOff).forEach(id=>{ if(!ids.includes(id))soltaEsp(id); });
+    },()=>{});
     R().on('value',snap=>{
       const v=snap.val()||{};
       S.d={projetos:v.projetos||{},notas:v.notas||{},aguardando:v.aguardando||{},inbox:v.inbox||{},config:v.config||{}};
       renderSafe();
     },err=>{ console.error(err); toast('Sem permissão para ler seus dados. Falta publicar as regras do banco.',true); });
   });
+}
+const espOff={};
+function ligaEsp(id){
+  if(espOff[id])return;
+  const r=db.ref('qgEspacos/'+id);
+  const cb=sn=>{ const v=sn.val();
+    if(!v||!v.membros||!v.membros[S.uid]){ soltaEsp(id); return; }
+    S.esp[id]=v; renderSafe(); };
+  r.on('value',cb,()=>soltaEsp(id));
+  espOff[id]=()=>r.off('value',cb);
+}
+function desligaEsp(id){ if(espOff[id]){espOff[id]();delete espOff[id];} }
+function soltaEsp(id){
+  desligaEsp(id); delete S.esp[id];
+  if(S.ws===id){ trocaWs('pessoal'); toast('Você não tem mais acesso a esse espaço.'); } else renderSafe();
 }
 window.__startApp=start;
 if(window.__gateOk)start();
