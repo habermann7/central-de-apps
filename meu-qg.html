@@ -12,8 +12,8 @@
   --acc:#1b1f24;--accInk:#fff;
   --ok:#2c7a55;--okBg:rgba(44,122,85,.12);--warn:#a96f12;--warnBg:rgba(169,111,18,.13);
   --bad:#b3433a;--badBg:rgba(179,67,58,.12);--info:#386a9b;--infoBg:rgba(56,106,155,.12);
-  --r:16px;--r2:10px;--ease:cubic-bezier(.23,1,.32,1);
-  --shadow:0 1px 0 rgba(255,255,255,.7) inset,0 10px 32px rgba(20,24,30,.07);
+  --r:22px;--r2:12px;--ease:cubic-bezier(.23,1,.32,1);
+  --shadow:0 1px 0 rgba(255,255,255,.7) inset,0 8px 28px rgba(20,24,30,.055);
 }
 @media (prefers-color-scheme:dark){
   :root{
@@ -32,7 +32,7 @@ html{-webkit-text-size-adjust:100%}
 body{
   font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,system-ui,sans-serif;
   color:var(--ink);background:var(--bg);min-height:100dvh;-webkit-font-smoothing:antialiased;
-  background-image:radial-gradient(1100px 600px at 12% -10%,var(--bg2),transparent 70%);background-attachment:fixed;
+  background-image:radial-gradient(900px 520px at 8% -8%,color-mix(in srgb,#8aa4c8 16%,var(--bg2)),transparent 70%),radial-gradient(800px 480px at 100% 100%,color-mix(in srgb,#b9a3d6 12%,var(--bg2)),transparent 70%);background-attachment:fixed;
 }
 [hidden]{display:none!important}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -41,19 +41,21 @@ h1,h2,h3{font-weight:650;letter-spacing:-.01em;text-wrap:balance}
 :focus-visible{outline:2px solid var(--info);outline-offset:2px}
 
 /* layout */
-.shell{display:grid;grid-template-columns:232px 1fr;min-height:100dvh}
-.side{position:sticky;top:0;height:100dvh;padding:22px 14px;display:flex;flex-direction:column;gap:4px;border-right:1px solid var(--line)}
+.shell{display:grid;grid-template-columns:268px 1fr;min-height:100dvh}
+.side{position:sticky;top:12px;margin:12px 0 12px 12px;height:calc(100dvh - 24px);padding:20px 12px;display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);border-radius:26px;background:var(--card);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:var(--shadow)}
 .brand{font-size:18px;font-weight:700;letter-spacing:-.02em;padding:0 10px 14px}
 .brand small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;font-size:12px;font-weight:500;color:var(--mut);letter-spacing:0;margin-top:2px}
-.nav{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:0;border-radius:var(--r2);background:none;cursor:pointer;text-align:left;color:var(--mut);font-weight:550;transition:background .15s var(--ease),color .15s var(--ease),transform .12s var(--ease)}
+.nav{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;border-radius:14px;background:none;cursor:pointer;text-align:left;color:var(--mut);font-weight:550;transition:background .15s var(--ease),color .15s var(--ease),transform .12s var(--ease)}
 .nav:hover{background:var(--line)}
 .nav:active{transform:scale(.97)}
-.nav[aria-current=page]{background:var(--card2);color:var(--ink);box-shadow:var(--shadow)}
+.nav[aria-current=page]{background:var(--acc);color:var(--accInk);box-shadow:0 6px 16px rgba(20,24,30,.18)}
+.nav[aria-current=page] .badge{background:var(--accInk);color:var(--acc)}
 .nav .ic{width:18px;text-align:center}
 .badge{margin-left:auto;font-size:11px;font-weight:650;background:var(--acc);color:var(--accInk);border-radius:99px;padding:1px 7px;min-width:20px;text-align:center}
 .side .sp{flex:1}
 .side .foot{display:flex;flex-direction:column;gap:2px}
-main{padding:28px clamp(16px,4vw,48px) 96px;max-width:1100px;width:100%}
+main{padding:34px clamp(18px,4vw,56px) 110px;max-width:1120px;width:100%;min-width:0}
+.ed{min-width:0}.ed>*{min-width:0;max-width:100%}
 .view{animation:in .22s var(--ease)}
 @keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .vh{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
@@ -87,11 +89,31 @@ main{padding:28px clamp(16px,4vw,48px) 96px;max-width:1100px;width:100%}
 .drop.on{background:var(--infoBg);border-color:var(--info)}
 .lb{max-width:min(92vw,980px);width:auto;padding:12px;text-align:center}
 .lb img{max-width:100%;max-height:74vh;border-radius:10px;display:block;margin:0 auto}
+.chip.stc{background:color-mix(in srgb,var(--c) 16%,transparent);color:color-mix(in srgb,var(--c) 62%,#000)}
+@media (prefers-color-scheme:dark){.chip.stc{color:color-mix(in srgb,var(--c) 70%,#fff)}}
+.seg button.stsel[aria-pressed=true]{background:color-mix(in srgb,var(--c) 16%,var(--card2));color:color-mix(in srgb,var(--c) 62%,#000);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--c) 70%,transparent)}
+@media (prefers-color-scheme:dark){.seg button.stsel[aria-pressed=true]{color:color-mix(in srgb,var(--c) 70%,#fff)}}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px;flex:none}
 .seg button{display:inline-flex;align-items:center}
+.pipe{display:flex;align-items:flex-start;overflow-x:auto;padding:6px 2px 4px;scrollbar-width:none}
+.pipe::-webkit-scrollbar{display:none}
+.stp{flex:1 0 76px;position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;background:none;border:0;cursor:pointer;color:var(--faint);font-size:12px;font-weight:600;padding:0 2px;transition:color .2s var(--ease),transform .12s var(--ease)}
+.stp:active{transform:scale(.96)}
+.stp::before{content:"";position:absolute;top:10px;right:50%;width:100%;height:2px;background:var(--line2);transition:background .3s var(--ease)}
+.stp:first-child::before{display:none}
+.stp .nd{position:relative;z-index:1;width:22px;height:22px;border-radius:50%;background:var(--card2);border:2px solid var(--line2);transition:background .25s var(--ease),border-color .25s var(--ease),box-shadow .25s var(--ease)}
+.stp .lb{text-align:center;line-height:1.2}
+.stp:hover .nd{border-color:var(--c)}
+.stp.done{color:var(--mut)}.stp.done::before,.stp.cur::before{background:var(--c)}
+.stp.done .nd{background:var(--c);border-color:var(--c)}
+.stp.cur{color:var(--ink)}.stp.cur .nd{background:var(--c);border-color:var(--c);box-shadow:0 0 0 6px color-mix(in srgb,var(--c) 22%,transparent)}
+.pipe.par .stp{opacity:.4;filter:grayscale(1)}
+.ring{width:56px;height:56px;border-radius:50%;flex:none;display:grid;place-items:center;background:conic-gradient(var(--c) calc(var(--p)*1%),var(--line) 0)}
+.ring b{width:44px;height:44px;border-radius:50%;background:var(--card2);display:grid;place-items:center;font-size:12.5px;font-weight:700}
+.pc{gap:14px}
 /* componentes */
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);background:var(--card2);border-radius:var(--r2);padding:8px 13px;font-weight:600;cursor:pointer;transition:transform .12s var(--ease),background .15s var(--ease),opacity .15s}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:20px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);background:var(--card2);border-radius:999px;padding:9px 16px;font-weight:600;cursor:pointer;transition:transform .12s var(--ease),background .15s var(--ease),opacity .15s}
 .btn:hover{background:var(--bg2)}.btn:active{transform:scale(.97)}
 .btn.pri{background:var(--acc);color:var(--accInk);border-color:var(--acc)}
 .btn.pri:hover{opacity:.88}
@@ -117,7 +139,7 @@ label.f{display:block;font-size:12px;font-weight:600;color:var(--mut);margin:0 0
 .sec{margin-top:26px}
 .sec>h3{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .list{display:flex;flex-direction:column;gap:8px}
-.item{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 14px;cursor:pointer;text-align:left;width:100%;transition:transform .12s var(--ease),border-color .15s,background .15s}
+.item{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px 16px;cursor:pointer;text-align:left;width:100%;transition:transform .12s var(--ease),border-color .15s,background .15s}
 .item:hover{border-color:var(--line2)}.item:active{transform:scale(.99)}
 .item .t{font-weight:600}.item .s{font-size:13px;color:var(--mut)}
 .item .grow{flex:1;min-width:0}
@@ -157,12 +179,12 @@ kbd{font:600 11px ui-monospace,monospace;border:1px solid var(--line2);border-bo
 /* mobile */
 @media (max-width:860px){
   .shell{grid-template-columns:1fr}
-  .side{position:fixed;bottom:0;left:0;right:0;top:auto;height:auto;flex-direction:row;padding:6px 8px calc(6px + env(safe-area-inset-bottom));border-right:0;border-top:1px solid var(--line);background:var(--bg);z-index:50;justify-content:space-around;gap:0}
+  .side{position:fixed;bottom:calc(10px + env(safe-area-inset-bottom));left:10px;right:10px;top:auto;margin:0;height:auto;flex-direction:row;padding:6px 6px;border-radius:26px;box-shadow:0 12px 34px rgba(0,0,0,.2);z-index:50;justify-content:space-around;gap:0}
   .brand,.side .sp,.side .foot,.side .ws{display:none}
   .wsbar{display:flex;gap:8px}
-  .nav{flex-direction:column;gap:2px;font-size:11px;padding:6px 4px;text-align:center;justify-content:center;position:relative}
+  .nav{flex-direction:column;gap:2px;font-size:11px;padding:7px 4px;border-radius:18px;text-align:center;justify-content:center;position:relative}
   .nav .badge{position:absolute;top:2px;right:6px;margin:0}
-  .fab{bottom:calc(76px + env(safe-area-inset-bottom));right:16px}
+  .fab{bottom:calc(92px + env(safe-area-inset-bottom));right:16px}
   .grid2{grid-template-columns:1fr}
   .notes{grid-template-columns:1fr}
   :root{--vb:inline-flex}
@@ -261,12 +283,13 @@ const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const DIA=864e5;
 /* [nome, classe antiga, cor do status]. A cor do STATUS (identidade) é diferente da cor do ANDAMENTO (vermelho/amarelo/verde). */
-const STATUS={mapeamento:['Mapeamento','','#64748b'],producao:['Em Produção','ok','#4f46e5'],andamento:['Em Andamento','info','#2563eb'],homologacao:['Em Homologação','warn','#ea580c'],suporte:['Suporte','sup','#9333ea'],concluido:['Concluído','','#0d9488'],paralisado:['Paralisado','bad','#78716c']};
+const STATUS={mapeamento:['Mapeamento','','#8b95a5'],andamento:['Em Andamento','info','#4a90b8'],producao:['Em Produção','ok','#6f7fc4'],homologacao:['Em Homologação','warn','#d08a3e'],suporte:['Suporte','sup','#8a6fb3'],concluido:['Concluído','','#4f9a7d'],paralisado:['Paralisado','bad','#a0948a']};
+const FLUXO=['mapeamento','andamento','producao','homologacao','suporte','concluido'];
 const stCor=k=>(STATUS[k]||STATUS.mapeamento)[2];
-const stChip=k=>{const [l,,c]=STATUS[k]||STATUS.mapeamento;return `<span class="chip" style="background:color-mix(in srgb,${c} 15%,transparent);color:${c}">${l}</span>`;};
+const stChip=k=>{const [l,,c]=STATUS[k]||STATUS.mapeamento;return `<span class="chip stc" style="--c:${c}">${l}</span>`;};
 const ORDEM_STATUS=['andamento','producao','homologacao','mapeamento','suporte','concluido','paralisado'];
 /* % que cada status assume ao ser escolhido (dá pra ajustar depois no controle). Paralisado não tem %: é caso à parte. */
-const PRESET={mapeamento:10,producao:30,andamento:50,homologacao:80,concluido:100,suporte:90};
+const PRESET={mapeamento:10,andamento:30,producao:50,homologacao:80,suporte:90,concluido:100};
 const MOV=['andamento','producao','homologacao']; /* "em movimento": entram nos alertas e nas próximas ações */
 const LEGADO={ideia:'mapeamento',fazendo:'andamento',parado:'paralisado'}; /* nomes antigos, convertidos ao ler */
 const VIEWS=['hoje','projetos','notas','aguardando','caixa','revisao','membros'];
@@ -365,6 +388,7 @@ function render(animate){
   else html='<div class="empty">Carregando…</div>';
   m.innerHTML=`<div class="view"${animate?'':' style="animation:none"'}>${wsBar()}${html}</div>`;
   if(S.view==='projetos'&&S.proj&&obj('projetos')[S.proj])carregaAnexos(S.proj);
+  const pp=$('.pipe'),cc=$('.pipe .stp.cur'); if(pp&&cc&&pp.scrollWidth>pp.clientWidth)pp.scrollLeft=cc.offsetLeft-pp.clientWidth/2+cc.clientWidth/2;
 }
 /* Re-render vindo do banco: não atropela quem está digitando. */
 function renderSafe(){
@@ -376,7 +400,7 @@ function renderSafe(){
 
 function projRow(p,extra){
   const prox=(p.proximaAcao||'').trim();
-  return `<button class="item" data-act="abrir" data-id="${p.id}" style="border-left:4px solid ${stCor(p.status)}">
+  return `<button class="item" data-act="abrir" data-id="${p.id}" style="border-left:3px solid ${stCor(p.status)}">
     <div class="grow"><div class="t">${esc(p.nome)}</div>
     <div class="s">${prox?'→ '+esc(prox):'<span style="color:var(--bad)">definir próxima ação</span>'}</div></div>
     ${extra||''}${prazoChip(p.prazo)}${stChip(p.status)}</button>`;
@@ -414,15 +438,26 @@ function vProjetos(){
   ${grupos.length?grupos.map(([st,arr])=>`<div class="sec"><h3><i class="dot" style="background:${stCor(st)}"></i>${STATUS[st][0]} <span class="chip">${arr.length}</span></h3><div class="grid3">${arr.map(cardProj).join('')}</div></div>`).join(''):'<div class="empty sec">Nada aqui ainda. Crie o primeiro projeto acima.</div>'}`;
 }
 function cardProj(p){
-  const prox=(p.proximaAcao||'').trim();
+  const prox=(p.proximaAcao||'').trim(), par=p.status==='paralisado', pct=Math.min(100,+p.progresso||0);
   const nn=lista('notas').filter(n=>n.projetoId===p.id).length;
-  return `<div class="card pc" data-act="abrir" data-id="${p.id}" tabindex="0" role="button" style="border-left:4px solid ${stCor(p.status)}">
-    <div class="row" style="justify-content:space-between;align-items:flex-start"><h3>${esc(p.nome)}</h3>${prazoChip(p.prazo)}</div>
-    ${(p.status==='concluido'&&(!prox||prox==='—'))?'':`<div class="next${prox?'':' none'}">${prox?'→ '+esc(prox):'Definir próxima ação'}</div>`}
-    <div class="bar"><i style="width:${Math.min(100,+p.progresso||0)}%;background:${corP(p)}"></i></div>
-    <div class="row hint" style="justify-content:space-between"><span class="num" style="color:${corP(p)};font-weight:650">${p.status==='paralisado'?'parado em '+(+p.progresso||0)+'%':(+p.progresso||0)+'%'}</span><span>${nn?nn+' nota'+(nn>1?'s':'')+' · ':''}mexido ${ago(p.atualizadoEm||p.criadoEm)}</span></div></div>`;
+  return `<div class="card pc" data-act="abrir" data-id="${p.id}" tabindex="0" role="button">
+    <div class="row" style="justify-content:space-between;align-items:flex-start;gap:8px"><h3>${esc(p.nome)}</h3>${prazoChip(p.prazo)}</div>
+    <div class="row" style="gap:14px;align-items:center">
+      <div class="ring" style="--p:${pct};--c:${corP(p)}" aria-label="Andamento ${pct}%"><b class="num">${par?'II':pct+'%'}</b></div>
+      <div class="grow" style="min-width:0">
+        ${(p.status==='concluido'&&(!prox||prox==='—'))?'':`<div class="next${prox?'':' none'}">${prox?'→ '+esc(prox):'Definir próxima ação'}</div>`}
+        <div class="hint" style="margin-top:6px">${par?'parado em '+pct+'% · ':''}${nn?nn+' nota'+(nn>1?'s':'')+' · ':''}mexido ${ago(p.atualizadoEm||p.criadoEm)}</div>
+      </div>
+    </div>
+    <div>${stChip(p.status)}</div></div>`;
 }
 
+function pipeHtml(p){
+  const par=p.status==='paralisado';
+  const ref=par?(FLUXO.includes(p.statusAntes)?p.statusAntes:null):p.status;
+  const idx=ref?FLUXO.indexOf(ref):-1;
+  return `<div class="pipe${par?' par':''}" role="group" aria-label="Fase do projeto">${FLUXO.map((k,i)=>`<button class="stp${i<idx?' done':i===idx?' cur':''}" data-act="status" data-id="${p.id}" data-v="${k}" aria-pressed="${p.status===k}" style="--c:${stCor(k)}"><span class="nd"></span><span class="lb">${STATUS[k][0]}</span></button>`).join('')}</div>${par?`<div class="hint" style="margin-top:-4px">Pausado${FLUXO.includes(p.statusAntes)?' em “'+STATUS[p.statusAntes][0]+'”':''}.</div>`:''}`;
+}
 function vProjeto(id){
   const p=Object.assign({id},obj('projetos')[id]);
   const links=Object.entries(p.links||{}).map(([k,l])=>Object.assign({k},l));
@@ -433,9 +468,10 @@ function vProjeto(id){
     <button class="btn ghost bad" data-act="del-proj" data-id="${id}">Excluir projeto</button></div>
   <div class="ed">
     <input type="text" class="tt" data-keep data-f="nome" data-id="${id}" value="${esc(p.nome)}" aria-label="Nome do projeto">
-    <div class="row wrap">
-      <div class="seg" role="group" aria-label="Status">${Object.entries(STATUS).map(([k,[l,,c]])=>`<button data-act="status" data-id="${id}" data-v="${k}" aria-pressed="${p.status===k}" style="${p.status===k?`background:color-mix(in srgb,${c} 16%,var(--card2));color:${c};box-shadow:inset 0 0 0 1.5px ${c}`:''}"><i class="dot" style="background:${c}"></i>${l}</button>`).join('')}</div>
-      <div style="width:170px"><input type="date" data-keep data-f="prazo" data-id="${id}" value="${esc(p.prazo||'')}" aria-label="Prazo"></div>
+    ${pipeHtml(p)}
+    <div class="row wrap" style="justify-content:space-between">
+      ${p.status==='paralisado'?`<button class="btn" data-act="retomar" data-id="${id}">Retomar projeto</button>`:`<button class="btn ghost" data-act="status" data-id="${id}" data-v="paralisado" aria-pressed="false">Paralisado</button>`}
+      <label class="row" style="gap:8px"><span class="hint">Prazo</span><input type="date" data-keep data-f="prazo" data-id="${id}" value="${esc(p.prazo||'')}" aria-label="Prazo" style="width:170px"></label>
     </div>
     <div class="card"><label class="f" for="pa">Próxima ação — o que eu faço agora?</label>
       <input id="pa" type="text" class="big" data-keep data-f="proximaAcao" data-id="${id}" value="${esc(p.proximaAcao||'')}" placeholder="Um passo pequeno e concreto"></div>
@@ -657,8 +693,10 @@ document.addEventListener('click',e=>{
     case 'abrir': abrirProjeto(id); break;
     case 'voltar': S.proj=null; render(true); break;
     case 'filtro': S.filtro=b.dataset.v; render(false); break;
+    case 'retomar': { const pr=obj('projetos')[id]||{}; const v=FLUXO.includes(pr.statusAntes)?pr.statusAntes:'andamento'; const ex={status:v,statusAntes:null}; if(PRESET[v]!=null)ex.progresso=PRESET[v]; tocaProjeto(id,ex); break; }
     case 'status': {
-      const ex={status:b.dataset.v};
+      const cur=(obj('projetos')[id]||{}).status; const ex={status:b.dataset.v};
+      if(b.dataset.v==='paralisado'&&cur!=='paralisado')ex.statusAntes=cur; else ex.statusAntes=null;
       if(PRESET[b.dataset.v]!=null)ex.progresso=PRESET[b.dataset.v];
       if(b.dataset.v==='concluido'){ex.concluidoEm=now();} else ex.concluidoEm=null;
       tocaProjeto(id,ex); break; }
