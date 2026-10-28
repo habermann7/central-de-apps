@@ -69,6 +69,23 @@ main{padding:28px clamp(16px,4vw,48px) 96px;max-width:1100px;width:100%}
 .wsbar{display:none;margin-bottom:14px}
 .wsbar select{flex:1;min-width:0}.wsbar .btn{white-space:nowrap}
 .who{font-size:12px;color:var(--faint)}
+/* arquivos */
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:12px}
+.th{position:relative;border:1px solid var(--line);border-radius:12px;background:var(--card2);overflow:hidden;cursor:pointer;transition:transform .12s var(--ease),border-color .15s;display:flex;flex-direction:column}
+.th:hover{border-color:var(--line2)}.th:active{transform:scale(.98)}
+.th .pv{aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:var(--bg2);font-weight:700;color:var(--mut);font-size:15px;letter-spacing:.04em}
+.th .pv img{width:100%;height:100%;object-fit:cover;display:block}
+.th .cap{padding:7px 9px;font-size:12px;line-height:1.3}
+.th .cap b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.th .cap span{color:var(--faint)}
+.th .ac{position:absolute;top:5px;right:5px;display:flex;gap:4px;opacity:0;transition:opacity .15s}
+.th:hover .ac,.th:focus-within .ac{opacity:1}
+@media (hover:none){.th .ac{opacity:1}}
+.th .ac button{border:0;border-radius:7px;background:rgba(20,23,27,.72);color:#fff;font-size:12px;padding:3px 7px;cursor:pointer}
+.drop{border:1.5px dashed var(--line2);border-radius:12px;padding:16px;text-align:center;color:var(--mut);transition:background .15s,border-color .15s}
+.drop.on{background:var(--infoBg);border-color:var(--info)}
+.lb{max-width:min(92vw,980px);width:auto;padding:12px;text-align:center}
+.lb img{max-width:100%;max-height:74vh;border-radius:10px;display:block;margin:0 auto}
 /* componentes */
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);background:var(--card2);border-radius:var(--r2);padding:8px 13px;font-weight:600;cursor:pointer;transition:transform .12s var(--ease),background .15s var(--ease),opacity .15s}
@@ -240,13 +257,17 @@ const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const DIA=864e5;
-const STATUS={ideia:['Ideia','info'],fazendo:['Fazendo','ok'],parado:['Parado','warn'],concluido:['Concluído','']};
-const ORDEM_STATUS=['fazendo','parado','ideia','concluido'];
+const STATUS={mapeamento:['Mapeamento',''],producao:['Em Produção','ok'],andamento:['Em Andamento','info'],homologacao:['Em Homologação','warn'],paralisado:['Paralisado','bad'],concluido:['Concluído','']};
+const ORDEM_STATUS=['andamento','producao','homologacao','mapeamento','paralisado','concluido'];
+const MOV=['andamento','producao','homologacao']; /* "em movimento": entram nos alertas e nas próximas ações */
+const LEGADO={ideia:'mapeamento',fazendo:'andamento',parado:'paralisado'}; /* nomes antigos, convertidos ao ler */
 const VIEWS=['hoje','projetos','notas','aguardando','caixa','revisao','membros'];
-const S={uid:null,email:'',nome:'',ws:'pessoal',esp:{},dir:{},dirAdm:{},d:{projetos:{},notas:{},aguardando:{},inbox:{},config:{}},view:'hoje',proj:null,nota:null,filtro:'ativos',busca:'',notaProj:'',verFeitos:false};
+const S={uid:null,email:'',nome:'',ws:'pessoal',esp:{},dir:{},dirAdm:{},anx:{},d:{projetos:{},notas:{},aguardando:{},inbox:{},config:{}},view:'hoje',proj:null,nota:null,filtro:'ativos',busca:'',notaProj:'',verFeitos:false};
 let db=null;
 
 /* ---------- utilitários ---------- */
+/* Andamento: vermelho até 20%, amarelo até 70%, verde acima disso */
+const corProg=v=>{v=+v||0;return v<=20?'var(--bad)':v<=70?'var(--warn)':'var(--ok)';};
 const PES=()=>'meuQG/'+S.uid;
 /* inbox e config são sempre pessoais; o resto vive no espaço escolhido (Pessoal ou um espaço de time) */
 const baseDe=p=>{const k=(p||'').split('/')[0];return(!p||k==='inbox'||k==='config'||S.ws==='pessoal')?PES():'qgEspacos/'+S.ws+'/dados';};
@@ -258,7 +279,8 @@ const ehDono=()=>{const e=espAtual();return !!e&&e.dono===S.uid;};
 const nomeDe=u=>{if(u===S.uid)return 'você';const e=espAtual();return (e&&e.nomes&&e.nomes[u])||(DIR()[u]&&DIR()[u].nome)||'';};
 const autor=()=>S.ws==='pessoal'?{}:{por:S.uid};
 const now=()=>Date.now();
-const obj=k=>{ if(k==='inbox'||k==='config'||S.ws==='pessoal')return S.d[k]||{}; const e=S.esp[S.ws]; return (e&&e.dados&&e.dados[k])||{}; };
+const obj0=k=>{ if(k==='inbox'||k==='config'||S.ws==='pessoal')return S.d[k]||{}; const e=S.esp[S.ws]; return (e&&e.dados&&e.dados[k])||{}; };
+const obj=k=>{ const o=obj0(k); if(k!=='projetos')return o; const r={}; Object.keys(o).forEach(id=>{ const p=o[id]; if(p&&typeof p==='object'){ r[id]=LEGADO[p.status]?Object.assign({},p,{status:LEGADO[p.status]}):p; } }); return r; };
 const lista=(k)=>Object.keys(obj(k)).map(id=>Object.assign({id},obj(k)[id]));
 const dias=ts=>Math.max(0,Math.floor((now()-ts)/DIA));
 function fmtData(ts){const d=new Date(ts);return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
@@ -282,8 +304,8 @@ const nomeProj=id=>(obj('projetos')[id]||{}).nome||'';
 
 /* ---------- regras de "atenção" ---------- */
 const ativos=()=>lista('projetos').filter(p=>p.status!=='concluido');
-const semProxima=()=>lista('projetos').filter(p=>(p.status==='fazendo'||p.status==='parado')&&!(p.proximaAcao||'').trim());
-const parados=()=>lista('projetos').filter(p=>p.status==='fazendo'&&dias(p.atualizadoEm||p.criadoEm||now())>=7);
+const semProxima=()=>lista('projetos').filter(p=>MOV.includes(p.status)&&!(p.proximaAcao||'').trim());
+const parados=()=>lista('projetos').filter(p=>MOV.includes(p.status)&&dias(p.atualizadoEm||p.criadoEm||now())>=7);
 const prazosPerto=()=>lista('projetos').filter(p=>p.status!=='concluido'&&p.prazo&&prazoDias(p.prazo)!=null&&prazoDias(p.prazo)<=7).sort((a,b)=>a.prazo.localeCompare(b.prazo));
 const agAbertos=()=>lista('aguardando').filter(a=>!a.feito).sort((a,b)=>(a.desde||0)-(b.desde||0));
 const agVelhos=()=>agAbertos().filter(a=>dias(a.desde||now())>=7);
@@ -333,6 +355,7 @@ function render(animate){
   else if(S.view==='revisao')html=vRevisao();
   else html='<div class="empty">Carregando…</div>';
   m.innerHTML=`<div class="view"${animate?'':' style="animation:none"'}>${wsBar()}${html}</div>`;
+  if(S.view==='projetos'&&S.proj&&obj('projetos')[S.proj])carregaAnexos(S.proj);
 }
 /* Re-render vindo do banco: não atropela quem está digitando. */
 function renderSafe(){
@@ -343,7 +366,7 @@ function renderSafe(){
 }
 
 function projRow(p,extra){
-  const [lab,cls]=STATUS[p.status]||STATUS.ideia;
+  const [lab,cls]=STATUS[p.status]||STATUS.mapeamento;
   const prox=(p.proximaAcao||'').trim();
   return `<button class="item" data-act="abrir" data-id="${p.id}">
     <div class="grow"><div class="t">${esc(p.nome)}</div>
@@ -353,7 +376,7 @@ function projRow(p,extra){
 
 function vHoje(){
   const nome=(S.email||'').split('@')[0];
-  const fazendo=lista('projetos').filter(p=>p.status==='fazendo').sort((a,b)=>(a.prazo||'9999').localeCompare(b.prazo||'9999')||(a.atualizadoEm||0)-(b.atualizadoEm||0));
+  const fazendo=lista('projetos').filter(p=>MOV.includes(p.status)).sort((a,b)=>(a.prazo||'9999').localeCompare(b.prazo||'9999')||(a.atualizadoEm||0)-(b.atualizadoEm||0));
   const ag=agAbertos().slice(0,5);
   const atencao=[...new Map([...parados(),...prazosPerto()].map(p=>[p.id,p])).values()];
   const h=new Date().getHours();
@@ -363,13 +386,13 @@ function vHoje(){
   <form class="card" data-form="captura-hoje"><label class="f" for="capH">Anotar rápido (vai pra Caixa, você organiza depois)</label>
     <div class="row"><input id="capH" type="text" class="big" placeholder="Ideia, tarefa, lembrete…" autocomplete="off" style="flex:1"><button class="btn pri" type="submit">Anotar</button></div></form>
   <div class="stats sec">
-    <div class="card stat"><b class="num">${lista('projetos').filter(p=>p.status==='fazendo').length}</b><span>Fazendo</span></div>
+    <div class="card stat"><b class="num">${lista('projetos').filter(p=>MOV.includes(p.status)).length}</b><span>Em movimento</span></div>
     <div class="card stat"><b class="num">${ativos().length}</b><span>Projetos ativos</span></div>
     <div class="card stat"><b class="num">${agAbertos().length}</b><span>Aguardando</span></div>
     <div class="card stat"><b class="num">${inbox().length}</b><span>Na Caixa</span></div>
   </div>
   ${atencao.length?`<div class="sec"><h3>Atenção</h3><div class="list">${atencao.map(p=>projRow(p,parados().some(x=>x.id===p.id)?`<span class="chip warn">sem mexer ${dias(p.atualizadoEm||p.criadoEm)}d</span>`:'')).join('')}</div></div>`:''}
-  <div class="sec"><h3>Próximas ações</h3>${fazendo.length?`<div class="list">${fazendo.map(p=>projRow(p)).join('')}</div>`:'<div class="empty">Nenhum projeto em andamento. Marque um projeto como “Fazendo”.</div>'}</div>
+  <div class="sec"><h3>Próximas ações</h3>${fazendo.length?`<div class="list">${fazendo.map(p=>projRow(p)).join('')}</div>`:'<div class="empty">Nenhum projeto em movimento. Marque um projeto como Em Andamento, Em Produção ou Em Homologação.</div>'}</div>
   ${ag.length?`<div class="sec"><h3>Esperando resposta</h3><div class="list">${ag.map(a=>`<button class="item" data-go="aguardando"><div class="grow"><div class="t">${esc(a.quem||'—')}</div><div class="s">${esc(a.oque||'')}</div></div><span class="chip ${dias(a.desde||now())>=7?'warn':''}">${dias(a.desde||now())}d</span></button>`).join('')}</div></div>`:''}`;
 }
 
@@ -388,8 +411,8 @@ function cardProj(p){
   return `<div class="card pc" data-act="abrir" data-id="${p.id}" tabindex="0" role="button">
     <div class="row" style="justify-content:space-between;align-items:flex-start"><h3>${esc(p.nome)}</h3>${prazoChip(p.prazo)}</div>
     <div class="next${prox?'':' none'}">${prox?'→ '+esc(prox):'Definir próxima ação'}</div>
-    <div class="bar"><i style="width:${Math.min(100,+p.progresso||0)}%"></i></div>
-    <div class="row hint" style="justify-content:space-between"><span class="num">${+p.progresso||0}%</span><span>${nn?nn+' nota'+(nn>1?'s':'')+' · ':''}mexido ${ago(p.atualizadoEm||p.criadoEm)}</span></div></div>`;
+    <div class="bar"><i style="width:${Math.min(100,+p.progresso||0)}%;background:${corProg(p.progresso)}"></i></div>
+    <div class="row hint" style="justify-content:space-between"><span class="num" style="color:${corProg(p.progresso)};font-weight:650">${+p.progresso||0}%</span><span>${nn?nn+' nota'+(nn>1?'s':'')+' · ':''}mexido ${ago(p.atualizadoEm||p.criadoEm)}</span></div></div>`;
 }
 
 function vProjeto(id){
@@ -411,9 +434,9 @@ function vProjeto(id){
     <div class="grid2">
       <div class="card"><label class="f" for="op">Onde parei</label>
         <textarea id="op" data-keep data-f="ondeParei" data-id="${id}" placeholder="Em que ponto está? O que falta?" style="min-height:110px">${esc(p.ondeParei||'')}</textarea></div>
-      <div class="card"><label class="f" for="pr">Andamento: <span class="num" id="prv">${+p.progresso||0}%</span></label>
-        <input id="pr" type="range" min="0" max="100" step="5" value="${+p.progresso||0}" data-keep data-f="progresso" data-id="${id}" style="width:100%;accent-color:var(--acc)">
-        <div class="bar" style="margin-top:10px"><i style="width:${+p.progresso||0}%"></i></div>
+      <div class="card"><label class="f" for="pr">Andamento: <span class="num" id="prv" style="color:${corProg(p.progresso)}">${+p.progresso||0}%</span></label>
+        <input id="pr" type="range" min="0" max="100" step="5" value="${+p.progresso||0}" data-keep data-f="progresso" data-id="${id}" style="width:100%;accent-color:${corProg(p.progresso)}">
+        <div class="bar" style="margin-top:10px"><i id="prb" style="width:${+p.progresso||0}%;background:${corProg(p.progresso)}"></i></div>
         <p class="hint" style="margin-top:12px">Criado em ${fmtData(p.criadoEm||now())}${p.por&&nomeDe(p.por)?' por '+esc(nomeDe(p.por)):''} · mexido ${ago(p.atualizadoEm||p.criadoEm)}${p.concluidoEm?' · concluído em '+fmtData(p.concluidoEm):''}</p></div>
     </div>
     <div class="sec"><h3>Diário de andamento</h3>
@@ -424,12 +447,82 @@ function vProjeto(id){
     <div class="sec"><h3>Aguardando ligado a este projeto</h3>
       <form class="row wrap" data-form="aguardando" data-proj="${id}"><input type="text" id="agQ" placeholder="De quem?" style="flex:1;min-width:120px"><input type="text" id="agO" placeholder="O que estou esperando?" style="flex:2;min-width:180px"><button class="btn" type="submit">Adicionar</button></form>
       <div class="list" style="margin-top:10px">${ag.map(agRow).join('')}</div></div>
-    <div class="sec"><h3>Links</h3>
-      <form class="row wrap" data-form="link" data-id="${id}"><input type="text" id="lT" placeholder="Título" style="flex:1;min-width:120px"><input type="text" inputmode="url" id="lU" placeholder="https://…" style="flex:2;min-width:180px"><button class="btn" type="submit">Adicionar</button></form>
-      <div class="list" style="margin-top:10px">${links.map(l=>`<div class="item" style="cursor:default"><div class="grow"><a class="t" href="${esc(l.u)}" target="_blank" rel="noopener noreferrer" style="color:inherit">${esc(l.t||l.u)}</a><div class="s">${esc(l.u)}</div></div><button class="btn ghost sm" data-act="del-link" data-id="${id}" data-k="${l.k}" aria-label="Remover link">×</button></div>`).join('')}</div></div>
+    <div class="sec"><h3>Arquivos <span class="chip" id="anxN">${Object.keys(p.anexosMeta||{}).length}</span></h3>
+      <div class="drop" id="drop"><div>Arraste fotos ou PDFs aqui, cole um print (<kbd>Ctrl</kbd>+<kbd>V</kbd>) ou</div>
+        <button class="btn" style="margin-top:8px" data-act="anx-add" data-id="${id}">+ Escolher arquivos</button>
+        <input type="file" id="anxIn" multiple accept="image/*,application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" hidden data-id="${id}">
+        <div class="hint" style="margin-top:6px">Fotos são reduzidas automaticamente. Outros arquivos: até 4 MB cada.</div></div>
+      <div id="anxBox">${anxHtml(id)}</div></div>
+    ${links.length?`<div class="sec"><h3>Links (antigos)</h3><div class="list">${links.map(l=>`<div class="item" style="cursor:default"><div class="grow"><a class="t" href="${esc(l.u)}" target="_blank" rel="noopener noreferrer" style="color:inherit">${esc(l.t||l.u)}</a><div class="s">${esc(l.u)}</div></div><button class="btn ghost sm" data-act="del-link" data-id="${id}" data-k="${l.k}" aria-label="Remover link">×</button></div>`).join('')}</div></div>`:''}
   </div>`;
 }
 
+/* ---------- arquivos (foto/PDF) ----------
+   Plano sem Storage: o arquivo vai como base64 no banco, num nó separado (anexos/{projeto}) que só é baixado
+   quando o projeto é aberto. O projeto guarda só a ficha (anexosMeta). */
+const MAX_FILE=4*1024*1024,MAX_FILES=20;
+const fmtSize=b=>b>=1048576?(b/1048576).toFixed(1).replace('.',',')+' MB':Math.max(1,Math.round(b/1024))+' KB';
+const isImg=t=>/^image\//.test(t||'');
+const tipoLabel=t=>isImg(t)?'FOTO':/pdf/.test(t||'')?'PDF':/sheet|excel|csv/.test(t||'')?'XLS':/word/.test(t||'')?'DOC':'ARQ';
+const ckey=id=>S.ws+':'+id;
+const readAsDataURL=f=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(f);});
+async function compressImage(f){
+  const src=await readAsDataURL(f);
+  if(f.size<350*1024&&/jpe?g|png|webp/.test(f.type))return{data:src,type:f.type,size:f.size};
+  const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=src;});
+  const k=Math.min(1,1600/Math.max(img.width,img.height)),c=document.createElement('canvas');
+  c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+  const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);
+  const data=c.toDataURL('image/jpeg',.82);return{data,type:'image/jpeg',size:Math.round((data.length-23)*.75)};
+}
+function anxHtml(id){
+  const p=obj('projetos')[id]||{}; const meta=Object.entries(p.anexosMeta||{}).map(([k,m])=>Object.assign({k},m)).sort((a,b)=>(a.t||0)-(b.t||0));
+  const cache=S.anx[ckey(id)];
+  if(!meta.length)return '<div class="hint" style="margin-top:10px">Nenhum arquivo ainda.</div>';
+  return `<div class="thumbs">${meta.map(m=>{
+    const d=cache&&cache[m.k]&&cache[m.k].data;
+    const pv=isImg(m.type)&&d&&/^data:image\//.test(d)?`<img src="${esc(d)}" alt="">`:tipoLabel(m.type);
+    return `<div class="th" data-act="anx-ver" data-id="${id}" data-k="${m.k}" tabindex="0" role="button" aria-label="Abrir ${esc(m.nome)}">
+      <div class="pv">${pv}</div><div class="cap"><b>${esc(m.nome)}</b><span>${fmtSize(m.size||0)}${m.por&&nomeDe(m.por)?' · '+esc(nomeDe(m.por)):''}</span></div>
+      <div class="ac"><button data-act="anx-ren" data-id="${id}" data-k="${m.k}" aria-label="Renomear">Renomear</button><button data-act="anx-del" data-id="${id}" data-k="${m.k}" aria-label="Excluir">×</button></div></div>`;}).join('')}</div>`;
+}
+async function carregaAnexos(id){
+  const k=ckey(id); if(S.anx[k]!==undefined)return S.anx[k];
+  try{ const sn=await db.ref(baseDe('anexos')+'/anexos/'+id).once('value'); S.anx[k]=sn.val()||{}; }catch(e){ S.anx[k]={}; }
+  if(S.proj===id&&S.ws+':'+id===k){ const bx=$('#anxBox'); if(bx)bx.innerHTML=anxHtml(id); }
+  return S.anx[k];
+}
+async function addAnexos(id,files){
+  files=[...files]; if(!files.length||!obj('projetos')[id])return;
+  const ja=Object.keys((obj('projetos')[id]||{}).anexosMeta||{}).length;
+  const cache=await carregaAnexos(id); const up={}; let n=0;
+  for(const f of files){
+    if(ja+n>=MAX_FILES*3||n>=MAX_FILES){toast('Máximo de '+MAX_FILES+' arquivos por vez',true);break;}
+    const type=f.type||'application/octet-stream',nome=f.name||'print.png';
+    if(!(isImg(type)||/pdf|msword|officedocument|spreadsheet|csv|text\//.test(type)||/\.(pdf|docx?|xlsx?|csv|txt)$/i.test(nome))){toast(nome+': tipo não aceito',true);continue;}
+    try{
+      let r;
+      if(isImg(type)){ r=await compressImage(f); if(r.size>MAX_FILE){toast(nome+': imagem muito grande',true);continue;} r.nome=r.type!==type?nome.replace(/\.[^.]+$/,'')+'.jpg':nome; }
+      else{ if(f.size>MAX_FILE){toast(nome+' passa de 4 MB',true);continue;} r={data:await readAsDataURL(f),type,size:f.size,nome}; }
+      const k=newId(), meta={nome:r.nome,type:r.type,size:r.size,t:now()}; if(S.ws!=='pessoal')meta.por=S.uid;
+      up['anexos/'+id+'/'+k]=Object.assign({},meta,{data:r.data}); up['projetos/'+id+'/anexosMeta/'+k]=meta;
+      cache[k]=up['anexos/'+id+'/'+k]; n++;
+    }catch(e){toast('Não consegui ler '+nome,true);}
+  }
+  if(!n)return;
+  up['projetos/'+id+'/atualizadoEm']=now();
+  guard(db.ref(baseDe('anexos')).update(up)).then(()=>toast(n+(n>1?' arquivos adicionados':' arquivo adicionado')));
+}
+function dataToBlob(d){ const [h,b]=d.split(','); const mime=(h.match(/:(.*?);/)||[])[1]||'application/octet-stream'; const bin=atob(b); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i); return new Blob([u],{type:mime}); }
+function baixar(m,d){ const a=document.createElement('a'); a.href=URL.createObjectURL(dataToBlob(d)); a.download=m.nome||'arquivo'; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},800); }
+async function verAnexo(id,k){
+  const m=((obj('projetos')[id]||{}).anexosMeta||{})[k]; if(!m)return;
+  const cache=await carregaAnexos(id); const d=cache[k]&&cache[k].data; if(!d){toast('Arquivo indisponível',true);return;}
+  if(isImg(m.type)&&/^data:image\//.test(d)){
+    $('#layer').innerHTML=`<div class="modal" data-act="fecha-modal" style="padding-top:5vh"><div class="box lb"><img src="${esc(d)}" alt="${esc(m.nome)}"><div class="row" style="justify-content:space-between;margin-top:10px"><span class="hint">${esc(m.nome)} · ${fmtSize(m.size||0)}</span><span class="row"><button class="btn sm" data-act="anx-dl" data-id="${id}" data-k="${k}">Baixar</button><button class="btn sm" data-act="fecha-modal-x">Fechar</button></span></div></div></div>`;
+  } else if(/pdf/.test(m.type||'')){ const u=URL.createObjectURL(dataToBlob(d)); const w=window.open(u,'_blank'); if(!w)baixar(m,d); setTimeout(()=>URL.revokeObjectURL(u),60000); }
+  else baixar(m,d);
+}
 function agRow(a){
   const n=dias(a.desde||now());
   return `<div class="item" style="cursor:default;${a.feito?'opacity:.55':''}">
@@ -502,7 +595,7 @@ function vRevisao(){
   const blocos=[
     ['Caixa de entrada',inbox().length?`<button class="item" data-go="caixa"><div class="grow t">${inbox().length} item(ns) esperando destino</div><span class="chip warn">organizar</span></button>`:''],
     ['Projetos ativos sem próxima ação',semProxima().map(p=>projRow(p)).join('')],
-    ['Fazendo, mas sem mexer há 7+ dias',parados().map(p=>projRow(p,`<span class="chip warn">${dias(p.atualizadoEm||p.criadoEm)}d</span>`)).join('')],
+    ['Em movimento, mas sem mexer há 7+ dias',parados().map(p=>projRow(p,`<span class="chip warn">${dias(p.atualizadoEm||p.criadoEm)}d</span>`)).join('')],
     ['Aguardando há 7+ dias',agVelhos().map(a=>`<button class="item" data-go="aguardando"><div class="grow"><div class="t">${esc(a.quem||'—')}</div><div class="s">${esc(a.oque||'')}</div></div><span class="chip warn">${dias(a.desde||now())}d</span></button>`).join('')],
     ['Prazos em até 7 dias (ou vencidos)',prazosPerto().map(p=>projRow(p)).join('')]
   ];
@@ -528,7 +621,7 @@ function capturar(txt){
 /* ---------- ações ---------- */
 function novoProjeto(nome,extra){
   const id=newId();
-  set('projetos/'+id,Object.assign(autor(),{nome,status:'ideia',progresso:0,proximaAcao:'',ondeParei:'',prazo:'',criadoEm:now(),atualizadoEm:now()},extra||{}));
+  set('projetos/'+id,Object.assign(autor(),{nome,status:'mapeamento',progresso:0,proximaAcao:'',ondeParei:'',prazo:'',criadoEm:now(),atualizadoEm:now()},extra||{}));
   return id;
 }
 function novaNota(projetoId,extra){
@@ -562,8 +655,14 @@ document.addEventListener('click',e=>{
     case 'del-proj': if(confirm('Excluir este projeto? As notas dele ficam, só perdem a ligação.')){
       lista('notas').filter(n=>n.projetoId===id).forEach(n=>upd('notas/'+n.id,{projetoId:''}));
       lista('aguardando').filter(x=>x.projetoId===id).forEach(x=>upd('aguardando/'+x.id,{projetoId:''}));
-      del('projetos/'+id); S.proj=null; } break;
+      del('anexos/'+id); delete S.anx[ckey(id)]; del('projetos/'+id); S.proj=null; } break;
     case 'del-diario': del('projetos/'+id+'/diario/'+b.dataset.k); tocaProjeto(id); break;
+    case 'anx-add': { const i=$('#anxIn'); if(i)i.click(); break; }
+    case 'anx-ver': verAnexo(id,b.dataset.k); break;
+    case 'anx-dl': { const m=((obj('projetos')[id]||{}).anexosMeta||{})[b.dataset.k]; const c=S.anx[ckey(id)]; if(m&&c&&c[b.dataset.k])baixar(m,c[b.dataset.k].data); break; }
+    case 'anx-ren': { e.stopPropagation(); const k=b.dataset.k,m=((obj('projetos')[id]||{}).anexosMeta||{})[k]; if(!m)break; const nn=prompt('Novo nome do arquivo:',m.nome); if(nn&&nn.trim()){ const v=nn.trim(); db.ref(baseDe('anexos')).update({['projetos/'+id+'/anexosMeta/'+k+'/nome']:v,['anexos/'+id+'/'+k+'/nome']:v}).catch(erroSalvar); if(S.anx[ckey(id)]&&S.anx[ckey(id)][k])S.anx[ckey(id)][k].nome=v; } break; }
+    case 'anx-del': { e.stopPropagation(); if(confirm('Excluir este arquivo?')){ const k=b.dataset.k; db.ref(baseDe('anexos')).update({['projetos/'+id+'/anexosMeta/'+k]:null,['anexos/'+id+'/'+k]:null}).catch(erroSalvar); if(S.anx[ckey(id)])delete S.anx[ckey(id)][k]; } break; }
+    case 'fecha-modal-x': fechaModal(); break;
     case 'del-link': del('projetos/'+id+'/links/'+b.dataset.k); break;
     case 'nova-nota': novaNota(id||''); break;
     case 'abrir-nota': S.view='notas';S.nota=id;S.proj=null;render(true);window.scrollTo(0,0); break;
@@ -595,7 +694,7 @@ document.addEventListener('click',e=>{
 function erroSalvar(e){ toast('Não consegui salvar. Confira a conexão e as regras do banco.',true); console.error(e); }
 function trocaWs(id){
   if(id!=='pessoal'&&!S.esp[id])id='pessoal';
-  S.ws=id;S.proj=null;S.nota=null;S.notaProj='';S.busca='';
+  S.ws=id;S.anx={};S.proj=null;S.nota=null;S.notaProj='';S.busca='';
   try{localStorage.setItem('meuqg_ws_'+S.uid,id);}catch(_){}
   if(S.view==='membros'&&id==='pessoal')S.view='hoje';
   render(true);window.scrollTo(0,0);
@@ -609,9 +708,22 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('tt')){ e.preventDefault(); e.target.blur(); return; }
   if((e.key==='c'||e.key==='C')&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&!/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName||''))&&!e.target.isContentEditable&&S.uid){ e.preventDefault(); abrirCaptura(); return; }
   if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.pc[data-act=abrir]')){ e.preventDefault(); abrirProjeto(e.target.dataset.id); }
+  if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.th[data-act=anx-ver]')){ e.preventDefault(); verAnexo(e.target.dataset.id,e.target.dataset.k); }
 });
 $('#fab').addEventListener('click',abrirCaptura);
 
+document.addEventListener('change',e=>{ const t=e.target; if(t&&t.id==='anxIn'){ addAnexos(t.dataset.id,t.files).then(()=>{t.value='';}); } });
+document.addEventListener('paste',e=>{
+  if(S.view!=='projetos'||!S.proj)return;
+  const fs=[...(e.clipboardData&&e.clipboardData.files||[])]; if(!fs.length)return;
+  e.preventDefault(); addAnexos(S.proj,fs);
+});
+['dragover','dragleave','drop'].forEach(ev=>document.addEventListener(ev,e=>{
+  const d=e.target.closest&&e.target.closest('#drop'); if(!d||S.view!=='projetos'||!S.proj)return;
+  e.preventDefault();
+  if(ev==='dragover')d.classList.add('on'); else d.classList.remove('on');
+  if(ev==='drop')addAnexos(S.proj,e.dataTransfer.files);
+}));
 document.addEventListener('submit',e=>{
   const f=e.target.closest('[data-form]'); if(!f)return; e.preventDefault();
   const k=f.dataset.form;
@@ -619,7 +731,7 @@ document.addEventListener('submit',e=>{
   if(k==='captura-hoje'){ if(capturar(val('#capH')))f.reset(); }
   else if(k==='captura'){ if(capturar(val('#capC')))f.reset(); }
   else if(k==='captura-modal'){ if(capturar(val('#capM')))fechaModal(); }
-  else if(k==='novo-projeto'){ const n=val('#npNome'); if(!n)return; const id=novoProjeto(n,{status:'fazendo'}); abrirProjeto(id); setTimeout(()=>{const x=$('#pa');if(x)x.focus();},40); }
+  else if(k==='novo-projeto'){ const n=val('#npNome'); if(!n)return; const id=novoProjeto(n,{status:'andamento'}); abrirProjeto(id); setTimeout(()=>{const x=$('#pa');if(x)x.focus();},40); }
   else if(k==='diario'){ const t=val('#dIn'); if(!t)return; const id=f.dataset.id; set('projetos/'+id+'/diario/'+newId(),{txt:t,t:now()}); tocaProjeto(id); f.reset(); }
   else if(k==='link'){ const t=val('#lT'); let u=val('#lU'); if(!u)return; if(!/^https?:\/\//i.test(u))u='https://'+u; set('projetos/'+f.dataset.id+'/links/'+newId(),{t:t||u,u}); f.reset(); }
   else if(k==='novo-espaco'){ const n=val('#neNome'); if(!n)return; const eid=db.ref('qgEspacos').push().key; fechaModal();
@@ -642,14 +754,14 @@ document.addEventListener('change',e=>{
     let v=t.value; const f=t.dataset.f;
     if(f==='progresso')v=+v; if(f==='nome'){v=v.trim(); if(!v){render(false);return;}}
     const ex={[f]:v}; if(f==='progresso'&&v===100&&(obj('projetos')[t.dataset.id]||{}).status!=='concluido'){}
-    tocaProjeto(t.dataset.id,ex); if(f==='progresso')render(false);
+    tocaProjeto(t.dataset.id,ex);
   } else if(t.dataset.ag){ upd('aguardando/'+t.dataset.id,{[t.dataset.ag]:t.value.trim()}); }
   else if(t.dataset.nf){ salvaNota(t); }
 });
 document.addEventListener('input',e=>{
   const t=e.target; if(!t.dataset)return;
   if(t.id==='busca'){ S.busca=t.value; const pos=t.selectionStart; render(false); const n=$('#busca'); if(n){n.focus();n.setSelectionRange(pos,pos);} return; }
-  if(t.id==='pr'){ const v=$('#prv'); if(v)v.textContent=t.value+'%'; return; }
+  if(t.id==='pr'){ const v=$('#prv'),b=$('#prb'),c=corProg(t.value); if(v){v.textContent=t.value+'%';v.style.color=c;} if(b){b.style.width=t.value+'%';b.style.background=c;} t.style.accentColor=c; return; }
   if(t.dataset.nf){ const s=$('#saved'); if(s)s.textContent='Salvando…'; clearTimeout(nTimer); nTimer=setTimeout(()=>salvaNota(t),600); }
 });
 function salvaNota(t){
@@ -680,22 +792,22 @@ function start(){
       ids.forEach(ligaEsp);
       Object.keys(espOff).forEach(id=>{ if(!ids.includes(id))soltaEsp(id); });
     },()=>{});
-    R().on('value',snap=>{
-      const v=snap.val()||{};
-      S.d={projetos:v.projetos||{},notas:v.notas||{},aguardando:v.aguardando||{},inbox:v.inbox||{},config:v.config||{}};
-      renderSafe();
-    },err=>{ console.error(err); toast('Sem permissão para ler seus dados. Falta publicar as regras do banco.',true); });
+    /* um ouvinte por coleção: assim os arquivos (pesados) NÃO são baixados junto com a lista */
+    ['projetos','notas','aguardando','inbox','config'].forEach(k=>{
+      db.ref(PES()+'/'+k).on('value',sn=>{ S.d[k]=sn.val()||{}; renderSafe(); },
+        err=>{ console.error(err); toast('Sem permissão para ler seus dados. Falta publicar as regras do banco.',true); });
+    });
   });
 }
 const espOff={};
 function ligaEsp(id){
   if(espOff[id])return;
-  const r=db.ref('qgEspacos/'+id);
-  const cb=sn=>{ const v=sn.val();
-    if(!v||!v.membros||!v.membros[S.uid]){ soltaEsp(id); return; }
-    S.esp[id]=v; renderSafe(); };
-  r.on('value',cb,()=>soltaEsp(id));
-  espOff[id]=()=>r.off('value',cb);
+  const E={dados:{}},offs=[];
+  const on=(path,fn)=>{ const r=db.ref('qgEspacos/'+id+'/'+path); const cb=sn=>fn(sn.val()); r.on('value',cb,()=>soltaEsp(id)); offs.push(()=>r.off('value',cb)); };
+  ['nome','dono','nomes'].forEach(k=>on(k,v=>{ E[k]=v; renderSafe(); }));
+  on('membros',v=>{ if(!v||!v[S.uid]){ soltaEsp(id); return; } E.membros=v; S.esp[id]=E; renderSafe(); });
+  ['projetos','notas','aguardando'].forEach(k=>on('dados/'+k,v=>{ E.dados[k]=v||{}; renderSafe(); }));
+  espOff[id]=()=>offs.forEach(f=>f());
 }
 function desligaEsp(id){ if(espOff[id]){espOff[id]();delete espOff[id];} }
 function soltaEsp(id){
