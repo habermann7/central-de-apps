@@ -258,7 +258,7 @@ const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const DIA=864e5;
-const STATUS={mapeamento:['Mapeamento',''],producao:['Em Produção','ok'],andamento:['Em Andamento','info'],homologacao:['Em Homologação','warn'],concluido:['Concluído',''],suporte:['Suporte','sup'],paralisado:['Paralisado','bad']};
+const STATUS={mapeamento:['Mapeamento',''],producao:['Em Produção','ok'],andamento:['Em Andamento','info'],homologacao:['Em Homologação','warn'],suporte:['Suporte','sup'],concluido:['Concluído',''],paralisado:['Paralisado','bad']};
 const ORDEM_STATUS=['andamento','producao','homologacao','mapeamento','suporte','concluido','paralisado'];
 /* % que cada status assume ao ser escolhido (dá pra ajustar depois no controle). Paralisado não tem %: é caso à parte. */
 const PRESET={mapeamento:10,producao:30,andamento:50,homologacao:80,concluido:100,suporte:100};
