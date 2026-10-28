@@ -209,7 +209,18 @@ main{max-width:1320px;padding:30px clamp(22px,4vw,64px) 110px;margin:0 auto}
 .vh{margin-bottom:25px}.vh h2{font-size:clamp(28px,3vw,40px);font-weight:600;letter-spacing:-1.4px}.vh p{font-size:13px;margin-top:7px}
 .card{border-radius:20px;padding:23px;backdrop-filter:none}.stat{position:relative;padding:21px 23px;overflow:hidden}.stat b{font-size:33px;font-weight:550}.stat span{font-size:12px}.stat::after{content:"";position:absolute;right:20px;top:25px;width:9px;height:9px;background:var(--acc);border-radius:50%;opacity:.5}.stat:nth-child(3)::after{background:var(--warn)}
 .sec{margin-top:30px}.sec>h3{font-size:11px;letter-spacing:.1em;margin-bottom:14px}.item{padding:17px 19px;border-radius:15px;box-shadow:0 3px 14px #283c3003}.item:hover,.pc:hover{background:var(--card2);box-shadow:0 8px 24px #283c300b;transform:translateY(-2px)}.item .s{margin-top:3px}.list{gap:10px}
-.btn{border-radius:12px;min-height:40px}.btn.sm{min-height:32px}.btn.pri{box-shadow:0 4px 12px #38644f16}.big{font-size:19px}.empty{padding:38px 24px;background:var(--card);border-style:dashed;line-height:1.7}.banner{font-size:13px}.fab{border-radius:19px;box-shadow:0 8px 25px #203b3a24}
+.btn{border-radius:12px;min-height:40px}.btn.sm{min-height:32px}.btn.pri{box-shadow:0 4px 12px #38644f16}.big{font-size:19px}.empty{padding:38px 24px;background:var(--card);border-style:dashed;line-height:1.7}.banner{font-size:13px}
+.statb{text-align:left;font:inherit;color:inherit;cursor:pointer;transition:transform .15s var(--ease),border-color .15s}.statb:hover{border-color:var(--line2)}.statb:active{transform:scale(.97)}
+.avs{display:grid;gap:8px;margin-bottom:18px}
+.av{--c:var(--warn);display:flex;align-items:center;gap:10px;padding:4px 6px 4px 14px;border-radius:14px;border:1px solid color-mix(in srgb,var(--c) 35%,transparent);background:color-mix(in srgb,var(--c) 11%,var(--card2));animation:avin .35s var(--ease)}
+.av.av1{--c:var(--info)}.av.av2{--c:var(--warn)}.av.av3{--c:var(--bad);background:color-mix(in srgb,var(--c) 15%,var(--card2))}
+.avl{display:flex;gap:3px;flex:none}.avl i{width:5px;height:16px;border-radius:3px;background:var(--c)}
+.avt{flex:1;min-width:0;border:0;background:none;text-align:left;font:inherit;font-size:13px;color:var(--ink);cursor:pointer;padding:9px 0}.avt b{color:var(--c)}.avt span{color:var(--mut)}
+.av.av3 .avt b{color:var(--bad)}
+.avx{border:0;background:none;color:var(--mut);cursor:pointer;width:34px;height:34px;border-radius:10px;font-size:13px}.avx:hover{background:var(--line)}
+@keyframes avin{from{opacity:0;transform:translateY(-6px)}}
+@media (prefers-reduced-motion:reduce){.av{animation:none}}
+.fab{border-radius:19px;box-shadow:0 8px 25px #203b3a24}
 .qg-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:30px;flex-wrap:wrap}.qg-caption{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);display:flex;align-items:center;gap:9px}.qg-caption::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--acc)}.qg-controls{display:flex;align-items:center;gap:7px}.qg-controls button{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:7px 12px;font-size:11px;cursor:pointer;min-height:36px}.qg-controls button[aria-pressed=true]{background:var(--acc);color:var(--accInk)}
 .qg-intro{position:relative;overflow:hidden;padding:26px 30px;margin-bottom:24px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(115deg,var(--card2),var(--bg2));min-height:128px;display:flex;align-items:center;justify-content:space-between;gap:24px}.qg-intro small{color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.14em}.qg-intro h3{font-size:24px;font-weight:500;letter-spacing:-.7px;margin-top:6px}.qg-intro p{font-size:12px;color:var(--mut);margin-top:6px}.qg-orbit{width:100px;height:100px;position:relative;flex:none;border:1px solid var(--line2);border-radius:50%;display:grid;place-items:center}.qg-orbit::before{content:"";position:absolute;inset:14px;border:1px solid var(--line2);border-radius:50%}.qg-orbit::after{content:"";position:absolute;inset:-1px;border-radius:50%;background:radial-gradient(circle at 50% 2%,var(--acc) 0 3px,transparent 4px);animation:qg-orbit 50s linear infinite}.qg-orbit span{font-size:28px;color:var(--acc)}@keyframes qg-orbit{to{transform:rotate(360deg)}}
 html[data-motion=off] *,html[data-motion=off] *::before,html[data-motion=off] *::after{animation:none!important;transition:none!important}
@@ -232,9 +243,6 @@ html[data-motion=off] *,html[data-motion=off] *::before,html[data-motion=off] *:
     <button class="nav" data-go="hoje"><span class="ic">◉</span>Hoje</button>
     <button class="nav" data-go="projetos"><span class="ic">▤</span>Projetos</button>
     <button class="nav" data-go="notas"><span class="ic">✎</span>Notas</button>
-    <button class="nav" data-go="aguardando"><span class="ic">⏳</span>Aguardando<span class="badge" id="bAg" hidden></span></button>
-    <button class="nav" data-go="caixa"><span class="ic">⤓</span>Caixa<span class="badge" id="bCx" hidden></span></button>
-    <button class="nav" data-go="revisao"><span class="ic">✓</span>Revisão</button>
     <button class="nav" data-go="membros" id="navMem" hidden><span class="ic">👥</span>Membros</button>
     <div class="sp"></div>
     <div class="foot">
@@ -395,8 +403,31 @@ function badges(){
   wsList(); $('#navMem').hidden=S.ws==='pessoal';
   const a=agAbertos().length,c=inbox().length;
   const ba=$('#bAg'),bc=$('#bCx');
-  ba.hidden=!a;ba.textContent=a;bc.hidden=!c;bc.textContent=c;
+  if(ba){ba.hidden=!a;ba.textContent=a;} if(bc){bc.hidden=!c;bc.textContent=c;}
   $$('.nav[data-go]').forEach(b=>{ if(b.dataset.go===S.view)b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
+}
+
+/* Avisos de prazo: 3 níveis, dispensáveis, voltam quando o nível sobe. */
+const AV_NIVEIS={1:{cls:'av1',tit:'Prazo chegando'},2:{cls:'av2',tit:'Falta pouco'},3:{cls:'av3',tit:'Venceu'}};
+function avNivel(n){ return n<0?3:n<=2?2:n<=7?1:0; }
+function avKey(id){ return 'qg-av-'+S.uid+'-'+S.ws+'-'+id; }
+function avisosPrazo(){
+  const out=[];
+  lista('projetos').forEach(p=>{
+    if(['concluido','paralisado'].includes(p.status)||!p.prazo)return;
+    const n=prazoDias(p.prazo); if(n==null)return; const nv=avNivel(n); if(!nv)return;
+    let vis=null; try{vis=localStorage.getItem(avKey(p.id));}catch{}
+    if(vis===nv+'|'+p.prazo)return;
+    out.push({p,n,nv});
+  });
+  return out.sort((a,b)=>b.nv-a.nv||a.n-b.n).slice(0,6);
+}
+function avisosHtml(){
+  const l=avisosPrazo(); if(!l.length)return '';
+  return '<div class="avs" role="region" aria-label="Avisos de prazo">'+l.map(({p,n,nv})=>{
+    const q=n<0?'venceu há '+(-n)+(n===-1?' dia':' dias'):n===0?'vence hoje':n===1?'vence amanhã':'vence em '+n+' dias';
+    return `<div class="av ${AV_NIVEIS[nv].cls}" role="${nv===3?'alert':'status'}"><span class="avl" aria-hidden="true">${'<i></i>'.repeat(nv)}</span><button class="avt" data-act="abrir" data-id="${p.id}"><b>${AV_NIVEIS[nv].tit}</b> · ${esc(p.nome)} <span>${q}</span></button><button class="avx" data-act="av-fecha" data-id="${p.id}" aria-label="Dispensar aviso">✕</button></div>`;
+  }).join('')+'</div>';
 }
 function render(animate){
   badges();
@@ -410,7 +441,7 @@ function render(animate){
   else if(S.view==='membros'&&espAtual())html=vMembros();
   else if(S.view==='revisao')html=vRevisao();
   else html='<div class="empty">Carregando…</div>';
-  m.innerHTML=`<div class="view"${animate?'':' style="animation:none"'}>${wsBar()}${html}</div>`;
+  m.innerHTML=`<div class="view"${animate?'':' style="animation:none"'}>${wsBar()}${S.view!=='membros'?avisosHtml():''}${html}</div>`;
   if(S.view==='projetos'&&S.proj&&obj('projetos')[S.proj])carregaAnexos(S.proj);
   const pp=$('.pipe'),cc=$('.pipe .stp.cur'); if(pp&&cc&&pp.scrollWidth>pp.clientWidth)pp.scrollLeft=cc.offsetLeft-pp.clientWidth/2+cc.clientWidth/2;
 }
@@ -438,15 +469,15 @@ function vHoje(){
   const h=new Date().getHours();
   const sauda=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
   return `<div class="vh"><div><h2>${sauda}</h2><p>${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · ${esc(wsLabel(S.ws))}</p></div></div>
-  <section class="qg-intro" aria-label="Seu ritmo"><div><small>Menos ruído. Mais direção.</small><h3>Uma coisa de cada vez.</h3><p>Capture uma ideia. Escolha o próximo passo.</p></div><div class="qg-orbit" aria-hidden="true"><span>✳</span></div></section>
+  <section class="qg-intro" aria-label="Seu ritmo"><div><small>Menos ruído. Mais direção.</small><h3>Uma coisa de cada vez.</h3><p>Capture uma ideia. Escolha o próximo passo.</p><button class="btn sm ghost" data-go="revisao" style="margin:8px 0 0 -10px">Revisão semanal →</button></div><div class="qg-orbit" aria-hidden="true"><span>✳</span></div></section>
   ${revisaoVencida()?`<div class="banner">Revisão semanal pendente <button class="btn sm" data-go="revisao">Fazer agora</button></div>`:''}
   <form class="card" data-form="captura-hoje"><label class="f" for="capH">Anotar rápido (vai pra Caixa, você organiza depois)</label>
     <div class="row"><input id="capH" type="text" class="big" placeholder="Ideia, tarefa, lembrete…" autocomplete="off" style="flex:1"><button class="btn pri" type="submit">Anotar</button></div></form>
   <div class="stats sec">
     <div class="card stat"><b class="num">${lista('projetos').filter(p=>MOV.includes(p.status)).length}</b><span>Em movimento</span></div>
     <div class="card stat"><b class="num">${ativos().length}</b><span>Projetos ativos</span></div>
-    <div class="card stat"><b class="num">${agAbertos().length}</b><span>Aguardando</span></div>
-    <div class="card stat"><b class="num">${inbox().length}</b><span>Na Caixa</span></div>
+    <button class="card stat statb" data-go="aguardando"><b class="num">${agAbertos().length}</b><span>Aguardando →</span></button>
+    <button class="card stat statb" data-go="caixa"><b class="num">${inbox().length}</b><span>Na Caixa →</span></button>
   </div>
   ${atencao.length?`<div class="sec"><h3>Atenção</h3><div class="list">${atencao.map(p=>projRow(p,parados().some(x=>x.id===p.id)?`<span class="chip warn">sem mexer ${dias(p.atualizadoEm||p.criadoEm)}d</span>`:'')).join('')}</div></div>`:''}
   <div class="sec"><h3>Próximas ações</h3>${fazendo.length?`<div class="list">${fazendo.map(p=>projRow(p)).join('')}</div>`:'<div class="empty">Nenhum projeto em movimento. Marque um projeto como Em Andamento, Em Produção ou Em Homologação.</div>'}</div>
@@ -721,6 +752,7 @@ document.addEventListener('click',e=>{
   switch(a){
     case 'abrir': abrirProjeto(id); break;
     case 'voltar': S.proj=null; render(true); break;
+    case 'av-fecha': { const p=obj('projetos')[id]; if(p){ try{localStorage.setItem(avKey(id),avNivel(prazoDias(p.prazo))+'|'+p.prazo);}catch{} } render(false); break; }
     case 'filtro': S.filtro=b.dataset.v; render(false); break;
     case 'retomar': { const pr=obj('projetos')[id]||{}; const v=FLUXO.includes(pr.statusAntes)?pr.statusAntes:'andamento'; const ex={status:v,statusAntes:null}; if(PRESET[v]!=null)ex.progresso=PRESET[v]; tocaProjeto(id,ex); break; }
     case 'status': {
