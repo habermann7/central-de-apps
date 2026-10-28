@@ -1257,6 +1257,12 @@ function debounce(fn, ms){
 // (maiúscula, acento, texto a mais no final). Só cai em "aguardando" se não reconhecer nada.
 function _norm(t){ return String(t==null?"":t).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim(); }
 var STATUS_MAP_NORM = (function(){ var m={}; Object.keys(STATUS_MAP).forEach(function(k){ m[_norm(k)]=STATUS_MAP[k]; }); return m; })();
+// Status que o time pediu pra IGNORAR no painel (etiqueta que nunca virou envio de verdade).
+// Os pedidos continuam no banco, só não aparecem nem entram nas contas.
+function statusIgnorado(status){
+  var n=_norm(status);
+  return n.indexOf("etiqueta expirada")===0 || n.indexOf("etiqueta cancelada pelo sistema de captacao")===0;
+}
 function bucketFor(status){
   if(Object.prototype.hasOwnProperty.call(STATUS_MAP,status)) return STATUS_MAP[status];
   var n=_norm(status);
@@ -1576,7 +1582,7 @@ function escutarPedidos() {
     if(version!==authVersion)return;
     var dados = snapshot.val() || {};
     var agoraTs = Date.now();
-    allRows = Object.keys(dados).filter(function(chave){return dados[chave] && typeof dados[chave] === "object";}).map(function (chave) {
+    allRows = Object.keys(dados).filter(function(chave){return dados[chave] && typeof dados[chave] === "object" && !statusIgnorado(dados[chave].status);}).map(function (chave) {
       var r = dados[chave];
       var bucket = bucketFor(r.status);
       var dataPostagem = dataValidaOuNula(r.dataPostagem);
