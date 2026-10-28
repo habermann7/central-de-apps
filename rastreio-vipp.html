@@ -1263,6 +1263,17 @@ function statusIgnorado(status){
   var n=_norm(status);
   return n.indexOf("etiqueta expirada")===0 || n.indexOf("etiqueta cancelada")===0 || n.indexOf("liberado(s) para download")>-1;
 }
+// "Etiqueta emitida" vale 10 dias: depois disso a etiqueta venceu e some do painel.
+// Usa a data do último evento (ou da postagem). Sem nenhuma data, mantém visível.
+var VALIDADE_ETIQUETA_DIAS = 10;
+function pedidoIgnorado(r){
+  if(statusIgnorado(r.status)) return true;
+  if(_norm(r.status).indexOf("etiqueta emitida")===0){
+    var d = dataValidaOuNula(r.dataEvento) || dataValidaOuNula(r.dataPostagem);
+    if(d && (Date.now()-d.getTime()) > VALIDADE_ETIQUETA_DIAS*86400000) return true;
+  }
+  return false;
+}
 function bucketFor(status){
   if(Object.prototype.hasOwnProperty.call(STATUS_MAP,status)) return STATUS_MAP[status];
   var n=_norm(status);
@@ -1582,7 +1593,7 @@ function escutarPedidos() {
     if(version!==authVersion)return;
     var dados = snapshot.val() || {};
     var agoraTs = Date.now();
-    allRows = Object.keys(dados).filter(function(chave){return dados[chave] && typeof dados[chave] === "object" && !statusIgnorado(dados[chave].status);}).map(function (chave) {
+    allRows = Object.keys(dados).filter(function(chave){return dados[chave] && typeof dados[chave] === "object" && !pedidoIgnorado(dados[chave]);}).map(function (chave) {
       var r = dados[chave];
       var bucket = bucketFor(r.status);
       var dataPostagem = dataValidaOuNula(r.dataPostagem);
