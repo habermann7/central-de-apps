@@ -430,6 +430,11 @@ input[type=range]{cursor:pointer}
 }
 
 .app-nav{justify-content:safe center}
+.updS{display:grid;gap:8px;margin-bottom:18px}
+.upd{display:flex;align-items:center;gap:10px;padding:2px 6px 2px 14px;border-radius:14px;border:1px solid color-mix(in srgb,var(--acc) 30%,transparent);background:var(--accent-soft);animation:avin .35s var(--ease)}
+.updt{flex:1;min-width:0;border:0;background:none;text-align:left;font:inherit;font-size:14px;color:var(--ink);cursor:pointer;padding:10px 0}
+.updt b{color:var(--acc)}.updt span{color:var(--mut);font-size:12.5px}
+.dot-un{width:8px;height:8px;border-radius:50%;background:var(--acc);flex:none;display:inline-block}
 </style>
 </head>
 <body>
@@ -470,6 +475,7 @@ input[type=range]{cursor:pointer}
       <button class="nav" data-go="hoje">Hoje</button>
       <button class="nav" data-go="projetos">Projetos</button>
       <button class="nav" data-go="notas">Notas</button>
+      <button class="nav" data-go="atividades">Atualizações <span class="nav-counter" id="bAt" hidden></span></button>
       <button class="nav" data-go="membros" id="navMem" hidden>Membros</button>
     </nav>
   </header>
@@ -548,7 +554,7 @@ const ORDEM_STATUS=['andamento','producao','homologacao','mapeamento','suporte',
 const PRESET={mapeamento:10,andamento:30,producao:50,homologacao:80,suporte:90,concluido:100};
 const MOV=['andamento','producao','homologacao']; /* "em movimento": entram nos alertas e nas próximas ações */
 const LEGADO={ideia:'mapeamento',fazendo:'andamento',parado:'paralisado'}; /* nomes antigos, convertidos ao ler */
-const VIEWS=['hoje','projetos','notas','aguardando','caixa','revisao','membros'];
+const VIEWS=['hoje','projetos','notas','atividades','aguardando','caixa','revisao','membros'];
 const S={uid:null,email:'',nome:'',ws:'pessoal',esp:{},dir:{},dirAdm:{},anx:{},d:{projetos:{},notas:{},aguardando:{},inbox:{},config:{}},view:'hoje',proj:null,nota:null,filtro:'ativos',busca:'',projBusca:'',notaProj:'',verFeitos:false};
 let db=null;
 
@@ -564,6 +570,7 @@ const newId=()=>db.ref(PES()).push().key;
 const DIR=()=>Object.assign({},S.dir,S.dirAdm);
 const espAtual=()=>S.ws==='pessoal'?null:S.esp[S.ws]||null;
 const ehDono=()=>{const e=espAtual();return !!e&&e.dono===S.uid;};
+const nomeDeEm=(eid,u)=>{const e=S.esp[eid]||{}; return (e.nomes&&e.nomes[u])||(DIR()[u]&&DIR()[u].nome)||'';};
 const nomeDe=u=>{if(u===S.uid)return 'você';const e=espAtual();return (e&&e.nomes&&e.nomes[u])||(DIR()[u]&&DIR()[u].nome)||'';};
 const autor=()=>S.ws==='pessoal'?{}:{por:S.uid};
 const now=()=>Date.now();
@@ -587,7 +594,62 @@ function guard(p){ return p.catch(e=>{ toast('Não consegui salvar. Confira a co
 const set=(p,v)=>guard(R(p).set(v));
 const upd=(p,v)=>guard(R(p).update(v));
 const del=p=>guard(R(p).remove());
-function tocaProjeto(id,extra){ if(id&&obj('projetos')[id]) upd('projetos/'+id,Object.assign({atualizadoEm:now()},extra||{})); }
+const ATV_CAMPOS={nome:'Nome',status:'Status',progresso:'Andamento',proximaAcao:'Próxima ação',ondeParei:'Onde parei',prazo:'Prazo'};
+function fmtAtv(c,v){
+  if(c==='status')return STATUS[v]?STATUS[v][0]:(v||'—');
+  if(c==='progresso')return (+v||0)+'%';
+  if(c==='prazo'){ if(!v)return 'sem prazo'; const [y,m,d]=String(v).split('-'); return d+'/'+m+'/'+y; }
+  return v?String(v).slice(0,60):'(vazio)';
+}
+function descreveMudancas(old,ex){
+  const partes=[];
+  Object.keys(ATV_CAMPOS).forEach(c=>{
+    if(!(c in ex))return;
+    const a=old[c]==null?'':String(old[c]), b=ex[c]==null?'':String(ex[c]);
+    if(a===b)return;
+    if(c==='ondeParei'||c==='proximaAcao'){ partes.push(ATV_CAMPOS[c]+': '+(b?'“'+b.slice(0,60)+'”':'apagada')); return; }
+    partes.push(ATV_CAMPOS[c]+': '+fmtAtv(c,a)+' → '+fmtAtv(c,b));
+  });
+  return partes;
+}
+/* Histórico de mudanças: guarda quem mexeu, em qual projeto e o quê. */
+function registraAtivRef(view,ref,nome,txt,pid){
+  if(!txt||!ref)return;
+  set('atividades/'+newId(),{view,ref,pid:pid||(view==='projetos'?ref:''),nome:nome||'Item',txt,t:now(),por:S.ws==='pessoal'?null:S.uid});
+}
+function registraAtiv(pid,txt,nomeOpt){
+  const p=obj('projetos')[pid];
+  registraAtivRef('projetos',pid,nomeOpt||(p&&p.nome)||'Projeto',txt,pid);
+}
+/* Notas: "editada" só depois de 3 min parado (senão salva a cada letra). */
+const notaPend={};
+function avisaNota(nid,tituloNovo){
+  const n=obj('notas')[nid]; if(!n)return;
+  const prev=notaPend[nid]; if(prev)clearTimeout(prev.t);
+  const info={titulo:tituloNovo!=null?tituloNovo:(n.titulo||''),pid:n.projetoId||'',projNome:n.projetoId?((obj('projetos')[n.projetoId]||{}).nome||''):''};
+  notaPend[nid]={info,t:setTimeout(()=>flushNota(nid),180000)};
+}
+function flushNota(nid){
+  const p=notaPend[nid]; if(!p)return; clearTimeout(p.t); delete notaPend[nid];
+  registraAtivRef('notas',nid,p.info.titulo.trim()||'Nota sem título','Nota editada'+(p.info.projNome?' · em '+p.info.projNome:''),p.info.pid);
+}
+function flushNotas(){ Object.keys(notaPend).forEach(flushNota); }
+/* se fechar a aba ou trocar de app antes dos 3 min, registra a edição mesmo assim */
+window.addEventListener('pagehide',flushNotas);
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden')flushNotas(); });
+function abrirAtiv(ws,view,id){
+  if(ws!==S.ws)trocaWs(ws);
+  if(view==='notas'){ S.view='notas';S.nota=id;S.proj=null;render(true);window.scrollTo(0,0); }
+  else if(view==='aguardando'){ go('aguardando'); }
+  else abrirProjeto(id);
+}
+function tocaProjeto(id,extra){
+  if(!id||!obj('projetos')[id])return;
+  const old=obj('projetos')[id];
+  upd('projetos/'+id,Object.assign({atualizadoEm:now()},extra||{}));
+  const partes=descreveMudancas(old,extra||{});
+  if(partes.length)registraAtiv(id,partes.join(' · '));
+}
 const nomeProj=id=>(obj('projetos')[id]||{}).nome||'';
 
 /* ---------- regras de "atenção" ---------- */
@@ -603,10 +665,12 @@ const revisaoVencida=()=>{const u=(S.d.config||{})[chaveRev()]; return !u||dias(
 
 /* ---------- navegação ---------- */
 function go(v,opts){
+  flushNotas();
   if(!VIEWS.includes(v)||(v==='membros'&&S.ws==='pessoal'))v='hoje';
   closePopups();
   S.view=v; if(!opts||!opts.keepProj)S.proj=null; if(!opts||!opts.keepNota)S.nota=null;
   history.replaceState(null,'','#'+v);
+  if(v==='atividades')setTimeout(()=>{ if(S.view==='atividades')marcaVisto(false); },1500);
   render(true);
   window.scrollTo(0,0);
 }
@@ -651,8 +715,49 @@ function badges(){
   const a=agAbertos().length,c=inbox().length;
   const ba=$('#bAg'),bc=$('#bCx');
   if(ba){ba.hidden=!a;ba.textContent=a;} if(bc){bc.hidden=!c;bc.textContent=c;}
+  const bt=$('#bAt'); if(bt){ const n=naoLidas().length; bt.hidden=!n; bt.textContent=n; }
   $$('.nav[data-go]').forEach(b=>{ if(b.dataset.go===S.view)b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
   { const c=$('.app-nav .nav[aria-current]'),bar=$('.app-nav'); if(c&&bar&&bar.scrollWidth>bar.clientWidth){ const l=c.offsetLeft-(bar.clientWidth-c.clientWidth)/2; bar.scrollLeft=Math.max(0,l); } }
+}
+
+
+/* Atualizações não lidas: só as feitas por OUTRAS pessoas (no Pessoal você é o único que mexe). */
+const vistoAte=(ws)=>(((S.d.config||{}).atividadeVista)||{})[ws||S.ws]||0;
+const atividadesOrdenadas=()=>lista('atividades').filter(a=>a&&a.t).sort((a,b)=>b.t-a.t);
+/* Todas as atualizações de TODOS os grupos (o aviso aparece em qualquer tela). */
+function todasAtividades(){
+  const out=[];
+  Object.keys(S.esp).forEach(eid=>{ const d=((S.esp[eid]||{}).dados||{}).atividades||{};
+    Object.keys(d).forEach(k=>{ const a=d[k]; if(a&&a.t)out.push(Object.assign({id:k,ws:eid},a)); }); });
+  return out.sort((a,b)=>b.t-a.t);
+}
+/* Feed geral: histórico do Pessoal + de todos os grupos, mais recente primeiro. */
+function feedGeral(){
+  const pes=atividadesOrdenadas().map(a=>Object.assign({ws:'pessoal'},a));
+  return todasAtividades().concat(pes).sort((a,b)=>b.t-a.t);
+}
+function naoLidas(){
+  return todasAtividades().filter(a=>a.por&&a.por!==S.uid&&a.t>(vistoAte(a.ws)||(now()-7*DIA)));
+}
+/* marca como lido: só a tela atual (all=false) ou todos os grupos (all=true) */
+function marcaVisto(all){
+  const o={};
+  if(all)Object.keys(S.esp).forEach(e=>o[e]=now()); else o[S.ws]=now();
+  upd('config/atividadeVista',o);
+}
+function atualizacoesHtml(){
+  const l=naoLidas(); if(!l.length)return '';
+  const mostra=l.slice(0,3), resto=l.length-mostra.length;
+  return '<div class="updS" role="region" aria-label="Atualizações de projetos">'+mostra.map(a=>
+    `<div class="upd"><span class="dot-un" aria-hidden="true"></span><button class="updt" data-act="abrir-ws" data-id="${esc(a.ref||a.pid)}" data-view="${esc(a.view||'projetos')}" data-ws="${esc(a.ws)}"><b>${esc(a.nome)}</b> · ${esc(a.txt)} <span>· ${esc((S.esp[a.ws]||{}).nome||'Grupo')} · ${esc(a.por&&a.por!==S.uid?(nomeDeEm(a.ws,a.por)||'alguém'):'você')} · ${ago(a.t)}</span></button></div>`
+  ).join('')+`<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><button class="btn sm ghost" data-act="ver-atv">Ver todas${resto?' ('+l.length+' novas)':''} →</button><button class="btn sm ghost" data-act="atv-lido">Marcar todas como lidas</button></div></div>`;
+}
+function vAtividades(){
+  const l=feedGeral().slice(0,150);
+  const grupos={};
+  l.forEach(a=>{ const k=new Date(a.t).toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}); (grupos[k]=grupos[k]||[]).push(a); });
+  return `<div class="vh"><div><h2>Atualizações</h2><p>O que mudou nos projetos, no seu Pessoal e nos grupos: status, andamento, prazo, diário e arquivos.</p></div></div>
+  ${l.length?Object.keys(grupos).map(d=>`<div class="sec"><h3>${esc(d)}</h3><div class="list">${grupos[d].map(a=>{ const nova=a.por&&a.por!==S.uid&&a.t>(vistoAte(a.ws)||0); const onde=a.ws==='pessoal'?'Pessoal':((S.esp[a.ws]||{}).nome||'Grupo'); const quem=a.por&&a.por!==S.uid?(nomeDeEm(a.ws,a.por)||'alguém'):'você'; return `<button class="item" data-act="abrir-ws" data-id="${esc(a.ref||a.pid)}" data-view="${esc(a.view||'projetos')}" data-ws="${esc(a.ws)}"><div class="grow"><div class="t">${nova?'<span class="dot-un" aria-label="nova" style="display:inline-block;margin-right:7px;vertical-align:middle"></span>':''}${esc(a.nome)} <span class="chip">${esc(onde)}</span></div><div class="s">${esc(a.txt)}</div><div class="hint">${esc(quem)} · ${new Date(a.t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div></div></button>`; }).join('')}</div></div>`).join(''):'<div class="empty sec">Nada por aqui ainda. Quando um projeto mudar de status, andamento, prazo ou ganhar diário ou arquivo, aparece aqui.</div>'}`;
 }
 
 /* Avisos de prazo: 3 níveis, dispensáveis, voltam quando o nível sobe. */
@@ -687,9 +792,10 @@ function render(animate){
   else if(S.view==='aguardando')html=vAguardando();
   else if(S.view==='caixa')html=vCaixa();
   else if(S.view==='membros'&&espAtual())html=vMembros();
+  else if(S.view==='atividades')html=vAtividades();
   else if(S.view==='revisao')html=vRevisao();
   else html='<div class="empty">Carregando…</div>';
-  m.innerHTML=`<div class="view"${animate?'':' style="animation:none"'}>${wsBar()}${S.view!=='membros'?avisosHtml():''}${html}</div>`;
+  m.innerHTML=`<div class="view"${animate?'':' style="animation:none"'}>${wsBar()}${S.view!=='membros'&&S.view!=='atividades'?atualizacoesHtml():''}${S.view!=='membros'?avisosHtml():''}${html}</div>`;
   if(S.view==='projetos'&&S.proj&&obj('projetos')[S.proj])carregaAnexos(S.proj);
   const pp=$('.pipe'),cc=$('.pipe .stp.cur'); if(pp&&cc&&pp.scrollWidth>pp.clientWidth)pp.scrollLeft=cc.offsetLeft-pp.clientWidth/2+cc.clientWidth/2;
 }
@@ -867,7 +973,7 @@ async function addAnexos(id,files){
     u.up['projetos/'+id+'/atualizadoEm']=now();
     try{ await db.ref(baseDe('anexos')).update(u.up); cache[u.k]=u.up['anexos/'+id+'/'+u.k]; ok++; }catch(e){ console.error(e); toast('Não consegui salvar '+u.up['anexos/'+id+'/'+u.k].nome,true); }
   }
-  if(ok)toast(ok+(ok>1?' arquivos adicionados':' arquivo adicionado'));
+  if(ok){ toast(ok+(ok>1?' arquivos adicionados':' arquivo adicionado')); registraAtiv(id,ok+(ok>1?' arquivos anexados':' arquivo anexado')); }
 }
 function dataToBlob(d){ const [h,b]=d.split(','); const mime=(h.match(/:(.*?);/)||[])[1]||'application/octet-stream'; const bin=atob(b); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i); return new Blob([u],{type:mime}); }
 function baixar(m,d){ const a=document.createElement('a'); a.href=URL.createObjectURL(dataToBlob(d)); a.download=m.nome||'arquivo'; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},800); }
@@ -978,11 +1084,13 @@ function capturar(txt){
 function novoProjeto(nome,extra){
   const id=newId();
   set('projetos/'+id,Object.assign(autor(),{nome,status:'mapeamento',progresso:PRESET.mapeamento,proximaAcao:'',ondeParei:'',prazo:'',criadoEm:now(),atualizadoEm:now()},extra||{}));
+  registraAtiv(id,'Projeto criado',nome);
   return id;
 }
 function novaNota(projetoId,extra){
   const id=newId();
   set('notas/'+id,Object.assign(autor(),{titulo:'',texto:'',projetoId:projetoId||'',fixada:false,criadoEm:now(),atualizadoEm:now()},extra||{}));
+  registraAtivRef('notas',id,'Nota nova','Nota criada',projetoId||'');
   S.view='notas';S.proj=null;S.nota=id;render(true);
   setTimeout(()=>{const t=$('[data-nf=titulo]');if(t)t.focus();},40);
   return id;
@@ -1005,6 +1113,9 @@ document.addEventListener('click',e=>{
   switch(a){
     case 'abrir': abrirProjeto(id); break;
     case 'voltar': S.proj=null; render(true); break;
+    case 'ver-atv': go('atividades'); break;
+    case 'atv-lido': marcaVisto(true); toast('Atualizações marcadas como lidas'); break;
+    case 'abrir-ws': abrirAtiv(b.dataset.ws,b.dataset.view,id); break;
     case 'av-fecha': { const p=obj('projetos')[id]; if(p){ try{localStorage.setItem(avKey(id),avNivel(prazoDias(p.prazo))+'|'+p.prazo);}catch{} } render(false); break; }
     case 'filtro': S.filtro=b.dataset.v; render(false); break;
     case 'retomar': { const pr=obj('projetos')[id]||{}; const v=FLUXO.includes(pr.statusAntes)?pr.statusAntes:'andamento'; const ex={status:v,statusAntes:null}; if(PRESET[v]!=null)ex.progresso=PRESET[v]; tocaProjeto(id,ex); break; }
@@ -1031,7 +1142,7 @@ document.addEventListener('click',e=>{
     case 'voltar-nota': S.nota=null;render(true); break;
     case 'fixar': upd('notas/'+id,{fixada:!(obj('notas')[id]||{}).fixada}); break;
     case 'del-nota': if(confirm('Excluir esta nota?')){del('notas/'+id);S.nota=null;} break;
-    case 'feito-ag': upd('aguardando/'+id,{feito:true,feitoEm:now()}); toast('Marcado como recebido'); break;
+    case 'feito-ag': { const a=obj('aguardando')[id]||{}; upd('aguardando/'+id,{feito:true,feitoEm:now()}); registraAtivRef('aguardando',id,'Aguardando: '+(a.quem||'—'),'Recebido: '+(a.oque||'—'),a.projetoId||''); toast('Marcado como recebido'); break; }
     case 'reabrir-ag': upd('aguardando/'+id,{feito:false,feitoEm:null,desde:now()}); break;
     case 'del-ag': del('aguardando/'+id); break;
     case 'ver-feitos': S.verFeitos=!S.verFeitos; render(false); break;
@@ -1055,6 +1166,7 @@ document.addEventListener('click',e=>{
 });
 function erroSalvar(e){ toast('Não consegui salvar. Confira a conexão e as regras do banco.',true); console.error(e); }
 function trocaWs(id){
+  flushNotas();
   if(id!=='pessoal'&&!S.esp[id])id='pessoal';
   closePopups();
   S.ws=id;S.anx={};S.proj=null;S.nota=null;S.notaProj='';S.busca='';S.projBusca='';
@@ -1105,7 +1217,7 @@ document.addEventListener('submit',e=>{
   else if(k==='captura'){ if(capturar(val('#capC')))f.reset(); }
   else if(k==='captura-modal'){ if(capturar(val('#capM')))fechaModal(); }
   else if(k==='novo-projeto'){ const n=val('#npNome'); if(!n)return; const id=novoProjeto(n); abrirProjeto(id); setTimeout(()=>{const x=$('#pa');if(x)x.focus();},40); }
-  else if(k==='diario'){ const t=val('#dIn'); if(!t)return; const id=f.dataset.id; set('projetos/'+id+'/diario/'+newId(),{txt:t,t:now()}); tocaProjeto(id); f.reset(); }
+  else if(k==='diario'){ const t=val('#dIn'); if(!t)return; const id=f.dataset.id; set('projetos/'+id+'/diario/'+newId(),{txt:t,t:now()}); tocaProjeto(id); registraAtiv(id,'Diário: “'+t.slice(0,80)+'”'); f.reset(); }
   else if(k==='link'){ const t=val('#lT'); let u=val('#lU'); if(!u)return; if(!/^https?:\/\//i.test(u))u='https://'+u; set('projetos/'+f.dataset.id+'/links/'+newId(),{t:t||u,u}); f.reset(); }
   else if(k==='novo-espaco'){ const n=val('#neNome'); if(!n)return; const eid=db.ref('qgEspacos').push().key; fechaModal();
     db.ref().update({['qgEspacos/'+eid+'/nome']:n,['qgEspacos/'+eid+'/dono']:S.uid,['qgEspacos/'+eid+'/membros/'+S.uid]:true,['qgEspacos/'+eid+'/nomes/'+S.uid]:S.nome||S.email,['qgIndice/'+S.uid+'/'+eid]:true})
@@ -1114,7 +1226,8 @@ document.addEventListener('submit',e=>{
   else if(k==='add-membro'){ const u=$('#amSel').value; if(!u)return; const eid=S.ws,d=DIR()[u]||{};
     db.ref().update({['qgEspacos/'+eid+'/membros/'+u]:true,['qgEspacos/'+eid+'/nomes/'+u]:d.nome||d.email||'',['qgIndice/'+u+'/'+eid]:true}).then(()=>toast('Pessoa adicionada')).catch(erroSalvar); }
   else if(k==='aguardando'){ const q=val('#agQ'),o=val('#agO'); if(!q&&!o)return; const sp=$('#agP',f); const pid=f.dataset.proj||(sp?sp.value:'');
-    set('aguardando/'+newId(),Object.assign(autor(),{quem:q,oque:o,projetoId:pid||'',desde:now(),feito:false})); if(pid)tocaProjeto(pid); f.reset(); toast('Adicionado'); }
+    const agId=newId(); set('aguardando/'+agId,Object.assign(autor(),{quem:q,oque:o,projetoId:pid||'',desde:now(),feito:false}));
+    registraAtivRef('aguardando',agId,'Aguardando: '+(q||'—'),'Esperando: '+(o||'—'),pid||''); f.reset(); toast('Adicionado'); }
 });
 
 /* edição de campos (salva ao sair do campo / ao mudar) */
@@ -1143,6 +1256,7 @@ document.addEventListener('input',e=>{
 });
 function salvaNota(t){
   const id=t.dataset.id; if(!obj('notas')[id])return;
+  avisaNota(id,t.dataset.nf==='titulo'?t.value:null);
   upd('notas/'+id,{[t.dataset.nf]:t.value,atualizadoEm:now()}).then(()=>{ const s=$('#saved'); if(s)s.textContent='Salvo'; });
   if(t.dataset.nf==='projetoId'&&t.value)tocaProjeto(t.value);
 }
@@ -1171,7 +1285,7 @@ function start(){
       Object.keys(espOff).forEach(id=>{ if(!ids.includes(id))soltaEsp(id); });
     },()=>{});
     /* um ouvinte por coleção: assim os arquivos (pesados) NÃO são baixados junto com a lista */
-    ['projetos','notas','aguardando','inbox','config'].forEach(k=>{
+    ['projetos','notas','aguardando','inbox','config','atividades'].forEach(k=>{
       db.ref(PES()+'/'+k).on('value',sn=>{ S.d[k]=sn.val()||{}; renderSafe(); },
         err=>{ console.error(err); toast('Sem permissão para ler seus dados. Falta publicar as regras do banco.',true); });
     });
@@ -1186,7 +1300,7 @@ function ligaEsp(id){
   on('membros',v=>{ if(!v||!v[S.uid]){ soltaEsp(id); return; } E.membros=v; S.esp[id]=E;
     if(!S.userSwitchedWs&&S.preferredWs===id){S.ws=id;S.preferredWs='pessoal';S.proj=null;S.nota=null;}
     renderSafe(); });
-  ['projetos','notas','aguardando'].forEach(k=>on('dados/'+k,v=>{ E.dados[k]=v||{}; renderSafe(); }));
+  ['projetos','notas','aguardando','atividades'].forEach(k=>on('dados/'+k,v=>{ E.dados[k]=v||{}; renderSafe(); }));
   espOff[id]=()=>offs.forEach(f=>f());
 }
 function desligaEsp(id){ if(espOff[id]){espOff[id]();delete espOff[id];} }
