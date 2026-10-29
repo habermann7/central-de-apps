@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel de Entregas — Transportadora ATIVA</title>
+<title>Painel de Entregas — ATIVA Logística</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
@@ -346,19 +346,13 @@
   .view-tab.active{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:0 2px 6px rgba(27,43,68,.2);}
   .view-tab.active small{color:#C9D3E0;}
   #justPanel{display:none;}
-  .motivo-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
-  .motivo-chip{
-    display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;
-    border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;
-    background:#fff;color:var(--navy-2);user-select:none;
-    transition:background .15s ease, border-color .15s ease;
-  }
-  .motivo-chip:hover{background:#F0F2F5;border-color:#D3D7DD;}
-  .motivo-chip input{margin:0;cursor:pointer;accent-color:#B7791F;}
-  .motivo-chip.on{background:var(--amber-bg);border-color:#E9C98F;color:#7A4F0E;}
-  .motivo-chip .n{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--gray);}
   .just-summary{font-size:12.5px;color:var(--navy-2);margin:12px 0 0;}
   .just-summary b{color:#7A4F0E;}
+  .diverg-box{display:flex;align-items:center;gap:14px;background:var(--amber-bg);border:1px solid #E9C98F;border-radius:10px;padding:12px 16px;margin-top:14px;flex-wrap:wrap;}
+  .diverg-box .dnum{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--amber);}
+  .diverg-box p{margin:0;flex:1;min-width:260px;font-size:12.5px;color:#7A4F0E;line-height:1.5;}
+  .diverg-box p b{color:#5C3A08;}
+  #divergDetail{display:none;margin-top:12px;}
   .save-msg{font-size:12px;color:var(--gray);margin-left:8px;}
 </style>
 </head>
@@ -368,16 +362,15 @@
   <header class="top">
     <div>
       <p class="eyebrow">Torre de Controle · Logística</p>
-      <h1>Painel de Entregas — Transportadora ATIVA</h1>
+      <h1>Painel de Entregas — ATIVA Logística</h1>
       <p class="subtitle">STIN Pharma · painel interativo de desempenho de entregas</p>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
       <div style="display:flex;align-items:center;gap:10px;">
         <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none;">
-        <button class="upload-btn" id="uploadBtn">⟲ Atualizar planilha</button>
-        <button class="chip-btn" id="restoreBtn" style="display:inline-block;">🔄 Recarregar do banco</button>
+        <button class="upload-btn" id="uploadBtn">📂 Carregar planilha</button>
       </div>
-      <span class="source-pill" id="sourcePill">Carregando do banco...</span>
+      <span class="source-pill" id="sourcePill">Nenhuma planilha carregada</span>
       <span class="upload-status" id="uploadStatus"></span>
     </div>
   </header>
@@ -396,22 +389,34 @@
 
   <div class="view-tabs">
     <button class="view-tab active" data-view="real">📊 Indicador real<small>Tudo o que foi e não foi entregue</small></button>
-    <button class="view-tab" data-view="transp">🚚 Indicador da transportadora<small>Desconsidera motivos fora do controle da ATIVA</small></button>
+    <button class="view-tab" data-view="transp">🚚 Indicador da ATIVA Logística<small>SLA pela coluna PRAZO da planilha</small></button>
   </div>
 
   <div class="panel" id="justPanel" style="margin-bottom:16px;">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
       <div>
-        <h3>Motivos desconsiderados no indicador da transportadora</h3>
-        <p class="phint" style="margin-bottom:0;">Marque as ocorrências (coluna N · ULTIMA OCORRENC) das remessas não entregues que não são responsabilidade da transportadora. Remessas com esses motivos saem da base de cálculo desta aba. A escolha fica salva no banco para todos.</p>
+        <h3>Como esta aba calcula o SLA</h3>
+        <p class="phint" style="margin-bottom:0;">Dentro ou fora do prazo vem direto da coluna <b>PRAZO</b> da planilha (Antes do prazo · No prazo · Atrasado). Remessas com PRAZO vazio (ainda sem definição de entrega) entram na base pelo cálculo de datas: em aberto dentro do prazo ou em aberto atrasado, igual ao indicador real.</p>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <button class="export-btn" id="exportJustBtn">⭱ Exportar desconsideradas</button>
-        <span class="save-msg" id="justSaveMsg"></span>
+      <button class="export-btn" id="exportJustBtn">⭱ Exportar remessas sem PRAZO</button>
+    </div>
+    <p class="just-summary" id="justSummary"></p>
+    <div class="diverg-box" id="divergBox">
+      <div class="dnum" id="divergNum">0</div>
+      <p>pedidos entregues <b>depois</b> da previsão que a ATIVA marcou como "No prazo" ou "Antes do prazo" na coluna PRAZO. No <b>indicador real</b> eles contam como entregues com atraso.</p>
+      <button class="export-btn" id="divergToggleBtn">Ver pedidos</button>
+    </div>
+    <div id="divergDetail">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+        <button class="export-btn" id="divergExportBtn">⭱ Exportar CSV</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="datatable">
+          <thead><tr><th>Nota Fiscal</th><th>Destinatário</th><th>Praça</th><th>Prevista</th><th>Entrega</th><th>Dias de atraso</th><th>PRAZO (ATIVA)</th><th>Justificativa</th></tr></thead>
+          <tbody id="divergTbody"></tbody>
+        </table>
       </div>
     </div>
-    <div class="motivo-list" id="motivoList"></div>
-    <p class="just-summary" id="justSummary"></p>
   </div>
 
   <div class="kpi-row" id="kpiRow"></div>
@@ -504,12 +509,10 @@
     </div>
   </div>
 
-  <footer>Painel gerado a partir da base de remessas ATIVA · atraso calculado em relação à data de previsão de entrega · referência de "hoje": 10/08/2026 para remessas em aberto</footer>
+  <footer>Painel gerado a partir da base de remessas ATIVA · atraso calculado em relação à data de previsão de entrega · aba Indicador da transportadora usa a coluna PRAZO da planilha</footer>
 </div>
 
 <script>
-var DB_ROOT = 'painelAtiva';
-function fbRef(path){ return firebase.database().ref(DB_ROOT + (path ? '/' + path : '')); }
 
 let DEFAULT_DATA = [];
 let ALL = [];
@@ -519,74 +522,83 @@ let dadosCarregados = false;
 
 // ---------------- Indicador real x Indicador da transportadora ----------------
 let VIEW_MODE = 'real';          // 'real' | 'transp'
-let MOTIVOS_CFG = null;          // {justificados:[...], naoJustificados:[...]} salvo no banco
-// Sugestão automática para ocorrências ainda não classificadas (só vale para remessas NÃO entregues)
-const JUST_DEFAULT_RE = /AUSENTE|ENDERE[CÇ]O|FISCALIZ|SEFAZ|NF RETIDA|RETID[OA] (PELA|NA|NO) FISC|RECUS|FECHADO|MUDOU|DESCONHECID|N[AÃ]O LOCALIZ|[AÁ]REA DE RISCO|DIVERG|AGUARDANDO (O )?CLIENTE|AGENDAMENTO/;
+let HAS_PRAZO_COL = false;       // a planilha carregada tem a coluna PRAZO?
 
-function isMotivoJustificado(ocor){
-  if(!ocor) return false;
-  if(MOTIVOS_CFG){
-    if((MOTIVOS_CFG.justificados||[]).includes(ocor)) return true;
-    if((MOTIVOS_CFG.naoJustificados||[]).includes(ocor)) return false;
+// Converte o texto da coluna PRAZO no status usado pelo painel (null = vazio/ignorar)
+function prazoToStatus(r){
+  const v = String(r.prazoCol==null?'':r.prazoCol).trim().toUpperCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'');
+  if(!v) return null;
+  if(v.includes('ANTES')) return 'Antes do prazo';
+  if(v.includes('ATRAS') || v.includes('FORA')) return r.ent ? 'Atrasado' : 'Atrasado (em aberto)';
+  if(v.includes('NO PRAZO') || v.includes('DENTRO')) return r.ent ? 'No prazo' : 'Dentro do prazo (em aberto)';
+  return '?';
+}
+
+function splitTransp(dateFiltered){
+  const base = [], vazias = [], desconhecidas = {};
+  dateFiltered.forEach(r=>{
+    const st = prazoToStatus(r);
+    if(st === null){ vazias.push(r); base.push(Object.assign({}, r, {realStatus: r.status, semPrazo: true})); return; }
+    if(st === '?'){ const k = String(r.prazoCol).trim(); desconhecidas[k]=(desconhecidas[k]||0)+1; return; }
+    base.push(Object.assign({}, r, {status: st, realStatus: r.status}));
+  });
+  return {base, vazias, desconhecidas};
+}
+
+let DIVERG = [];
+function fmtBR(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
+
+function renderDivergencias(base){
+  const ON_TIME_T = ['Antes do prazo','No prazo','Dentro do prazo (em aberto)'];
+  DIVERG = base.filter(r=> ON_TIME_T.includes(r.status) && PROBLEM_STATUSES.includes(r.realStatus))
+               .sort((a,b)=>b.dias-a.dias);
+  const box = document.getElementById('divergBox');
+  box.style.display = HAS_PRAZO_COL ? 'flex' : 'none';
+  document.getElementById('divergNum').textContent = fmtNum(DIVERG.length);
+  document.getElementById('divergToggleBtn').disabled = !DIVERG.length;
+  document.getElementById('divergTbody').innerHTML = DIVERG.map(r=>`
+    <tr>
+      <td class="mono">${r.nf!=null?esc(r.nf):'—'}</td>
+      <td>${esc(r.dest)||'—'}</td>
+      <td>${esc(r.praca)||'—'}</td>
+      <td class="mono">${fmtBR(r.prev)}</td>
+      <td class="mono">${fmtBR(r.ent)}</td>
+      <td class="mono"><span class="tag red">${r.dias} d</span></td>
+      <td>${esc(r.prazoCol)||'—'}</td>
+      <td>${esc(r.just)||'—'}</td>
+    </tr>`).join('');
+  if(!DIVERG.length){
+    document.getElementById('divergDetail').style.display='none';
+    document.getElementById('divergToggleBtn').textContent='Ver pedidos';
   }
-  return JUST_DEFAULT_RE.test(ocor);
-}
-// Só remessas não entregues podem ser desconsideradas
-function isJustificado(r){ return !r.ent && isMotivoJustificado(r.ocor); }
-
-function loadMotivosCfg(){
-  return fbRef('config/motivos').once('value')
-    .then(snap=>{ MOTIVOS_CFG = snap.val() || null; })
-    .catch(()=>{ MOTIVOS_CFG = null; });
 }
 
-function saveMotivosCfg(){
-  const ocorrs = [...new Set(ALL.filter(r=>!r.ent && r.ocor).map(r=>r.ocor))];
-  const just = ocorrs.filter(isMotivoJustificado);
-  const nao = ocorrs.filter(o=>!isMotivoJustificado(o));
-  // preserva escolhas de ocorrências que não estão na planilha atual
-  const prevJ = (MOTIVOS_CFG&&MOTIVOS_CFG.justificados)||[];
-  const prevN = (MOTIVOS_CFG&&MOTIVOS_CFG.naoJustificados)||[];
-  MOTIVOS_CFG = {
-    justificados: [...new Set([...prevJ.filter(o=>!ocorrs.includes(o)), ...just])],
-    naoJustificados: [...new Set([...prevN.filter(o=>!ocorrs.includes(o)), ...nao])]
-  };
-  const msg = document.getElementById('justSaveMsg');
-  msg.textContent = 'Salvando…';
-  fbRef('config/motivos').set(MOTIVOS_CFG)
-    .then(()=>{ msg.textContent = '✓ Salvo'; setTimeout(()=>msg.textContent='',2500); })
-    .catch(err=>{ msg.textContent = 'Não salvou no banco (' + err.message + ')'; });
-}
-
-function renderJustPanel(dateFiltered){
-  const naoEnt = dateFiltered.filter(r=>!r.ent);
-  const counts = {};
-  naoEnt.forEach(r=>{ const o = r.ocor || '(sem ocorrência)'; counts[o]=(counts[o]||0)+1; });
-  const ocorrs = Object.keys(counts).filter(o=>o!=='(sem ocorrência)')
-    .sort((a,b)=> (isMotivoJustificado(b)-isMotivoJustificado(a)) || counts[b]-counts[a] || a.localeCompare(b));
-  document.getElementById('motivoList').innerHTML = ocorrs.length ? ocorrs.map(o=>{
-    const on = isMotivoJustificado(o);
-    return `<label class="motivo-chip ${on?'on':''}"><input type="checkbox" data-ocor="${escapeAttr(o)}" ${on?'checked':''}>${o} <span class="n">${counts[o]}</span></label>`;
-  }).join('') : '<span class="phint">Nenhuma remessa não entregue no período filtrado.</span>';
-
-  const excl = dateFiltered.filter(isJustificado);
-  const atrasadasExcl = excl.filter(r=>r.status==='Atrasado (em aberto)').length;
-  document.getElementById('justSummary').innerHTML = excl.length
-    ? `<b>${fmtNum(excl.length)}</b> remessa(s) desconsiderada(s) neste período (${fmtNum(atrasadasExcl)} delas atrasadas). Base da transportadora: <b>${fmtNum(dateFiltered.length-excl.length)}</b> de ${fmtNum(dateFiltered.length)} remessas.`
-    : 'Nenhuma remessa desconsiderada no período filtrado — os números desta aba são iguais aos do indicador real.';
-}
-
-document.addEventListener('change', (e)=>{
-  const cb = e.target.closest && e.target.closest('#motivoList input[type=checkbox]');
-  if(!cb) return;
-  const o = cb.dataset.ocor;
-  MOTIVOS_CFG = MOTIVOS_CFG || {justificados:[], naoJustificados:[]};
-  MOTIVOS_CFG.justificados = (MOTIVOS_CFG.justificados||[]).filter(x=>x!==o);
-  MOTIVOS_CFG.naoJustificados = (MOTIVOS_CFG.naoJustificados||[]).filter(x=>x!==o);
-  (cb.checked ? MOTIVOS_CFG.justificados : MOTIVOS_CFG.naoJustificados).push(o);
-  saveMotivosCfg();
-  applyFilters();
+document.getElementById('divergToggleBtn').addEventListener('click', ()=>{
+  const det = document.getElementById('divergDetail');
+  const open = det.style.display !== 'block';
+  det.style.display = open ? 'block' : 'none';
+  document.getElementById('divergToggleBtn').textContent = open ? 'Ocultar pedidos' : 'Ver pedidos';
 });
+document.getElementById('divergExportBtn').addEventListener('click', ()=>{
+  const header = ['Nota Fiscal','CTRC','Destinatário','Praça','Modal','Data prevista','Data entrega','Dias de atraso','PRAZO (ATIVA)','Justificativa','Última ocorrência'];
+  const body = DIVERG.map(r=>[r.nf, r.ctrc, r.dest, r.praca, r.tipo, fmtBR(r.prev), fmtBR(r.ent), r.dias, r.prazoCol, r.just, r.ocor]);
+  downloadCSV('no_prazo_ativa_x_atraso_real.csv', [header, ...body]);
+});
+
+function renderJustPanel(dateFiltered, split){
+  const el = document.getElementById('justSummary');
+  if(!HAS_PRAZO_COL){
+    el.innerHTML = '<b style="color:var(--red)">A planilha carregada não tem a coluna PRAZO</b> — esta aba fica sem base de cálculo.';
+    return;
+  }
+  const {base, vazias, desconhecidas} = split;
+  const vzAtr = vazias.filter(r=>PROBLEM_STATUSES.includes(r.status)).length;
+  let txt = `Base da transportadora: <b>${fmtNum(base.length)}</b> de ${fmtNum(dateFiltered.length)} remessas no período · <b>${fmtNum(vazias.length)}</b> com PRAZO vazio calculadas pela data (${fmtNum(vzAtr)} delas já atrasadas).`;
+  const unk = Object.entries(desconhecidas);
+  if(unk.length) txt += `<br>Valores de PRAZO não reconhecidos (também fora da base): ${unk.map(([k,n])=>`<b>${esc(k)}</b> (${n})`).join(', ')}.`;
+  el.innerHTML = txt;
+}
 
 document.addEventListener('click', (e)=>{
   const tab = e.target.closest && e.target.closest('.view-tab');
@@ -594,14 +606,14 @@ document.addEventListener('click', (e)=>{
     VIEW_MODE = tab.dataset.view;
     document.querySelectorAll('.view-tab').forEach(t=>t.classList.toggle('active', t===tab));
     document.getElementById('justPanel').style.display = VIEW_MODE==='transp' ? 'block' : 'none';
-    applyFilters();
+    if(ALL.length) applyFilters();
     return;
   }
   if(e.target.closest && e.target.closest('#exportJustBtn')){
-    const excl = getDateFiltered().filter(isJustificado);
-    const header = ['Nota Fiscal','CTRC','Destinatário','Praça','Modal','Data prevista','Última ocorrência','Situação','Dias'];
-    const body = excl.map(r=>[r.nf, r.ctrc, r.dest, r.praca, r.tipo, r.prev, r.ocor, r.status, r.dias]);
-    downloadCSV('remessas_desconsideradas.csv', [header, ...body]);
+    const {vazias} = splitTransp(getDateFiltered());
+    const header = ['Nota Fiscal','CTRC','Destinatário','Praça','Modal','Data prevista','Data entrega','Última ocorrência','PRAZO','Justificativa'];
+    const body = vazias.map(r=>[r.nf, r.ctrc, r.dest, r.praca, r.tipo, fmtBR(r.prev), fmtBR(r.ent), r.ocor, r.prazoCol, r.just]);
+    downloadCSV('remessas_sem_prazo.csv', [header, ...body]);
   }
 });
 
@@ -609,28 +621,9 @@ function mostrarCarregando(msg){
   document.getElementById('kpiRow').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6B7280;font-size:13.5px;">${msg}</div>`;
 }
 
-function loadDataFromFirebase(){
-  mostrarCarregando('⏳ Carregando dados do banco...');
-  document.getElementById('sourcePill').textContent = 'Carregando do banco...';
-  Promise.all([fbRef('registros').once('value'), loadMotivosCfg()]).then(([snap])=>{
-    const val = snap.val();
-    DEFAULT_DATA = val || [];
-    ALL = DEFAULT_DATA;
-    dadosCarregados = true;
-    if(!ALL.length){
-      mostrarCarregando('Nenhum dado encontrado em painelAtiva/registros. Suba uma planilha pelo botão "Atualizar planilha", ou rode o seed uma vez.');
-      document.getElementById('sourcePill').textContent = 'Sem dados no banco ainda';
-      return;
-    }
-    refreshDateBounds();
-    setActiveChip(document.querySelector('.chip-btn[data-range="all"]'));
-    applyFilters();
-    document.getElementById('sourcePill').textContent = `Dados do banco (${ALL.length} registros)`;
-    document.getElementById('sourcePill').classList.remove('custom');
-  }).catch((err)=>{
-    mostrarCarregando('❌ Não consegui carregar os dados do banco (' + err.message + '). Confere as Regras do Firebase pro nó "painelAtiva".');
-    document.getElementById('sourcePill').textContent = 'Erro ao carregar';
-  });
+function mostrarInicio(){
+  mostrarCarregando('📂 Clique em <b>"Carregar planilha"</b> e selecione a base de remessas da ATIVA (.xlsx) para gerar o painel.<br><small>Os dados são lidos só no seu computador — nada é enviado para a internet.</small>');
+  document.getElementById('sourcePill').textContent = 'Nenhuma planilha carregada';
 }
 
 const COLORS = {
@@ -674,7 +667,7 @@ function computeAndRender(rows){
 
 function renderKPIs({total, entregues, naoEntregues, problemas, noPrazo, atrasoMedio}){
   const kpis = [
-    {label:'Total de remessas', value: fmtNum(total), sub: VIEW_MODE==='transp' ? 'base da transportadora (sem justificadas)' : 'no período filtrado', cls:''},
+    {label:'Total de remessas', value: fmtNum(total), sub: VIEW_MODE==='transp' ? 'base pela coluna PRAZO' : 'no período filtrado', cls:''},
     {label:'Entregues', value: fmtNum(entregues.length), sub: total? fmtPct(entregues.length/total*100)+' do total':'—', cls:'good'},
     {label:'Não entregues', value: fmtNum(naoEntregues.length), sub: total? fmtPct(naoEntregues.length/total*100)+' do total':'—', cls:'danger'},
     {label:'Com atraso', value: fmtNum(problemas.length), sub: total? fmtPct(problemas.length/total*100)+' do total (entreg. + aberto)':'—', cls:'danger'},
@@ -842,7 +835,7 @@ function populateSlaPracaSelect(){
   sel.innerHTML =
     `<option value="__worst8">Piores 8 (padrão)</option>` +
     `<option value="__all">Todas as praças (${SLA_DATA.length})</option>` +
-    pracasSorted.map(a=>`<option value="${escapeAttr(a.praca)}">${a.praca}</option>`).join('');
+    pracasSorted.map(a=>`<option value="${escapeAttr(a.praca)}">${esc(a.praca)}</option>`).join('');
   const stillValid = Array.from(sel.options).some(o=>o.value===prevVal);
   sel.value = stillValid ? prevVal : '__worst8';
 }
@@ -910,13 +903,13 @@ function drawSlaChart(view, selection){
     const d = view[0];
     document.getElementById('slaCallout').innerHTML = `
       <div class="cnum">${fmtPct(d.slaPct)}</div>
-      <p><b>${d.praca}</b> está com ${fmtPct(d.slaPct)} dentro do prazo no período filtrado
+      <p><b>${esc(d.praca)}</b> está com ${fmtPct(d.slaPct)} dentro do prazo no período filtrado
       (${fmtNum(d.onTime)} de ${fmtNum(d.total)} remessas).</p>`;
   } else {
     const worst = view.slice().sort((a,b)=>a.slaPct-b.slaPct)[0];
     document.getElementById('slaCallout').innerHTML = `
       <div class="cnum">${fmtPct(worst.slaPct)}</div>
-      <p>é o menor SLA entre as praças com volume relevante no período — <b>${worst.praca}</b>
+      <p>é o menor SLA entre as praças com volume relevante no período — <b>${esc(worst.praca)}</b>
       tem apenas ${fmtNum(worst.onTime)} de ${fmtNum(worst.total)} remessas dentro do prazo.</p>`;
   }
 }
@@ -967,7 +960,8 @@ function heatStyle(n, max){
   return ` style="background:rgba(179,38,30,${alpha});color:${color};font-weight:600;"`;
 }
 
-function escapeAttr(s){ return String(s).replace(/"/g,'&quot;'); }
+function esc(v){ return v==null?'':String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function escapeAttr(s){ return esc(s); }
 
 function csvEscape(v){
   if(v===null||v===undefined) return '';
@@ -1028,7 +1022,7 @@ function renderGargaloTable(naoEntregues){
       return `<td class="${cls}"${heatStyle(n, maxCell)} data-scope="cell" data-ocor="${escapeAttr(ocor)}" data-dias="${d}">${n||0}</td>`;
     }).join('');
     const total = statusTotals[ocor];
-    return `<tr><td title="${escapeAttr(ocor)}">${ocor}</td>${cells}<td class="total-col cell-count"${heatStyle(total, maxRowTotal)} data-scope="status" data-ocor="${escapeAttr(ocor)}">${total}</td></tr>`;
+    return `<tr><td title="${escapeAttr(ocor)}">${esc(ocor)}</td>${cells}<td class="total-col cell-count"${heatStyle(total, maxRowTotal)} data-scope="status" data-ocor="${escapeAttr(ocor)}">${total}</td></tr>`;
   }).join('');
 
   const diasTotals = diasList.map(d => naoEntregues.filter(r=>String(r.dias)===d).length);
@@ -1088,11 +1082,11 @@ function showGargaloDrilldown(tdEl, dataset){
   const tbody = document.getElementById('drillTbody');
   tbody.innerHTML = records.map(r=>`
     <tr>
-      <td class="mono">${r.nf!=null?r.nf:'—'}</td>
-      <td>${r.dest||'—'}</td>
-      <td>${r.praca||'—'}</td>
-      <td>${r.tipo||'—'}</td>
-      <td>${r.ocor||'—'}</td>
+      <td class="mono">${r.nf!=null?esc(r.nf):'—'}</td>
+      <td>${esc(r.dest)||'—'}</td>
+      <td>${esc(r.praca)||'—'}</td>
+      <td>${esc(r.tipo)||'—'}</td>
+      <td>${esc(r.ocor)||'—'}</td>
       <td class="mono"><span class="tag ${r.dias>0?'red':'amber'}">${r.dias>0? r.dias+' d':'no prazo'}</span></td>
     </tr>`).join('');
 
@@ -1121,9 +1115,9 @@ function drawTopDelays(){
   const tbody = document.querySelector('#topDelaysTable tbody');
   tbody.innerHTML = delayed.map(r=>`
     <tr>
-      <td class="mono">${r.nf!=null?r.nf:'—'}</td>
-      <td>${r.praca}</td>
-      <td>${r.ocor||'—'}</td>
+      <td class="mono">${r.nf!=null?esc(r.nf):'—'}</td>
+      <td>${esc(r.praca)||'—'}</td>
+      <td>${esc(r.ocor)||'—'}</td>
       <td class="mono">${r.dias} d</td>
     </tr>`).join('');
 }
@@ -1134,7 +1128,8 @@ function parseDate(s){ return s ? new Date(s+'T00:00:00') : null; }
 function getDateFiltered(){
   const from = document.getElementById('dateFrom').value;
   const to = document.getElementById('dateTo').value;
-  const fromD = parseDate(from), toD = parseDate(to);
+  let fromD = parseDate(from), toD = parseDate(to);
+  if(fromD && toD && fromD > toD){ const t=fromD; fromD=toD; toD=t; }
   return ALL.filter(r=>{
     const d = parseDate(r.prev);
     if(fromD && d < fromD) return false;
@@ -1146,10 +1141,12 @@ function getDateFiltered(){
 function applyFilters(){
   const dateFiltered = getDateFiltered();
   if(VIEW_MODE === 'transp'){
-    renderJustPanel(dateFiltered);
-    computeAndRender(dateFiltered.filter(r=>!isJustificado(r)));
-    const nExcl = dateFiltered.filter(isJustificado).length;
-    document.getElementById('countTotal').textContent = fmtNum(ALL.length) + (nExcl ? ` · ${fmtNum(nExcl)} desconsideradas` : '');
+    const split = splitTransp(dateFiltered);
+    renderJustPanel(dateFiltered, split);
+    renderDivergencias(split.base);
+    computeAndRender(split.base);
+    const nUnk = Object.values(split.desconhecidas).reduce((a,b)=>a+b,0);
+    document.getElementById('countTotal').textContent = fmtNum(ALL.length) + (nUnk ? ` · ${fmtNum(nUnk)} com PRAZO não reconhecido` : '');
   } else {
     computeAndRender(dateFiltered);
   }
@@ -1185,10 +1182,11 @@ document.querySelectorAll('.chip-btn[data-range]').forEach(btn=>{
       document.getElementById('dateTo').value = '';
     } else {
       const days = parseInt(range,10);
-      const max = new Date(maxDate+'T00:00:00');
-      const from = new Date(max); from.setDate(from.getDate()-days+1);
-      document.getElementById('dateFrom').value = from.toISOString().slice(0,10);
-      document.getElementById('dateTo').value = maxDate;
+      const hoje = isoDate(new Date());
+      const fim = hoje < maxDate ? hoje : maxDate;
+      const from = new Date(fim+'T00:00:00'); from.setDate(from.getDate()-days+1);
+      document.getElementById('dateFrom').value = isoDate(from);
+      document.getElementById('dateTo').value = fim;
     }
     applyFilters();
   });
@@ -1207,7 +1205,7 @@ const OCOR_FIXES = {'AGUARDANDO EMABRQUE':'AGUARDANDO EMBARQUE','RETIDADO NA CIA
 
 function excelSerialToDate(n){
   // Excel serial date (1900 system) -> JS Date at local midnight
-  const utcDays = Math.round(n) - 25569;
+  const utcDays = Math.floor(n) - 25569;
   const utcMs = utcDays * 86400 * 1000;
   const d = new Date(utcMs);
   return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
@@ -1266,7 +1264,7 @@ function parseWorkbookToRecords(wb){
   const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
   if(!rows.length) throw new Error('Planilha vazia.');
 
-  const header = rows[0].map(h => String(h||'').trim().toUpperCase());
+  const header = rows[0].map(h => String(h||'').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' '));
   const idx = {};
   header.forEach((h,i)=>{ idx[h] = i; });
 
@@ -1275,6 +1273,7 @@ function parseWorkbookToRecords(wb){
     throw new Error('Colunas não encontradas na planilha: ' + missing.join(', '));
   }
 
+  HAS_PRAZO_COL = ('PRAZO' in idx);
   const today = (()=>{ const t = new Date(); return new Date(t.getFullYear(), t.getMonth(), t.getDate()); })();
 
   const records = [];
@@ -1296,6 +1295,8 @@ function parseWorkbookToRecords(wb){
       ent: entD ? isoDate(entD) : null,
       status, dias,
       ocor: normOcor(r[idx['ULTIMA OCORRENC']]),
+      prazoCol: idx['PRAZO']!==undefined ? r[idx['PRAZO']] : null,
+      just: idx['JUSTIFICATIVA']!==undefined ? r[idx['JUSTIFICATIVA']] : null,
     });
   }
   if(!records.length) throw new Error('Nenhuma linha válida encontrada (verifique a coluna DATA PREV ENTREGA).');
@@ -1320,26 +1321,17 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
       const data = new Uint8Array(ev.target.result);
       const wb = XLSX.read(data, {type:'array', cellDates:true});
       const records = parseWorkbookToRecords(wb);
-      if(!confirm('Isso vai SUBSTITUIR os dados do painel pra todo mundo que usa esse app (' + records.length + ' registros). Confirma?')){
-        e.target.value = '';
-        showUploadStatus('', false);
-        return;
-      }
-      showUploadStatus('Salvando no banco...', false);
-      fbRef('registros').set(records).then(()=>{
-        ALL = records;
-        DEFAULT_DATA = records;
-        refreshDateBounds();
-        setActiveChip(document.querySelector('.chip-btn[data-range="all"]'));
-        applyFilters();
-        const now = new Date();
-        const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
-        document.getElementById('sourcePill').textContent = `${file.name} · atualizado às ${hh}:${mm} (${records.length} registros)`;
-        document.getElementById('sourcePill').classList.add('custom');
-        showUploadStatus('Planilha carregada e salva no banco — todo mundo que abrir o painel já vê os dados novos.', false);
-      }).catch((err)=>{
-        showUploadStatus('Não consegui salvar no banco (' + err.message + '). Os dados NÃO foram atualizados.', true);
-      });
+      ALL = records;
+      DEFAULT_DATA = records;
+      dadosCarregados = true;
+      refreshDateBounds();
+      setActiveChip(document.querySelector('.chip-btn[data-range="all"]'));
+      applyFilters();
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
+      document.getElementById('sourcePill').textContent = `${file.name} · carregado às ${hh}:${mm} (${records.length} registros)`;
+      document.getElementById('sourcePill').classList.add('custom');
+      showUploadStatus('', false);
     }catch(err){
       showUploadStatus('Erro ao ler a planilha: ' + err.message, true);
     }
@@ -1349,59 +1341,8 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
   e.target.value = '';
 });
 
-document.getElementById('restoreBtn').addEventListener('click', ()=>{
-  showUploadStatus('', false);
-  loadDataFromFirebase();
-});
+mostrarInicio();
 </script>
 
-<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
-  <div style="max-width:320px;width:100%;">
-    <div id="__gateMsg" style="font-size:14px;color:#8a93a3;line-height:1.6;">Verificando acesso...</div>
-  </div>
-</div>
-<style id="__gateStyle">body > *:not(#__gateOverlay){ display:none !important; }</style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
-<script>
-(function(){
-  var GRUPOS_PERMITIDOS = ["PCP"];
-  var firebaseConfig = {
-    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
-    authDomain: "stinpharma-qualidade.firebaseapp.com",
-    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
-    projectId: "stinpharma-qualidade",
-    storageBucket: "stinpharma-qualidade.firebasestorage.app",
-    messagingSenderId: "422803826984",
-    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
-    measurementId: "G-6C0TLHH2VP"
-  };
-  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  function liberar(){
-    var st = document.getElementById('__gateStyle');
-    var ov = document.getElementById('__gateOverlay');
-    if(st) st.remove();
-    if(ov) ov.remove();
-  }
-  function negar(msg){
-    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Central de Apps</a>';
-  }
-  var jaResolveu = false;
-  setTimeout(function(){
-    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
-  }, 10000);
-  firebase.auth().onAuthStateChanged(function(user){
-    jaResolveu = true;
-    if(!user){ negar('Você precisa entrar pela Central de Apps.'); return; }
-    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
-      var dados = snap.val();
-      var meusGrupos = (dados && dados.grupos) || [];
-      var permitido = GRUPOS_PERMITIDOS.some(function(g){ return meusGrupos.indexOf(g) !== -1; });
-      if(permitido){ liberar(); loadDataFromFirebase(); } else { negar('Você não tem permissão pra acessar este app.'); }
-    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
-  });
-})();
-</script>
 </body>
 </html>
