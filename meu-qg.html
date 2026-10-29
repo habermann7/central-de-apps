@@ -227,6 +227,18 @@ html[data-motion=off] *,html[data-motion=off] *::before,html[data-motion=off] *:
 @media(max-width:860px){.shell{grid-template-columns:1fr}.side{margin:0;top:auto;bottom:calc(10px + env(safe-area-inset-bottom));height:auto;padding:6px;left:10px;right:10px;border-radius:22px}.nav{padding:8px 3px;min-height:48px;font-size:10px}.nav .ic{font-size:16px}main{padding:22px 18px 120px}.qg-toolbar{margin-bottom:24px;gap:10px}.qg-caption{font-size:9px}.qg-controls button{padding:7px 10px}.qg-intro{padding:22px;gap:12px}.qg-intro h3{font-size:21px}.qg-orbit{width:65px;height:65px}.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.stat{padding:17px}.grid3{grid-template-columns:minmax(0,1fr)}.card{padding:18px}.row input{min-width:0}.vh h2{font-size:30px}.item{flex-wrap:wrap}.item .grow{min-width:140px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 
+/* Legibilidade: textos maiores e mais claros */
+:root{--mut:#3f5047;--faint:#53625a}
+:root[data-ambiente=noite]{--ink:#f3f8f1;--mut:#d0dcd3;--faint:#b9c7bd}
+body{font-size:16px}
+.hint,.saved,.who,.tl .e small,.stat span,.chip,.brand small,.item .s,.th .cap,.qg-intro p,.vh p{font-size:13.5px}
+.stp{font-size:13.5px}.stp.cur,.stp.done{color:var(--ink)}
+label.f,.ws .lbl,.sec>h3,.qg-caption,.qg-intro small{font-size:12.5px}
+.badge{font-size:12px}.avt{font-size:14.5px}.btn.sm{font-size:14px}
+textarea,input[type=text],input[type=date],select{font-size:15.5px}
+.qg-controls button{font-size:13px}
+.pc .next,.item .t{font-size:15.5px}
+@media(max-width:860px){.nav{font-size:12px}}
 </style>
 </head>
 <body>
@@ -259,7 +271,7 @@ html[data-motion=off] *,html[data-motion=off] *::before,html[data-motion=off] *:
 <script>
 (function(){
   /* CADEADO PADRÃO DA ESTANTE. Só esta linha muda (o ✎ Editar troca ela). "*" = qualquer pessoa cadastrada na Estante (os dados continuam protegidos por espaço). */
-  var GRUPOS_PERMITIDOS = ["PROJETOS"];
+  var GRUPOS_PERMITIDOS = ["*"];
   var firebaseConfig = {
     apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
     authDomain: "stinpharma-qualidade.firebaseapp.com",
