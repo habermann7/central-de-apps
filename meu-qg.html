@@ -239,6 +239,195 @@ textarea,input[type=text],input[type=date],select{font-size:15.5px}
 .qg-controls button{font-size:13px}
 .pc .next,.item .t{font-size:15.5px}
 @media(max-width:860px){.nav{font-size:12px}}
+
+/* =============== Meu QG · interface clara e compacta (2026) =============== */
+:root{
+  --content-width:1160px; --accent-soft:rgba(56,100,79,.095);
+  --page-border:rgba(53,77,62,.12); --surface-raised:#fffefa;
+}
+:root[data-ambiente=noite]{--accent-soft:rgba(190,216,172,.12);--page-border:rgba(216,232,216,.12);--surface-raised:#253b31}
+:root[data-space=grupo]{--acc:#426da5;--accInk:#fff;--info:#426da5;--infoBg:rgba(66,109,165,.12);--glow:#c1d8e9;--accent-soft:rgba(66,109,165,.105)}
+:root[data-space=grupo][data-ambiente=noite]{--acc:#afc9ef;--accInk:#1a304d;--info:#adc9f1;--infoBg:rgba(173,201,241,.13);--glow:#24435e;--accent-soft:rgba(173,201,241,.13)}
+html{scroll-padding-top:148px}
+body{background-image:none;font-size:15.5px}
+body::before,body::after{opacity:.25;filter:blur(28px)}
+.shell{display:block;min-height:100dvh}
+.app-header{position:sticky;top:0;z-index:70;background:color-mix(in srgb,var(--bg) 93%,transparent);border-bottom:1px solid var(--page-border);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
+.header-top,.app-nav{max-width:calc(var(--content-width) + 44px);margin:auto}
+.header-top{display:flex;align-items:center;gap:18px;padding:12px 22px 10px;min-height:74px}
+.header-identity{display:flex;align-items:center;gap:9px;white-space:nowrap;font-size:17px;letter-spacing:-.55px}
+.brand-symbol{display:grid;place-items:center;width:33px;height:33px;background:var(--acc);color:var(--accInk);border-radius:11px;font-size:24px;line-height:1}
+.header-spacer{flex:1;min-width:2px}
+.workspace-picker,.tools-picker{position:relative;min-width:0}
+.workspace-trigger{border:1px solid var(--line2);border-radius:12px;background:var(--card2);display:flex;align-items:center;gap:10px;padding:7px 10px;min-height:46px;max-width:310px;text-align:left;cursor:pointer;transition:background .18s,border-color .18s}
+.workspace-trigger:hover,.workspace-trigger[aria-expanded=true]{background:var(--accent-soft);border-color:var(--acc)}
+.workspace-icon{display:grid;place-items:center;width:30px;height:30px;flex:none;border-radius:9px;background:var(--accent-soft);color:var(--acc);font-size:17px;font-weight:700}
+.workspace-current{min-width:0;display:flex;flex-direction:column;line-height:1.2;gap:2px}
+.workspace-current small{font-size:10px;font-weight:650;letter-spacing:.04em;color:var(--mut)}
+.workspace-current b{font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px}
+.workspace-trigger svg{flex:none;color:var(--mut)}
+.ws-panel,.tools-panel{position:absolute;top:calc(100% + 9px);right:0;width:292px;max-width:calc(100vw - 24px);border:1px solid var(--line2);border-radius:17px;background:var(--card2);padding:11px;box-shadow:0 18px 55px #14201824;z-index:80;animation:in .16s var(--ease)}
+.ws-panel{left:0;right:auto}
+.panel-label{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);font-weight:700;padding:6px 9px 9px}
+.ws{display:flex;flex-direction:column;gap:4px;margin:0;padding:0;border:0;max-height:270px;overflow:auto}
+.ws button{display:flex;align-items:center;gap:9px;width:100%;min-height:42px;padding:10px;border:1px solid transparent;background:transparent;border-radius:10px;text-align:left;font-weight:600;cursor:pointer;color:var(--ink)}
+.ws button:hover{background:var(--bg2)}
+.ws button[aria-pressed=true]{background:var(--accent-soft);border-color:color-mix(in srgb,var(--acc) 25%,transparent);color:var(--acc);box-shadow:none}
+.ws button .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.ws button .checkmark{color:var(--acc);font-weight:800}
+.panel-tip{font-size:11.5px;line-height:1.45;color:var(--mut);padding:10px 9px 4px;border-top:1px solid var(--line);margin-top:7px}
+.header-tools{display:flex;align-items:center;gap:8px}
+.top-icon-btn{border:1px solid var(--line);background:var(--card2);border-radius:11px;min-height:37px;padding:7px 11px;cursor:pointer;font-weight:600;font-size:12px;white-space:nowrap}
+.top-icon-btn:hover,.top-icon-btn[aria-expanded=true]{background:var(--accent-soft)}
+.top-more{width:38px;padding:3px;font-size:22px;line-height:1}
+.tools-panel{width:245px}
+.tools-panel button{display:block;text-align:left;border:0;background:none;border-radius:9px;padding:12px 10px;width:100%;font-size:13px;cursor:pointer}
+.tools-panel button:hover{background:var(--bg2)}
+.account-info{display:block;overflow-wrap:anywhere;padding:12px 10px 3px;margin-top:4px;border-top:1px solid var(--line);color:var(--mut);font-size:11.5px}
+.app-nav{display:flex;align-items:center;gap:5px;padding:0 22px 9px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
+.nav{display:inline-flex;flex-direction:row;align-items:center;justify-content:center;gap:7px;white-space:nowrap;flex:none;width:auto;min-height:40px;padding:10px 14px;font-size:13px;font-weight:620;color:var(--mut);border-radius:10px;box-shadow:none!important;position:relative}
+.nav:hover{background:var(--accent-soft);color:var(--ink)}
+.nav[aria-current=page]{background:var(--accent-soft);color:var(--acc)}
+.nav[aria-current=page]::after{content:"";position:absolute;left:14px;right:14px;bottom:2px;height:2px;border-radius:4px;background:var(--acc)}
+.nav-counter{min-width:19px;padding:1px 5px;border-radius:7px;background:var(--line);font-size:10px;font-weight:700;text-align:center;color:var(--ink)}
+.nav[aria-current=page] .nav-counter{background:var(--acc);color:var(--accInk)}
+main{max-width:var(--content-width);padding:30px 24px 100px;margin:0 auto;width:100%}
+.page-footer{font-size:12px;text-align:center;color:var(--faint);padding-top:55px}
+.context-wrap{margin-bottom:26px}
+.context-path{display:flex;align-items:center;flex-wrap:wrap;gap:7px;font-size:12px;color:var(--mut)}
+.context-path button{padding:1px 2px;border:0;color:inherit;background:none;cursor:pointer;font-size:inherit}
+.context-path button:hover{color:var(--acc);text-decoration:underline}
+.context-path .sep{color:var(--faint);font-weight:400}
+.context-path .current{color:var(--ink);font-weight:650}
+.context-space{display:inline-flex;align-items:center;gap:7px;border:1px solid color-mix(in srgb,var(--acc) 20%,transparent);background:var(--accent-soft);color:var(--acc);padding:5px 9px;border-radius:8px;font-weight:700;font-size:11.5px}
+.context-help{display:flex;gap:6px;align-items:center;margin-top:9px;font-size:12px;color:var(--mut)}
+.context-help::before{content:"";height:6px;width:6px;flex:none;border-radius:50%;background:var(--acc)}
+.vh{margin-bottom:22px;align-items:center}
+.vh h2{font-size:clamp(26px,2.8vw,34px);letter-spacing:-1px;font-weight:675}
+.vh p{font-size:13.5px;max-width:710px;line-height:1.5;margin-top:5px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:21px;box-shadow:0 5px 22px #1f2f2308}
+.card:hover{box-shadow:0 5px 22px #1f2f2308}
+.stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
+.stat{padding:20px}.stat b{font-size:30px}.stat span{font-size:12.5px}.stat::after{height:7px;width:7px}
+.statb{border-radius:16px;display:block}
+.statb:hover{border-color:var(--acc);background:var(--accent-soft)}
+.sec{margin-top:29px}
+.sec>h3{font-size:12px;letter-spacing:.045em;color:var(--mut);font-weight:750;margin-bottom:12px;text-transform:none}
+.item{padding:15px 17px;border-radius:13px;background:var(--card2)}
+.item:hover,.pc:hover{background:var(--card2);box-shadow:0 8px 24px #283c300c;transform:translateY(-1px)}
+.item .t{font-size:15px}.item .s{font-size:12.5px;line-height:1.45}
+.grid3{grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:13px}
+.pc{gap:13px;border-top:3px solid var(--project-color,var(--acc));min-height:180px;cursor:pointer}
+.pc h3{font-size:17px;line-height:1.4;overflow-wrap:anywhere}
+.pc .next{font-size:13px;line-height:1.45}
+.pc .ring{width:52px;height:52px}.pc .ring b{width:40px;height:40px;font-size:12px}
+.btn{font-weight:650;font-size:13.5px;min-height:39px}
+.btn:focus-visible,.nav:focus-visible,.workspace-trigger:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.btn.pri{box-shadow:none}
+.empty{padding:30px 25px;border-radius:15px;background:var(--card);font-size:13.5px}
+.welcome-quick{padding:19px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid var(--line);border-radius:16px;background:var(--card2)}
+.welcome-quick strong{display:block;font-size:15px;font-weight:700}
+.welcome-quick p{font-size:12.5px;color:var(--mut);margin-top:3px}
+.quick-actions{display:flex;flex-wrap:wrap;gap:7px}
+.quick-actions .btn{background:var(--accent-soft);color:var(--ink);border-color:transparent}
+.capture-card{padding:17px 20px}
+.capture-card .big{padding:7px 10px;font-size:16px}
+.capture-card label{font-size:13px;text-transform:none;letter-spacing:0;color:var(--ink);margin-bottom:5px}
+.section-hint{font-size:12px;color:var(--mut);margin-top:3px}
+.project-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:17px}
+.project-kicker{font-size:11px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
+.project-title{font-size:clamp(25px,3vw,35px)!important;letter-spacing:-1px!important;font-weight:700!important;max-width:100%}
+.project-phase{background:var(--card2);padding:19px 20px;border:1px solid var(--line);border-radius:16px}
+.project-phase .pipe{padding:8px 2px 5px}
+.project-help{font-size:12.5px;color:var(--mut);margin-bottom:11px}
+.project-details{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);gap:16px}
+.project-details>.card{min-width:0}
+input[type=text],input[type=url],input[type=date],select,textarea{background:var(--card2);border-radius:10px;padding:11px 12px}
+input.big{font-size:16px}
+input[type=range]{cursor:pointer}
+.ed{gap:14px}
+.ed textarea{min-height:130px}
+.notes{grid-template-columns:280px minmax(0,1fr)}
+.notes .ne{min-width:0}
+.notes .ed textarea{min-height:48dvh}
+.notes .nl>.list{position:sticky;top:150px;max-height:calc(100dvh - 190px);overflow-y:auto;padding-right:3px}
+.banner{border-radius:12px}
+.fab{background:var(--acc);color:var(--accInk);bottom:23px;right:24px;width:51px;height:51px;font-size:26px;border-radius:17px}
+.fab:focus-visible{outline-offset:3px}
+@media(max-width:900px){
+ .header-top{gap:10px;padding:10px 18px 8px}
+ .app-nav{padding:0 18px 7px}
+ .nav{font-size:12.5px;padding:9px 12px}
+ main{padding:22px 18px 95px}
+ .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .project-details{grid-template-columns:1fr}
+ .notes .nl>.list{top:138px}
+}
+@media(max-width:620px){
+ html{scroll-padding-top:132px}
+ .header-top{min-height:63px;gap:8px;padding:9px 12px 7px}
+ .header-identity{font-size:0;gap:0}
+ .header-identity .brand-symbol{width:34px;height:34px;font-size:22px}
+ .workspace-trigger{min-height:41px;padding:6px 7px;gap:6px;max-width:min(51vw,240px)}
+ .workspace-icon{width:25px;height:25px;font-size:15px}
+ .workspace-current small{font-size:9px}
+ .workspace-current b{font-size:12px;max-width:30vw}
+ .workspace-trigger svg{width:12px}
+ .header-tools{gap:5px}
+ .top-icon-btn{padding:5px 7px;min-height:34px;font-size:11px}
+ .top-more{width:32px;font-size:21px}
+ .ws-panel{left:-39px}
+ .app-nav{gap:2px;padding:0 10px 7px}
+ .nav{font-size:12px;min-height:36px;padding:8px 11px}
+ .nav[aria-current=page]::after{left:11px;right:11px}
+ main{padding:17px 13px 98px}
+ .context-wrap{margin-bottom:20px}
+ .context-help{font-size:11px}
+ .vh{margin-bottom:18px}
+ .vh h2{font-size:26px}
+ .vh p{font-size:12.5px}
+ .card{padding:16px;border-radius:14px}
+ .stat{padding:17px}
+ .stat b{font-size:27px}
+ .welcome-quick{padding:15px;flex-direction:column;align-items:stretch;gap:12px}
+ .welcome-quick p{font-size:12px}
+ .quick-actions .btn{flex:1;justify-content:center}
+ .capture-card .row,.project-phase .row{flex-wrap:wrap}
+ .capture-card .row input{min-width:130px}
+ .notes{display:grid;grid-template-columns:1fr}
+ .notes.edit .nl{display:none}.notes:not(.edit) .ne{display:none}
+ .notes .nl>.list{max-height:none;position:static;overflow:visible}
+ .project-phase{padding:14px}
+ .project-title{font-size:28px!important}
+ .project-heading{align-items:flex-start}
+ .project-heading .btn{font-size:12px;padding:7px 9px}
+ .ed textarea{min-height:125px}
+ .item{padding:13px;gap:9px}
+ .item .grow{min-width:140px}
+ .fab{right:14px;bottom:15px;width:49px;height:49px}
+ .modal{padding-top:12vh}
+}
+@media(prefers-reduced-motion:reduce){.ws-panel,.tools-panel{animation:none}}
+
+
+/* Acesso rápido integrado ao cabeçalho: nada flutuando sobre os cartões */
+.label-short{display:none}
+@media(max-width:620px){.label-full{display:none}.label-short{display:inline}}
+.header-tools .fab{position:static;display:grid;place-items:center;flex:none;width:37px;height:37px;min-height:37px;background:var(--acc);color:var(--accInk);border:0;border-radius:11px;box-shadow:none;font-size:24px;font-weight:400;line-height:1}
+.header-tools .fab[hidden]{display:none}
+.header-tools .fab:hover{transform:none;opacity:.88}
+.project-search{display:flex;align-items:center;gap:12px;margin-top:19px;flex-wrap:wrap}
+.project-search label{margin:0;white-space:nowrap;font-size:12px;text-transform:none;letter-spacing:0}
+.project-search input{width:min(460px,100%);flex:1;min-width:170px;background:var(--card2)}
+.project-search .hint{white-space:nowrap}
+@media(max-width:620px){
+ .header-tools .fab{width:33px;height:34px;min-height:34px;font-size:22px}
+ #qgTheme{font-size:0;width:34px;height:34px;padding:0;text-align:center}
+ #qgTheme::before{content:'☾';font-size:18px;line-height:1}
+ :root[data-ambiente=noite] #qgTheme::before{content:'☀'}
+ .project-search input{min-width:100%;order:2}
+ .project-search .hint{margin-left:auto}
+}
 </style>
 </head>
 <body>
@@ -249,20 +438,45 @@ textarea,input[type=text],input[type=date],select{font-size:15.5px}
 </div>
 
 <div class="shell" id="app" hidden>
-  <nav class="side" aria-label="Seções">
-    <div class="brand">Meu QG<small id="meMail"></small></div>
-    <div class="ws" id="wsList"></div>
-    <button class="nav" data-go="hoje"><span class="ic">◉</span>Hoje</button>
-    <button class="nav" data-go="projetos"><span class="ic">▤</span>Projetos</button>
-    <button class="nav" data-go="membros" id="navMem" hidden><span class="ic">👥</span>Membros</button>
-    <div class="sp"></div>
-    <div class="foot">
-      <button class="nav" data-act="backup"><span class="ic">⇩</span>Baixar backup</button>
+  <header class="app-header">
+    <div class="header-top">
+      <div class="header-identity"><span class="brand-symbol" aria-hidden="true">✳</span><strong>Meu QG</strong></div>
+      <div class="workspace-picker">
+        <button type="button" class="workspace-trigger" id="wsTrigger" data-act="ws-toggle" aria-expanded="false" aria-haspopup="true" aria-controls="wsPanel" aria-label="Trocar ambiente">
+          <span class="workspace-icon" id="wsCurrentIcon" aria-hidden="true">⌂</span>
+          <span class="workspace-current"><small>Ambiente atual</small><b id="wsCurrentName">Pessoal</b></span>
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="ws-panel" id="wsPanel" hidden><div class="panel-label">Mudar de ambiente</div><div class="ws" id="wsList"></div><p class="panel-tip">Projetos e notas ficam separados em cada ambiente.</p></div>
+      </div>
+      <div class="header-spacer"></div>
+      <div class="header-tools">
+        <button type="button" class="fab" id="fab" title="Criar uma anotação rápida (tecla C)" aria-label="Criar uma anotação rápida" hidden>+</button>
+        <button type="button" class="top-icon-btn" id="qgTheme" aria-pressed="false" aria-label="Alternar tema claro e escuro" title="Alternar tema">☾ Noite</button>
+        <div class="tools-picker">
+          <button type="button" class="top-icon-btn top-more" data-act="tools-toggle" id="toolsTrigger" aria-expanded="false" aria-controls="toolsPanel" aria-label="Mais opções" title="Mais opções">⋯</button>
+          <div class="tools-panel" id="toolsPanel" hidden>
+            <div class="panel-label">Preferências e dados</div>
+            <button type="button" id="qgMotion" aria-pressed="false">Pausar movimento</button>
+            <button type="button" data-act="backup">↓ Baixar cópia dos meus dados</button>
+            <span class="account-info" id="meMail"></span>
+          </div>
+        </div>
+      </div>
     </div>
-  </nav>
-  <main><div class="qg-toolbar"><span class="qg-caption">Seu espaço para clarear as ideias</span><div class="qg-controls" role="group" aria-label="Aparência"><button type="button" id="qgTheme" aria-pressed="false">☾ Noite</button><button type="button" id="qgMotion" aria-pressed="false">Pausar movimento</button></div></div><div id="main"></div></main>
+    <nav class="app-nav" aria-label="Navegação principal">
+      <button class="nav" data-go="hoje">Hoje</button>
+      <button class="nav" data-go="projetos">Projetos</button>
+      <button class="nav" data-go="notas">Notas</button>
+      <button class="nav" data-go="aguardando">Aguardando <span class="nav-counter" id="bAg" hidden></span></button>
+      <button class="nav" data-go="caixa">Caixa de entrada <span class="nav-counter" id="bCx" hidden></span></button>
+      <button class="nav" data-go="revisao">Revisão semanal</button>
+      <button class="nav" data-go="membros" id="navMem" hidden>Membros</button>
+    </nav>
+  </header>
+  <main id="appContent"><div id="main"></div><footer class="page-footer">Meu QG <span aria-hidden="true">·</span> Um espaço para organizar o que importa</footer></main>
 </div>
-<button class="fab" id="fab" title="Anotar rápido (tecla C)" aria-label="Anotar rápido" hidden>+</button>
+
 <div id="layer"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
@@ -336,7 +550,7 @@ const PRESET={mapeamento:10,andamento:30,producao:50,homologacao:80,suporte:90,c
 const MOV=['andamento','producao','homologacao']; /* "em movimento": entram nos alertas e nas próximas ações */
 const LEGADO={ideia:'mapeamento',fazendo:'andamento',parado:'paralisado'}; /* nomes antigos, convertidos ao ler */
 const VIEWS=['hoje','projetos','notas','aguardando','caixa','revisao','membros'];
-const S={uid:null,email:'',nome:'',ws:'pessoal',esp:{},dir:{},dirAdm:{},anx:{},d:{projetos:{},notas:{},aguardando:{},inbox:{},config:{}},view:'hoje',proj:null,nota:null,filtro:'ativos',busca:'',notaProj:'',verFeitos:false};
+const S={uid:null,email:'',nome:'',ws:'pessoal',esp:{},dir:{},dirAdm:{},anx:{},d:{projetos:{},notas:{},aguardando:{},inbox:{},config:{}},view:'hoje',proj:null,nota:null,filtro:'ativos',busca:'',projBusca:'',notaProj:'',verFeitos:false};
 let db=null;
 
 /* ---------- utilitários ---------- */
@@ -391,24 +605,47 @@ const revisaoVencida=()=>{const u=(S.d.config||{})[chaveRev()]; return !u||dias(
 /* ---------- navegação ---------- */
 function go(v,opts){
   if(!VIEWS.includes(v)||(v==='membros'&&S.ws==='pessoal'))v='hoje';
+  closePopups();
   S.view=v; if(!opts||!opts.keepProj)S.proj=null; if(!opts||!opts.keepNota)S.nota=null;
   history.replaceState(null,'','#'+v);
   render(true);
   window.scrollTo(0,0);
 }
-function abrirProjeto(id){ S.view='projetos';S.proj=id;S.nota=null; render(true); window.scrollTo(0,0); }
+function abrirProjeto(id){ closePopups(); S.view='projetos';S.proj=id;S.nota=null; render(true); window.scrollTo(0,0); }
 
 /* ---------- render ---------- */
-function wsLabel(id){return id==='pessoal'?'🔒 Pessoal':'👥 '+((S.esp[id]||{}).nome||'Espaço');}
+function wsLabel(id){return id==='pessoal'?'Pessoal':((S.esp[id]||{}).nome||'Grupo');}
+const pageNames={hoje:'Hoje',projetos:'Projetos',notas:'Notas',aguardando:'Aguardando',caixa:'Caixa de entrada',revisao:'Revisão semanal',membros:'Membros'};
+function closePopups(){
+  [['wsPanel','wsTrigger'],['toolsPanel','toolsTrigger']].forEach(([p,t])=>{
+    const panel=$('#'+p),trigger=$('#'+t);if(panel)panel.hidden=true;if(trigger)trigger.setAttribute('aria-expanded','false');
+  });
+}
+function togglePopup(which){
+  const id=which==='ws'?'wsPanel':'toolsPanel',btn=which==='ws'?'wsTrigger':'toolsTrigger';
+  const wasOpen=!$('#'+id).hidden; closePopups();
+  $('#'+id).hidden=wasOpen;$('#'+btn).setAttribute('aria-expanded',String(!wasOpen));
+}
 function wsBar(){
-  const ids=['pessoal',...Object.keys(S.esp)];
-  return `<div class="wsbar"><select data-act-change="ws" aria-label="Espaço">${ids.map(i=>`<option value="${i}"${S.ws===i?' selected':''}>${esc(wsLabel(i))}</option>`).join('')}</select><button class="btn" data-act="novo-espaco">+ Espaço</button></div>`;
+  const isGroup=S.ws!=='pessoal';
+  const project=S.view==='projetos'&&S.proj&&obj('projetos')[S.proj];
+  const note=S.view==='notas'&&S.nota&&obj('notas')[S.nota];
+  let crumbs='';
+  if(project)crumbs+=`<button type="button" data-go="projetos">Projetos</button><span class="sep">›</span><span class="current">${esc(project.nome||'Projeto')}</span>`;
+  else if(note)crumbs+=`<button type="button" data-go="notas">Notas</button><span class="sep">›</span><span class="current">${esc(note.titulo||'Nota sem título')}</span>`;
+  else crumbs+=`<span class="current">${pageNames[S.view]||'Hoje'}</span>`;
+  const info=isGroup?'Compartilhado com os integrantes deste grupo.':'Privado: só você vê os projetos e notas deste ambiente.';
+  const detail=S.view==='caixa'?'A caixa de entrada é privada, inclusive quando você está em um grupo.':info;
+  return `<div class="context-wrap" aria-label="Localização atual"><div class="context-path"><span class="context-space">${isGroup?'◉ '+esc(wsLabel(S.ws)):'⌂ Pessoal'}</span><span class="sep">/</span>${crumbs}</div><p class="context-help">${detail}</p></div>`;
 }
 function wsList(){
   const ids=Object.keys(S.esp).sort((a,b)=>(S.esp[a].nome||'').localeCompare(S.esp[b].nome||''));
-  $('#wsList').innerHTML=`<div class="lbl">Espaços</div><button data-act="ws" data-id="pessoal" aria-pressed="${S.ws==='pessoal'}"><span>🔒</span><span class="n">Pessoal</span></button>`+
-   ids.map(i=>`<button data-act="ws" data-id="${i}" aria-pressed="${S.ws===i}"><span>👥</span><span class="n">${esc(S.esp[i].nome||'Espaço')}</span></button>`).join('')+
-   `<button data-act="novo-espaco" style="color:var(--faint)"><span>＋</span><span class="n">Novo espaço</span></button>`;
+  $('#wsList').innerHTML=`<button data-act="ws" data-id="pessoal" aria-pressed="${S.ws==='pessoal'}"><span aria-hidden="true">⌂</span><span class="n">Pessoal <small style="display:block;color:var(--mut);font-weight:450">Apenas você</small></span>${S.ws==='pessoal'?'<span class="checkmark">✓</span>':''}</button>`+
+    ids.map(i=>`<button data-act="ws" data-id="${esc(i)}" aria-pressed="${S.ws===i}"><span aria-hidden="true">◉</span><span class="n">${esc(S.esp[i].nome||'Grupo')}<small style="display:block;color:var(--mut);font-weight:450">Compartilhado</small></span>${S.ws===i?'<span class="checkmark">✓</span>':''}</button>`).join('')+
+    `<button data-act="novo-espaco" style="color:var(--mut)"><span aria-hidden="true">＋</span><span class="n">Criar novo grupo</span></button>`;
+  $('#wsCurrentName').textContent=wsLabel(S.ws);
+  $('#wsCurrentIcon').textContent=S.ws==='pessoal'?'⌂':'◉';
+  document.documentElement.dataset.space=S.ws==='pessoal'?'pessoal':'grupo';
 }
 function badges(){
   wsList(); $('#navMem').hidden=S.ws==='pessoal';
@@ -416,6 +653,7 @@ function badges(){
   const ba=$('#bAg'),bc=$('#bCx');
   if(ba){ba.hidden=!a;ba.textContent=a;} if(bc){bc.hidden=!c;bc.textContent=c;}
   $$('.nav[data-go]').forEach(b=>{ if(b.dataset.go===S.view)b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
+  { const c=$('.app-nav .nav[aria-current]'),bar=$('.app-nav'); if(c&&bar&&bar.scrollWidth>bar.clientWidth){ const l=c.offsetLeft-(bar.clientWidth-c.clientWidth)/2; bar.scrollLeft=Math.max(0,l); } }
 }
 
 /* Avisos de prazo: 3 níveis, dispensáveis, voltam quando o nível sobe. */
@@ -473,47 +711,50 @@ function projRow(p,extra){
 }
 
 function vHoje(){
-  const nome=(S.email||'').split('@')[0];
+
   const fazendo=lista('projetos').filter(p=>MOV.includes(p.status)).sort((a,b)=>(a.prazo||'9999').localeCompare(b.prazo||'9999')||(a.atualizadoEm||0)-(b.atualizadoEm||0));
   const ag=agAbertos().slice(0,5);
   const atencao=[...new Map([...parados(),...prazosPerto()].map(p=>[p.id,p])).values()];
   const h=new Date().getHours();
   const sauda=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
-  return `<div class="vh"><div><h2>${sauda}</h2><p>${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · ${esc(wsLabel(S.ws))}</p></div></div>
-  <section class="qg-intro" aria-label="Seu ritmo"><div><small>Menos ruído. Mais direção.</small><h3>Uma coisa de cada vez.</h3><p>Capture uma ideia. Escolha o próximo passo.</p><div class="row" style="gap:2px;margin:8px 0 0 -10px"><button class="btn sm ghost" data-go="notas">Notas →</button><button class="btn sm ghost" data-go="revisao">Revisão semanal →</button></div></div><div class="qg-orbit" aria-hidden="true"><span>✳</span></div></section>
+  return `<div class="vh"><div><h2>${sauda}</h2><p>${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}</p></div></div>
+  <section class="welcome-quick" aria-label="Acesso rápido"><div><strong>Por onde começar?</strong><p>Acompanhe os projetos ou registre algo que não quer esquecer.</p></div><div class="quick-actions"><button class="btn sm" data-go="projetos">Ver projetos →</button><button class="btn sm" data-go="notas">Abrir notas →</button></div></section>
   ${revisaoVencida()?`<div class="banner">Revisão semanal pendente <button class="btn sm" data-go="revisao">Fazer agora</button></div>`:''}
-  <form class="card" data-form="captura-hoje"><label class="f" for="capH">Anotar rápido (vai pra Caixa, você organiza depois)</label>
+  <form class="card capture-card sec" data-form="captura-hoje"><label class="f" for="capH">Anotação rápida</label><p class="section-hint" style="margin-bottom:9px">Salva na sua caixa de entrada pessoal para organizar depois.</p>
     <div class="row"><input id="capH" type="text" class="big" placeholder="Ideia, tarefa, lembrete…" autocomplete="off" style="flex:1"><button class="btn pri" type="submit">Anotar</button></div></form>
   <div class="stats sec">
-    <div class="card stat"><b class="num">${lista('projetos').filter(p=>MOV.includes(p.status)).length}</b><span>Em movimento</span></div>
+    <div class="card stat"><b class="num">${lista('projetos').filter(p=>MOV.includes(p.status)).length}</b><span>Em andamento</span></div>
     <div class="card stat"><b class="num">${ativos().length}</b><span>Projetos ativos</span></div>
-    <button class="card stat statb" data-go="aguardando"><b class="num">${agAbertos().length}</b><span>Aguardando →</span></button>
-    <button class="card stat statb" data-go="caixa"><b class="num">${inbox().length}</b><span>Na Caixa →</span></button>
+    <button class="card stat statb" data-go="aguardando"><b class="num">${agAbertos().length}</b><span>Respostas pendentes →</span></button>
+    <button class="card stat statb" data-go="caixa"><b class="num">${inbox().length}</b><span>Ideias na caixa →</span></button>
   </div>
   ${atencao.length?`<div class="sec"><h3>Atenção</h3><div class="list">${atencao.map(p=>projRow(p,parados().some(x=>x.id===p.id)?`<span class="chip warn">sem mexer ${dias(p.atualizadoEm||p.criadoEm)}d</span>`:'')).join('')}</div></div>`:''}
-  <div class="sec"><h3>Próximas ações</h3>${fazendo.length?`<div class="list">${fazendo.map(p=>projRow(p)).join('')}</div>`:'<div class="empty">Nenhum projeto em movimento. Marque um projeto como Em Andamento, Em Produção ou Em Homologação.</div>'}</div>
-  ${ag.length?`<div class="sec"><h3>Esperando resposta</h3><div class="list">${ag.map(a=>`<button class="item" data-go="aguardando"><div class="grow"><div class="t">${esc(a.quem||'—')}</div><div class="s">${esc(a.oque||'')}</div></div><span class="chip ${dias(a.desde||now())>=7?'warn':''}">${dias(a.desde||now())}d</span></button>`).join('')}</div></div>`:''}`;
+  <div class="sec"><h3>Próximos passos dos projetos</h3>${fazendo.length?`<div class="list">${fazendo.map(p=>projRow(p)).join('')}</div>`:'<div class="empty">Nenhum projeto em movimento. Marque um projeto como Em Andamento, Em Produção ou Em Homologação.</div>'}</div>
+  ${ag.length?`<div class="sec"><h3>Aguardando respostas</h3><div class="list">${ag.map(a=>`<button class="item" data-go="aguardando"><div class="grow"><div class="t">${esc(a.quem||'—')}</div><div class="s">${esc(a.oque||'')}</div></div><span class="chip ${dias(a.desde||now())>=7?'warn':''}">${dias(a.desde||now())}d</span></button>`).join('')}</div></div>`:''}`;
 }
 
 function vProjetos(){
   let ps=lista('projetos');
   if(S.filtro==='ativos')ps=ps.filter(p=>p.status!=='concluido'); else if(S.filtro==='concluidos')ps=ps.filter(p=>p.status==='concluido');
+  const q=S.projBusca.trim().toLocaleLowerCase('pt-BR');
+  if(q)ps=ps.filter(p=>((p.nome||'')+' '+(p.proximaAcao||'')).toLocaleLowerCase('pt-BR').includes(q));
   const grupos=ORDEM_STATUS.map(st=>[st,ps.filter(p=>p.status===st).sort((a,b)=>(b.atualizadoEm||0)-(a.atualizadoEm||0))]).filter(g=>g[1].length);
-  return `<div class="vh"><div><h2>Projetos</h2><p>${ativos().length} ativos · ${lista('projetos').length} no total</p></div>
+  return `<div class="vh"><div><h2>Projetos</h2><p>Organize seus projetos por etapa e acompanhe o que falta fazer. ${ativos().length} ativos de ${lista('projetos').length} no total.</p></div>
     <div class="seg" role="group" aria-label="Filtro">${[['ativos','Ativos'],['todos','Todos'],['concluidos','Concluídos']].map(([k,l])=>`<button data-act="filtro" data-v="${k}" aria-pressed="${S.filtro===k}">${l}</button>`).join('')}</div></div>
-  <form class="card row" data-form="novo-projeto"><input type="text" id="npNome" placeholder="Novo projeto… (Enter para criar)" autocomplete="off"><button class="btn pri" type="submit">Criar</button></form>
-  ${grupos.length?grupos.map(([st,arr])=>`<div class="sec"><h3><i class="dot" style="background:${stCor(st)}"></i>${STATUS[st][0]} <span class="chip">${arr.length}</span></h3><div class="grid3">${arr.map(cardProj).join('')}</div></div>`).join(''):'<div class="empty sec">Nada aqui ainda. Crie o primeiro projeto acima.</div>'}`;
+  <form class="card row" data-form="novo-projeto"><input type="text" id="npNome" placeholder="Nome do novo projeto" aria-label="Nome do novo projeto" autocomplete="off" required><button class="btn pri" type="submit"><span class="label-full">+ Criar projeto</span><span class="label-short">+ Criar</span></button></form>
+  <div class="project-search"><label class="f" for="projBusca">Buscar projeto</label><input id="projBusca" type="text" data-keep value="${esc(S.projBusca)}" placeholder="Buscar por nome ou próximo passo…" autocomplete="off"><span class="hint">${ps.length} resultado(s)</span></div>
+  ${grupos.length?grupos.map(([st,arr])=>`<div class="sec"><h3><i class="dot" style="background:${stCor(st)}"></i>${STATUS[st][0]} <span class="chip">${arr.length}</span></h3><div class="grid3">${arr.map(cardProj).join('')}</div></div>`).join(''):`<div class="empty sec">${q?'Nenhum projeto encontrado. Tente outra busca.':'Nenhum projeto neste filtro. Crie um projeto ou escolha outro filtro.'}</div>`}`;
 }
 function cardProj(p){
   const prox=(p.proximaAcao||'').trim(), par=p.status==='paralisado', pct=Math.min(100,+p.progresso||0);
   const nn=lista('notas').filter(n=>n.projetoId===p.id).length;
-  return `<div class="card pc" data-act="abrir" data-id="${p.id}" tabindex="0" role="button">
+  return `<div class="card pc" style="--project-color:${stCor(p.status)}" data-act="abrir" data-id="${p.id}" tabindex="0" role="button">
     <div class="row" style="justify-content:space-between;align-items:flex-start;gap:8px"><h3>${esc(p.nome)}</h3>${prazoChip(p.prazo)}</div>
     <div class="row" style="gap:14px;align-items:center">
       <div class="ring" style="--p:${pct};--c:${corP(p)}" aria-label="Andamento ${pct}%"><b class="num">${par?'II':pct+'%'}</b></div>
       <div class="grow" style="min-width:0">
         ${(p.status==='concluido'&&(!prox||prox==='—'))?'':`<div class="next${prox?'':' none'}">${prox?'→ '+esc(prox):'Definir próxima ação'}</div>`}
-        <div class="hint" style="margin-top:6px">${par?'parado em '+pct+'% · ':''}${nn?nn+' nota'+(nn>1?'s':'')+' · ':''}mexido ${ago(p.atualizadoEm||p.criadoEm)}</div>
+        <div class="hint" style="margin-top:6px">${par?'parado em '+pct+'% · ':''}${nn?nn+' nota'+(nn>1?'s':'')+' · ':''}atualizado ${ago(p.atualizadoEm||p.criadoEm)}</div>
       </div>
     </div>
     <div>${stChip(p.status)}</div></div>`;
@@ -531,41 +772,41 @@ function vProjeto(id){
   const diario=Object.entries(p.diario||{}).map(([k,e])=>Object.assign({k},e)).sort((a,b)=>b.t-a.t);
   const notas=lista('notas').filter(n=>n.projetoId===id).sort((a,b)=>(b.atualizadoEm||0)-(a.atualizadoEm||0));
   const ag=lista('aguardando').filter(a=>a.projetoId===id).sort((a,b)=>(a.feito?1:0)-(b.feito?1:0)||(a.desde||0)-(b.desde||0));
-  return `<div class="vh"><button class="btn ghost" data-act="voltar">← Projetos</button>
+  return `<div class="project-heading"><div><p class="project-kicker">Detalhes do projeto</p><button class="btn sm ghost" data-act="voltar">← Voltar para projetos</button></div>
     <button class="btn ghost bad" data-act="del-proj" data-id="${id}">Excluir projeto</button></div>
   <div class="ed">
-    <input type="text" class="tt" data-keep data-f="nome" data-id="${id}" value="${esc(p.nome)}" aria-label="Nome do projeto">
-    ${pipeHtml(p)}
+    <input type="text" class="tt project-title" data-keep data-f="nome" data-id="${id}" value="${esc(p.nome)}" aria-label="Nome do projeto" title="Clique para renomear o projeto">
+    <div class="project-phase"><p class="project-kicker">Etapa atual ${stChip(p.status)}</p><p class="project-help">Clique em uma etapa para mudar a situação do projeto. O percentual será ajustado automaticamente e você poderá alterá-lo abaixo.</p>${pipeHtml(p)}</div>
     <div class="row wrap" style="justify-content:space-between">
       ${p.status==='paralisado'?`<button class="btn" data-act="retomar" data-id="${id}">Retomar projeto</button>`:`<button class="btn ghost" data-act="status" data-id="${id}" data-v="paralisado" aria-pressed="false">Paralisado</button>`}
-      <label class="row" style="gap:8px"><span class="hint">Prazo</span><input type="date" data-keep data-f="prazo" data-id="${id}" value="${esc(p.prazo||'')}" aria-label="Prazo" style="width:170px"></label>
+      <label class="row" style="gap:8px"><span class="hint">Prazo de entrega</span><input type="date" data-keep data-f="prazo" data-id="${id}" value="${esc(p.prazo||'')}" aria-label="Prazo" style="width:170px"></label>
     </div>
-    <div class="card"><label class="f" for="pa">Próxima ação — o que eu faço agora?</label>
-      <input id="pa" type="text" class="big" data-keep data-f="proximaAcao" data-id="${id}" value="${esc(p.proximaAcao||'')}" placeholder="Um passo pequeno e concreto"></div>
-    <div class="grid2">
-      <div class="card"><label class="f" for="op">Onde parei</label>
-        <textarea id="op" data-keep data-f="ondeParei" data-id="${id}" placeholder="Em que ponto está? O que falta?" style="min-height:110px">${esc(p.ondeParei||'')}</textarea></div>
-      <div class="card"><label class="f" for="pr">Andamento: <span class="num" id="prv" style="color:${corP(p)}">${p.status==='paralisado'?'parado em '+(+p.progresso||0)+'%':(+p.progresso||0)+'%'}</span></label>
+    <div class="card"><label class="f" for="pa">Próximo passo: o que precisa ser feito?</label>
+      <input id="pa" type="text" class="big" data-keep data-f="proximaAcao" data-id="${id}" value="${esc(p.proximaAcao||'')}" placeholder="Ex.: Revisar documentação e enviar para aprovação"></div>
+    <div class="grid2 project-details">
+      <div class="card"><label class="f" for="op">Situação atual e observações</label>
+        <textarea id="op" data-keep data-f="ondeParei" data-id="${id}" placeholder="Descreva o que já foi feito, dificuldades ou o que falta concluir." style="min-height:110px">${esc(p.ondeParei||'')}</textarea></div>
+      <div class="card"><label class="f" for="pr">Progresso estimado: <span class="num" id="prv" style="color:${corP(p)}">${p.status==='paralisado'?'parado em '+(+p.progresso||0)+'%':(+p.progresso||0)+'%'}</span></label>
         <input id="pr" type="range" min="0" max="100" step="5" value="${+p.progresso||0}" data-keep data-f="progresso" data-id="${id}" style="width:100%;accent-color:${corP(p)}"${p.status==='paralisado'?' disabled':''}>
         <div class="bar" style="margin-top:10px"><i id="prb" style="width:${+p.progresso||0}%;background:${corP(p)}"></i></div>
         ${p.status==='paralisado'?'<p class="hint" style="margin-top:10px">Paralisado fica fora da régua de %. Ao escolher outro status, o andamento volta a valer.</p>':''}
-        <p class="hint" style="margin-top:12px">Criado em ${fmtData(p.criadoEm||now())}${p.por&&nomeDe(p.por)?' por '+esc(nomeDe(p.por)):''} · mexido ${ago(p.atualizadoEm||p.criadoEm)}${p.concluidoEm?' · concluído em '+fmtData(p.concluidoEm):''}</p></div>
+        <p class="hint" style="margin-top:12px">Criado em ${fmtData(p.criadoEm||now())}${p.por&&nomeDe(p.por)?' por '+esc(nomeDe(p.por)):''} · atualizado ${ago(p.atualizadoEm||p.criadoEm)}${p.concluidoEm?' · concluído em '+fmtData(p.concluidoEm):''}</p></div>
     </div>
-    <div class="sec"><h3>Diário de andamento</h3>
-      <form class="row" data-form="diario" data-id="${id}"><input type="text" id="dIn" placeholder="Hoje fiz… (Enter)" autocomplete="off"><button class="btn" type="submit">Registrar</button></form>
+    <div class="sec"><h3>Histórico de atualizações</h3><p class="section-hint" style="margin-bottom:10px">Registre as novidades para acompanhar a evolução do projeto.</p>
+      <form class="row" data-form="diario" data-id="${id}"><input type="text" id="dIn" placeholder="O que foi feito ou mudou?" autocomplete="off"><button class="btn" type="submit">Registrar</button></form>
       <div class="tl" style="margin-top:14px">${diario.length?diario.map(e=>`<div class="e">${esc(e.txt)}<small>${fmtData(e.t)} · ${ago(e.t)} <button class="btn ghost sm" data-act="del-diario" data-id="${id}" data-k="${e.k}" aria-label="Apagar registro">×</button></small></div>`).join(''):'<span class="hint">Nenhum registro ainda.</span>'}</div></div>
-    <div class="sec"><h3>Notas deste projeto <button class="btn sm" data-act="nova-nota" data-id="${id}">+ Nova nota</button></h3>
+    <div class="sec"><h3>Anotações relacionadas <button class="btn sm" data-act="nova-nota" data-id="${id}">+ Nova nota</button></h3>
       ${notas.length?`<div class="list">${notas.map(n=>`<button class="item" data-act="abrir-nota" data-id="${n.id}"><div class="grow"><div class="t">${esc(n.titulo||'Sem título')}</div><div class="s">${esc((n.texto||'').slice(0,90))}</div></div><span class="hint">${ago(n.atualizadoEm)}</span></button>`).join('')}</div>`:'<span class="hint">Nenhuma nota ligada.</span>'}</div>
-    <div class="sec"><h3>Aguardando ligado a este projeto</h3>
+    <div class="sec"><h3>Respostas pendentes deste projeto</h3>
       <form class="row wrap" data-form="aguardando" data-proj="${id}"><input type="text" id="agQ" placeholder="De quem?" style="flex:1;min-width:120px"><input type="text" id="agO" placeholder="O que estou esperando?" style="flex:2;min-width:180px"><button class="btn" type="submit">Adicionar</button></form>
       <div class="list" style="margin-top:10px">${ag.map(agRow).join('')}</div></div>
-    <div class="sec"><h3>Arquivos <span class="chip" id="anxN">${Object.keys(p.anexosMeta||{}).length}</span></h3>
+    <div class="sec"><h3>Arquivos e anexos <span class="chip" id="anxN">${Object.keys(p.anexosMeta||{}).length}</span></h3>
       <div class="drop" id="drop"><div>Arraste fotos ou PDFs aqui, cole um print (<kbd>Ctrl</kbd>+<kbd>V</kbd>) ou</div>
         <button class="btn" style="margin-top:8px" data-act="anx-add" data-id="${id}">+ Escolher arquivos</button>
         <input type="file" id="anxIn" multiple accept="image/*,application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" hidden data-id="${id}">
         <div class="hint" style="margin-top:6px">Fotos são reduzidas automaticamente. Outros arquivos: até 4 MB cada.</div></div>
       <div id="anxBox">${anxHtml(id)}</div></div>
-    ${links.length?`<div class="sec"><h3>Links (antigos)</h3><div class="list">${links.map(l=>`<div class="item" style="cursor:default"><div class="grow"><a class="t" href="${esc(l.u)}" target="_blank" rel="noopener noreferrer" style="color:inherit">${esc(l.t||l.u)}</a><div class="s">${esc(l.u)}</div></div><button class="btn ghost sm" data-act="del-link" data-id="${id}" data-k="${l.k}" aria-label="Remover link">×</button></div>`).join('')}</div></div>`:''}
+    ${links.length?`<div class="sec"><h3>Links salvos</h3><div class="list">${links.map(l=>`<div class="item" style="cursor:default"><div class="grow"><a class="t" href="${esc(l.u)}" target="_blank" rel="noopener noreferrer" style="color:inherit">${esc(l.t||l.u)}</a><div class="s">${esc(l.u)}</div></div><button class="btn ghost sm" data-act="del-link" data-id="${id}" data-k="${l.k}" aria-label="Remover link">×</button></div>`).join('')}</div></div>`:''}
   </div>`;
 }
 
@@ -652,7 +893,7 @@ function vAguardando(){
   const ab=agAbertos();
   const feitos=lista('aguardando').filter(a=>a.feito).sort((a,b)=>(b.feitoEm||0)-(a.feitoEm||0));
   const projs=lista('projetos').filter(p=>p.status!=='concluido');
-  return `<div class="vh"><div><h2>Aguardando</h2><p>Tudo o que você pediu e ainda não voltou.</p></div></div>
+  return `<div class="vh"><div><h2>Aguardando respostas</h2><p>Reúna pedidos, aprovações e informações que dependem de outra pessoa.</p></div></div>
   <form class="card row wrap" data-form="aguardando"><input type="text" id="agQ" placeholder="De quem?" style="flex:1;min-width:130px"><input type="text" id="agO" placeholder="O que estou esperando?" style="flex:2;min-width:200px">
     <select id="agP" style="flex:1;min-width:140px" aria-label="Projeto"><option value="">Sem projeto</option>${projs.map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('')}</select><button class="btn pri" type="submit">Adicionar</button></form>
   <div class="sec"><h3>Em aberto <span class="chip">${ab.length}</span></h3>${ab.length?`<div class="list">${ab.map(agRow).join('')}</div>`:'<div class="empty">Nada pendente com terceiros.</div>'}</div>
@@ -661,11 +902,11 @@ function vAguardando(){
 
 function vCaixa(){
   const it=inbox();
-  return `<div class="vh"><div><h2>Caixa de entrada</h2><p>O que você anotou rápido. Decida o destino de cada item.</p></div></div>
+  return `<div class="vh"><div><h2>Caixa de entrada</h2><p>Ideias e lembretes pessoais ainda não organizados. Transforme cada item em nota, projeto ou pendência.</p></div></div>
   <form class="card row" data-form="captura"><input type="text" id="capC" class="big" placeholder="Anotar algo…" autocomplete="off"><button class="btn pri" type="submit">Anotar</button></form>
   <div class="sec">${it.length?`<div class="list">${it.map(i=>`<div class="item" style="cursor:default;flex-wrap:wrap">
     <div class="grow" style="min-width:200px"><div class="t" style="white-space:pre-wrap">${esc(i.texto)}</div><div class="s">${ago(i.criadoEm)}</div></div>
-    <div class="row wrap" style="gap:6px"><button class="btn sm" data-act="cx-nota" data-id="${i.id}">Virar nota</button><button class="btn sm" data-act="cx-proj" data-id="${i.id}">Virar projeto</button><button class="btn sm" data-act="cx-ag" data-id="${i.id}">Aguardando</button><button class="btn ghost sm bad" data-act="cx-del" data-id="${i.id}" aria-label="Apagar">×</button></div></div>`).join('')}</div>`:'<div class="empty">Caixa vazia. 🎉</div>'}</div>`;
+    <div class="row wrap" style="gap:6px"><button class="btn sm" data-act="cx-nota" data-id="${i.id}">Criar nota</button><button class="btn sm" data-act="cx-proj" data-id="${i.id}">Criar projeto</button><button class="btn sm" data-act="cx-ag" data-id="${i.id}">Aguardando</button><button class="btn ghost sm bad" data-act="cx-del" data-id="${i.id}" aria-label="Apagar">×</button></div></div>`).join('')}</div>`:'<div class="empty">Caixa vazia. 🎉</div>'}</div>`;
 }
 
 function vNotas(){
@@ -676,7 +917,7 @@ function vNotas(){
   if(S.notaProj)ns=ns.filter(n=>n.projetoId===S.notaProj);
   ns.sort((a,b)=>(b.fixada?1:0)-(a.fixada?1:0)||(b.atualizadoEm||0)-(a.atualizadoEm||0));
   const n=S.nota&&obj('notas')[S.nota]?Object.assign({id:S.nota},obj('notas')[S.nota]):null;
-  return `<div class="vh"><div><h2>Notas</h2><p>${lista('notas').length} no total</p></div><button class="btn pri" data-act="nova-nota">+ Nova nota</button></div>
+  return `<div class="vh"><div><h2>Notas</h2><p>Guarde informações e conecte suas anotações aos projetos. ${lista('notas').length} nota(s) neste ambiente.</p></div><button class="btn pri" data-act="nova-nota">+ Nova nota</button></div>
   <div class="notes${n?' edit':''}">
     <div class="nl"><div class="list">
       <input type="text" data-keep id="busca" placeholder="Buscar…" value="${esc(S.busca)}" aria-label="Buscar notas">
@@ -696,7 +937,7 @@ function vMembros(){
   const e=espAtual(); const dono=ehDono();
   const ms=Object.keys(e.membros||{}).sort((a,b)=>(a===e.dono?-1:b===e.dono?1:0));
   const candidatos=Object.keys(DIR()).filter(u=>!(e.membros||{})[u]).sort((a,b)=>(DIR()[a].nome||'').localeCompare(DIR()[b].nome||''));
-  return `<div class="vh"><div><h2>${esc(e.nome||'Espaço')}</h2><p>Espaço compartilhado · todos os membros veem e editam projetos, notas e pendências daqui.</p></div></div>
+  return `<div class="vh"><div><h2>Pessoas do grupo</h2><p>${esc(e.nome||'Grupo')} · integrantes podem visualizar e editar os projetos, notas e pendências compartilhados.</p></div></div>
   ${dono?`<form class="card row wrap" data-form="renomear-espaco"><input type="text" id="enome" value="${esc(e.nome||'')}" aria-label="Nome do espaço" style="flex:1;min-width:180px"><button class="btn" type="submit">Renomear</button></form>`:''}
   <div class="sec"><h3>Membros <span class="chip">${ms.length}</span></h3><div class="list">
     ${ms.map(u=>`<div class="item" style="cursor:default"><div class="grow"><div class="t">${esc(nomeDe(u)||(DIR()[u]&&DIR()[u].email)||u)}${u===S.uid?' (você)':''}</div><div class="s">${esc((DIR()[u]&&DIR()[u].email)||'')}</div></div>
@@ -716,7 +957,7 @@ function vRevisao(){
     ['Prazos em até 7 dias (ou vencidos)',prazosPerto().map(p=>projRow(p)).join('')]
   ];
   const tudoOk=blocos.every(b=>!b[1]);
-  return `<div class="vh"><div><h2>Revisão semanal</h2><p>${u?'Última revisão: '+fmtData(u)+' ('+ago(u)+')':'Você ainda não fez nenhuma revisão.'}</p></div>
+  return `<div class="vh"><div><h2>Revisão semanal</h2><p>Confira o que está parado, sem próximo passo ou perto do prazo. ${u?'Última revisão: '+fmtData(u)+' ('+ago(u)+').':'Nenhuma revisão registrada até agora.'}</p></div>
     <button class="btn pri" data-act="concluir-revisao">Concluir revisão</button></div>
   ${tudoOk?'<div class="empty">Tudo em dia. Nada pedindo atenção. 👌</div>':blocos.filter(b=>b[1]).map(b=>`<div class="sec"><h3>${b[0]}</h3><div class="list">${b[1]}</div></div>`).join('')}
   <p class="hint sec">Dica: reserve 10 minutos na sexta. Para cada item acima, ou dê uma próxima ação, ou pause, ou conclua.</p>`;
@@ -758,6 +999,8 @@ document.addEventListener('click',e=>{
   const g=e.target.closest('[data-go]'); if(g){ e.preventDefault(); go(g.dataset.go); return; }
   const b=e.target.closest('[data-act]'); if(!b)return;
   const a=b.dataset.act,id=b.dataset.id;
+  if(a==='ws-toggle'){ togglePopup('ws');return; }
+  if(a==='tools-toggle'){ togglePopup('tools');return; }
   if(a==='fecha-modal'){ if(e.target===b)fechaModal(); return; }
   if(e.target.closest('input,select,textarea')&&a!=='abrir')return;
   switch(a){
@@ -798,7 +1041,7 @@ document.addEventListener('click',e=>{
     case 'cx-ag': { const i=obj('inbox')[id]; if(!i)break; set('aguardando/'+newId(),Object.assign(autor(),{quem:'',oque:i.texto,projetoId:'',desde:now(),feito:false})); del('inbox/'+id); toast('Movido para Aguardando'); break; }
     case 'cx-del': del('inbox/'+id); break;
     case 'concluir-revisao': upd('config',{[chaveRev()]:now()}); toast('Revisão concluída ✓'); break;
-    case 'backup': backup(); break;
+    case 'backup': closePopups(); backup(); break;
     case 'ws': trocaWs(id); break;
     case 'novo-espaco': abrirNovoEspaco(); break;
     case 'rm-membro': if(confirm('Remover esta pessoa do espaço?')){const eid=S.ws;
@@ -814,8 +1057,10 @@ document.addEventListener('click',e=>{
 function erroSalvar(e){ toast('Não consegui salvar. Confira a conexão e as regras do banco.',true); console.error(e); }
 function trocaWs(id){
   if(id!=='pessoal'&&!S.esp[id])id='pessoal';
-  S.ws=id;S.anx={};S.proj=null;S.nota=null;S.notaProj='';S.busca='';
+  closePopups();
+  S.ws=id;S.anx={};S.proj=null;S.nota=null;S.notaProj='';S.busca='';S.projBusca='';
   try{localStorage.setItem('meuqg_ws_'+S.uid,id);}catch(_){}
+  S.userSwitchedWs=true;
   if(S.view==='membros'&&id==='pessoal')S.view='hoje';
   render(true);window.scrollTo(0,0);
 }
@@ -824,13 +1069,22 @@ function abrirNovoEspaco(){
   setTimeout(()=>{const i=$('#neNome');if(i)i.focus();},30);
 }
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){ fechaModal(); return; }
+  if(e.key==='Escape'){ closePopups(); fechaModal(); return; }
   if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('tt')){ e.preventDefault(); e.target.blur(); return; }
   if((e.key==='c'||e.key==='C')&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&!/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName||''))&&!e.target.isContentEditable&&S.uid){ e.preventDefault(); abrirCaptura(); return; }
   if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.pc[data-act=abrir]')){ e.preventDefault(); abrirProjeto(e.target.dataset.id); }
   if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.th[data-act=anx-ver]')){ e.preventDefault(); verAnexo(e.target.dataset.id,e.target.dataset.k); }
 });
 $('#fab').addEventListener('click',abrirCaptura);
+// Fechar menus ao clicar fora, sem atrapalhar edição ou navegação.
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.workspace-picker')&&!e.target.closest('.context-path [data-act="ws-toggle"]')){
+    const p=$('#wsPanel'); if(p&&!p.hidden){p.hidden=true;$('#wsTrigger').setAttribute('aria-expanded','false');}
+  }
+  if(!e.target.closest('.tools-picker')){
+    const p=$('#toolsPanel'); if(p&&!p.hidden){p.hidden=true;$('#toolsTrigger').setAttribute('aria-expanded','false');}
+  }
+});
 
 document.addEventListener('change',e=>{ const t=e.target; if(t&&t.id==='anxIn'){ addAnexos(t.dataset.id,t.files).then(()=>{t.value='';}); } });
 document.addEventListener('paste',e=>{
@@ -880,7 +1134,11 @@ document.addEventListener('change',e=>{
 });
 document.addEventListener('input',e=>{
   const t=e.target; if(!t.dataset)return;
-  if(t.id==='busca'){ S.busca=t.value; const pos=t.selectionStart; render(false); const n=$('#busca'); if(n){n.focus();n.setSelectionRange(pos,pos);} return; }
+  if(t.id==='busca'||t.id==='projBusca'){
+    if(t.id==='busca')S.busca=t.value;else S.projBusca=t.value;
+    const pos=t.selectionStart,field=t.id; render(false); const n=$('#'+field);
+    if(n){n.focus();n.setSelectionRange(pos,pos);} return;
+  }
   if(t.id==='pr'){ const v=$('#prv'),b=$('#prb'),c=corProg(t.value); if(v){v.textContent=t.value+'%';v.style.color=c;} if(b){b.style.width=t.value+'%';b.style.background=c;} t.style.accentColor=c; return; }
   if(t.dataset.nf){ const s=$('#saved'); if(s)s.textContent='Salvando…'; clearTimeout(nTimer); nTimer=setTimeout(()=>salvaNota(t),600); }
 });
@@ -898,6 +1156,7 @@ function start(){
   firebase.auth().onAuthStateChanged(u=>{
     if(!u)return;
     S.uid=u.uid;S.email=u.email||'';
+    try{S.preferredWs=localStorage.getItem('meuqg_ws_'+S.uid)||'pessoal';}catch(_){S.preferredWs='pessoal';}
     $('#meMail').textContent=S.email;
     $('#app').hidden=false;$('#fab').hidden=false;
     const h=location.hash.slice(1); S.view=VIEWS.includes(h)?h:'hoje'; if(S.view==='membros')S.view='hoje';
@@ -925,7 +1184,9 @@ function ligaEsp(id){
   const E={dados:{}},offs=[];
   const on=(path,fn)=>{ const r=db.ref('qgEspacos/'+id+'/'+path); const cb=sn=>fn(sn.val()); r.on('value',cb,()=>soltaEsp(id)); offs.push(()=>r.off('value',cb)); };
   ['nome','dono','nomes'].forEach(k=>on(k,v=>{ E[k]=v; renderSafe(); }));
-  on('membros',v=>{ if(!v||!v[S.uid]){ soltaEsp(id); return; } E.membros=v; S.esp[id]=E; renderSafe(); });
+  on('membros',v=>{ if(!v||!v[S.uid]){ soltaEsp(id); return; } E.membros=v; S.esp[id]=E;
+    if(!S.userSwitchedWs&&S.preferredWs===id){S.ws=id;S.preferredWs='pessoal';S.proj=null;S.nota=null;}
+    renderSafe(); });
   ['projetos','notas','aguardando'].forEach(k=>on('dados/'+k,v=>{ E.dados[k]=v||{}; renderSafe(); }));
   espOff[id]=()=>offs.forEach(f=>f());
 }
