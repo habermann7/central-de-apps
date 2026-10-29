@@ -675,7 +675,7 @@ function go(v,opts){
   closePopups();
   S.view=v; if(!opts||!opts.keepProj)S.proj=null; if(!opts||!opts.keepNota)S.nota=null;
   history.replaceState(null,'','#'+v);
-  if(v==='atividades')setTimeout(()=>{ if(S.view==='atividades')marcaVisto(false); },1500);
+  if(v==='atividades')setTimeout(()=>{ if(S.view==='atividades')marcaVisto(); },1500);
   render(true);
   window.scrollTo(0,0);
 }
@@ -736,18 +736,18 @@ function todasAtividades(){
     Object.keys(d).forEach(k=>{ const a=d[k]; if(a&&a.t)out.push(Object.assign({id:k,ws:eid},a)); }); });
   return out.sort((a,b)=>b.t-a.t);
 }
-/* Feed geral: histórico do Pessoal + de todos os grupos, mais recente primeiro. */
+/* Atualizações SÓ do ambiente em que você está: Pessoal ou o grupo aberto. */
 function feedGeral(){
-  const pes=atividadesOrdenadas().map(a=>Object.assign({ws:'pessoal'},a));
-  return todasAtividades().concat(pes).sort((a,b)=>b.t-a.t);
+  if(S.ws==='pessoal')return atividadesOrdenadas().map(a=>Object.assign({ws:'pessoal'},a));
+  return todasAtividades().filter(a=>a.ws===S.ws);
 }
 function naoLidas(){
   return feedGeral().filter(a=>a.por&&a.t>(vistoAte(a.ws)||(now()-7*DIA)));
 }
 /* marca como lido: só a tela atual (all=false) ou todos os grupos (all=true) */
-function marcaVisto(all){
+function marcaVisto(){
   const o={};
-  if(all){ o.pessoal=now(); Object.keys(S.esp).forEach(e=>o[e]=now()); } else o[S.ws]=now();
+  o[S.ws]=now();
   upd('config/atividadeVista',o);
 }
 /* Quando um projeto, nota ou pedido é apagado, apaga também as atualizações dele (neste ambiente). */
@@ -766,14 +766,14 @@ function atualizacoesHtml(){
   const mostra=l.slice(0,3), resto=l.length-mostra.length;
   return '<div class="updS" role="region" aria-label="Atualizações de projetos">'+mostra.map(a=>
     `<div class="upd"><span class="dot-un" aria-hidden="true"></span><button class="updt" data-act="abrir-ws" data-id="${esc(a.ref||a.pid)}" data-view="${esc(a.view||'projetos')}" data-ws="${esc(a.ws)}"><b>${esc(a.nome)}</b> · ${esc(a.txt)} <span>· ${esc(nomeGrupo(a.ws))} · ${esc(quemFez(a))} · ${ago(a.t)}</span></button><button class="avx" data-act="atv-excluir" data-id="${esc(a.id)}" data-ws="${esc(a.ws)}" aria-label="Excluir esta atualização" title="Excluir">✕</button></div>`
-  ).join('')+`<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><button class="btn sm ghost" data-act="ver-atv">Ver todas${resto?' ('+l.length+' novas)':''} →</button><button class="btn sm ghost" data-act="atv-lido">Marcar todas como lidas</button></div></div>`;
+  ).join('')+`<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><button class="btn sm ghost" data-act="ver-atv">Ver todas${resto?' ('+l.length+' novas)':''} →</button><button class="btn sm ghost" data-act="atv-lido">Marcar como lidas</button></div></div>`;
 }
 function vAtividades(){
   const l=feedGeral().slice(0,150);
   const grupos={};
   l.forEach(a=>{ const k=new Date(a.t).toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}); (grupos[k]=grupos[k]||[]).push(a); });
-  return `<div class="vh"><div><h2>Atualizações</h2><p>O que mudou nos projetos, no seu Pessoal e nos grupos: status, andamento, prazo, diário, arquivos e notas.</p></div></div>
-  ${l.length?Object.keys(grupos).map(d=>`<div class="sec"><h3>${esc(d)}</h3><div class="list">${grupos[d].map(a=>{ const nova=a.por&&a.t>(vistoAte(a.ws)||0); return `<div class="item atv-item"><button class="atv-main" data-act="abrir-ws" data-id="${esc(a.ref||a.pid)}" data-view="${esc(a.view||'projetos')}" data-ws="${esc(a.ws)}"><div class="grow"><div class="t">${nova?'<span class="dot-un" aria-label="nova" style="display:inline-block;margin-right:7px;vertical-align:middle"></span>':''}${esc(a.nome)} <span class="chip">${esc(nomeGrupo(a.ws))}</span></div><div class="s">${esc(a.txt)}</div><div class="hint">${esc(quemFez(a))} · ${new Date(a.t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div></div></button><button class="avx" data-act="atv-excluir" data-id="${esc(a.id)}" data-ws="${esc(a.ws)}" aria-label="Excluir esta atualização" title="Excluir">✕</button></div>`; }).join('')}</div></div>`).join(''):'<div class="empty sec">Nada por aqui ainda. Quando um projeto, nota ou pedido mudar, aparece aqui.</div>'}`;
+  return `<div class="vh"><div><h2>Atualizações</h2><p>O que mudou aqui, neste ${S.ws==='pessoal'?'seu Pessoal':'grupo'}: status, andamento, prazo, diário, arquivos e notas.</p></div></div>
+  ${l.length?Object.keys(grupos).map(d=>`<div class="sec"><h3>${esc(d)}</h3><div class="list">${grupos[d].map(a=>{ const nova=a.por&&a.t>(vistoAte(a.ws)||0); return `<div class="item atv-item"><button class="atv-main" data-act="abrir-ws" data-id="${esc(a.ref||a.pid)}" data-view="${esc(a.view||'projetos')}" data-ws="${esc(a.ws)}"><div class="grow"><div class="t">${nova?'<span class="dot-un" aria-label="nova" style="display:inline-block;margin-right:7px;vertical-align:middle"></span>':''}${esc(a.nome)}</div><div class="s">${esc(a.txt)}</div><div class="hint">${esc(quemFez(a))} · ${new Date(a.t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div></div></button><button class="avx" data-act="atv-excluir" data-id="${esc(a.id)}" data-ws="${esc(a.ws)}" aria-label="Excluir esta atualização" title="Excluir">✕</button></div>`; }).join('')}</div></div>`).join(''):'<div class="empty sec">Nada por aqui ainda. Quando um projeto, nota ou pedido mudar, aparece aqui.</div>'}`;
 }
 
 /* Avisos de prazo: 3 níveis, dispensáveis, voltam quando o nível sobe. */
@@ -840,7 +840,6 @@ function vHoje(){
   const sauda=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
   return `<div class="vh"><div><h2>${sauda}</h2><p>${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}</p></div></div>
   <section class="welcome-quick" aria-label="Acesso rápido"><div><strong>Por onde começar?</strong><p>Acompanhe os projetos ou registre algo que não quer esquecer.</p></div><div class="quick-actions"><button class="btn sm" data-go="projetos">Ver projetos →</button><button class="btn sm" data-go="notas">Abrir notas →</button></div></section>
-  ${revisaoVencida()?`<div class="banner">Revisão semanal pendente <button class="btn sm" data-go="revisao">Fazer agora</button></div>`:''}
   <form class="card capture-card sec" data-form="captura-hoje"><label class="f" for="capH">Anotação rápida</label><p class="section-hint" style="margin-bottom:9px">Salva na sua caixa de entrada pessoal para organizar depois.</p>
     <div class="row"><input id="capH" type="text" class="big" placeholder="Ideia, tarefa, lembrete…" autocomplete="off" style="flex:1"><button class="btn pri" type="submit">Anotar</button></div></form>
   <div class="stats sec">
@@ -1131,7 +1130,7 @@ document.addEventListener('click',e=>{
     case 'voltar': S.proj=null; render(true); break;
     case 'ver-atv': go('atividades'); break;
     case 'atv-excluir': excluiAtiv(b.dataset.ws,b.dataset.id); toast('Atualização excluída'); break;
-    case 'atv-lido': marcaVisto(true); toast('Atualizações marcadas como lidas'); break;
+    case 'atv-lido': marcaVisto(); toast('Atualizações deste ambiente marcadas como lidas'); break;
     case 'abrir-ws': abrirAtiv(b.dataset.ws,b.dataset.view,id); break;
     case 'del-atv': delAtivEm(b.dataset.ws,id); toast('Atualização excluída'); break;
     case 'av-fecha': { const p=obj('projetos')[id]; if(p){ try{localStorage.setItem(avKey(id),avNivel(prazoDias(p.prazo))+'|'+p.prazo);}catch{} } render(false); break; }
