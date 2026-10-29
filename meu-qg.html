@@ -1275,8 +1275,9 @@ function vProjetos(){
   const q=S.projBusca.trim().toLocaleLowerCase('pt-BR');
   if(q)ps=ps.filter(p=>((p.nome||'')+' '+(p.proximaAcao||'')).toLocaleLowerCase('pt-BR').includes(q));
   /* A sequência segue exatamente a régua de fases exibida dentro do projeto. */
-  const passos=[...FLUXO,'paralisado'];
-  const grupos=passos.map(st=>[st,ps.filter(p=>p.status===st).sort((a,b)=>(b.atualizadoEm||0)-(a.atualizadoEm||0))]);
+  /* No quadro ficam só as fases em andamento (Concluído só aparece no filtro Concluídos) e colunas vazias somem. */
+  const passos=S.filtro==='concluidos'?['concluido']:[...FLUXO.filter(st=>st!=='concluido'),'paralisado'];
+  const grupos=passos.map(st=>[st,ps.filter(p=>p.status===st).sort((a,b)=>(b.atualizadoEm||0)-(a.atualizadoEm||0))]).filter(([st,arr])=>arr.length);
   return `<div class="vh"><div><h2>Projetos</h2><p>Acompanhe cada projeto do Mapeamento até a Conclusão. ${ativos().length} ativos de ${lista('projetos').length} no total.</p></div>
     <div class="seg" role="group" aria-label="Filtro">${[['ativos','Ativos'],['todos','Todos'],['concluidos','Concluídos']].map(([k,l])=>`<button data-act="filtro" data-v="${k}" aria-pressed="${S.filtro===k}">${l}</button>`).join('')}</div></div>
   <form class="card row" data-form="novo-projeto"><input type="text" id="npNome" placeholder="Nome do novo projeto" aria-label="Nome do novo projeto" autocomplete="off" required><button class="btn pri" type="submit"><span class="label-full">+ Criar projeto</span><span class="label-short">+ Criar</span></button></form>
