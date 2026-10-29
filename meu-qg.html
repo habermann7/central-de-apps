@@ -1,18 +1,18 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<script>try{var a=localStorage.getItem('qg-ambiente')||(matchMedia('(prefers-color-scheme: dark)').matches?'noite':'areia');document.documentElement.setAttribute('data-ambiente',a)}catch(e){}</script>
+<script>try{var a=localStorage.getItem('qg-visual-v3')||'noite';document.documentElement.setAttribute('data-ambiente',a)}catch(e){}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Meu QG</title>
+<title>Meu QG · Organização em um só lugar</title>
 <style>
 :root{
   --bg:#e8ebee;--bg2:#f5f6f8;--card:rgba(255,255,255,.82);--card2:#fff;
   --line:rgba(21,24,28,.09);--line2:rgba(21,24,28,.17);
   --ink:#14171b;--mut:#646c75;--faint:#97a0a9;
   --acc:#1b1f24;--accInk:#fff;
-  --ok:#2c7a55;--okBg:rgba(44,122,85,.12);--warn:#a96f12;--warnBg:rgba(169,111,18,.13);
-  --bad:#b3433a;--badBg:rgba(179,67,58,.12);--info:#386a9b;--infoBg:rgba(56,106,155,.12);
+  --ok:#2c7a55;--okBg:rgba(44,122,85,.12);--warn:#8a5a08;--warnBg:rgba(169,111,18,.13);
+  --bad:#9c3a32;--badBg:rgba(179,67,58,.12);--info:#386a9b;--infoBg:rgba(56,106,155,.12);
   --r:22px;--r2:12px;--ease:cubic-bezier(.23,1,.32,1);
   --shadow:0 1px 0 rgba(255,255,255,.7) inset,0 8px 28px rgba(20,24,30,.055);
 }
@@ -22,8 +22,8 @@
     --line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.17);
     --ink:#eceff2;--mut:#98a1ab;--faint:#677079;
     --acc:#eceff2;--accInk:#14171b;
-    --ok:#58b88a;--okBg:rgba(88,184,138,.15);--warn:#d9a24a;--warnBg:rgba(217,162,74,.15);
-    --bad:#e0766c;--badBg:rgba(224,118,108,.15);--info:#7aa9d6;--infoBg:rgba(122,169,214,.15);
+    --ok:#58b88a;--okBg:rgba(88,184,138,.15);--warn:#ebbb63;--warnBg:rgba(217,162,74,.15);
+    --bad:#f08d84;--badBg:rgba(224,118,108,.15);--info:#7aa9d6;--infoBg:rgba(122,169,214,.15);
     --shadow:0 1px 0 rgba(255,255,255,.05) inset,0 10px 32px rgba(0,0,0,.35);
   }
 }
@@ -228,7 +228,7 @@ html[data-motion=off] *,html[data-motion=off] *::before,html[data-motion=off] *:
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 
 /* Legibilidade: textos maiores e mais claros */
-:root{--mut:#3f5047;--faint:#53625a}
+:root{--mut:#3f5047;--faint:#46554d}
 :root[data-ambiente=noite]{--ink:#f3f8f1;--mut:#d0dcd3;--faint:#b9c7bd}
 body{font-size:16px}
 .hint,.saved,.who,.tl .e small,.stat span,.chip,.brand small,.item .s,.th .cap,.qg-intro p,.vh p{font-size:13.5px}
@@ -440,6 +440,404 @@ input[type=range]{cursor:pointer}
 .atv-row{display:flex;align-items:center;gap:10px}
 .atv-open{flex:1;min-width:0;border:0;background:none;text-align:left;font:inherit;color:inherit;padding:0;cursor:pointer}
 .atv-del{flex:none;color:var(--bad)}
+
+/* MEU QG 2026 · superfícies neutras; as notas concentram a cor. */
+:root{
+  color-scheme:light;
+  --bg:#f6f7fb;--bg2:#f0f3f8;--card:rgba(255,255,255,.95);--card2:#ffffff;
+  --ink:#202b40;--mut:#66738b;--faint:#8490a4;
+  --line:rgba(34,53,86,.095);--line2:rgba(34,53,86,.17);
+  --acc:#315fca;--accInk:#fff;--info:#315fca;--infoBg:rgba(49,95,202,.10);
+  --ok:#29816c;--warn:#986923;--bad:#bb5362;
+  --shadow:0 6px 25px rgba(24,42,72,.035);
+  --glow:transparent;--glow2:transparent;--accent-soft:rgba(49,95,202,.07);
+  --page-border:rgba(34,53,86,.085);--surface-raised:#fff;
+}
+:root[data-ambiente=noite]{
+  color-scheme:dark;
+  --bg:#121722;--bg2:#1b2230;--card:#1b2330;--card2:#212b3a;
+  --ink:#edf2fa;--mut:#b2bdd0;--faint:#92a0b6;
+  --line:rgba(213,228,255,.09);--line2:rgba(213,228,255,.18);
+  --acc:#9dbbff;--accInk:#14213b;--info:#9dbbff;--infoBg:rgba(157,187,255,.11);
+  --ok:#69c0a9;--warn:#e3bd77;--bad:#ef99a7;
+  --shadow:0 8px 28px #080e192b;
+  --glow:transparent;--glow2:transparent;--accent-soft:rgba(157,187,255,.13);
+  --page-border:rgba(213,228,255,.095);--surface-raised:#212b3a;
+}
+:root[data-space=grupo]{--acc:#635ac1;--info:#635ac1;--accent-soft:rgba(99,90,193,.085);--glow:transparent}
+:root[data-space=grupo][data-ambiente=noite]{--acc:#b6b1ff;--accInk:#19172c;--info:#b6b1ff;--accent-soft:rgba(182,177,255,.13);--glow:transparent}
+body{background:var(--bg)!important;background-image:none!important;line-height:1.5}
+body::before,body::after{display:none!important}
+.app-header{background:color-mix(in srgb,var(--card2) 96%,transparent);box-shadow:none}
+.header-top{min-height:69px;padding-top:10px;padding-bottom:8px}
+.header-identity{font-size:20px;letter-spacing:-.75px;font-weight:750}
+.header-identity strong{font-weight:760}
+.brand-symbol{background:var(--acc);border-radius:10px;width:37px;height:37px;color:var(--accInk);font-size:inherit}
+.brand-symbol svg{display:block}
+.app-nav{justify-content:flex-start;gap:6px;padding-bottom:7px}
+.nav{font-weight:610;font-size:13px;border-radius:9px;min-height:38px}
+.nav[aria-current=page]{color:var(--acc);background:var(--accent-soft)}
+.nav[aria-current=page]::after{height:2px;bottom:0}
+.workspace-trigger{background:var(--card2);border-color:var(--line);border-radius:10px}
+.workspace-icon{background:var(--bg2)}
+.top-icon-btn{border-color:var(--line);background:var(--card2)}
+main{max-width:1240px;padding-top:27px}
+.context-wrap{margin-bottom:21px}
+.context-help{margin-top:7px}
+.context-space{border-color:var(--line);background:var(--card2);color:var(--mut)}
+.vh{margin-bottom:19px}.vh h2{font-size:clamp(27px,2.8vw,36px);font-weight:740;letter-spacing:-1.1px}.vh p{font-size:13px}
+.card{box-shadow:var(--shadow)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--accInk)}
+.btn.pri:hover{opacity:.92;background:var(--acc)}
+.page-footer{opacity:.75}
+/* O mural/post-it é a única parte visualmente colorida. */
+.notes-heading{align-items:center;margin-bottom:20px}
+.notes-count{margin-left:7px;padding:3px 9px;border-radius:999px;background:var(--bg2);border:1px solid var(--line);color:var(--mut);white-space:nowrap;font-size:11px;font-weight:650}
+.notes{grid-template-columns:minmax(245px,290px) minmax(0,1fr);gap:20px;align-items:stretch}
+.notes .nl{min-width:0}
+.notes-filters{display:grid;gap:10px;margin-bottom:15px}
+.notes-filters select{background:var(--card2);height:43px;border-radius:11px;border-color:var(--line2);font-size:13px}
+.notes-search{position:relative;display:block}
+.notes-search>span{position:absolute;left:13px;top:4px;font-size:26px;color:var(--faint);pointer-events:none}
+.notes-search input{height:43px;padding-left:39px;font-size:13px;background:var(--card2);border-color:var(--line2)}
+.note-list{display:flex;flex-direction:column;gap:11px;max-height:min(76vh,820px);overflow-y:auto;padding:2px 5px 10px 2px;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
+.note-tile,.postit{--papel:#fff1b5;--papel2:#fff7d9;--papel-ink:#243044;--papel-muted:#454b55}
+.note-tile[data-cor=rosa],.postit[data-cor=rosa]{--papel:#ffd9e4;--papel2:#ffedf2}
+.note-tile[data-cor=azul],.postit[data-cor=azul]{--papel:#d8eaff;--papel2:#ecf5ff}
+.note-tile[data-cor=menta],.postit[data-cor=menta]{--papel:#d5f3e2;--papel2:#ebfaef}
+.note-tile[data-cor=lilas],.postit[data-cor=lilas]{--papel:#e8dcff;--papel2:#f3ecff}
+.note-tile[data-cor=coral],.postit[data-cor=coral]{--papel:#ffdfc9;--papel2:#fff0e4}
+.note-tile{
+  display:flex;flex-direction:column;gap:7px;width:100%;min-height:126px;text-align:left;cursor:pointer;
+  background:linear-gradient(140deg,var(--papel2),var(--papel));color:var(--papel-ink);
+  border:1px solid rgba(35,50,76,.06);border-radius:13px;padding:15px 15px 12px;
+  box-shadow:0 4px 10px rgba(32,43,64,.05);transition:transform .16s,border-color .16s,box-shadow .16s;
+  position:relative;overflow:hidden;
+}
+.note-tile:hover{transform:translateY(-2px);box-shadow:0 9px 22px rgba(32,43,64,.105)}
+.note-tile.selected{border:1.5px solid #3766d2;box-shadow:0 0 0 2px rgba(55,102,210,.11),0 8px 20px rgba(32,43,64,.08)}
+.note-tile-head{display:flex;gap:8px;align-items:flex-start}
+.note-tile-title{display:block;min-width:0;flex:1;font-weight:750;font-size:14.5px;line-height:1.35;overflow-wrap:anywhere}
+.note-pin{font-size:14px;color:#c14b5b;line-height:1.1}
+.note-tile-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;line-height:1.5;font-size:12.5px;color:#4b5967;overflow-wrap:anywhere}
+.note-tile-foot{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:auto;padding-top:6px;font-size:10.5px;color:#586475}
+.note-tile-foot span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%}
+.note-empty-list{border:1px dashed var(--line2);border-radius:13px;padding:25px 16px;font-size:13px;color:var(--mut);line-height:1.6}
+.notes .ne{min-width:0}
+.postit{
+  position:relative;background:linear-gradient(130deg,var(--papel2),var(--papel));color:var(--papel-ink);
+  border:1px solid rgba(36,48,68,.06);border-radius:17px;padding:22px clamp(17px,3vw,34px) 21px;
+  box-shadow:0 12px 35px rgba(26,38,60,.09);min-height:min(72vh,720px);
+  display:flex;flex-direction:column;gap:16px;isolation:isolate;
+}
+.postit::before{content:"";position:absolute;z-index:0;left:50%;transform:translateX(-50%);width:75px;height:19px;top:-6px;background:rgba(255,255,255,.52);border:1px solid rgba(255,255,255,.3);box-shadow:0 2px 5px rgba(36,48,68,.025);border-radius:2px}
+.postit::after{content:"";position:absolute;right:0;bottom:0;width:30px;height:30px;border-radius:15px 0 17px 0;background:linear-gradient(135deg,rgba(255,255,255,.6),rgba(201,170,86,.17));box-shadow:-2px -2px 7px rgba(55,61,70,.035);pointer-events:none}
+.note-toolbar{display:flex;gap:12px;align-items:center;justify-content:flex-end;min-height:34px;z-index:1}
+.note-toolbar .saved{margin-right:auto;color:#687180;font-size:11px}
+.note-toolbar-actions{display:flex;align-items:center;gap:7px}
+.note-action{border:1px solid rgba(32,43,64,.13);background:rgba(255,255,255,.42);color:#445063;border-radius:9px;padding:6px 10px;cursor:pointer;font-weight:650;font-size:12px;min-height:31px}
+.note-action:hover{background:rgba(255,255,255,.7)}
+.note-action[aria-pressed=true]{background:rgba(255,255,255,.7);color:#293c61}
+.note-action.delete{color:#b04b55;border-color:transparent;background:transparent}
+.back-notes{display:none}
+.postit-top{display:flex;gap:15px;align-items:flex-start;justify-content:space-between;position:relative;z-index:1}
+.postit-top>div:first-child{flex:1;min-width:0}
+.postit-kicker{display:block;font-size:10px;font-weight:750;letter-spacing:.16em;color:#7a725c;margin:1px 0 7px}
+.postit .tt{font-weight:760;font-size:clamp(20px,2.35vw,28px);letter-spacing:-.65px;line-height:1.3;color:var(--papel-ink);background:transparent!important;border:0!important;outline:none!important;box-shadow:none!important;padding:4px 0 10px;width:100%;border-radius:0;border-bottom:1px solid rgba(41,52,70,.16)!important}
+.postit .tt::placeholder,.postit textarea::placeholder{color:#777d84;opacity:.75}
+.note-palette{display:flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:wrap;max-width:193px;padding-top:25px}
+.note-swatch{--cor:#fff1b5;width:22px;height:22px;border-radius:50%;background:var(--cor);border:2px solid rgba(255,255,255,.8);box-shadow:0 0 0 1px rgba(39,53,83,.17);cursor:pointer;flex:none;transition:transform .12s,box-shadow .12s}
+.note-swatch[data-cor=rosa]{--cor:#f5a9be}.note-swatch[data-cor=azul]{--cor:#9ac8fc}.note-swatch[data-cor=menta]{--cor:#95dfb8}.note-swatch[data-cor=lilas]{--cor:#c8adff}.note-swatch[data-cor=coral]{--cor:#f7b18a}
+.note-swatch:hover{transform:scale(1.14)}.note-swatch[aria-pressed=true]{box-shadow:0 0 0 2px #2b4a82;transform:scale(1.03)}
+.postit textarea{flex:1;display:block;min-height:360px!important;resize:vertical;background:rgba(255,255,255,.23)!important;color:#2c3a4c;border:1px solid rgba(45,52,69,.055)!important;border-radius:11px;box-shadow:none!important;font-size:15px;line-height:1.78;padding:17px 19px;width:100%;font-family:inherit}
+.postit textarea:focus{border-color:rgba(49,95,202,.22)!important;box-shadow:0 0 0 2px rgba(49,95,202,.05)!important}
+.postit-bottom{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;z-index:1}
+.note-project{display:flex;align-items:center;gap:8px;font-size:11px;color:#4f5a6a;font-weight:650}
+.note-project select{min-width:155px;width:auto;max-width:280px;min-height:35px;font-size:12px;padding:7px 28px 7px 10px;background:rgba(255,255,255,.6)!important;border-color:rgba(44,54,70,.1);border-radius:9px;color:#344054}
+.note-updated{font-size:11px;color:#627080}
+.note-placeholder{min-height:420px;display:flex;align-items:center;justify-content:center;gap:10px;flex-direction:column;text-align:center;border:1px dashed var(--line2);border-radius:16px;background:var(--card2);padding:35px}
+.note-placeholder-icon{font-size:30px;color:var(--acc);width:62px;height:62px;display:grid;place-items:center;background:var(--accent-soft);border-radius:19px}
+.note-placeholder h3{font-size:19px;font-weight:730;margin-top:8px}
+.note-placeholder p{color:var(--mut);max-width:270px;font-size:13px;margin-bottom:10px}
+@media(max-width:900px){.notes{grid-template-columns:minmax(220px,245px) minmax(0,1fr);gap:13px}.note-palette{max-width:110px}.postit{padding:20px}}
+@media(max-width:620px){
+  .header-identity{font-size:0}.header-identity strong{display:none}
+  main{padding-top:19px}.notes{grid-template-columns:1fr}
+  .notes .nl{display:block}.notes.edit .nl{display:none}.notes:not(.edit) .ne{display:none}
+  .notes .nl>.list{display:none}
+  .note-list{max-height:none;overflow:visible;padding-bottom:8px}
+  .notes-filters{gap:8px}.note-tile{min-height:118px}
+  .notes-heading{gap:8px;align-items:center}.notes-heading .btn{padding:9px 12px}
+  .postit{min-height:calc(100dvh - 310px);padding:18px 15px}
+  .back-notes{display:inline-flex;color:#33445b!important;background:transparent!important;padding:5px!important;margin-right:auto}
+  .note-toolbar{flex-wrap:wrap;gap:6px}.note-toolbar .saved{order:2;margin-left:auto;margin-right:0}.note-toolbar-actions{order:1}
+  .postit-top{flex-direction:column;gap:4px}.note-palette{max-width:none;padding-top:4px;justify-content:flex-start}
+  .postit textarea{min-height:300px!important}
+  .note-project{width:100%}.note-project select{max-width:none;flex:1;min-width:0}
+}
+@media(prefers-reduced-motion:reduce){.note-tile,.note-swatch{transition:none}}
+
+
+/* Refinamento · Branco-neve e post-its (sem alterar a navegação original). */
+:root{
+  color-scheme:light;
+  --bg:#fffafa; --bg2:#f5f5f7; --card:#ffffff; --card2:#ffffff;
+  --ink:#212936; --mut:#667080; --faint:#86909d;
+  --line:rgba(32,45,61,.085); --line2:rgba(32,45,61,.17);
+  --acc:#28384e; --accInk:#fff; --info:#48658c; --infoBg:rgba(72,101,140,.10);
+  --ok:#457991; --warn:#9f712d; --bad:#bc5761;
+  --glow:transparent; --glow2:transparent; --accent-soft:rgba(40,56,78,.07);
+  --page-border:rgba(32,45,61,.085); --surface-raised:#fff;
+  --shadow:0 4px 24px rgba(30,40,55,.035);
+}
+:root[data-space=grupo]{--acc:#28384e;--accInk:#fff;--info:#48658c;--infoBg:rgba(72,101,140,.10);--accent-soft:rgba(40,56,78,.07);--glow:transparent}
+:root[data-ambiente=noite]{
+  color-scheme:dark;
+  --bg:#171a20;--bg2:#232832;--card:#242933;--card2:#282e39;
+  --ink:#f0f2f6;--mut:#b9c0cb;--faint:#a2aab7;
+  --line:rgba(241,245,255,.09);--line2:rgba(241,245,255,.18);
+  --acc:#e5eaf3;--accInk:#222a37;--info:#b2c9e7;--infoBg:rgba(178,201,231,.13);
+  --ok:#87b6c3;--warn:#e2bc7b;--bad:#efa4ac;
+  --glow:transparent;--glow2:transparent;--accent-soft:rgba(229,234,243,.10);
+  --page-border:rgba(241,245,255,.09);--surface-raised:#282e39;
+}
+:root[data-space=grupo][data-ambiente=noite]{--acc:#e5eaf3;--accInk:#222a37;--info:#b2c9e7;--infoBg:rgba(178,201,231,.13);--accent-soft:rgba(229,234,243,.10);--glow:transparent}
+body{background:var(--bg)!important;background-image:none!important}
+body::before,body::after{display:none!important}
+.app-header{background:color-mix(in srgb,var(--card2) 96%,transparent);border-bottom:1px solid var(--page-border)}
+/* A navegação permanece exatamente na faixa superior, centralizada. */
+.app-nav{justify-content:safe center;gap:5px}
+.nav[aria-current=page]{background:var(--accent-soft);color:var(--ink)}
+.header-identity{color:var(--ink)}
+.brand-symbol{background:var(--acc);color:var(--accInk)}
+main{max-width:1240px}
+/* Paleta de papéis vivos, mantendo o restante da tela branco-neve. */
+.note-tile,.postit{--papel:#ffe6a0;--papel2:#fff1bf}
+.note-tile[data-cor=rosa],.postit[data-cor=rosa]{--papel:#ffbed6;--papel2:#ffe2eb}
+.note-tile[data-cor=azul],.postit[data-cor=azul]{--papel:#b9dcff;--papel2:#e1efff}
+.note-tile[data-cor=menta],.postit[data-cor=menta]{--papel:#b8edce;--papel2:#e0f8e9}
+.note-tile[data-cor=lilas],.postit[data-cor=lilas]{--papel:#dac3ff;--papel2:#efe4ff}
+.note-tile[data-cor=coral],.postit[data-cor=coral]{--papel:#ffc5ad;--papel2:#ffe3d6}
+/* Somente a página Notas muda de apresentação: mural em grade e editor ao abrir. */
+.notes{display:block;grid-template-columns:none;max-width:100%}
+.notes .nl{display:block;width:100%}
+.notes-filters{display:flex;align-items:center;gap:11px;margin-bottom:25px;max-width:none;flex-wrap:wrap}
+.notes-search{width:min(100%,345px);flex:0 1 345px}
+.notes-filters select{width:min(100%,255px);flex:0 1 255px}
+.note-list{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:19px;
+  max-height:none;overflow:visible;padding:6px 5px 32px;
+}
+.note-tile{
+  min-height:265px;max-height:365px;gap:14px;padding:26px 20px 18px;
+  border-radius:9px 10px 11px 9px;isolation:isolate;
+  background:linear-gradient(142deg,var(--papel2) 0%,var(--papel) 100%);
+  box-shadow:0 5px 12px rgba(36,45,65,.065),0 15px 30px rgba(36,45,65,.025);
+  border:1px solid rgba(31,40,55,.045);color:#1f2936;
+}
+.note-tile::before{
+  content:'';position:absolute;left:50%;top:0;transform:translateX(-50%);z-index:1;
+  width:58px;height:16px;background:rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.21);
+}
+.note-tile::after{
+  content:'';position:absolute;right:0;bottom:0;width:26px;height:26px;
+  background:linear-gradient(135deg,rgba(255,255,255,.62) 48%,rgba(130,105,60,.11) 52%);
+  border-radius:10px 0 8px 0;box-shadow:-2px -2px 6px rgba(44,37,30,.035);
+}
+.note-tile:hover{transform:translateY(-4px);box-shadow:0 14px 28px rgba(36,45,65,.11)}
+.note-tile.selected{border-color:rgba(32,45,61,.19);box-shadow:0 10px 25px rgba(36,45,65,.1)}
+.note-tile-head{gap:6px}
+.note-tile-title{font-size:17px;letter-spacing:-.3px;font-weight:760;line-height:1.37;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;line-clamp:4;overflow:hidden}
+.note-tile-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:7;line-clamp:7;font-size:14px;line-height:1.55;color:#364356;overflow:hidden;white-space:pre-line}
+.note-tile-foot{border-top:1px solid rgba(38,50,68,.075);font-size:11.5px;padding-top:12px;color:#556072;gap:5px}
+.note-pin{font-size:17px;color:#c14960}
+.notes .ne{display:none}
+.notes.edit .nl{display:none}
+.notes.edit .ne{display:block;width:100%;max-width:890px;margin:0 auto}
+.notes.edit .postit{min-height:60dvh}
+.back-notes{display:inline-flex!important;color:#33445b!important;background:rgba(255,255,255,.37)!important}
+.notes.edit .note-toolbar{flex-wrap:wrap}
+.notes.edit .note-toolbar .back-notes{margin-right:8px}
+.notes.edit .note-toolbar .saved{margin-right:auto}
+.postit{box-shadow:0 16px 38px rgba(29,40,61,.095)}
+/* Mostrar mais espaço útil em tablets e celulares, sem alterar os menus. */
+@media(max-width:1090px){.note-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}}
+@media(max-width:810px){.note-list{grid-template-columns:repeat(2,minmax(0,1fr))}.note-tile{min-height:235px}}
+@media(max-width:620px){
+  .app-nav{justify-content:safe center}
+  .notes{display:block}
+  .notes.edit .nl{display:none}
+  .notes:not(.edit) .ne{display:none}
+  .notes-filters{gap:9px;margin-bottom:17px}
+  .notes-search{width:100%;flex:1 1 100%}
+  .notes-filters select{width:100%;flex:1 1 100%}
+  .note-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;padding:3px 2px 22px}
+  .note-tile{min-height:216px;max-height:330px;padding:22px 13px 15px;gap:9px}
+  .note-tile::before{width:42px;height:12px}
+  .note-tile-title{font-size:14.5px;letter-spacing:-.2px}
+  .note-tile-text{font-size:12.5px;line-height:1.5;-webkit-line-clamp:6;line-clamp:6}
+  .note-tile-foot{font-size:10px;display:flex;flex-direction:column;align-items:flex-start;padding-top:8px;gap:1px}
+  .notes.edit .postit{min-height:calc(100dvh - 300px)}
+}
+@media(max-width:360px){.note-list{grid-template-columns:1fr}.note-tile{min-height:170px}}
+
+
+/* MEU QG · identidade escura com detalhes BRANCO-NEVE.
+   Notas coloridas mantidas. Topo e menus permanecem no lugar original. */
+:root[data-ambiente=noite]{
+  color-scheme:dark;
+  --bg:#11161e;
+  --bg2:#1b222d;
+  --card:#1b222c;
+  --card2:#202935;
+  --ink:#fffafa; /* branco-neve */
+  --mut:#b6bfcd;
+  --faint:#8f9aa9;
+  --line:rgba(255,250,250,.09);
+  --line2:rgba(255,250,250,.18);
+  --acc:#fffafa;
+  --accInk:#171e29;
+  --info:#fffafa;
+  --infoBg:rgba(255,250,250,.10);
+  --ok:#e4e7ec;
+  --okBg:rgba(255,250,250,.1);
+  --warn:#e3bc7f;
+  --bad:#efa5b3;
+  --shadow:0 8px 28px rgba(4,9,17,.16);
+  --glow:transparent;
+  --glow2:transparent;
+  --accent-soft:rgba(255,250,250,.095);
+  --page-border:rgba(255,250,250,.085);
+  --surface-raised:#202935;
+}
+/* Mesmo visual neutro para ambiente de grupo: sem acentos azul/verde. */
+:root[data-space=grupo][data-ambiente=noite]{
+  --bg:#11161e;--bg2:#1b222d;--card:#1b222c;--card2:#202935;
+  --acc:#fffafa;--accInk:#171e29;
+  --info:#fffafa;--infoBg:rgba(255,250,250,.10);
+  --glow:transparent;--accent-soft:rgba(255,250,250,.095);
+}
+:root[data-ambiente=noite] body{background:#11161e!important;color:var(--ink)}
+:root[data-ambiente=noite] .app-header{
+  background:rgba(18,23,31,.975);
+  border-bottom:1px solid rgba(255,250,250,.085);
+  box-shadow:none;
+}
+:root[data-ambiente=noite] .header-identity{color:#fffafa}
+:root[data-ambiente=noite] .brand-symbol{background:#fffafa;color:#171e29}
+:root[data-ambiente=noite] .workspace-current b{color:#fffafa}
+:root[data-ambiente=noite] .workspace-icon{color:#fffafa;background:rgba(255,250,250,.09)}
+:root[data-ambiente=noite] .workspace-trigger{
+  color:#fffafa;background:#202935;border-color:var(--line2);
+}
+:root[data-ambiente=noite] .workspace-trigger:hover,
+:root[data-ambiente=noite] .workspace-trigger[aria-expanded=true]{
+  background:#293340;border-color:rgba(255,250,250,.40);
+}
+:root[data-ambiente=noite] .nav{color:#b9c2ce}
+:root[data-ambiente=noite] .nav:hover{background:rgba(255,250,250,.065);color:#fffafa}
+:root[data-ambiente=noite] .nav[aria-current=page]{color:#fffafa;background:rgba(255,250,250,.10)}
+:root[data-ambiente=noite] .nav[aria-current=page]::after{background:#fffafa}
+:root[data-ambiente=noite] .nav[aria-current=page] .nav-counter{background:#fffafa;color:#11161e}
+:root[data-ambiente=noite] .top-icon-btn{color:#fffafa;background:#202935;border-color:var(--line2)}
+:root[data-ambiente=noite] .top-icon-btn:hover{background:#2a3442}
+:root[data-ambiente=noite] .btn.pri{background:#fffafa;border-color:#fffafa;color:#11161e}
+:root[data-ambiente=noite] .btn.pri:hover{background:#e8e8e8;border-color:#e8e8e8;opacity:1}
+:root[data-ambiente=noite] .btn:not(.pri):hover{border-color:rgba(255,250,250,.28)}
+:root[data-ambiente=noite] .context-space{
+  background:rgba(255,250,250,.065);color:#fffafa;
+  border-color:rgba(255,250,250,.12);
+}
+:root[data-ambiente=noite] .context-help::before,
+:root[data-ambiente=noite] .qg-caption::before{background:#fffafa}
+:root[data-ambiente=noite] .ws button[aria-pressed=true]{background:rgba(255,250,250,.1);color:#fffafa;border-color:rgba(255,250,250,.14)}
+:root[data-ambiente=noite] .ws button .checkmark{color:#fffafa}
+:root[data-ambiente=noite] .notes-search input,
+:root[data-ambiente=noite] .notes-filters select{
+  background:#202935;color:#fffafa;border-color:rgba(255,250,250,.15);
+}
+:root[data-ambiente=noite] .notes-search input::placeholder{color:#9ea9b6}
+:root[data-ambiente=noite] .note-placeholder{background:#1b222c}
+:root[data-ambiente=noite] .note-placeholder-icon{background:rgba(255,250,250,.09);color:#fffafa}
+/* A escolha da nota ganha uma borda branca, nunca azul/verde. */
+/* Post-its mantêm papel claro e letra escura também no tema Noite */
+.note-tile,.postit{color:var(--papel-ink)}
+.note-tile .note-tile-title{color:var(--papel-ink)}
+.note-tile .note-tile-text,.note-tile .note-tile-foot,.note-tile .note-tile-foot span,.postit-kicker{color:var(--papel-muted)!important}
+:root[data-ambiente=noite] .note-tile.selected{
+  border-color:rgba(255,250,250,.9);
+  box-shadow:0 0 0 2px rgba(255,250,250,.24),0 11px 28px rgba(0,0,0,.22);
+}
+:root[data-ambiente=noite] .notes-count{
+  color:#dde2e9;background:#202935;border-color:var(--line);
+}
+:root[data-ambiente=noite] .page-footer{color:#9ca5b4}
+:root[data-ambiente=noite] input:focus,
+:root[data-ambiente=noite] select:focus,
+:root[data-ambiente=noite] textarea:focus{
+  border-color:rgba(255,250,250,.52);box-shadow:0 0 0 3px rgba(255,250,250,.10);
+}
+:root[data-ambiente=noite] :focus-visible{outline-color:#fffafa}
+/* Editor mantém a tinta escura legível sobre o papel de cada cor. */
+:root[data-ambiente=noite] .postit,
+:root[data-ambiente=noite] .postit textarea,
+:root[data-ambiente=noite] .postit input{color:#273143}
+:root[data-ambiente=noite] .postit textarea:focus{
+  border-color:rgba(33,43,58,.3)!important;
+  box-shadow:0 0 0 2px rgba(33,43,58,.06)!important;
+}
+/* Preserva a barra superior ORIGINAL, centralizada, em todos os tamanhos. */
+.app-nav{justify-content:safe center}
+@media(max-width:620px){.app-nav{justify-content:safe center}}
+
+
+/* ===== Projetos · fluxo Kanban de ponta a ponta ===== */
+.kanban-intro{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:25px 0 12px}
+.kanban-intro-label{display:flex;align-items:center;gap:10px;color:var(--ink);font-weight:720;font-size:14px}
+.kanban-intro-label svg{color:var(--mut)}
+.kanban-intro .hint{margin-top:3px}
+.kanban-arrows{display:flex;gap:7px}
+.kanban-arrows button{display:grid;place-items:center;width:35px;height:35px;border:1px solid var(--line2);background:var(--card2);color:var(--ink);border-radius:10px;font-size:20px;cursor:pointer}
+.kanban-arrows button:hover{background:var(--accent-soft)}
+.kanban-board{display:flex;align-items:flex-start;gap:14px;max-width:100%;overflow-x:auto;overflow-y:hidden;padding:2px 2px 18px;scroll-snap-type:x proximity;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
+.kanban-board::-webkit-scrollbar{height:9px}.kanban-board::-webkit-scrollbar-thumb{background:var(--line2);border-radius:30px}.kanban-board::-webkit-scrollbar-track{background:transparent}
+.kanban-column{--step-color:var(--mut);flex:0 0 clamp(258px,27vw,296px);min-width:0;min-height:300px;display:flex;flex-direction:column;gap:10px;border-radius:15px;background:color-mix(in srgb,var(--card2) 62%,var(--bg));border:1px solid var(--line);padding:11px;scroll-snap-align:start;transition:border-color .16s,background .16s}
+.kanban-column.is-over{border-color:var(--step-color);background:color-mix(in srgb,var(--step-color) 9%,var(--card2))}
+.kanban-column-head{position:relative;display:flex;align-items:center;gap:9px;min-height:50px;padding:6px 3px 10px;border-bottom:1px solid var(--line);margin-bottom:3px}
+.kanban-stage{display:grid;place-items:center;flex:none;width:29px;height:29px;border-radius:9px;background:color-mix(in srgb,var(--step-color) 15%,transparent);color:var(--step-color);font-size:12px;font-weight:750;font-variant-numeric:tabular-nums}
+.kanban-stage-title{min-width:0;flex:1;font-size:13px;font-weight:760;line-height:1.3}
+.kanban-stage-count{display:grid;place-items:center;min-width:25px;height:25px;padding:0 6px;border:1px solid var(--line);border-radius:99px;color:var(--mut);font-size:12px;font-weight:750;background:var(--card2);font-variant-numeric:tabular-nums}
+.kanban-col-list{display:flex;flex-direction:column;gap:9px;min-height:150px;flex:1}
+.kanban-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:32px 12px;min-height:140px;text-align:center;color:var(--faint);border:1px dashed var(--line2);border-radius:11px;font-size:12px}
+.kanban-empty strong{font-weight:650;color:var(--mut)}
+.kanban-ticket{border:1px solid var(--line2);background:var(--card2);border-radius:12px;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,.035);transition:transform .15s,box-shadow .15s,border-color .15s}
+.kanban-ticket:hover{border-color:color-mix(in srgb,var(--step-color) 50%,var(--line2));box-shadow:0 6px 18px rgba(0,0,0,.13);transform:translateY(-1px)}
+.kanban-ticket.is-dragging{opacity:.45;transform:scale(.97)}
+.kanban-ticket .kb-open{display:block;border:0;border-top:3px solid var(--step-color);background:none;text-align:left;width:100%;padding:13px 13px 10px;color:var(--ink);cursor:pointer}
+.kanban-ticket .kb-open:focus-visible{outline:2px solid var(--ink);outline-offset:-4px}
+.kanban-ticket .kb-head{display:flex;align-items:start;justify-content:space-between;gap:8px}
+.kanban-ticket .kb-title{min-width:0;font-size:13.5px;line-height:1.35;font-weight:740;overflow-wrap:anywhere}
+.kanban-ticket .kb-next{margin-top:12px;padding:9px 10px;border-radius:8px;background:color-mix(in srgb,var(--bg) 70%,var(--card2));color:var(--mut);font-size:12px;line-height:1.5;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden}
+.kanban-ticket .kb-next .kb-label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.045em;font-weight:750;color:var(--faint);margin-bottom:2px}
+.kanban-ticket .kb-next.kb-no-next{border:1px dashed var(--line2);background:transparent}
+.kanban-ticket .kb-meter{height:5px;overflow:hidden;border-radius:10px;background:var(--line);margin:12px 0 7px}
+.kanban-ticket .kb-meter span{display:block;height:100%;border-radius:10px;background:var(--step-color);width:var(--pct)}
+.kanban-ticket .kb-meta{display:flex;justify-content:space-between;align-items:center;gap:7px;color:var(--mut);font-size:11px}
+.kanban-ticket .kb-meta b{font-size:12px;color:var(--ink)}
+.kanban-ticket .kb-bottom{display:flex;align-items:center;justify-content:space-between;gap:5px;border-top:1px solid var(--line);padding:8px 10px}
+.kanban-ticket .kb-bottom .hint{font-size:10.5px;white-space:nowrap}
+.kanban-ticket .kb-move{width:110px;min-width:0;max-width:115px;min-height:28px;padding:4px 22px 4px 7px;border-radius:7px;font-size:11px;color:var(--mut);border:1px solid var(--line);background:var(--bg2);cursor:pointer;text-overflow:ellipsis}
+.kanban-ticket .kb-move:focus{border-color:var(--step-color)}
+.kanban-footer{margin-top:6px;font-size:12px;color:var(--mut);display:flex;align-items:center;gap:8px}
+.kanban-footer span:first-child{display:inline-block;width:8px;height:8px;border:1.5px solid var(--mut);border-radius:2px}
+:root[data-ambiente=noite] .kanban-column{background:#171e27;border-color:rgba(255,250,250,.09)}
+:root[data-ambiente=noite] .kanban-ticket{background:#202935;border-color:rgba(255,250,250,.105)}
+:root[data-ambiente=noite] .kanban-ticket .kb-next{background:#19222d}
+:root[data-ambiente=noite] .kanban-ticket .kb-move{background:#1b2430;color:#e3e9f1}
+:root[data-ambiente=noite] .kanban-column.is-over{background:#273342}
+@media(max-width:740px){.kanban-column{flex-basis:min(82vw,290px);min-height:300px}.kanban-intro{margin-top:20px}.kanban-board{gap:10px}}
+@media(prefers-reduced-motion:reduce){.kanban-ticket,.kanban-column{transition:none!important}}
+
 </style>
 </head>
 <body>
@@ -452,7 +850,7 @@ input[type=range]{cursor:pointer}
 <div class="shell" id="app" hidden>
   <header class="app-header">
     <div class="header-top">
-      <div class="header-identity"><span class="brand-symbol" aria-hidden="true">✳</span><strong>Meu QG</strong></div>
+      <div class="header-identity" aria-label="Meu QG"><span class="brand-symbol" aria-hidden="true"><svg width="25" height="25" viewBox="0 0 24 24" fill="none"><path d="M5 8a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V8Z" stroke="currentColor" stroke-width="1.75"/><path d="M9 9h2.5v2.5H9zM13 9h2.5v2.5H13zM9 13h2.5v2.5H9z" fill="currentColor"/><path d="M13 15h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span><strong>Meu QG</strong></div>
       <div class="workspace-picker">
         <button type="button" class="workspace-trigger" id="wsTrigger" data-act="ws-toggle" aria-expanded="false" aria-haspopup="true" aria-controls="wsPanel" aria-label="Trocar ambiente">
           <span class="workspace-icon" id="wsCurrentIcon" aria-hidden="true">⌂</span>
@@ -484,7 +882,7 @@ input[type=range]{cursor:pointer}
       <button class="nav" data-go="membros" id="navMem" hidden>Membros</button>
     </nav>
   </header>
-  <main id="appContent"><div id="main"></div><footer class="page-footer">Meu QG <span aria-hidden="true">·</span> Um espaço para organizar o que importa</footer></main>
+  <main id="appContent"><div id="main"></div><footer class="page-footer">Meu QG <span aria-hidden="true">·</span> Feito para organizar o que importa</footer></main>
 </div>
 
 <div id="layer"></div>
@@ -549,6 +947,10 @@ const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const DIA=864e5;
+/* Cores dos post-its: a cor é exclusiva da nota, não do aplicativo. */
+const NOTA_CORES={amarelo:'Amarelo',rosa:'Rosa',azul:'Azul',menta:'Menta',lilas:'Lilás',coral:'Coral'};
+const notaCor=n=>n&&NOTA_CORES[n.cor]?n.cor:'amarelo';
+
 /* [nome, classe antiga, cor do status]. A cor do STATUS (identidade) é diferente da cor do ANDAMENTO (vermelho/amarelo/verde). */
 const STATUS={mapeamento:['Mapeamento','','#8b95a5'],andamento:['Em Andamento','info','#4a90b8'],producao:['Em Produção','ok','#6f7fc4'],homologacao:['Em Homologação','warn','#d08a3e'],suporte:['Suporte','sup','#8a6fb3'],concluido:['Concluído','','#4f9a7d'],paralisado:['Paralisado','bad','#a0948a']};
 const FLUXO=['mapeamento','andamento','producao','homologacao','suporte','concluido'];
@@ -560,7 +962,7 @@ const PRESET={mapeamento:10,andamento:30,producao:50,homologacao:80,suporte:90,c
 const MOV=['andamento','producao','homologacao']; /* "em movimento": entram nos alertas e nas próximas ações */
 const LEGADO={ideia:'mapeamento',fazendo:'andamento',parado:'paralisado'}; /* nomes antigos, convertidos ao ler */
 const VIEWS=['hoje','projetos','notas','atividades','aguardando','caixa','revisao','membros'];
-const S={uid:null,email:'',nome:'',ws:'pessoal',esp:{},dir:{},dirAdm:{},anx:{},d:{projetos:{},notas:{},aguardando:{},inbox:{},config:{}},view:'hoje',proj:null,nota:null,filtro:'ativos',busca:'',projBusca:'',notaProj:'',verFeitos:false};
+const S={uid:null,email:'',nome:'',ws:'pessoal',esp:{},dir:{},dirAdm:{},anx:{},d:{projetos:{},notas:{},aguardando:{},inbox:{},config:{}},view:'hoje',proj:null,nota:null,filtro:'todos',busca:'',projBusca:'',notaProj:'',verFeitos:false};
 let db=null;
 
 /* ---------- utilitários ---------- */
@@ -648,6 +1050,16 @@ function abrirAtiv(ws,view,id){
   else if(view==='aguardando'){ go('aguardando'); }
   else abrirProjeto(id);
 }
+function mudarEtapaProjeto(id,etapa){
+  if(!STATUS[etapa]||!obj('projetos')[id])return;
+  const atual=obj('projetos')[id].status;
+  if(atual===etapa&&obj0('projetos')[id].status===etapa)return; /* legado (ex.: fazendo) também é gravado no nome novo */
+  const ex={status:etapa,statusAntes:etapa==='paralisado'?atual:null};
+  if(PRESET[etapa]!=null)ex.progresso=PRESET[etapa];
+  ex.concluidoEm=etapa==='concluido'?now():null;
+  tocaProjeto(id,ex);
+  toast('Projeto movido para '+STATUS[etapa][0]);
+}
 function tocaProjeto(id,extra){
   if(!id||!obj('projetos')[id])return;
   const old=obj('projetos')[id];
@@ -681,6 +1093,8 @@ function go(v,opts){
 }
 function abrirProjeto(id){ closePopups(); S.view='projetos';S.proj=id;S.nota=null; render(true); window.scrollTo(0,0); }
 
+let kanbanPos=0;
+let kanbanDraggedId=null;
 /* ---------- render ---------- */
 function wsLabel(id){return id==='pessoal'?'Pessoal':((S.esp[id]||{}).nome||'Grupo');}
 const pageNames={hoje:'Hoje',projetos:'Projetos',notas:'Notas',aguardando:'Aguardando',caixa:'Caixa de entrada',revisao:'Revisão semanal',membros:'Membros'};
@@ -811,7 +1225,9 @@ function render(animate){
   else if(S.view==='atividades')html=vAtividades();
   else if(S.view==='revisao')html=vRevisao();
   else html='<div class="empty">Carregando…</div>';
+  const oldBoard=$('#kanbanBoard'); if(oldBoard)kanbanPos=oldBoard.scrollLeft;
   m.innerHTML=`<div class="view"${animate?'':' style="animation:none"'}>${wsBar()}${S.view!=='membros'&&S.view!=='atividades'?atualizacoesHtml():''}${S.view!=='membros'?avisosHtml():''}${html}</div>`;
+  const newBoard=$('#kanbanBoard'); if(newBoard)newBoard.scrollLeft=kanbanPos;
   if(S.view==='projetos'&&S.proj&&obj('projetos')[S.proj])carregaAnexos(S.proj);
   const pp=$('.pipe'),cc=$('.pipe .stp.cur'); if(pp&&cc&&pp.scrollWidth>pp.clientWidth)pp.scrollLeft=cc.offsetLeft-pp.clientWidth/2+cc.clientWidth/2;
 }
@@ -858,13 +1274,34 @@ function vProjetos(){
   if(S.filtro==='ativos')ps=ps.filter(p=>p.status!=='concluido'); else if(S.filtro==='concluidos')ps=ps.filter(p=>p.status==='concluido');
   const q=S.projBusca.trim().toLocaleLowerCase('pt-BR');
   if(q)ps=ps.filter(p=>((p.nome||'')+' '+(p.proximaAcao||'')).toLocaleLowerCase('pt-BR').includes(q));
-  const grupos=ORDEM_STATUS.map(st=>[st,ps.filter(p=>p.status===st).sort((a,b)=>(b.atualizadoEm||0)-(a.atualizadoEm||0))]).filter(g=>g[1].length);
-  return `<div class="vh"><div><h2>Projetos</h2><p>Organize seus projetos por etapa e acompanhe o que falta fazer. ${ativos().length} ativos de ${lista('projetos').length} no total.</p></div>
+  /* A sequência segue exatamente a régua de fases exibida dentro do projeto. */
+  const passos=[...FLUXO,'paralisado'];
+  const grupos=passos.map(st=>[st,ps.filter(p=>p.status===st).sort((a,b)=>(b.atualizadoEm||0)-(a.atualizadoEm||0))]);
+  return `<div class="vh"><div><h2>Projetos</h2><p>Acompanhe cada projeto do Mapeamento até a Conclusão. ${ativos().length} ativos de ${lista('projetos').length} no total.</p></div>
     <div class="seg" role="group" aria-label="Filtro">${[['ativos','Ativos'],['todos','Todos'],['concluidos','Concluídos']].map(([k,l])=>`<button data-act="filtro" data-v="${k}" aria-pressed="${S.filtro===k}">${l}</button>`).join('')}</div></div>
   <form class="card row" data-form="novo-projeto"><input type="text" id="npNome" placeholder="Nome do novo projeto" aria-label="Nome do novo projeto" autocomplete="off" required><button class="btn pri" type="submit"><span class="label-full">+ Criar projeto</span><span class="label-short">+ Criar</span></button></form>
   <div class="project-search"><label class="f" for="projBusca">Buscar projeto</label><input id="projBusca" type="text" data-keep value="${esc(S.projBusca)}" placeholder="Buscar por nome ou próximo passo…" autocomplete="off"><span class="hint">${ps.length} resultado(s)</span></div>
-  ${grupos.length?grupos.map(([st,arr])=>`<div class="sec"><h3><i class="dot" style="background:${stCor(st)}"></i>${STATUS[st][0]} <span class="chip">${arr.length}</span></h3><div class="grid3">${arr.map(cardProj).join('')}</div></div>`).join(''):`<div class="empty sec">${q?'Nenhum projeto encontrado. Tente outra busca.':'Nenhum projeto neste filtro. Crie um projeto ou escolha outro filtro.'}</div>`}`;
+  <div class="kanban-intro"><div><div class="kanban-intro-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="11" rx="1"/><rect x="17" y="4" width="4" height="14" rx="1"/></svg> Fluxo dos projetos</div><p class="hint">Da primeira à última etapa · arraste um cartão ou use “Mover para…”</p></div><div class="kanban-arrows"><button type="button" data-act="kanban-scroll" data-v="-1" aria-label="Ver etapas anteriores" title="Etapas anteriores">‹</button><button type="button" data-act="kanban-scroll" data-v="1" aria-label="Ver próximas etapas" title="Próximas etapas">›</button></div></div>
+  ${ps.length?`<div class="kanban-board" id="kanbanBoard" role="region" tabindex="0" aria-label="Quadro Kanban. Role para o lado para ver as próximas etapas">${grupos.map(([st,arr],i)=>`<section class="kanban-column" data-kanban-status="${st}" style="--step-color:${stCor(st)}" aria-label="${STATUS[st][0]}, ${arr.length} projetos">
+      <header class="kanban-column-head"><span class="kanban-stage" aria-hidden="true">${st==='paralisado'?'II':String(i+1).padStart(2,'0')}</span><h3 class="kanban-stage-title">${STATUS[st][0]}</h3><span class="kanban-stage-count" title="Quantidade de projetos">${arr.length}</span></header>
+      <div class="kanban-col-list">${arr.length?arr.map(cardKanban).join(''):'<div class="kanban-empty"><strong>Etapa vazia</strong><span>Arraste um projeto para cá</span></div>'}</div>
+    </section>`).join('')}</div><div class="kanban-footer"><span aria-hidden="true"></span>Arraste na horizontal para navegar entre as etapas. “Paralisado” fica separado do fluxo.</div>`:`<div class="empty sec">${q?'Nenhum projeto encontrado. Tente outra busca.':'Nenhum projeto neste filtro. Crie um projeto ou escolha outro filtro.'}</div>`}`;
 }
+function cardKanban(p){
+  const prox=(p.proximaAcao||'').trim(),pct=Math.max(0,Math.min(100,+p.progresso||0)),par=p.status==='paralisado';
+  const nn=lista('notas').filter(n=>n.projetoId===p.id).length;
+  const opcoes=[...FLUXO,'paralisado'].filter(st=>st!==p.status);
+  return `<article class="kanban-ticket" data-drag-id="${esc(p.id)}" draggable="true" style="--step-color:${stCor(p.status)}">
+    <button type="button" class="kb-open" data-act="abrir" data-id="${esc(p.id)}" aria-label="Abrir projeto ${esc(p.nome)}">
+      <div class="kb-head"><h4 class="kb-title">${esc(p.nome||'Sem nome')}</h4>${prazoChip(p.prazo)}</div>
+      ${p.status==='concluido'&&!prox?'':`<div class="kb-next${!prox?' kb-no-next':''}"><span class="kb-label">Próxima ação</span>${prox?esc(prox):'Ainda não definida'}</div>`}
+      <div class="kb-meter" style="--pct:${pct}%" aria-label="${pct}% concluído"><span></span></div>
+      <div class="kb-meta"><b>${par?'Pausado · ':''}${pct}%</b><span>${nn?nn+' nota'+(nn>1?'s':'')+' · ':''}${ago(p.atualizadoEm||p.criadoEm)||'recente'}</span></div>
+    </button>
+    <div class="kb-bottom"><span class="hint">Arrastar ↗</span><select class="kb-move" data-act-change="kanban-status" data-id="${esc(p.id)}" aria-label="Mover projeto ${esc(p.nome)} para outra etapa"><option value="" selected>Mover para…</option>${opcoes.map(st=>`<option value="${st}">${STATUS[st][0]}</option>`).join('')}</select></div>
+  </article>`;
+}
+
 function cardProj(p){
   const prox=(p.proximaAcao||'').trim(), par=p.status==='paralisado', pct=Math.min(100,+p.progresso||0);
   const nn=lista('notas').filter(n=>n.projetoId===p.id).length;
@@ -1037,19 +1474,26 @@ function vNotas(){
   if(S.notaProj)ns=ns.filter(n=>n.projetoId===S.notaProj);
   ns.sort((a,b)=>(b.fixada?1:0)-(a.fixada?1:0)||(b.atualizadoEm||0)-(a.atualizadoEm||0));
   const n=S.nota&&obj('notas')[S.nota]?Object.assign({id:S.nota},obj('notas')[S.nota]):null;
-  return `<div class="vh"><div><h2>Notas</h2><p>Guarde informações e conecte suas anotações aos projetos. ${lista('notas').length} nota(s) neste ambiente.</p></div><button class="btn pri" data-act="nova-nota">+ Nova nota</button></div>
-  <div class="notes${n?' edit':''}">
-    <div class="nl"><div class="list">
-      <input type="text" data-keep id="busca" placeholder="Buscar…" value="${esc(S.busca)}" aria-label="Buscar notas">
-      <select id="fNP" data-keep aria-label="Filtrar por projeto"><option value="">Todos os projetos</option>${projs.map(p=>`<option value="${p.id}"${S.notaProj===p.id?' selected':''}>${esc(p.nome)}</option>`).join('')}</select>
-      ${ns.map(x=>`<button class="item" data-act="abrir-nota" data-id="${x.id}" style="${n&&n.id===x.id?'border-color:var(--info)':''}"><div class="grow"><div class="t">${x.fixada?'📌 ':''}${esc(x.titulo||'Sem título')}</div><div class="s">${esc((x.texto||'').replace(/\s+/g,' ').slice(0,70))||'—'}</div></div></button>`).join('')||'<div class="empty">Nenhuma nota.</div>'}</div></div>
-    <div class="ne">${n?`<div class="card ed">
-      <div class="row" style="justify-content:space-between"><button class="btn ghost sm" data-act="voltar-nota" style="display:var(--vb,none)">← Notas</button><span class="saved" id="saved">Salvo</span>
-        <div class="row"><button class="btn sm" data-act="fixar" data-id="${n.id}">${n.fixada?'Desafixar':'📌 Fixar'}</button><button class="btn ghost sm bad" data-act="del-nota" data-id="${n.id}">Excluir</button></div></div>
-      <input type="text" class="tt" data-keep data-nf="titulo" data-id="${n.id}" value="${esc(n.titulo||'')}" placeholder="Título" aria-label="Título">
-      <select data-keep data-nf="projetoId" data-id="${n.id}" aria-label="Projeto da nota"><option value="">Sem projeto</option>${projs.map(p=>`<option value="${p.id}"${n.projetoId===p.id?' selected':''}>${esc(p.nome)}</option>`).join('')}</select>
-      <textarea data-keep data-nf="texto" data-id="${n.id}" placeholder="Escreva aqui…" aria-label="Texto">${esc(n.texto||'')}</textarea>
-      <span class="hint">Editada ${ago(n.atualizadoEm)}${n.por&&nomeDe(n.por)?" · criada por "+esc(nomeDe(n.por)):""}</span></div>`:'<div class="empty" style="margin-top:6px">Escolha uma nota ou crie uma nova.</div>'}</div>
+  const total=lista('notas').length;
+  const cards=ns.map(x=>`<button class="note-tile${n&&n.id===x.id?' selected':''}" data-cor="${notaCor(x)}" data-act="abrir-nota" data-id="${esc(x.id)}" aria-pressed="${!!(n&&n.id===x.id)}">
+    <span class="note-tile-head"><span class="note-tile-title">${esc(x.titulo||'Nota sem título')}</span>${x.fixada?'<span class="note-pin" aria-label="Nota fixada">●</span>':''}</span>
+    <span class="note-tile-text">${esc((x.texto||'').replace(/\s+/g,' ').slice(0,115))||'Escreva sua ideia aqui…'}</span>
+    <span class="note-tile-foot"><span>${esc(nomeProj(x.projetoId)||'Sem projeto')}</span><span>${ago(x.atualizadoEm)}</span></span>
+  </button>`).join('');
+  const palette=n?Object.keys(NOTA_CORES).map(c=>`<button type="button" class="note-swatch" data-cor="${c}" data-act="cor-nota" data-id="${esc(n.id)}" aria-label="Cor ${NOTA_CORES[c]}" title="${NOTA_CORES[c]}" aria-pressed="${notaCor(n)===c}"></button>`).join(''):'';
+  return `<div class="vh notes-heading"><div><h2>Notas</h2><p>Suas ideias, lembretes e informações em um só lugar. <span class="notes-count">${total} ${total===1?'nota':'notas'}</span></p></div><button class="btn pri" data-act="nova-nota"><span aria-hidden="true">＋</span> Nova nota</button></div>
+  <div class="notes${S.nota?' edit':''}">
+    <aside class="nl" aria-label="Lista de notas">
+      <div class="notes-filters"><label class="notes-search"><span aria-hidden="true">⌕</span><input type="text" data-keep id="busca" placeholder="Buscar notas..." value="${esc(S.busca)}" aria-label="Buscar notas"></label>
+      <select id="fNP" data-keep aria-label="Filtrar notas por projeto"><option value="">Todos os projetos</option>${projs.map(p=>`<option value="${esc(p.id)}"${S.notaProj===p.id?' selected':''}>${esc(p.nome)}</option>`).join('')}</select></div>
+      <div class="note-list" role="list">${cards||'<div class="note-empty-list">Nenhuma nota encontrada.<br>Tente outra busca ou crie uma nota.</div>'}</div>
+    </aside>
+    <section class="ne" aria-label="Editor de nota">${n?`<div class="postit" data-cor="${notaCor(n)}">
+      <div class="note-toolbar"><button class="btn ghost sm back-notes" data-act="voltar-nota">← Voltar às notas</button><span class="saved" id="saved">Salvo</span><span class="note-toolbar-actions"><button class="note-action" data-act="fixar" data-id="${esc(n.id)}" aria-pressed="${!!n.fixada}" title="${n.fixada?'Desafixar':'Fixar'}">${n.fixada?'● Fixada':'○ Fixar'}</button><button class="note-action delete" data-act="del-nota" data-id="${esc(n.id)}">Excluir</button></span></div>
+      <div class="postit-top"><div><span class="postit-kicker">ANOTAÇÃO</span><input type="text" class="tt" data-keep data-nf="titulo" data-id="${esc(n.id)}" value="${esc(n.titulo||'')}" placeholder="Título da nota" aria-label="Título da nota"></div><div class="note-palette" role="group" aria-label="Cor da nota">${palette}</div></div>
+      <textarea data-keep data-nf="texto" data-id="${esc(n.id)}" placeholder="Comece a escrever suas ideias..." aria-label="Texto da nota">${esc(n.texto||'')}</textarea>
+      <div class="postit-bottom"><label class="note-project"><span>Projeto</span><select data-keep data-nf="projetoId" data-id="${esc(n.id)}" aria-label="Projeto vinculado"><option value="">Sem projeto</option>${projs.map(p=>`<option value="${esc(p.id)}"${n.projetoId===p.id?' selected':''}>${esc(p.nome)}</option>`).join('')}</select></label><span class="note-updated">Editada ${ago(n.atualizadoEm)}${n.por&&nomeDe(n.por)?' · '+esc(nomeDe(n.por)):''}</span></div>
+    </div>`:'<div class="note-placeholder"><span class="note-placeholder-icon" aria-hidden="true">✎</span><h3>Suas ideias começam aqui</h3><p>Escolha uma das suas notas ou crie uma nova para começar.</p><button class="btn pri" data-act="nova-nota">＋ Criar nota</button></div>'}</section>
   </div>`;
 }
 
@@ -1104,7 +1548,7 @@ function novoProjeto(nome,extra){
 }
 function novaNota(projetoId,extra){
   const id=newId();
-  set('notas/'+id,Object.assign(autor(),{titulo:'',texto:'',projetoId:projetoId||'',fixada:false,criadoEm:now(),atualizadoEm:now()},extra||{}));
+  set('notas/'+id,Object.assign(autor(),{titulo:'',texto:'',projetoId:projetoId||'',cor:'amarelo',fixada:false,criadoEm:now(),atualizadoEm:now()},extra||{}));
   registraAtivRef('notas',id,'Nota nova','Nota criada',projetoId||'');
   S.view='notas';S.proj=null;S.nota=id;render(true);
   setTimeout(()=>{const t=$('[data-nf=titulo]');if(t)t.focus();},40);
@@ -1135,13 +1579,9 @@ document.addEventListener('click',e=>{
     case 'del-atv': delAtivEm(b.dataset.ws,id); toast('Atualização excluída'); break;
     case 'av-fecha': { const p=obj('projetos')[id]; if(p){ try{localStorage.setItem(avKey(id),avNivel(prazoDias(p.prazo))+'|'+p.prazo);}catch{} } render(false); break; }
     case 'filtro': S.filtro=b.dataset.v; render(false); break;
+    case 'kanban-scroll': {const board=$('#kanbanBoard');if(board)board.scrollBy({left:(Number(b.dataset.v)||1)*318,behavior:'smooth'});break;}
     case 'retomar': { const pr=obj('projetos')[id]||{}; const v=FLUXO.includes(pr.statusAntes)?pr.statusAntes:'andamento'; const ex={status:v,statusAntes:null}; if(PRESET[v]!=null)ex.progresso=PRESET[v]; tocaProjeto(id,ex); break; }
-    case 'status': {
-      const cur=(obj('projetos')[id]||{}).status; const ex={status:b.dataset.v};
-      if(b.dataset.v==='paralisado'&&cur!=='paralisado')ex.statusAntes=cur; else ex.statusAntes=null;
-      if(PRESET[b.dataset.v]!=null)ex.progresso=PRESET[b.dataset.v];
-      if(b.dataset.v==='concluido'){ex.concluidoEm=now();} else ex.concluidoEm=null;
-      tocaProjeto(id,ex); break; }
+    case 'status': mudarEtapaProjeto(id,b.dataset.v); break;
     case 'del-proj': if(confirm('Excluir este projeto? As notas dele ficam, só perdem a ligação.')){
       lista('notas').filter(n=>n.projetoId===id).forEach(n=>upd('notas/'+n.id,{projetoId:''}));
       lista('aguardando').filter(x=>x.projetoId===id).forEach(x=>upd('aguardando/'+x.id,{projetoId:''}));
@@ -1158,6 +1598,7 @@ document.addEventListener('click',e=>{
     case 'abrir-nota': S.view='notas';S.nota=id;S.proj=null;render(true);window.scrollTo(0,0); break;
     case 'voltar-nota': S.nota=null;render(true); break;
     case 'fixar': upd('notas/'+id,{fixada:!(obj('notas')[id]||{}).fixada}); break;
+    case 'cor-nota': if(NOTA_CORES[b.dataset.cor]&&obj('notas')[id]){ upd('notas/'+id,{cor:b.dataset.cor}); } break;
     case 'del-nota': if(confirm('Excluir esta nota?')){del('notas/'+id);purgaAtivs(id);S.nota=null;} break;
     case 'feito-ag': { const a=obj('aguardando')[id]||{}; upd('aguardando/'+id,{feito:true,feitoEm:now()}); registraAtivRef('aguardando',id,'Aguardando: '+(a.quem||'—'),'Recebido: '+(a.oque||'—'),a.projetoId||''); toast('Marcado como recebido'); break; }
     case 'reabrir-ag': upd('aguardando/'+id,{feito:false,feitoEm:null,desde:now()}); break;
@@ -1186,7 +1627,7 @@ function trocaWs(id){
   flushNotas();
   if(id!=='pessoal'&&!S.esp[id])id='pessoal';
   closePopups();
-  S.ws=id;S.anx={};S.proj=null;S.nota=null;S.notaProj='';S.busca='';S.projBusca='';
+  S.ws=id;S.anx={};S.proj=null;S.nota=null;S.notaProj='';S.busca='';S.projBusca='';kanbanPos=0;
   try{localStorage.setItem('meuqg_ws_'+S.uid,id);}catch(_){}
   S.userSwitchedWs=true;
   if(S.view==='membros'&&id==='pessoal')S.view='hoje';
@@ -1215,6 +1656,35 @@ document.addEventListener('click',e=>{
 });
 
 document.addEventListener('change',e=>{ const t=e.target; if(t&&t.id==='anxIn'){ addAnexos(t.dataset.id,t.files).then(()=>{t.value='';}); } });
+/* Arraste cartões entre etapas; no celular há o seletor 'Mover para…'. */
+function limparKanbanDrag(){
+  $$('.kanban-column.is-over').forEach(el=>el.classList.remove('is-over'));
+  $$('.kanban-ticket.is-dragging').forEach(el=>el.classList.remove('is-dragging'));
+  kanbanDraggedId=null;
+}
+document.addEventListener('dragstart',e=>{
+  const t=e.target.closest&&e.target.closest('.kanban-ticket[data-drag-id]');
+  if(!t||S.view!=='projetos'||S.proj)return;
+  kanbanDraggedId=t.dataset.dragId;
+  t.classList.add('is-dragging');
+  if(e.dataTransfer){e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',kanbanDraggedId);}
+});
+document.addEventListener('dragover',e=>{
+  if(!kanbanDraggedId||S.view!=='projetos'||S.proj)return;
+  const col=e.target.closest&&e.target.closest('.kanban-column');
+  $$('.kanban-column.is-over').forEach(el=>{if(el!==col)el.classList.remove('is-over')});
+  if(col){e.preventDefault();col.classList.add('is-over');if(e.dataTransfer)e.dataTransfer.dropEffect='move';}
+});
+document.addEventListener('drop',e=>{
+  if(!kanbanDraggedId||S.view!=='projetos'||S.proj)return;
+  const col=e.target.closest&&e.target.closest('.kanban-column');
+  if(!col)return;
+  e.preventDefault();
+  const id=kanbanDraggedId, etapa=col.dataset.kanbanStatus;
+  limparKanbanDrag();
+  if(STATUS[etapa])mudarEtapaProjeto(id,etapa);
+});
+document.addEventListener('dragend',limparKanbanDrag);
 document.addEventListener('paste',e=>{
   if(S.view!=='projetos'||!S.proj)return;
   const fs=[...(e.clipboardData&&e.clipboardData.files||[])]; if(!fs.length)return;
@@ -1252,6 +1722,7 @@ let nTimer=null;
 document.addEventListener('change',e=>{
   const t=e.target; if(!t.dataset)return;
   if(t.dataset.actChange==='ws'){ trocaWs(t.value); return; }
+  if(t.dataset.actChange==='kanban-status'){ if(STATUS[t.value])mudarEtapaProjeto(t.dataset.id,t.value); return; }
   if(t.id==='fNP'){ S.notaProj=t.value; render(false); return; }
   if(t.dataset.f&&t.dataset.id){
     let v=t.value; const f=t.dataset.f;
@@ -1334,11 +1805,11 @@ if(window.__gateOk)start();
 (function(){
  const root=document.documentElement, reduced=matchMedia('(prefers-reduced-motion: reduce)');
  const read=k=>{try{return localStorage.getItem(k)}catch{return null}},save=(k,v)=>{try{localStorage.setItem(k,v)}catch{}};
- let theme=read('qg-ambiente')||(matchMedia('(prefers-color-scheme: dark)').matches?'noite':'areia');
+ let theme=read('qg-visual-v3')||'noite';
  let motion=read('qg-movimento')||'on';
  const t=document.getElementById('qgTheme'),m=document.getElementById('qgMotion');
- function apply(){root.dataset.ambiente=theme;root.dataset.motion=reduced.matches?'off':motion;t.textContent=theme==='noite'?'☀ Areia':'☾ Noite';t.setAttribute('aria-pressed',String(theme==='noite'));m.textContent=root.dataset.motion==='on'?'Pausar movimento':'Ativar movimento';m.setAttribute('aria-pressed',String(root.dataset.motion==='off'));m.disabled=reduced.matches;m.title=reduced.matches?'Movimento desativado pela preferência do dispositivo':'Controlar animações do ambiente'}
- t.onclick=()=>{theme=theme==='noite'?'areia':'noite';save('qg-ambiente',theme);apply()};
+ function apply(){root.dataset.ambiente=theme;root.dataset.motion=reduced.matches?'off':motion;t.textContent=theme==='noite'?'☀ Claro':'☾ Escuro';t.setAttribute('aria-pressed',String(theme==='noite'));m.textContent=root.dataset.motion==='on'?'Pausar movimento':'Ativar movimento';m.setAttribute('aria-pressed',String(root.dataset.motion==='off'));m.disabled=reduced.matches;m.title=reduced.matches?'Movimento desativado pela preferência do dispositivo':'Controlar animações do ambiente'}
+ t.onclick=()=>{theme=theme==='noite'?'areia':'noite';save('qg-visual-v3',theme);apply()};
  m.onclick=()=>{motion=motion==='on'?'off':'on';save('qg-movimento',motion);apply()};
  reduced.addEventListener('change',apply);apply();
  document.addEventListener('visibilitychange',()=>{document.getAnimations().forEach(a=>{if(a.animationName==='qg-drift'||a.animationName==='qg-orbit'){if(document.hidden)a.pause();else a.play()}})});
