@@ -435,6 +435,11 @@ input[type=range]{cursor:pointer}
 .updt{flex:1;min-width:0;border:0;background:none;text-align:left;font:inherit;font-size:14px;color:var(--ink);cursor:pointer;padding:10px 0}
 .updt b{color:var(--acc)}.updt span{color:var(--mut);font-size:12.5px}
 .dot-un{width:8px;height:8px;border-radius:50%;background:var(--acc);flex:none;display:inline-block}
+.atv-item{display:flex;align-items:center;gap:8px;padding:0 10px 0 0}.atv-main{flex:1;min-width:0;border:0;background:none;text-align:left;font:inherit;color:inherit;cursor:pointer;padding:15px 17px}
+.upd .avx{margin-right:2px}
+.atv-row{display:flex;align-items:center;gap:10px}
+.atv-open{flex:1;min-width:0;border:0;background:none;text-align:left;font:inherit;color:inherit;padding:0;cursor:pointer}
+.atv-del{flex:none;color:var(--bad)}
 </style>
 </head>
 <body>
@@ -615,7 +620,7 @@ function descreveMudancas(old,ex){
 /* Histórico de mudanças: guarda quem mexeu, em qual projeto e o quê. */
 function registraAtivRef(view,ref,nome,txt,pid){
   if(!txt||!ref)return;
-  set('atividades/'+newId(),{view,ref,pid:pid||(view==='projetos'?ref:''),nome:nome||'Item',txt,t:now(),por:S.ws==='pessoal'?null:S.uid});
+  set('atividades/'+newId(),{view,ref,pid:pid||(view==='projetos'?ref:''),nome:nome||'Item',txt,t:now(),por:S.uid});
 }
 function registraAtiv(pid,txt,nomeOpt){
   const p=obj('projetos')[pid];
@@ -721,7 +726,7 @@ function badges(){
 }
 
 
-/* Atualizações não lidas: só as feitas por OUTRAS pessoas (no Pessoal você é o único que mexe). */
+/* Atualizações não lidas: todas, inclusive as suas (você vê confirmação de cada mudança). */
 const vistoAte=(ws)=>(((S.d.config||{}).atividadeVista)||{})[ws||S.ws]||0;
 const atividadesOrdenadas=()=>lista('atividades').filter(a=>a&&a.t).sort((a,b)=>b.t-a.t);
 /* Todas as atualizações de TODOS os grupos (o aviso aparece em qualquer tela). */
@@ -737,27 +742,38 @@ function feedGeral(){
   return todasAtividades().concat(pes).sort((a,b)=>b.t-a.t);
 }
 function naoLidas(){
-  return todasAtividades().filter(a=>a.por&&a.por!==S.uid&&a.t>(vistoAte(a.ws)||(now()-7*DIA)));
+  return feedGeral().filter(a=>a.por&&a.t>(vistoAte(a.ws)||(now()-7*DIA)));
 }
 /* marca como lido: só a tela atual (all=false) ou todos os grupos (all=true) */
 function marcaVisto(all){
   const o={};
-  if(all)Object.keys(S.esp).forEach(e=>o[e]=now()); else o[S.ws]=now();
+  if(all){ o.pessoal=now(); Object.keys(S.esp).forEach(e=>o[e]=now()); } else o[S.ws]=now();
   upd('config/atividadeVista',o);
 }
+/* Quando um projeto, nota ou pedido é apagado, apaga também as atualizações dele (neste ambiente). */
+function purgaAtivs(ref){
+  atividadesOrdenadas().filter(a=>a.ref===ref||a.pid===ref).forEach(a=>del('atividades/'+a.id));
+}
+/* Exclui uma atualização do histórico (some da tela e dos avisos). */
+function excluiAtiv(ws,id){
+  const path=ws==='pessoal'?'meuQG/'+S.uid+'/atividades/'+id:'qgEspacos/'+ws+'/dados/atividades/'+id;
+  db.ref(path).remove().catch(erroSalvar);
+}
+function nomeGrupo(ws){ return ws==='pessoal'?'Pessoal':((S.esp[ws]||{}).nome||'Grupo'); }
+function quemFez(a){ return a.por===S.uid?'você':(nomeDeEm(a.ws==='pessoal'?S.ws:a.ws,a.por)||'alguém'); }
 function atualizacoesHtml(){
   const l=naoLidas(); if(!l.length)return '';
   const mostra=l.slice(0,3), resto=l.length-mostra.length;
   return '<div class="updS" role="region" aria-label="Atualizações de projetos">'+mostra.map(a=>
-    `<div class="upd"><span class="dot-un" aria-hidden="true"></span><button class="updt" data-act="abrir-ws" data-id="${esc(a.ref||a.pid)}" data-view="${esc(a.view||'projetos')}" data-ws="${esc(a.ws)}"><b>${esc(a.nome)}</b> · ${esc(a.txt)} <span>· ${esc((S.esp[a.ws]||{}).nome||'Grupo')} · ${esc(a.por&&a.por!==S.uid?(nomeDeEm(a.ws,a.por)||'alguém'):'você')} · ${ago(a.t)}</span></button></div>`
+    `<div class="upd"><span class="dot-un" aria-hidden="true"></span><button class="updt" data-act="abrir-ws" data-id="${esc(a.ref||a.pid)}" data-view="${esc(a.view||'projetos')}" data-ws="${esc(a.ws)}"><b>${esc(a.nome)}</b> · ${esc(a.txt)} <span>· ${esc(nomeGrupo(a.ws))} · ${esc(quemFez(a))} · ${ago(a.t)}</span></button><button class="avx" data-act="atv-excluir" data-id="${esc(a.id)}" data-ws="${esc(a.ws)}" aria-label="Excluir esta atualização" title="Excluir">✕</button></div>`
   ).join('')+`<div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><button class="btn sm ghost" data-act="ver-atv">Ver todas${resto?' ('+l.length+' novas)':''} →</button><button class="btn sm ghost" data-act="atv-lido">Marcar todas como lidas</button></div></div>`;
 }
 function vAtividades(){
   const l=feedGeral().slice(0,150);
   const grupos={};
   l.forEach(a=>{ const k=new Date(a.t).toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}); (grupos[k]=grupos[k]||[]).push(a); });
-  return `<div class="vh"><div><h2>Atualizações</h2><p>O que mudou nos projetos, no seu Pessoal e nos grupos: status, andamento, prazo, diário e arquivos.</p></div></div>
-  ${l.length?Object.keys(grupos).map(d=>`<div class="sec"><h3>${esc(d)}</h3><div class="list">${grupos[d].map(a=>{ const nova=a.por&&a.por!==S.uid&&a.t>(vistoAte(a.ws)||0); const onde=a.ws==='pessoal'?'Pessoal':((S.esp[a.ws]||{}).nome||'Grupo'); const quem=a.por&&a.por!==S.uid?(nomeDeEm(a.ws,a.por)||'alguém'):'você'; return `<button class="item" data-act="abrir-ws" data-id="${esc(a.ref||a.pid)}" data-view="${esc(a.view||'projetos')}" data-ws="${esc(a.ws)}"><div class="grow"><div class="t">${nova?'<span class="dot-un" aria-label="nova" style="display:inline-block;margin-right:7px;vertical-align:middle"></span>':''}${esc(a.nome)} <span class="chip">${esc(onde)}</span></div><div class="s">${esc(a.txt)}</div><div class="hint">${esc(quem)} · ${new Date(a.t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div></div></button>`; }).join('')}</div></div>`).join(''):'<div class="empty sec">Nada por aqui ainda. Quando um projeto mudar de status, andamento, prazo ou ganhar diário ou arquivo, aparece aqui.</div>'}`;
+  return `<div class="vh"><div><h2>Atualizações</h2><p>O que mudou nos projetos, no seu Pessoal e nos grupos: status, andamento, prazo, diário, arquivos e notas.</p></div></div>
+  ${l.length?Object.keys(grupos).map(d=>`<div class="sec"><h3>${esc(d)}</h3><div class="list">${grupos[d].map(a=>{ const nova=a.por&&a.t>(vistoAte(a.ws)||0); return `<div class="item atv-item"><button class="atv-main" data-act="abrir-ws" data-id="${esc(a.ref||a.pid)}" data-view="${esc(a.view||'projetos')}" data-ws="${esc(a.ws)}"><div class="grow"><div class="t">${nova?'<span class="dot-un" aria-label="nova" style="display:inline-block;margin-right:7px;vertical-align:middle"></span>':''}${esc(a.nome)} <span class="chip">${esc(nomeGrupo(a.ws))}</span></div><div class="s">${esc(a.txt)}</div><div class="hint">${esc(quemFez(a))} · ${new Date(a.t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div></div></button><button class="avx" data-act="atv-excluir" data-id="${esc(a.id)}" data-ws="${esc(a.ws)}" aria-label="Excluir esta atualização" title="Excluir">✕</button></div>`; }).join('')}</div></div>`).join(''):'<div class="empty sec">Nada por aqui ainda. Quando um projeto, nota ou pedido mudar, aparece aqui.</div>'}`;
 }
 
 /* Avisos de prazo: 3 níveis, dispensáveis, voltam quando o nível sobe. */
@@ -1114,8 +1130,10 @@ document.addEventListener('click',e=>{
     case 'abrir': abrirProjeto(id); break;
     case 'voltar': S.proj=null; render(true); break;
     case 'ver-atv': go('atividades'); break;
+    case 'atv-excluir': excluiAtiv(b.dataset.ws,b.dataset.id); toast('Atualização excluída'); break;
     case 'atv-lido': marcaVisto(true); toast('Atualizações marcadas como lidas'); break;
     case 'abrir-ws': abrirAtiv(b.dataset.ws,b.dataset.view,id); break;
+    case 'del-atv': delAtivEm(b.dataset.ws,id); toast('Atualização excluída'); break;
     case 'av-fecha': { const p=obj('projetos')[id]; if(p){ try{localStorage.setItem(avKey(id),avNivel(prazoDias(p.prazo))+'|'+p.prazo);}catch{} } render(false); break; }
     case 'filtro': S.filtro=b.dataset.v; render(false); break;
     case 'retomar': { const pr=obj('projetos')[id]||{}; const v=FLUXO.includes(pr.statusAntes)?pr.statusAntes:'andamento'; const ex={status:v,statusAntes:null}; if(PRESET[v]!=null)ex.progresso=PRESET[v]; tocaProjeto(id,ex); break; }
@@ -1128,7 +1146,7 @@ document.addEventListener('click',e=>{
     case 'del-proj': if(confirm('Excluir este projeto? As notas dele ficam, só perdem a ligação.')){
       lista('notas').filter(n=>n.projetoId===id).forEach(n=>upd('notas/'+n.id,{projetoId:''}));
       lista('aguardando').filter(x=>x.projetoId===id).forEach(x=>upd('aguardando/'+x.id,{projetoId:''}));
-      del('anexos/'+id); delete S.anx[ckey(id)]; del('projetos/'+id); S.proj=null; } break;
+      del('anexos/'+id); delete S.anx[ckey(id)]; del('projetos/'+id); purgaAtivs(id); S.proj=null; } break;
     case 'del-diario': del('projetos/'+id+'/diario/'+b.dataset.k); tocaProjeto(id); break;
     case 'anx-add': { const i=$('#anxIn'); if(i)i.click(); break; }
     case 'anx-ver': verAnexo(id,b.dataset.k); break;
@@ -1141,10 +1159,10 @@ document.addEventListener('click',e=>{
     case 'abrir-nota': S.view='notas';S.nota=id;S.proj=null;render(true);window.scrollTo(0,0); break;
     case 'voltar-nota': S.nota=null;render(true); break;
     case 'fixar': upd('notas/'+id,{fixada:!(obj('notas')[id]||{}).fixada}); break;
-    case 'del-nota': if(confirm('Excluir esta nota?')){del('notas/'+id);S.nota=null;} break;
+    case 'del-nota': if(confirm('Excluir esta nota?')){del('notas/'+id);purgaAtivs(id);S.nota=null;} break;
     case 'feito-ag': { const a=obj('aguardando')[id]||{}; upd('aguardando/'+id,{feito:true,feitoEm:now()}); registraAtivRef('aguardando',id,'Aguardando: '+(a.quem||'—'),'Recebido: '+(a.oque||'—'),a.projetoId||''); toast('Marcado como recebido'); break; }
     case 'reabrir-ag': upd('aguardando/'+id,{feito:false,feitoEm:null,desde:now()}); break;
-    case 'del-ag': del('aguardando/'+id); break;
+    case 'del-ag': del('aguardando/'+id); purgaAtivs(id); break;
     case 'ver-feitos': S.verFeitos=!S.verFeitos; render(false); break;
     case 'cx-nota': { const i=obj('inbox')[id]; if(!i)break; const t=i.texto; novaNota('',{titulo:t.slice(0,60),texto:t.length>60?t:''}); del('inbox/'+id); break; }
     case 'cx-proj': { const i=obj('inbox')[id]; if(!i)break; const pid=novoProjeto(i.texto.slice(0,80)); del('inbox/'+id); toast('Projeto criado'); abrirProjeto(pid); break; }
