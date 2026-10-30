@@ -1010,6 +1010,23 @@ function aplicaBanco(v){
 function checkDraft(){
   try{ var dr=JSON.parse(lsGet(KEY+':draft')||'null'); if(dr && dr.base===store.history.length && diff(store.current,dr.state).length) draftOffer=true; else if(dr) lsDel(KEY+':draft'); }catch(e){}
 }
+var remotoPendente=null;
+function mostraAvisoRemoto(){
+  var el=document.getElementById('__remoto');
+  if(!el){
+    el=document.createElement('div'); el.id='__remoto';
+    el.style.cssText='position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;background:#1d2a3a;color:#fff;border:1px solid #4d9fff;border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;box-shadow:0 8px 24px rgba(0,0,0,.35);font-size:14px';
+    el.innerHTML='<span style="flex:1;min-width:220px">Outra pessoa salvou uma nova versão deste estudo. Você tem alterações não salvas, então não atualizei a tela.</span><button id="__remotoOk" style="background:#4d9fff;color:#06203f;border:0;border-radius:8px;padding:8px 12px;font-weight:700;cursor:pointer">Ver nova versão</button><button id="__remotoX" style="background:transparent;color:#fff;border:1px solid #4d5a6b;border-radius:8px;padding:8px 12px;cursor:pointer">Continuar aqui</button>';
+    document.body.appendChild(el);
+    document.getElementById('__remotoX').onclick=function(){ el.remove(); };
+    document.getElementById('__remotoOk').onclick=function(){
+      if(dirty && !confirm('Suas alterações não salvas serão descartadas para mostrar a versão nova. Continuar?')) return;
+      var nv=remotoPendente; remotoPendente=null; dirty=false; editMode=false; pendingOrigin=null; lsDel(KEY+':draft');
+      if(nv) aplicaBanco(nv);
+      el.remove(); render();
+    };
+  }
+}
 function carregaBanco(){
   var ref=firebase.database().ref('eqEstudos');
   ref.once('value').then(function(snap){
@@ -1022,7 +1039,14 @@ function carregaBanco(){
     return v;
   }).then(function(v){
     aplicaBanco(v); checkDraft(); render();
-    ref.on('value',function(s){ var nv=s.val(); if(!nv||!nv.current||dirty||editMode) return; aplicaBanco(nv); render(); });
+    ref.on('value',function(s){
+      var nv=s.val(); if(!nv||!nv.current) return;
+      var novaVersao = nv.history && Object.keys(nv.history).length !== store.history.length;
+      var mudouAtual = JSON.stringify(nv.current)!==JSON.stringify(store.current);
+      if(!novaVersao && !mudouAtual) return;
+      if(dirty||editMode){ remotoPendente=nv; mostraAvisoRemoto(); return; }
+      aplicaBanco(nv); render();
+    });
   }).catch(function(err){
     var m=String((err&&err.message)||err||'');
     var motivo=/permission|denied/i.test(m)?'Seu usuário não tem permissão de leitura nos dados deste app. Peça para o admin conferir o grupo e se as regras do Firebase foram publicadas.':'Não consegui carregar os dados agora. Recarregue a página.';
@@ -1054,7 +1078,7 @@ window.addEventListener('beforeunload',function(e){ if(dirty){e.preventDefault()
 <script>
 (function(){
   /* CADEADO PADRÃO DA ESTANTE. Só esta linha muda (o ✎ Editar troca ela). */
-  var GRUPOS_PERMITIDOS = ["PESQUISA CLINICA","EQUIVALENCIA"];
+  var GRUPOS_PERMITIDOS = ["EQUIVALENCIA"];
   var firebaseConfig = {
     apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
     authDomain: "stinpharma-qualidade.firebaseapp.com",
