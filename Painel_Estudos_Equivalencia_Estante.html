@@ -461,6 +461,7 @@ function diff(a,b){
       if(p.status!==l.status) ch.push(s.nome+' · '+l.lab+': situação alterada de "'+ST[p.status].label+'" para "'+ST[l.status].label+'"');
       if((p.data||'')!==(l.data||'')) ch.push(s.nome+' · '+l.lab+': última atualização alterada de '+br(p.data)+' para '+br(l.data));
       if((p.obs||'').trim()!==(l.obs||'').trim()) ch.push(s.nome+' · '+l.lab+': observação '+(l.obs?'atualizada para "'+l.obs.trim()+'"':'removida'));
+      if((p.validade||'')!==(l.validade||'')) ch.push(s.nome+' · '+l.lab+': validade da proposta '+(l.validade?'registrada para '+br(l.validade):'removida'));
       if((p.valor==null?null:+p.valor)!==(l.valor==null?null:+l.valor)) ch.push(s.nome+' · '+l.lab+': valor da proposta '+(l.valor!=null?'registrado em '+brl(l.valor):'removido'));
     });
     o.labs.forEach(function(l){ if(!nl[norm(l.lab)]) ch.push(s.nome+' · '+l.lab+' removido'); });
@@ -495,12 +496,12 @@ function parseRows(rows){
     s.solicitacao=cellDate(rows[i][1]);
     var j=i+1; while(j<rows.length && norm(rows[j][0]).indexOf('laborat')!==0) j++;
     if(j>=rows.length) continue;
-    var h=rows[j].map(norm), cD=1,cS=2,cO=3,cV=-1;
-    h.forEach(function(x,k){ if(/ultima|atualiza/.test(x))cD=k; else if(/situa|status/.test(x))cS=k; else if(/observa/.test(x))cO=k; else if(/valor|orcamento/.test(x))cV=k; });
+    var h=rows[j].map(norm), cD=1,cS=2,cO=3,cV=-1,cX=-1;
+    h.forEach(function(x,k){ if(/ultima|atualiza/.test(x))cD=k; else if(/situa|status/.test(x))cS=k; else if(/observa/.test(x))cO=k; else if(/validade/.test(x))cX=k; else if(/valor|orcamento/.test(x))cV=k; });
     for(j=j+1;j<rows.length;j++){
       var rr=rows[j], la=S(rr[0]); if(!la || byName[norm(la)]) break;
       var obs=S(rr[cO]); var val=cV>=0&&rr[cV]!=null&&rr[cV]!==''?(typeof rr[cV]==='number'?rr[cV]:parseMoney('R$ '+rr[cV])):parseMoney(obs);
-      s.labs.push({lab:la.replace(/^\d+\s*[.)-]\s*/,''),data:cellDate(rr[cD]),status:normStatus(rr[cS]),obs:obs,valor:val});
+      s.labs.push({lab:la.replace(/^\d+\s*[.)-]\s*/,''),data:cellDate(rr[cD]),status:normStatus(rr[cS]),obs:obs,valor:val,validade:cX>=0?cellDate(rr[cX]):null});
     }
   }
   if(!studies.length) throw new Error('Nenhum estudo encontrado abaixo do cabeçalho.');
@@ -664,15 +665,15 @@ function renderStudies(d,ref){
   h+='<div class="card" style="margin-top:16px"><h3>Linha do tempo por laboratório</h3><div class="cap">Traço colorido: tempo da solicitação até a última atualização. Tracejado: tempo sem nova atualização.</div>'+
     timeline(s.labs.map(function(l){return {label:l.lab,start:s.solicitacao,end:l.data?(days(l.data,ref)+' d'):'s/ data',points:[{date:l.data,status:l.status,tip:l.lab+': '+ST[l.status].label+'\nÚltima atualização: '+br(l.data)+(l.obs?'\n'+l.obs:'')}]};}),ref,{mode:'study',rowH:38,labelW:120,refLabel:view.version!=null?'Ref.':'Hoje'})+
     '<div style="margin-top:12px">'+legend()+'</div></div>';
-  h+='<div class="card" style="margin-top:16px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div><h3>Laboratórios cotados</h3><div class="cap" style="margin:0">Situação, última atualização e observações</div></div><div style="flex:1"></div>'+(ed?'<button class="btn2 pri" data-act="addLab">+ Incluir laboratório</button>':'')+'</div><div class="scroll" style="margin-top:10px"><table class="t" style="min-width:760px"><thead><tr><th>Laboratório</th><th>Situação</th><th>Última atualização</th><th class="num">Dias</th><th>Observação</th><th class="num">Valor da proposta</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
+  h+='<div class="card" style="margin-top:16px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div><h3>Laboratórios cotados</h3><div class="cap" style="margin:0">Situação, última atualização e observações</div></div><div style="flex:1"></div>'+(ed?'<button class="btn2 pri" data-act="addLab">+ Incluir laboratório</button>':'')+'</div><div class="scroll" style="margin-top:10px"><table class="t" style="min-width:960px"><thead><tr><th>Laboratório</th><th>Situação</th><th>Última atualização</th><th class="num">Dias</th><th>Observação</th><th class="num">Valor da proposta</th><th>Validade da proposta</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
   s.labs.forEach(function(l,i){
     if(ed){
       h+='<tr><td><input class="fld" data-b="l:'+i+':lab" value="'+esc(l.lab)+'" style="min-width:110px"></td><td><select class="fld" data-b="l:'+i+':status">'+KEYS.map(function(k){return '<option value="'+k+'"'+(k===l.status?' selected':'')+'>'+ST[k].label+'</option>';}).join('')+'</select></td>'+
         '<td><input class="fld" type="date" data-b="l:'+i+':data" value="'+esc(l.data||'')+'"></td><td class="num mut">'+(l.data?days(l.data,ref):'')+'</td><td><input class="fld" data-b="l:'+i+':obs" value="'+esc(l.obs||'')+'" placeholder="Observação"></td>'+
-        '<td><input class="fld" type="number" step="0.01" min="0" data-b="l:'+i+':valor" value="'+(l.valor!=null?l.valor:'')+'" placeholder="R$" style="text-align:right;min-width:120px"></td><td><button class="xbtn" data-act="delLab" data-i="'+i+'" title="Remover laboratório">×</button></td></tr>';
+        '<td><input class="fld" type="number" step="0.01" min="0" data-b="l:'+i+':valor" value="'+(l.valor!=null?l.valor:'')+'" placeholder="R$" style="text-align:right;min-width:120px"></td><td><input class="fld" type="date" data-b="l:'+i+':validade" value="'+esc(l.validade||'')+'" style="min-width:140px"></td><td><button class="xbtn" data-act="delLab" data-i="'+i+'" title="Remover laboratório">×</button></td></tr>';
     } else {
       var warn=l.data&&s.solicitacao&&l.data<s.solicitacao;
-      h+='<tr><td><b>'+esc(l.lab)+'</b></td><td>'+stBadge(l.status)+'</td><td>'+br(l.data)+(warn?' <span class="st pendente" data-tip="Data anterior à solicitação. Conferir."><i>!</i>conferir</span>':'')+'</td><td class="num">'+(l.data?days(l.data,ref):'<span class="mut">s/ data</span>')+'</td><td>'+(l.obs?esc(l.obs):'<span class="mut">s/ observação</span>')+'</td><td class="num">'+(l.valor!=null?brl(l.valor):'<span class="mut">s/ proposta</span>')+'</td></tr>';
+      h+='<tr><td><b>'+esc(l.lab)+'</b></td><td>'+stBadge(l.status)+'</td><td>'+br(l.data)+(warn?' <span class="st pendente" data-tip="Data anterior à solicitação. Conferir."><i>!</i>conferir</span>':'')+'</td><td class="num">'+(l.data?days(l.data,ref):'<span class="mut">s/ data</span>')+'</td><td>'+(l.obs?esc(l.obs):'<span class="mut">s/ observação</span>')+'</td><td class="num">'+(l.valor!=null?brl(l.valor):'<span class="mut">s/ proposta</span>')+'</td><td>'+(l.validade?br(l.validade)+(l.validade<todayISO()?' <span class="st bad"><i>!</i>vencida</span>':''):'<span class="mut">s/ validade</span>')+'</td></tr>';
     }
   });
   h+='</tbody></table></div></div>';
@@ -753,6 +754,7 @@ document.addEventListener('change',function(ev){
   else { var l=s.labs[+p[1]]; var f=p[2];
     if(f==='valor') l.valor=v===''?null:Math.round(parseFloat(v)*100)/100;
     else if(f==='data') l.data=v||null;
+    else if(f==='validade') l.validade=v||null;
     else if(f==='obs'){ l.obs=v; if(l.valor==null){var mv=parseMoney(v); if(mv!=null) l.valor=mv;} }
     else l[f]=v; }
   markDirty(); keepScroll(render);
@@ -767,7 +769,7 @@ document.addEventListener('click',function(ev){
   var a=t.dataset.act, i=+t.dataset.i;
   if(a==='addStudy'){var n={id:uid(),nome:'NOVO ESTUDO',apresentacoes:'',classe:'',indicacao:'',referencia:'',companhia:'',solicitacao:todayISO(),labs:labOrder(state).map(function(l){return {lab:l,data:null,status:'pendente',obs:'',valor:null};})}; state.studies.push(n); view.study=n.id; markDirty(); render();}
   else if(a==='delStudy'){var s=curStudy(); confirmBox('Excluir o estudo '+s.nome+'?','O estudo sairá da versão atual, mas continuará registrado nas versões anteriores do histórico.',function(){state.studies=state.studies.filter(function(x){return x!==s;}); view.study=null; markDirty(); render();});}
-  else if(a==='addLab'){curStudy().labs.push({lab:'Novo laboratório',data:todayISO(),status:'analise',obs:'',valor:null}); markDirty(); keepScroll(render);}
+  else if(a==='addLab'){curStudy().labs.push({lab:'Novo laboratório',data:todayISO(),status:'analise',obs:'',valor:null,validade:null}); markDirty(); keepScroll(render);}
   else if(a==='delLab'){var s2=curStudy(); s2.labs.splice(i,1); markDirty(); keepScroll(render);}
   else if(a==='pdfStudy'){ var e=view.version!=null?store.history[view.version]:lastEntry(); var snap=view.version!=null?e.snapshot:(dirty?null:e.snapshot);
     if(!snap){toast('Há alterações não salvas. O PDF usa a última versão salva (v'+e.v+'). Salve uma nova versão para incluí-las.');snap=e.snapshot;}
@@ -935,12 +937,12 @@ function makePDF(entry,opt){
     y+=25;
     secT('Laboratórios cotados',y);
     doc.autoTable({startY:y+2.5,margin:{left:M,right:M,bottom:16,top:30},theme:'striped',rowPageBreak:'avoid',
-      head:[['Laboratório','Situação','Última atualização','Dias desde a atualização','Observação','Valor da proposta']],
-      body:s.labs.map(function(l){return [l.lab,ST[l.status].label,br(l.data),l.data?String(days(l.data,ref)):'s/ data',pdfSafe(l.obs||''),l.valor!=null?brl(l.valor):''];}),
+      head:[['Laboratório','Situação','Última atualização','Dias desde a atualização','Observação','Valor da proposta','Validade da proposta']],
+      body:s.labs.map(function(l){return [l.lab,ST[l.status].label,br(l.data),l.data?String(days(l.data,ref)):'s/ data',pdfSafe(l.obs||''),l.valor!=null?brl(l.valor):'',l.validade?br(l.validade):''];}),
       styles:{fontSize:7.8,cellPadding:1.8,textColor:[15,23,32]},
       headStyles:{fillColor:navy,textColor:[255,255,255],fontSize:7.2},
       alternateRowStyles:{fillColor:[248,249,251]},
-      columnStyles:{0:{fontStyle:'bold',cellWidth:32},1:{cellWidth:40},2:{cellWidth:30},3:{cellWidth:30,halign:'right'},5:{cellWidth:34,halign:'right',fontStyle:'bold'}},
+      columnStyles:{0:{fontStyle:'bold',cellWidth:32},1:{cellWidth:40},2:{cellWidth:30},3:{cellWidth:30,halign:'right'},5:{cellWidth:30,halign:'right',fontStyle:'bold'},6:{cellWidth:26}},
       didParseCell:function(dd){ if(dd.section==='body'&&dd.column.index===1) stCell(dd,s.labs[dd.row.index].status); }
     });
     y=doc.lastAutoTable.finalY+7;
@@ -1052,7 +1054,7 @@ window.addEventListener('beforeunload',function(e){ if(dirty){e.preventDefault()
 <script>
 (function(){
   /* CADEADO PADRÃO DA ESTANTE. Só esta linha muda (o ✎ Editar troca ela). */
-  var GRUPOS_PERMITIDOS = ["PESQUISA CLINICA"];
+  var GRUPOS_PERMITIDOS = ["EQUIVALENCIA"];
   var firebaseConfig = {
     apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
     authDomain: "stinpharma-qualidade.firebaseapp.com",
