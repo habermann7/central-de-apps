@@ -511,9 +511,12 @@ function importFile(file){
   var fr=new FileReader();
   fr.onload=function(){
     try{
-      var wb=XLSX.read(new Uint8Array(fr.result),{type:'array'}), parsed=null, err=null;
-      wb.SheetNames.some(function(n){ try{ parsed=parseRows(XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:null})); return true;}catch(e){err=e;return false;} });
+      var wb=XLSX.read(new Uint8Array(fr.result),{type:'array'}), parsed=null, err=null, nLabs=-1;
+      /* escolhe a aba com mais laboratórios cotados (a aba "Geral" só tem o resumo, sem laboratórios) */
+      wb.SheetNames.forEach(function(n){ try{ var pr=parseRows(XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:null})); var k=pr.studies.reduce(function(a,s){return a+s.labs.length;},0); if(k>nLabs){nLabs=k; parsed=pr;} }catch(e){ err=err||e; } });
       if(!parsed) throw err||new Error('Planilha sem dados reconhecíveis.');
+      if(nLabs===0) throw new Error('Nenhuma aba com laboratórios cotados. Confira se a planilha tem os blocos "Laboratórios / Situação".');
+      if(!state) throw new Error('Os dados do painel ainda não carregaram. Recarregue a página e tente de novo.');
       var old={}; state.studies.forEach(function(s){old[norm(s.nome)]=s.id;});
       parsed.studies.forEach(function(s){ if(old[norm(s.nome)]) s.id=old[norm(s.nome)]; });
       state=parsed; pendingOrigin='Planilha importada ('+file.name+')';
@@ -742,7 +745,7 @@ function render(){
 /* ===================== edição ===================== */
 var draftOffer=false;
 function markDirty(){dirty=true; lsSet(KEY+':draft',JSON.stringify({base:store.history.length,state:state,origin:pendingOrigin}));}
-function curStudy(){return state.studies.filter(function(s){return s.id===view.study;})[0];}
+function curStudy(){ if(!state) return undefined; return state.studies.filter(function(s){return s.id===view.study;})[0];}
 document.addEventListener('change',function(ev){
   var el=ev.target, b=el.dataset&&el.dataset.b; if(!b||!canEdit()) return;
   var s=curStudy(); if(!s) return; var p=b.split(':'), v=el.value;
@@ -1018,7 +1021,12 @@ function carregaBanco(){
   }).then(function(v){
     aplicaBanco(v); checkDraft(); render();
     ref.on('value',function(s){ var nv=s.val(); if(!nv||!nv.current||dirty||editMode) return; aplicaBanco(nv); render(); });
-  }).catch(function(){ toast('Não foi possível carregar os dados. Verifique seu acesso e recarregue a página.',true); });
+  }).catch(function(err){
+    var m=String((err&&err.message)||err||'');
+    var motivo=/permission|denied/i.test(m)?'Seu usuário não tem permissão de leitura nos dados deste app. Peça para o admin conferir o grupo e se as regras do Firebase foram publicadas.':'Não consegui carregar os dados agora. Recarregue a página.';
+    document.getElementById('app').innerHTML='<div class="empty" style="padding:40px 20px;text-align:center"><b>Os dados não carregaram.</b><br>'+esc(motivo)+'<br><small style="color:var(--muted)">Detalhe técnico: '+esc(m)+'</small></div>';
+    toast('Dados não carregados. Veja a mensagem na tela.',true);
+  });
 }
 function salvarNoBanco(e){
   var ref=firebase.database().ref('eqEstudos');
@@ -1044,7 +1052,7 @@ window.addEventListener('beforeunload',function(e){ if(dirty){e.preventDefault()
 <script>
 (function(){
   /* CADEADO PADRÃO DA ESTANTE. Só esta linha muda (o ✎ Editar troca ela). */
-  var GRUPOS_PERMITIDOS = ["PESQUISA CLINICA"];
+  var GRUPOS_PERMITIDOS = ["EQUIVALENCIA"];
   var firebaseConfig = {
     apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
     authDomain: "stinpharma-qualidade.firebaseapp.com",
