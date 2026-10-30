@@ -1332,6 +1332,7 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
       document.getElementById('sourcePill').textContent = `${file.name} · carregado às ${hh}:${mm} (${records.length} registros)`;
       document.getElementById('sourcePill').classList.add('custom');
       showUploadStatus('', false);
+      salvaDados(file.name, now, records);
     }catch(err){
       showUploadStatus('Erro ao ler a planilha: ' + err.message, true);
     }
@@ -1341,7 +1342,41 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
   e.target.value = '';
 });
 
-mostrarInicio();
+/* ---------- Guarda a última planilha no navegador ----------
+   Assim, ao atualizar a página (F5) os dados continuam. Vale só para este navegador/computador. */
+const CHAVE_DADOS = 'painelEntregas.ultimaPlanilha.v1';
+function salvaDados(nomeArq, quando, records){
+  try{
+    localStorage.setItem(CHAVE_DADOS, JSON.stringify({nome: nomeArq, quando: quando.getTime(), records: records}));
+    document.getElementById('sourcePill').title = 'Dados guardados neste navegador';
+  }catch(err){
+    showUploadStatus('Painel carregado, mas não deu para guardar no navegador (planilha grande ou navegador bloqueando). Ao atualizar a página será preciso carregar de novo.', true);
+  }
+}
+function restauraDados(){
+  try{
+    const txt = localStorage.getItem(CHAVE_DADOS);
+    if(!txt) return false;
+    const salvo = JSON.parse(txt);
+    if(!salvo || !Array.isArray(salvo.records) || !salvo.records.length) return false;
+    ALL = salvo.records;
+    DEFAULT_DATA = salvo.records;
+    dadosCarregados = true;
+    refreshDateBounds();
+    setActiveChip(document.querySelector('.chip-btn[data-range="all"]'));
+    applyFilters();
+    const d = new Date(salvo.quando);
+    const hh = String(d.getHours()).padStart(2,'0'), mm = String(d.getMinutes()).padStart(2,'0');
+    const pill = document.getElementById('sourcePill');
+    pill.textContent = `${salvo.nome} · carregado às ${hh}:${mm} (${salvo.records.length} registros)`;
+    pill.classList.add('custom');
+    return true;
+  }catch(err){
+    return false;
+  }
+}
+
+if(!restauraDados()) mostrarInicio();
 </script>
 
 </body>
