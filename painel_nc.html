@@ -1332,18 +1332,19 @@ function resumoSituacao(list,prevList,rotAtual,rotPrev){
   const out=[`No período ${rotAtual} foram registradas ${INT(list.length)} ${list.length===1?'NC':'NCs'}, com ${INT(un)} itens${val?` e valor de ${BRL(val)}`:''}.`];
   if(prevList){
     const p=pctDe(list.length,prevList.length);
-    out.push(p==null||list.length===prevList.length?`O número de NCs ficou igual ao período anterior (${INT(prevList.length)}).`:`As NCs ${p>0?'aumentaram':'diminuíram'} ${Math.abs(p).toLocaleString('pt-BR',{maximumFractionDigits:1})}% em relação ao período anterior (${rotPrev}), de ${INT(prevList.length)} para ${INT(list.length)}.`);
+    if(!prevList.length) out.push(`Não há NCs registradas no período anterior (${rotPrev}) para comparar.`);
+    else out.push(list.length===prevList.length?`O número de NCs ficou igual ao período anterior (${INT(prevList.length)}).`:`As NCs ${p>0?'aumentaram':'diminuíram'} ${Math.abs(p).toLocaleString('pt-BR',{maximumFractionDigits:1})}% em relação ao período anterior (${rotPrev}), de ${INT(prevList.length)} para ${INT(list.length)}.`);
   }
   const top=agg(list,n=>[[n.motivo,0]],'qtd')[0];
   if(top)out.push(`O motivo mais frequente foi "${top.k}", com ${(top.qtd/list.length*100).toLocaleString('pt-BR',{maximumFractionDigits:0})}% das NCs.`);
   return out.join(' ');
 }
 function diaBarsHtml(list,de,ate){
-  const ini=(de&&de>addDays(ate,-59))?de:addDays(ate,-59);
+  const LIM=366; const ini=(de&&de>addDays(ate,-(LIM-1)))?de:addDays(ate,-(LIM-1));
   const cont=new Map(); list.forEach(n=>cont.set(n.data,(cont.get(n.data)||0)+1));
   const dias=[]; for(let d=ini; d<=ate; d=addDays(d,1)) dias.push(d);
   const mx=Math.max(1,...dias.map(d=>cont.get(d)||0));
-  return `<div class="evo dia" role="img" aria-label="NCs por dia">${dias.map((d,i)=>{const q=cont.get(d)||0;return `<div class="col" title="${brDate(d)}: ${q} NC(s)"><em>${q||''}</em><span class="b" style="--h:${(q/mx*100).toFixed(1)}%;--i:${i}"></span><small>${d.slice(8)}/${d.slice(5,7)}</small></div>`}).join('')}</div>`;
+  return `<div class="evo dia" role="img" aria-label="NCs por dia">${dias.map((d,i)=>{const q=cont.get(d)||0;return `<div class="col" title="${brDate(d)}: ${q} NC(s)"><em>${q||''}</em><span class="b" style="--h:${(q/mx*100).toFixed(1)}%;--i:${i}"></span><small>${i%3===0?d.slice(8)+'/'+d.slice(5,7):''}</small></div>`}).join('')}</div>`;
 }
 function resumoDiarioCard(list,de,ate){
   let prevList=null,rotPrev='';
@@ -1352,7 +1353,7 @@ function resumoDiarioCard(list,de,ate){
   return `<div class="card panel wide"><div class="ph"><div><h3>Resumo diário</h3><p>Como estão as NCs dia a dia e um resumo do período.</p></div></div>
     <p class="resumo-txt">${esc(resumoSituacao(list,prevList,rotAtual,rotPrev))}</p>
     ${list.length?diaBarsHtml(list,de,ate):'<p class="mut">Sem NCs no período.</p>'}
-    <p class="mut" style="font-size:12px;margin-top:8px">Barras dos últimos 60 dias do período.</p></div>`;
+    <p class="mut" style="font-size:12px;margin-top:8px">Uma barra por dia, do início ao fim do período. Use a barra de rolagem para ver os dias antigos.</p></div>`;
 }
 function renderAnalise(){
   const ref=addMes(today().slice(0,7),-1), prevM=addMes(ref,-1);
