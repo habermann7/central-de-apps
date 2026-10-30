@@ -272,6 +272,16 @@ dialog.sheet.wide{width:min(880px,100vw)}
 .split i{display:block;background:var(--bar);transition:width 500ms var(--ease)}
 .split i+i{background:var(--barDim)}
 .dg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.resumo-txt{font-size:14.5px;line-height:1.6;max-width:90ch;margin:4px 0 0}
+.dg>*{min-width:0}
+.cmp-tab{max-height:none;min-height:0;overflow-x:auto;overflow-y:visible}
+.cmp-tab table{width:100%;min-width:0;border-collapse:collapse}
+.cmp-tab td{min-width:0!important}
+.cmp-tab th,.cmp-tab td{padding:9px 12px;white-space:nowrap}
+.evo{overflow-x:auto}
+.evo.dia{overflow-x:auto;gap:4px}
+.evo.dia .col{flex:0 0 22px;min-width:22px}
+.evo.dia .col small{font-size:10.5px}
 .panel{padding:20px}
 .panel.wide{grid-column:1/-1}
 .ph{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:14px;flex-wrap:wrap}
@@ -367,6 +377,7 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
       <button data-go="lancar"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Lançar NC</button>
       <button data-go="planilha"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 10h17M9.5 10v9.5"/></svg>Planilha</button>
       <button data-go="dash"><svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Dashboard</button>
+      <button data-go="analise"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Análise</button>
       <button data-go="cad" id="navCad"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>Cadastros</button>
     </nav>
     <a class="btn ghost sm" href="./index.html" style="text-decoration:none;justify-content:flex-start;margin-bottom:6px" id="backLink">← Central de Apps</a><div class="sp"></div>
@@ -465,6 +476,12 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
       </div>
       <div class="kpis" id="kpis"></div>
       <div class="dg" id="dgrid"></div>
+    </section>
+
+    <!-- ANÁLISE -->
+    <section id="v-analise" class="view">
+      <div class="vh"><div><h2>Análise</h2><p id="aSub"></p></div></div>
+      <div class="dg" id="agrid"></div>
     </section>
 
     <!-- CADASTROS -->
@@ -578,6 +595,7 @@ function afterData(cfgChanged){
   renderLast();renderPdfBtn();
   if(S.view==='planilha')renderTable();
   if(S.view==='dash')renderDash(false);
+  if(S.view==='analise')renderAnalise();
   if(S.view==='cad')renderCad();
   if(sheetId&&$('#sheet').open&&!(sheetTab==='form'&&fvDirty)){const n=S.ncs.find(x=>x.id===sheetId);if(n)renderSheet(n,sheetAnx);else closeSheet()}
 }
@@ -587,7 +605,7 @@ function startFirebaseListeners(){
 }
 
 /* ============================ navegação ============================ */
-const VIEWS=['lancar','planilha','dash','cad'];
+const VIEWS=['lancar','planilha','dash','analise','cad'];
 function go(v,opts={}){
   if(v==='lancar'&&!canWrite())v='dash';
   if(v==='cad'&&!canWrite())v='dash';
@@ -596,6 +614,7 @@ function go(v,opts={}){
   $$('.nav button').forEach(b=>{if(b.dataset.go===v)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
   if(v==='planilha')renderTable();
   if(v==='dash')renderDash(true);
+  if(v==='analise')renderAnalise();
   if(v==='cad')renderCad();
   if(v==='lancar')renderLast();
   history.replaceState(null,'','#'+v);
@@ -1290,6 +1309,91 @@ function barsHtml(rows,m,total,id){
   return `<div class="bars">${vis.map((r,i)=>`<button class="bar" data-f="${id}" data-v="${esc(r.k)}" style="--i:${i}" title="Ver na planilha"><span class="n">${esc(r.k)}</span><span class="tr"><i style="--w:${(r[m]/max*100).toFixed(1)}%"></i></span><span class="v">${fmt(r)}${m==='qtd'?` <small>${(r.qtd/total*100).toFixed(0)}%</small>`:''}</span></button>`).join('')}</div>`
     +(rows.length>8?`<button class="btn ghost sm more" data-more="${id}">${D.more[id]?'Ver menos':`Ver mais (${Math.min(25,rows.length)-8})`}</button>`:'');
 }
+/* ============ Resumo diário e Análise (trazidos do app de indicadores) ============ */
+const LIMITE_ESTAVEL=10; // variação abaixo disso (%) = tendência "estável"
+const pctDe=(a,b)=>b?(a-b)/b*100:null;
+const fmtPct=x=>x==null?'—':(x>0?'+':'')+x.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';
+const addMes=(ym,n)=>{const [y,m]=ym.split('-').map(Number);const d=new Date(y,m-1+n,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
+const mesDe=n=>n.data?n.data.slice(0,7):'';
+function contaMes(list,ym){return list.filter(n=>mesDe(n)===ym).length;}
+function tendencia(meses){ // meses: [{k,qtd}] em ordem
+  const n=meses.length; if(n<3)return {status:'insuf',n};
+  let sx=0,sy=0; meses.forEach((m,i)=>{sx+=i;sy+=m.qtd}); const mx=sx/n,my=sy/n;
+  let sxy=0,sxx=0; meses.forEach((m,i)=>{sxy+=(i-mx)*(m.qtd-my);sxx+=(i-mx)*(i-mx)});
+  const slope=sxx?sxy/sxx:0, inter=my-slope*mx;
+  const change=my?slope*(n-1)/my*100:0;
+  const status=Math.abs(change)<LIMITE_ESTAVEL?'estavel':change>0?'aumento':'reducao';
+  return {status,change,n,fitStart:Math.max(0,inter),fitEnd:Math.max(0,inter+slope*(n-1))};
+}
+const palavraTend=t=>t.status==='aumento'?'Aumentando':t.status==='reducao'?'Diminuindo':t.status==='estavel'?'Estável':'Sem histórico suficiente';
+function resumoSituacao(list,prevList,rotAtual,rotPrev){
+  if(!list.length)return 'Não há NCs para o período escolhido.';
+  const un=list.reduce((a,n)=>a+n.itens.reduce((x,i)=>x+i.q,0),0), val=list.reduce((a,n)=>a+(+n.valorNF||0),0);
+  const out=[`No período ${rotAtual} foram registradas ${INT(list.length)} ${list.length===1?'NC':'NCs'}, com ${INT(un)} itens${val?` e valor de ${BRL(val)}`:''}.`];
+  if(prevList){
+    const p=pctDe(list.length,prevList.length);
+    out.push(p==null||list.length===prevList.length?`O número de NCs ficou igual ao período anterior (${INT(prevList.length)}).`:`As NCs ${p>0?'aumentaram':'diminuíram'} ${Math.abs(p).toLocaleString('pt-BR',{maximumFractionDigits:1})}% em relação ao período anterior (${rotPrev}), de ${INT(prevList.length)} para ${INT(list.length)}.`);
+  }
+  const top=agg(list,n=>[[n.motivo,0]],'qtd')[0];
+  if(top)out.push(`O motivo mais frequente foi "${top.k}", com ${(top.qtd/list.length*100).toLocaleString('pt-BR',{maximumFractionDigits:0})}% das NCs.`);
+  return out.join(' ');
+}
+function diaBarsHtml(list,de,ate){
+  const ini=(de&&de>addDays(ate,-59))?de:addDays(ate,-59);
+  const cont=new Map(); list.forEach(n=>cont.set(n.data,(cont.get(n.data)||0)+1));
+  const dias=[]; for(let d=ini; d<=ate; d=addDays(d,1)) dias.push(d);
+  const mx=Math.max(1,...dias.map(d=>cont.get(d)||0));
+  return `<div class="evo dia" role="img" aria-label="NCs por dia">${dias.map((d,i)=>{const q=cont.get(d)||0;return `<div class="col" title="${brDate(d)}: ${q} NC(s)"><em>${q||''}</em><span class="b" style="--h:${(q/mx*100).toFixed(1)}%;--i:${i}"></span><small>${d.slice(8)}/${d.slice(5,7)}</small></div>`}).join('')}</div>`;
+}
+function resumoDiarioCard(list,de,ate){
+  let prevList=null,rotPrev='';
+  if(de){const len=Math.round((new Date(ate)-new Date(de))/864e5)+1;const pDe=addDays(de,-len),pAte=addDays(de,-1);prevList=S.ncs.filter(n=>n.data>=pDe&&n.data<=pAte);rotPrev=brDate(pDe)+' a '+brDate(pAte);}
+  const rotAtual=de?brDate(de)+' a '+brDate(ate):'todo o histórico até '+brDate(ate);
+  return `<div class="card panel wide"><div class="ph"><div><h3>Resumo diário</h3><p>Como estão as NCs dia a dia e um resumo do período.</p></div></div>
+    <p class="resumo-txt">${esc(resumoSituacao(list,prevList,rotAtual,rotPrev))}</p>
+    ${list.length?diaBarsHtml(list,de,ate):'<p class="mut">Sem NCs no período.</p>'}
+    <p class="mut" style="font-size:12px;margin-top:8px">Barras dos últimos 60 dias do período.</p></div>`;
+}
+function renderAnalise(){
+  const ref=addMes(today().slice(0,7),-1), prevM=addMes(ref,-1);
+  $('#aSub').textContent=`Último mês fechado: ${monthLbl(ref)} · comparado com ${monthLbl(prevM)}`;
+  // tendência: últimos 12 meses fechados, a partir do primeiro mês com dados
+  const primeiro=S.ncs.map(mesDe).filter(Boolean).sort()[0];
+  let ini=addMes(ref,-11); if(primeiro&&primeiro>ini)ini=primeiro;
+  const meses=[]; for(let k=ini;k<=ref;k=addMes(k,1))meses.push({k,qtd:contaMes(S.ncs,k)});
+  const t=tendencia(meses), mx=Math.max(1,...meses.map(m=>m.qtd));
+  const tTxt=t.status==='insuf'?'Ainda não há histórico suficiente (pelo menos 3 meses) para indicar tendência.'
+    :`Com base em ${t.n} meses de histórico, a tendência é de ${t.status==='aumento'?'aumento':t.status==='reducao'?'redução':'estabilidade'} (a linha de tendência vai de ${t.fitStart.toLocaleString("pt-BR",{maximumFractionDigits:1})} para ${t.fitEnd.toLocaleString("pt-BR",{maximumFractionDigits:1})} NCs por mês).`;
+  // comparação mês fechado × anterior
+  const cur=S.ncs.filter(n=>mesDe(n)===ref), prev=S.ncs.filter(n=>mesDe(n)===prevM);
+  const soma=l=>({n:l.length,u:l.reduce((a,n)=>a+n.itens.reduce((x,i)=>x+i.q,0),0),v:l.reduce((a,n)=>a+(+n.valorNF||0),0)});
+  const a=soma(cur), b=soma(prev), temVal=S.ncs.some(n=>+n.valorNF>0);
+  const linha=(l,x,y,f)=>`<tr><td>${l}</td><td class="r num">${f(x)}</td><td class="r num">${f(y)}</td><td class="r num">${fmtPct(pctDe(x,y))}</td></tr>`;
+  const mA=agg(cur,n=>[[n.motivo,0]],'qtd'), mB=agg(prev,n=>[[n.motivo,0]],'qtd');
+  const chaves=[...new Set([...mA.map(r=>r.k),...mB.map(r=>r.k)])];
+  const qA=k=>(mA.find(r=>r.k===k)||{qtd:0}).qtd, qB=k=>(mB.find(r=>r.k===k)||{qtd:0}).qtd;
+  const motTab=chaves.sort((x,y)=>qA(y)-qA(x)||qB(y)-qB(x)).slice(0,8).map(k=>linha(esc(k),qA(k),qB(k),INT)).join('');
+  const resumoCmp=resumoSituacao(cur,prev,monthLbl(ref),monthLbl(prevM));
+  // rankings (todo o histórico)
+  const rank=(titulo,fn)=>{const rows=agg(S.ncs,fn,'qtd').slice(0,10);const mxr=Math.max(1,...rows.map(r=>r.qtd));return `<div class="card panel"><div class="ph"><div><h3>${titulo}</h3><p>Top 10 por número de NCs, todo o histórico.</p></div></div>${rows.length?`<div class="bars">${rows.map((r,i)=>`<div class="bar" style="--i:${i}"><span class="n">${esc(r.k)}</span><span class="tr"><i style="--w:${(r.qtd/mxr*100).toFixed(1)}%"></i></span><span class="v">${INT(r.qtd)}</span></div>`).join('')}</div>`:'<p class="mut">Sem dados.</p>'}</div>`;};
+  $('#agrid').innerHTML=`
+   <div class="card panel wide"><div class="ph"><div><h3>Tendência</h3><p>Quantidade de NCs por mês. A linha de tendência mostra o sentido geral.</p></div><span class="chip">${palavraTend(t)}${t.status==='estavel'||t.status==='insuf'?'':' '+fmtPct(t.change)}</span></div>
+     <div class="evo" role="img" aria-label="NCs por mês">${meses.map((m,i)=>`<div class="col"><em>${m.qtd}</em><span class="b" style="--h:${(m.qtd/mx*100).toFixed(1)}%;--i:${i}"></span><small>${monthLbl(m.k)}</small></div>`).join('')}</div>
+     <p class="resumo-txt" style="margin-top:14px">${esc(tTxt)}</p>
+     <p class="mut" style="font-size:12px">Variação "estável" quando fica abaixo de ${LIMITE_ESTAVEL}% no período.</p></div>
+   <div class="card panel wide"><div class="ph"><div><h3>Resumo da situação</h3><p>${esc(monthLbl(ref))} × ${esc(monthLbl(prevM))}</p></div></div><p class="resumo-txt">${esc(resumoCmp)}</p></div>
+   <div class="card panel wide"><div class="ph"><div><h3>Comparação de períodos</h3><p>Último mês fechado contra o mês anterior.</p></div></div>
+     <div class="card tw cmp-tab"><table><thead><tr><th></th><th class="r">${esc(monthLbl(ref))}</th><th class="r">${esc(monthLbl(prevM))}</th><th class="r">Variação</th></tr></thead><tbody>
+       ${linha('NCs',a.n,b.n,INT)}${linha('Itens devolvidos',a.u,b.u,INT)}${temVal?linha('Valor financeiro',a.v,b.v,BRL):''}
+     </tbody></table></div>
+     <h4 style="margin:16px 0 8px;font-size:14px">Motivos</h4>
+     ${chaves.length?`<div class="card tw cmp-tab"><table><thead><tr><th>Motivo</th><th class="r">${esc(monthLbl(ref))}</th><th class="r">${esc(monthLbl(prevM))}</th><th class="r">Variação</th></tr></thead><tbody>${motTab}</tbody></table></div>`:'<p class="mut">Sem NCs nos dois meses.</p>'}
+   </div>
+   ${rank('Motivos mais frequentes',n=>[[n.motivo,0]])}
+   ${rank('Áreas com mais NCs',n=>[[n.area||areaOf(n.motivo)||'Sem área',0]])}
+   ${rank('Produtos mais devolvidos',n=>n.itens.map(i=>[i.n,0]))}
+   ${rank('Vendedores com mais NCs',n=>[[n.vendedor,0]])}`;
+}
 function renderDash(animate){
   const D=S.dash,{de,ate}=dashRange();
   $$('#dRange button').forEach(b=>b.setAttribute('aria-pressed',D.range===b.dataset.r));
@@ -1311,6 +1415,7 @@ function renderDash(animate){
   const seg=(id,a,b,c)=>`<div class="seg" data-m="${id}">${[[a,'qtd'],[b,c]].map(([l,v])=>`<button data-v="${v}" aria-pressed="${D.m[id]===v}">${l}</button>`).join('')}</div>`;
   const months=agg(list,n=>[[n.data.slice(0,7),0]],'qtd').sort((a,b)=>a.k.localeCompare(b.k)),mx=Math.max(...months.map(x=>x.qtd),1);
   $('#dgrid').innerHTML=`
+   ${resumoDiarioCard(list,de,ate)}
    <div class="card panel"><div class="ph"><div><h3>Principais motivos</h3><p>${tot?`Os 3 maiores somam ${pct(top3)}% das NCs.`:''}</p></div>${seg('motivo','NCs','Valor','val')}</div>${barsHtml(mot,D.m.motivo,tot||1,'motivo')}</div>
    <div class="card panel"><div class="ph"><div><h3>Por área</h3><p>De onde vem o problema: transporte, expedição, qualidade ou cliente.</p></div>${seg('area','NCs','Valor','val')}</div>${barsHtml(are,D.m.area,tot||1,'area')}</div>
    <div class="card panel"><div class="ph"><div><h3>Produtos mais devolvidos</h3><p>NCs em que o produto aparece, ou unidades.</p></div>${seg('produto','NCs','Unidades','un')}</div>${barsHtml(pro,D.m.produto,tot||1,'produto')}</div>
