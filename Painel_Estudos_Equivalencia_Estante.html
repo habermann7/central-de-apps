@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estudos de Equivalência · Painel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f4f6; --surface:#ffffff; --surface-2:#f8f9fb; --surface-3:#eef1f5;
+  --ink:#0f1720; --ink-2:#4b5563; --muted:#848b96; --line:#e3e6eb; --line-2:#d3d8df;
+  --brand:#0f2a44; --brand-2:#1d4e89; --accent:#2a78d6; --accent-ink:#1c5cab;
+  --good:#0ca30c; --good-ink:#0a6e0a; --good-bg:#e7f5e7;
+  --info:#2a78d6; --info-ink:#1c5cab; --info-bg:#e6f0fb;
+  --warn:#fab219; --warn-ink:#7a5000; --warn-bg:#fdf3dc;
+  --crit:#d03b3b; --crit-ink:#a72b2b; --crit-bg:#fbe9e9;
+  --shadow:0 1px 2px rgba(15,23,32,.04),0 4px 16px rgba(15,23,32,.05);
+  --radius:14px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d0f12; --surface:#16191e; --surface-2:#1b1f25; --surface-3:#222731;
+    --ink:#f3f5f8; --ink-2:#c3c8d0; --muted:#8a919c; --line:#2a2f37; --line-2:#363c46;
+    --brand:#0b1e31; --brand-2:#3987e5; --accent:#3987e5; --accent-ink:#86b6ef;
+    --good-ink:#6fd36f; --good-bg:rgba(12,163,12,.16);
+    --info-ink:#86b6ef; --info-bg:rgba(57,135,229,.16);
+    --warn-ink:#fbc85a; --warn-bg:rgba(250,178,25,.15);
+    --crit-ink:#f08a8a; --crit-bg:rgba(208,59,59,.18);
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d0f12; --surface:#16191e; --surface-2:#1b1f25; --surface-3:#222731;
+  --ink:#f3f5f8; --ink-2:#c3c8d0; --muted:#8a919c; --line:#2a2f37; --line-2:#363c46;
+  --brand:#0b1e31; --brand-2:#3987e5; --accent:#3987e5; --accent-ink:#86b6ef;
+  --good-ink:#6fd36f; --good-bg:rgba(12,163,12,.16);
+  --info-ink:#86b6ef; --info-bg:rgba(57,135,229,.16);
+  --warn-ink:#fbc85a; --warn-bg:rgba(250,178,25,.15);
+  --crit-ink:#f08a8a; --crit-bg:rgba(208,59,59,.18);
+  --shadow:0 1px 2px rgba(0,0,0,.3);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:Manrope,Inter,system-ui,sans-serif;margin:0;letter-spacing:-.01em}
+button{font:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--ink)}
+[hidden]{display:none!important}
+
+/* top bar */
+.topbar{background:var(--brand);color:#fff;padding:14px 28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;position:sticky;top:0;z-index:30}
+.brand{display:flex;align-items:center;gap:14px;flex:1 1 360px;min-width:0}
+.logo{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,#2a78d6,#1baf7a);display:grid;place-items:center;font:800 15px Manrope,Inter,system-ui,sans-serif;letter-spacing:.02em;flex:none}
+.t1{font:800 18px/1.2 Manrope,Inter,system-ui,sans-serif}
+.t2{font-size:12px;opacity:.75;max-width:720px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;border-radius:9px;padding:8px 13px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.btn:hover{background:rgba(255,255,255,.16)}
+.btn.primary{background:#2a78d6;border-color:#2a78d6}
+.btn.primary:hover{background:#256abf}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.on{background:#fab219;border-color:#fab219;color:#1a1300}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:4px 11px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill.ver{background:rgba(255,255,255,.12)}
+.pill.dirty{background:#fab219;color:#1a1300}
+.pill.ro{background:rgba(255,255,255,.12)}
+.menu{position:relative}
+.menu-list{position:absolute;right:0;top:calc(100% + 6px);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:6px;min-width:290px;z-index:40}
+.menu-list button{display:block;width:100%;text-align:left;background:none;border:0;padding:9px 11px;border-radius:8px;color:var(--ink)}
+.menu-list button small{display:block;color:var(--muted);font-size:11.5px}
+.menu-list button:hover{background:var(--surface-3)}
+
+/* tabs */
+.tabs{display:flex;gap:4px;padding:0 28px;background:var(--surface);border-bottom:1px solid var(--line);overflow-x:auto;position:sticky;top:70px;z-index:20}
+.tabs button{background:none;border:0;padding:14px 14px 12px;color:var(--ink-2);font-weight:600;border-bottom:2.5px solid transparent;white-space:nowrap}
+.tabs button.on{color:var(--ink);border-color:var(--accent)}
+.tabs .count{background:var(--surface-3);border-radius:99px;padding:1px 8px;font-size:11.5px;margin-left:4px}
+
+main{max-width:1320px;margin:0 auto;padding:24px 28px 64px}
+.banner{max-width:1320px;margin:16px auto 0;padding:0 28px}
+.banner .b{display:flex;gap:12px;align-items:center;flex-wrap:wrap;border-radius:12px;padding:11px 16px;font-weight:500}
+.banner .b.info{background:var(--info-bg);color:var(--info-ink)}
+.banner .b.warn{background:var(--warn-bg);color:var(--warn-ink)}
+.banner .b .sp{flex:1}
+.lnk{background:none;border:0;color:inherit;text-decoration:underline;font-weight:700;padding:0}
+
+.sec-title{display:flex;align-items:baseline;gap:12px;margin:30px 0 12px}
+.sec-title h2{font-size:17px}
+.sec-title .sub{color:var(--muted);font-size:12.5px}
+.sec-title .sp{flex:1}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+.card h3{font-size:14.5px;margin-bottom:2px}
+.card .cap{color:var(--muted);font-size:12.5px;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:16px}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi .l{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.kpi .v{font:800 30px/1.15 Manrope,Inter,system-ui,sans-serif;margin-top:6px;letter-spacing:-.02em}
+.kpi .v small{font-size:14px;color:var(--muted);font-weight:700;margin-left:3px}
+.kpi .s{font-size:12.5px;color:var(--ink-2);margin-top:4px}
+.kpi .bar{position:absolute;left:0;top:0;bottom:0;width:4px}
+
+/* status */
+.st{display:inline-flex;align-items:center;gap:6px;border-radius:7px;padding:3px 9px;font-size:12px;font-weight:600;white-space:nowrap}
+.st i{font-style:normal;font-weight:800;width:15px;height:15px;border-radius:50%;display:inline-grid;place-items:center;font-size:9.5px;color:#fff;flex:none}
+.st.proposta{background:var(--good-bg);color:var(--good-ink)} .st.proposta i{background:var(--good)}
+.st.analise{background:var(--info-bg);color:var(--info-ink)} .st.analise i{background:var(--info)}
+.st.pendente{background:var(--warn-bg);color:var(--warn-ink)} .st.pendente i{background:var(--warn);color:#3a2700}
+.st.declinou{background:var(--crit-bg);color:var(--crit-ink)} .st.declinou i{background:var(--crit)}
+.health{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;border-radius:99px;padding:4px 11px}
+.health:before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.health.good{background:var(--good-bg);color:var(--good-ink)}
+.health.info{background:var(--info-bg);color:var(--info-ink)}
+.health.warn{background:var(--warn-bg);color:var(--warn-ink)}
+.health.crit{background:var(--crit-bg);color:var(--crit-ink)}
+.chip{display:inline-flex;align-items:center;border:1px solid var(--line-2);border-radius:99px;padding:3px 10px;font-size:12px;color:var(--ink-2);font-weight:500;white-space:nowrap}
+
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12.5px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend b{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+/* stacked bar */
+.stack{display:flex;gap:2px;height:22px;border-radius:6px;overflow:hidden;background:var(--surface-3)}
+.stack div{display:grid;place-items:center;color:#fff;font-size:11.5px;font-weight:700;min-width:0}
+.stack .s-pendente{color:#3a2700}
+.stack.sm{height:10px;border-radius:4px}
+.stack.sm div{font-size:0}
+.srow{display:grid;grid-template-columns:150px 1fr 54px;gap:12px;align-items:center;padding:9px 0;border-bottom:1px dashed var(--line)}
+.srow:last-child{border-bottom:0}
+.srow .n{font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srow .t{font-size:12px;color:var(--muted);text-align:right}
+
+/* donut */
+.donut-wrap{display:flex;align-items:center;gap:28px;flex-wrap:wrap}
+.donut-legend{display:grid;gap:10px;flex:1;min-width:200px}
+.dl{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;font-size:13px}
+.dl .pct{color:var(--muted);font-size:12px;width:40px;text-align:right}
+.dl .num{font-weight:700}
+
+/* study cards */
+.scard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;display:flex;flex-direction:column;gap:12px;cursor:pointer;transition:border-color .15s,transform .15s}
+.scard:hover{border-color:var(--accent);transform:translateY(-1px)}
+.scard .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.scard h3{font-size:17px}
+.scard .ref{font-size:12.5px;color:var(--ink-2)}
+.scard .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.scard .nums .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.scard .nums .v{font:800 17px Manrope,Inter,system-ui,sans-serif}
+.scard .go{font-size:12.5px;font-weight:600;color:var(--accent-ink)}
+
+/* matrix */
+.scroll{overflow-x:auto}
+.matrix{display:grid;gap:6px;min-width:720px}
+.matrix .h{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;padding:2px 4px}
+.matrix .rn{font-weight:700;font-size:13px;display:flex;flex-direction:column;justify-content:center;padding:4px;cursor:pointer}
+.matrix .rn small{font-weight:500;color:var(--muted);font-size:11.5px}
+.mcell{border-radius:9px;padding:9px 10px;display:flex;flex-direction:column;gap:3px;min-height:58px;border:1px solid transparent}
+.mcell .a{display:flex;align-items:center;gap:6px;font-weight:700;font-size:12.5px}
+.mcell .a i{font-style:normal;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;font-size:9.5px;color:#fff;flex:none}
+.mcell .d{font-size:11.5px;opacity:.85}
+.mcell.proposta{background:var(--good-bg);color:var(--good-ink)} .mcell.proposta i{background:var(--good)}
+.mcell.analise{background:var(--info-bg);color:var(--info-ink)} .mcell.analise i{background:var(--info)}
+.mcell.pendente{background:var(--warn-bg);color:var(--warn-ink)} .mcell.pendente i{background:var(--warn);color:#3a2700}
+.mcell.declinou{background:var(--crit-bg);color:var(--crit-ink)} .mcell.declinou i{background:var(--crit)}
+.mcell.vazio{background:var(--surface-2);color:var(--muted);border:1px dashed var(--line-2)}
+
+/* alerts */
+.alerts{display:grid;gap:8px}
+.al{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:11px 13px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);font-size:13px}
+.al .ic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:12px;color:#fff}
+.al.crit .ic{background:var(--crit)} .al.warn .ic{background:var(--warn);color:#3a2700} .al.info .ic{background:var(--muted)}
+.al b{font-weight:700}
+.al .meta{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:700}
+
+/* svg charts */
+svg text{font-family:Inter,sans-serif}
+.tl{width:100%;height:auto;display:block;min-width:720px}
+.tl .lab{font-size:13px;font-weight:700;fill:var(--ink)}
+.tl .labs{font-size:11px;fill:var(--muted)}
+.tl .tick{font-size:11px;fill:var(--muted)}
+.tl .grid{stroke:var(--line);stroke-width:1}
+.tl .track{stroke:var(--surface-3);stroke-width:10;stroke-linecap:round}
+.tl .fill{stroke:var(--accent);stroke-opacity:.28;stroke-width:10;stroke-linecap:round}
+.tl .today{stroke:var(--ink-2);stroke-width:1.2;stroke-dasharray:4 4}
+.tl .todayt{font-size:11px;font-weight:700;fill:var(--ink-2)}
+.tl .dot{stroke:var(--surface);stroke-width:2.5}
+.tl .start{fill:var(--surface);stroke:var(--ink-2);stroke-width:2}
+.tl .stale{stroke:var(--line-2);stroke-width:2;stroke-dasharray:3 4}
+.tl .resp{stroke-width:3;stroke-linecap:round}
+.tl .end{font-size:11.5px;fill:var(--ink-2);font-weight:600}
+.donut text{fill:var(--ink)}
+
+/* studies tab */
+.selector{display:flex;gap:8px;flex-wrap:wrap}
+.selector button{border:1px solid var(--line-2);background:var(--surface);color:var(--ink);border-radius:11px;padding:9px 14px;font-weight:700;display:inline-flex;align-items:center;gap:9px}
+.selector button.on{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 20%,transparent)}
+.selector button .dot{width:8px;height:8px;border-radius:50%}
+.selector button.add{border-style:dashed;color:var(--accent-ink)}
+.shead{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin:22px 0 16px}
+.shead h1{font-size:28px;letter-spacing:-.02em}
+.shead .sp{flex:1}
+.shead .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.btn2{border:1px solid var(--line-2);background:var(--surface);color:var(--ink);border-radius:9px;padding:8px 13px;font-weight:600;font-size:13px;display:inline-flex;gap:7px;align-items:center}
+.btn2:hover{background:var(--surface-3)}
+.btn2.danger{color:var(--crit-ink);border-color:color-mix(in srgb,var(--crit) 40%,transparent)}
+.btn2.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.info-grid>div{background:var(--surface);padding:14px 16px}
+.info-grid .wide{grid-column:1/-1}
+.info-grid .l{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:4px}
+.info-grid .v{font-weight:600}
+.info-grid .v.txt{font-weight:400;color:var(--ink-2);white-space:pre-line}
+.funnel{display:grid;gap:10px}
+.fr{display:grid;grid-template-columns:130px 1fr;gap:12px;align-items:center;font-size:13px}
+.fr .bw{background:var(--surface-3);border-radius:6px;height:30px;position:relative}
+.fr .b{height:100%;border-radius:6px;display:flex;align-items:center;padding:0 10px;color:#fff;font-weight:700;font-size:12.5px;min-width:34px}
+
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{text-align:left;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;padding:10px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.t td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.t tr:last-child td{border-bottom:0}
+table.t td.num{text-align:right;font-weight:600}
+table.t th.num{text-align:right}
+.mut{color:var(--muted)}
+.fld{width:100%;border:1px solid var(--line-2);background:var(--surface-2);border-radius:8px;padding:7px 9px;font-size:13px}
+.fld:focus{outline:2px solid color-mix(in srgb,var(--accent) 40%,transparent);border-color:var(--accent)}
+textarea.fld{min-height:70px;resize:vertical}
+.editing .info-grid>div{background:var(--surface-2)}
+.edit-flag{display:inline-flex;align-items:center;gap:6px;background:var(--warn-bg);color:var(--warn-ink);font-weight:700;font-size:12px;border-radius:99px;padding:4px 11px}
+.xbtn{background:none;border:0;color:var(--crit-ink);font-weight:700;font-size:16px;padding:2px 8px;border-radius:6px}
+.xbtn:hover{background:var(--crit-bg)}
+
+/* history */
+.vlist{display:grid;gap:12px}
+.vitem{display:grid;grid-template-columns:56px minmax(0,1fr);gap:16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.vnum{width:48px;height:48px;border-radius:12px;background:var(--surface-3);display:grid;place-items:center;font:800 16px Manrope,Inter,system-ui,sans-serif;color:var(--ink)}
+.vitem.latest .vnum{background:var(--accent);color:#fff}
+.vitem .vh{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.vitem .vh h3{font-size:15px}
+.vitem .meta{color:var(--muted);font-size:12.5px;margin-top:2px}
+.vitem .note{margin-top:8px;color:var(--ink-2)}
+.vitem ul{margin:10px 0 0;padding-left:18px;color:var(--ink-2);font-size:13px}
+.vitem li{margin:3px 0}
+.vitem .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+@media (max-width:520px){.vitem{grid-template-columns:1fr;gap:10px}.vitem .vnum{width:auto;justify-self:start;padding:4px 12px}}
+.evo{display:flex;gap:18px;align-items:flex-end;height:200px;padding:10px 4px 0;border-bottom:1px solid var(--line);overflow-x:auto}
+.evo .col{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:46px;height:100%;justify-content:flex-end}
+.evo .bars{display:flex;flex-direction:column-reverse;gap:2px;width:34px}
+.evo .bars div{border-radius:3px}
+.evo .bars div:last-child{border-radius:5px 5px 3px 3px}
+.evo .lb{font-size:11.5px;color:var(--muted);font-weight:600;white-space:nowrap}
+.evo .tt{font-size:12px;font-weight:700}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(8,14,22,.55);display:grid;place-items:center;z-index:100;padding:16px}
+.modal-card{background:var(--surface);color:var(--ink);border-radius:16px;max-width:640px;width:100%;max-height:90vh;overflow:auto;padding:24px;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+.modal-card h2{font-size:20px;margin-bottom:6px}
+.modal-card .cap{color:var(--muted);font-size:13px;margin-bottom:16px}
+.modal-card label{display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin:12px 0 5px;text-transform:uppercase;letter-spacing:.04em}
+.modal-card .changes{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;max-height:220px;overflow:auto;font-size:13px}
+.modal-card .changes li{margin:3px 0}
+.modal-card .row{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+.check{display:flex!important;gap:8px;align-items:center;text-transform:none!important;letter-spacing:0!important;font-weight:500!important;font-size:13px!important;color:var(--ink)!important}
+
+.tip{position:fixed;pointer-events:none;background:#0f1720;color:#fff;border-radius:9px;padding:8px 11px;font-size:12.5px;max-width:320px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;transition:opacity .08s;line-height:1.45}
+.tip.on{opacity:1}
+#toasts{position:fixed;right:20px;bottom:20px;display:grid;gap:8px;z-index:150}
+.toast{background:#0f1720;color:#fff;border-radius:11px;padding:12px 16px;max-width:380px;box-shadow:0 10px 30px rgba(0,0,0,.3);font-size:13px}
+.toast.ok{border-left:4px solid #0ca30c}.toast.err{border-left:4px solid #d03b3b}
+.empty{color:var(--muted);text-align:center;padding:30px;border:1px dashed var(--line-2);border-radius:12px}
+footer.foot{max-width:1320px;margin:0 auto;padding:0 28px 32px;color:var(--muted);font-size:12px}
+
+@media (max-width:720px){
+  .topbar{padding:12px 16px;position:static}
+  .tabs{padding:0 16px;top:0}
+  main{padding:18px 16px 48px}
+  .banner,footer.foot{padding-left:16px;padding-right:16px}
+  .srow{grid-template-columns:96px 1fr 40px}
+  .shead h1{font-size:22px}
+  .fr{grid-template-columns:96px 1fr}
+  .info-grid{grid-template-columns:1fr}
+}
+@media print{
+  .topbar .actions,.tabs,#banner{display:none}
+  .topbar{position:static}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0d0f12;color:#f3f5f8;display:flex;align-items:center;justify-content:center;font-family:Inter,system-ui,sans-serif;text-align:center;padding:20px;">
+  <div style="max-width:320px;width:100%;"><div id="__gateMsg" style="font-size:14px;color:#8a919c;line-height:1.6;">Verificando acesso...</div></div>
+</div>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">EQ</div>
+    <div style="min-width:0">
+      <div class="t1" id="docTitle">Estudos de Equivalência</div>
+      <div class="t2" id="objetivo"></div>
+    </div>
+  </div>
+  <div class="actions">
+    <span class="pill ver" id="verBadge"></span>
+    <span class="pill ro" id="roPill" hidden>Somente leitura</span>
+    <span class="pill dirty" id="dirtyPill" hidden>Alterações não salvas</span>
+    <button class="btn" id="btnImport" title="Carregar uma nova versão da planilha (.xlsx)">Importar planilha</button>
+    <input type="file" id="fileInput" accept=".xlsx,.xls" hidden>
+    <button class="btn" id="btnEdit">Modo edição</button>
+    <button class="btn primary" id="btnSave" disabled>Salvar versão + PDF</button>
+    <div class="menu">
+      <button class="btn" id="btnExport">Exportar ▾</button>
+      <div class="menu-list" id="exportMenu" hidden>
+        <button data-act="pdf">PDF somente leitura<small>Última versão salva, protegido contra edição</small></button>
+      </div>
+    </div>
+    <button class="btn" id="btnTheme" title="Alternar tema claro/escuro" aria-label="Alternar tema">◐</button>
+  </div>
+</header>
+<nav class="tabs" id="tabs">
+  <button data-tab="overview" class="on">Visão geral</button>
+  <button data-tab="studies">Estudos</button>
+  <button data-tab="labs">Laboratórios</button>
+  <button data-tab="history">Histórico de versões <span class="count" id="histCount"></span></button>
+</nav>
+<div class="banner" id="banner"></div>
+<main id="app"></main>
+<footer class="foot" id="foot"></footer>
+<div class="tip" id="tip"></div>
+<div class="modal" id="modal" hidden><div class="modal-card" id="modalCard"></div></div>
+<div id="toasts"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+(function(){
+'use strict';
+/* ===================== base ===================== */
+var $ = function(s,r){return (r||document).querySelector(s);};
+var $$ = function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+var clone = function(o){return JSON.parse(JSON.stringify(o));};
+var SEED_DATA = {"doc": {"id": "eq-q8se24eo6s0x38", "createdAt": "2026-10-09T10:39"}, "readonly": false, "current": {"meta": {"titulo": "ESTUDOS DE EQUIVALENCIA", "objetivo": "Demonstrar, por métodos científicos e critérios regulatórios, que o medicamento teste apresenta desempenho equivalente ao medicamento de referência."}, "studies": [{"id": "slzhoqii", "nome": "ENOXAPARINA", "apresentacoes": "20, 40, 60  e/ou 80 mg.", "classe": "Medicamento biológico complexo", "indicacao": "É um anticoagulante. Reduz a formação de trombos ao atuar principalmente sobre o fator Xa.", "referencia": "CLEXANE", "companhia": "SANOFI", "solicitacao": "2026-08-26", "labs": [{"lab": "T&E", "data": "2026-09-17", "status": "analise", "obs": "", "valor": null}, {"lab": "ICF", "data": "2026-08-28", "status": "declinou", "obs": "", "valor": null}, {"lab": "EPHAR", "data": "2026-08-06", "status": "analise", "obs": "", "valor": null}, {"lab": "CSA", "data": "2026-08-26", "status": "declinou", "obs": "", "valor": null}, {"lab": "SYNVIA", "data": "2026-08-28", "status": "declinou", "obs": "", "valor": null}]}, {"id": "sbr19q75", "nome": "PARICALCITOL", "apresentacoes": "5 mcg/mL", "classe": "Medicamento químico/sintético", "indicacao": "É um análogo da vitamina D utilizado principalmente em pacientes com doença renal crônica.\nNa insuficiência renal, o rim perde capacidade de ativar a vitamina D adequadamente, podendo ocorrer aumento do hormonio da paratireoide, levando ao hiperparatireoidismo secundário.", "referencia": "ZEMPLAR", "companhia": "AbbVie Farmacêutica Ltda.", "solicitacao": "2026-10-01", "labs": [{"lab": "T&E", "data": "2026-10-06", "status": "analise", "obs": "", "valor": null}, {"lab": "ICF", "data": "2026-10-02", "status": "analise", "obs": "", "valor": null}, {"lab": "EPHAR", "data": "2026-10-01", "status": "analise", "obs": "", "valor": null}, {"lab": "CSA", "data": "2026-10-08", "status": "proposta", "obs": "Envio orcamento salvo R$ 117.986,48", "valor": 117986.48}, {"lab": "SYNVIA", "data": "2026-10-01", "status": "declinou", "obs": "", "valor": null}]}, {"id": "s6hdezwy", "nome": "MEROPENEM", "apresentacoes": "500MG;1G", "classe": "Medicamento químico/sintético", "indicacao": "É um antibiótico  da classe dos carbapenêmicos, utilizado principalmente em infecções graves causadas por bactérias suscetíveis, como Pneumonia grave; Infecções intra-abdominais; urinárias complicadas; de pele e tecidos moles; Meningite bacteriana; Sepse e outras infecções graves.", "referencia": "MERONEM IV", "companhia": "Wyeth", "solicitacao": "2026-10-06", "labs": [{"lab": "T&E", "data": "2026-10-07", "status": "analise", "obs": "", "valor": null}, {"lab": "ICF", "data": "2026-10-07", "status": "analise", "obs": "", "valor": null}, {"lab": "EPHAR", "data": null, "status": "analise", "obs": "", "valor": null}, {"lab": "CSA", "data": "2026-10-07", "status": "declinou", "obs": "", "valor": null}, {"lab": "SYNVIA", "data": null, "status": "pendente", "obs": "", "valor": null}]}]}, "history": [{"v": 1, "ts": "2026-10-09T10:39", "autor": "André Mellega Seccato", "origem": "Carga inicial (fb7eff54-Estudos_de_equival_ncia.xlsx)", "nota": "Carga inicial da planilha de estudos de equivalência.", "changes": [], "snapshot": {"meta": {"titulo": "ESTUDOS DE EQUIVALENCIA", "objetivo": "Demonstrar, por métodos científicos e critérios regulatórios, que o medicamento teste apresenta desempenho equivalente ao medicamento de referência."}, "studies": [{"id": "slzhoqii", "nome": "ENOXAPARINA", "apresentacoes": "20, 40, 60  e/ou 80 mg.", "classe": "Medicamento biológico complexo", "indicacao": "É um anticoagulante. Reduz a formação de trombos ao atuar principalmente sobre o fator Xa.", "referencia": "CLEXANE", "companhia": "SANOFI", "solicitacao": "2026-08-26", "labs": [{"lab": "T&E", "data": "2026-09-17", "status": "analise", "obs": "", "valor": null}, {"lab": "ICF", "data": "2026-08-28", "status": "declinou", "obs": "", "valor": null}, {"lab": "EPHAR", "data": "2026-08-06", "status": "analise", "obs": "", "valor": null}, {"lab": "CSA", "data": "2026-08-26", "status": "declinou", "obs": "", "valor": null}, {"lab": "SYNVIA", "data": "2026-08-28", "status": "declinou", "obs": "", "valor": null}]}, {"id": "sbr19q75", "nome": "PARICALCITOL", "apresentacoes": "5 mcg/mL", "classe": "Medicamento químico/sintético", "indicacao": "É um análogo da vitamina D utilizado principalmente em pacientes com doença renal crônica.\nNa insuficiência renal, o rim perde capacidade de ativar a vitamina D adequadamente, podendo ocorrer aumento do hormonio da paratireoide, levando ao hiperparatireoidismo secundário.", "referencia": "ZEMPLAR", "companhia": "AbbVie Farmacêutica Ltda.", "solicitacao": "2026-10-01", "labs": [{"lab": "T&E", "data": "2026-10-06", "status": "analise", "obs": "", "valor": null}, {"lab": "ICF", "data": "2026-10-02", "status": "analise", "obs": "", "valor": null}, {"lab": "EPHAR", "data": "2026-10-01", "status": "analise", "obs": "", "valor": null}, {"lab": "CSA", "data": "2026-10-08", "status": "proposta", "obs": "Envio orcamento salvo R$ 117.986,48", "valor": 117986.48}, {"lab": "SYNVIA", "data": "2026-10-01", "status": "declinou", "obs": "", "valor": null}]}, {"id": "s6hdezwy", "nome": "MEROPENEM", "apresentacoes": "500MG;1G", "classe": "Medicamento químico/sintético", "indicacao": "É um antibiótico  da classe dos carbapenêmicos, utilizado principalmente em infecções graves causadas por bactérias suscetíveis, como Pneumonia grave; Infecções intra-abdominais; urinárias complicadas; de pele e tecidos moles; Meningite bacteriana; Sepse e outras infecções graves.", "referencia": "MERONEM IV", "companhia": "Wyeth", "solicitacao": "2026-10-06", "labs": [{"lab": "T&E", "data": "2026-10-07", "status": "analise", "obs": "", "valor": null}, {"lab": "ICF", "data": "2026-10-07", "status": "analise", "obs": "", "valor": null}, {"lab": "EPHAR", "data": null, "status": "analise", "obs": "", "valor": null}, {"lab": "CSA", "data": "2026-10-07", "status": "declinou", "obs": "", "valor": null}, {"lab": "SYNVIA", "data": null, "status": "pendente", "obs": "", "valor": null}]}]}}]};
+var store = {doc:{id:'eq-principal'}, readonly:false, current:null, history:[]};
+var KEY = 'eqdash:' + store.doc.id;
+var RO = !!store.readonly;
+var state = null;
+var view = {tab:'overview', study:null, version:null};
+var editMode = false, dirty = false, pendingOrigin = null;
+
+var ST = {
+  proposta:{label:'Proposta recebida', short:'Proposta', hex:'#0ca30c', icon:'✓'},
+  analise:{label:'Em análise', short:'Em análise', hex:'#2a78d6', icon:'◔'},
+  pendente:{label:'Retorno pendente', short:'Pendente', hex:'#fab219', icon:'!'},
+  declinou:{label:'Não consegue atender', short:'Declinou', hex:'#d03b3b', icon:'✕'}
+};
+var KEYS = ['proposta','analise','pendente','declinou'];
+var FIELDS = [['apresentacoes','Apresentações'],['classe','Classe'],['indicacao','Para que serve'],['referencia','Medicamento de referência'],['companhia','Companhia'],['solicitacao','Data de solicitação']];
+
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function lsDel(k){try{localStorage.removeItem(k);}catch(e){}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function norm(s){return String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();}
+function normStatus(s){var n=norm(s); if(!n) return 'pendente';
+  if(/conclu|proposta|orcamento rec|aprovad|enviad/.test(n)) return 'proposta';
+  if(/nao consegue|nao atende|declin|recus|sem capacidade|nao tem/.test(n)) return 'declinou';
+  if(/pendente|aguardando|sem retorno/.test(n)) return 'pendente';
+  return 'analise';}
+function parseMoney(s){var m=String(s||'').match(/R\$\s*([\d.]+(?:,\d{1,2})?)/); return m?Number(m[1].replace(/\./g,'').replace(',','.')):null;}
+function brl(v){return v==null||isNaN(v)?'':Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+function pad(n){return (n<10?'0':'')+n;}
+function todayISO(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function nowLocal(){var d=new Date();return todayISO()+'T'+pad(d.getHours())+':'+pad(d.getMinutes());}
+function br(iso){if(!iso) return 's/ data'; var p=iso.slice(0,10).split('-'); return p[2]+'/'+p[1]+'/'+p[0];}
+function brShort(iso){var p=iso.split('-'); return p[2]+'/'+p[1];}
+function brTs(ts){return br(ts)+' às '+ts.slice(11,16);}
+function utc(iso){var p=iso.split('-');return Date.UTC(+p[0],+p[1]-1,+p[2]);}
+function days(a,b){return Math.round((utc(b)-utc(a))/864e5);}
+function isoFromUTC(t){var d=new Date(t);return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate());}
+function uid(){return 's'+Math.random().toString(36).slice(2,9);}
+function plural(n,s,p){return n+' '+(n===1?s:p);}
+
+function niceTitle(t){return !t||norm(t)==='estudos de equivalencia'?'Estudos de Equivalência':t;}
+function data(){return view.version!=null ? store.history[view.version].snapshot : state;}
+function refDate(){return view.version!=null ? store.history[view.version].ts.slice(0,10) : todayISO();}
+function lastEntry(){return store.history[store.history.length-1];}
+function canEdit(){return !RO && editMode && view.version==null;}
+function labOrder(d){var o=[];d.studies.forEach(function(s){s.labs.forEach(function(l){if(o.indexOf(l.lab)<0)o.push(l.lab);});});return o;}
+
+/* ===================== métricas ===================== */
+function metrics(s,ref){
+  var c={proposta:0,analise:0,pendente:0,declinou:0};
+  s.labs.forEach(function(l){c[l.status]=(c[l.status]||0)+1;});
+  var total=s.labs.length, ativos=c.analise+c.pendente+c.proposta;
+  var ds=s.labs.map(function(l){return l.data;}).filter(Boolean).sort();
+  var last=ds.length?ds[ds.length-1]:null;
+  var dias=s.solicitacao?days(s.solicitacao,ref):null;
+  var vals=s.labs.filter(function(l){return l.valor!=null;}).map(function(l){return l.valor;});
+  var best=vals.length?Math.min.apply(null,vals):null;
+  var h;
+  if(c.proposta>0) h={k:'good',label:'Com proposta'};
+  else if(total && c.analise+c.pendente===0) h={k:'crit',label:'Sem laboratório ativo'};
+  else if((total && c.declinou/total>=0.6) || (dias!=null && dias>30)) h={k:'warn',label:'Atenção'};
+  else h={k:'info',label:'Em andamento'};
+  return {c:c,total:total,ativos:ativos,last:last,dias:dias,semMov:last?days(last,ref):null,vals:vals,best:best,health:h};
+}
+function overall(d,ref){
+  var c={proposta:0,analise:0,pendente:0,declinou:0},total=0;
+  var ms=d.studies.map(function(s){return {s:s,m:metrics(s,ref)};});
+  ms.forEach(function(x){KEYS.forEach(function(k){c[k]+=x.m.c[k];});total+=x.m.total;});
+  var vals=[];d.studies.forEach(function(s){s.labs.forEach(function(l){if(l.valor!=null)vals.push(l.valor);});});
+  var open=ms.filter(function(x){return x.m.dias!=null;});
+  var avg=open.length?Math.round(open.reduce(function(a,x){return a+x.m.dias;},0)/open.length):null;
+  var oldest=open.slice().sort(function(a,b){return b.m.dias-a.m.dias;})[0];
+  return {c:c,total:total,labs:labOrder(d),vals:vals,avg:avg,oldest:oldest,ms:ms};
+}
+function alertsOf(d,ref){
+  var out=[];
+  d.studies.forEach(function(s){
+    var m=metrics(s,ref);
+    if(m.health.k==='crit') out.push({lvl:'crit',study:s.nome,text:'Nenhum laboratório ativo: todos os '+m.total+' cotados declinaram. Necessário ampliar a cotação.'});
+    if(m.c.proposta===0 && m.dias!=null && m.dias>30) out.push({lvl:'warn',study:s.nome,text:m.dias+' dias desde a solicitação sem nenhuma proposta recebida.'});
+    if(m.total && m.c.declinou/m.total>=0.5 && m.health.k!=='crit') out.push({lvl:'warn',study:s.nome,text:m.c.declinou+' de '+m.total+' laboratórios declinaram ('+Math.round(m.c.declinou/m.total*100)+'%). Base de cotação reduzida a '+plural(m.ativos,'laboratório ativo','laboratórios ativos')+'.'});
+    s.labs.forEach(function(l){
+      if(l.status==='pendente') out.push({lvl:'warn',study:s.nome,text:l.lab+': retorno pendente'+(l.data?' desde '+br(l.data):' e sem data de atualização')+'.'});
+      else if(!l.data && l.status!=='declinou') out.push({lvl:'info',study:s.nome,text:l.lab+': sem data de última atualização registrada.'});
+      if(l.data && s.solicitacao && l.data<s.solicitacao) out.push({lvl:'info',study:s.nome,text:l.lab+': última atualização ('+br(l.data)+') anterior à solicitação ('+br(s.solicitacao)+'). Conferir a data na planilha.'});
+      if(l.data && (l.status==='analise'||l.status==='pendente')){var dd=days(l.data,ref); if(dd>=14) out.push({lvl:'warn',study:s.nome,text:l.lab+': em análise sem nova atualização há '+dd+' dias.'});}
+    });
+  });
+  var o={crit:0,warn:1,info:2};
+  return out.sort(function(a,b){return o[a.lvl]-o[b.lvl];});
+}
+
+/* ===================== diff ===================== */
+function diff(a,b){
+  var ch=[], am={}, bm={};
+  a.studies.forEach(function(s){am[norm(s.nome)]=s;});
+  b.studies.forEach(function(s){bm[norm(s.nome)]=s;});
+  b.studies.forEach(function(s){ if(!am[norm(s.nome)]) ch.push('Estudo incluído: '+s.nome+' ('+plural(s.labs.length,'laboratório','laboratórios')+')'); });
+  a.studies.forEach(function(s){ if(!bm[norm(s.nome)]) ch.push('Estudo removido: '+s.nome); });
+  b.studies.forEach(function(s){
+    var o=am[norm(s.nome)]; if(!o) return;
+    FIELDS.forEach(function(f){var k=f[0]; var x=o[k]||'', y=s[k]||''; if(String(x).trim()!==String(y).trim()){
+      if(k==='solicitacao') ch.push(s.nome+' · data de solicitação alterada de '+br(x||null)+' para '+br(y||null));
+      else ch.push(s.nome+' · campo "'+f[1]+'" atualizado');}});
+    var ol={}, nl={};
+    o.labs.forEach(function(l){ol[norm(l.lab)]=l;}); s.labs.forEach(function(l){nl[norm(l.lab)]=l;});
+    s.labs.forEach(function(l){
+      var p=ol[norm(l.lab)];
+      if(!p){ch.push(s.nome+' · '+l.lab+' incluído ('+ST[l.status].label+')');return;}
+      if(p.status!==l.status) ch.push(s.nome+' · '+l.lab+': situação alterada de "'+ST[p.status].label+'" para "'+ST[l.status].label+'"');
+      if((p.data||'')!==(l.data||'')) ch.push(s.nome+' · '+l.lab+': última atualização alterada de '+br(p.data)+' para '+br(l.data));
+      if((p.obs||'').trim()!==(l.obs||'').trim()) ch.push(s.nome+' · '+l.lab+': observação '+(l.obs?'atualizada para "'+l.obs.trim()+'"':'removida'));
+      if((p.valor==null?null:+p.valor)!==(l.valor==null?null:+l.valor)) ch.push(s.nome+' · '+l.lab+': valor da proposta '+(l.valor!=null?'registrado em '+brl(l.valor):'removido'));
+    });
+    o.labs.forEach(function(l){ if(!nl[norm(l.lab)]) ch.push(s.nome+' · '+l.lab+' removido'); });
+  });
+  return ch;
+}
+
+/* ===================== leitura da planilha ===================== */
+function cellDate(v){
+  if(v==null||v==='') return null;
+  if(typeof v==='number' && window.XLSX){var p=XLSX.SSF.parse_date_code(v); if(p) return p.y+'-'+pad(p.m)+'-'+pad(p.d);}
+  if(v instanceof Date) return v.getFullYear()+'-'+pad(v.getMonth()+1)+'-'+pad(v.getDate());
+  var m=String(v).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); if(m) return m[3]+'-'+pad(+m[2])+'-'+pad(+m[1]);
+  m=String(v).match(/(\d{4})-(\d{2})-(\d{2})/); if(m) return m[1]+'-'+m[2]+'-'+m[3];
+  return null;
+}
+function parseRows(rows){
+  var S=function(v){return v==null?'':String(v).trim();};
+  var hdr=-1;
+  for(var i=0;i<rows.length;i++){ if(norm(rows[i][0]).indexOf('estudo')===0 && norm(rows[i][1]).indexOf('apresenta')===0){hdr=i;break;} }
+  if(hdr<0) throw new Error('Não encontrei o cabeçalho "Estudos | Apresentações | Classe ..." na planilha.');
+  var head=S(rows[0]&&rows[0][0]).split('\n'), meta={titulo:head[0]?head[0].trim():'Estudos de Equivalência', objetivo:head.slice(1).join(' ').trim()};
+  var studies=[];
+  for(i=hdr+1;i<rows.length;i++){
+    var r=rows[i], a=S(r[0]); if(!a) break; if(norm(a).indexOf('estudos no portfolio')===0||norm(a).indexOf('laboratorios cotados')===0) break;
+    studies.push({id:uid(),nome:a.toUpperCase(),apresentacoes:S(r[1]),classe:S(r[2]),indicacao:S(r[3]),referencia:S(r[4]),companhia:S(r[5]),solicitacao:null,labs:[]});
+  }
+  var byName={}; studies.forEach(function(s){byName[norm(s.nome)]=s;});
+  for(i=0;i<rows.length;i++){
+    var s=byName[norm(rows[i][0])];
+    if(!s || norm(rows[i][1]).indexOf('solicita')<0) continue;
+    s.solicitacao=cellDate(rows[i][1]);
+    var j=i+1; while(j<rows.length && norm(rows[j][0]).indexOf('laborat')!==0) j++;
+    if(j>=rows.length) continue;
+    var h=rows[j].map(norm), cD=1,cS=2,cO=3,cV=-1;
+    h.forEach(function(x,k){ if(/ultima|atualiza/.test(x))cD=k; else if(/situa|status/.test(x))cS=k; else if(/observa/.test(x))cO=k; else if(/valor|orcamento/.test(x))cV=k; });
+    for(j=j+1;j<rows.length;j++){
+      var rr=rows[j], la=S(rr[0]); if(!la || byName[norm(la)]) break;
+      var obs=S(rr[cO]); var val=cV>=0&&rr[cV]!=null&&rr[cV]!==''?(typeof rr[cV]==='number'?rr[cV]:parseMoney('R$ '+rr[cV])):parseMoney(obs);
+      s.labs.push({lab:la.replace(/^\d+\s*[.)-]\s*/,''),data:cellDate(rr[cD]),status:normStatus(rr[cS]),obs:obs,valor:val});
+    }
+  }
+  if(!studies.length) throw new Error('Nenhum estudo encontrado abaixo do cabeçalho.');
+  return {meta:meta,studies:studies};
+}
+function importFile(file){
+  if(!window.XLSX){toast('A biblioteca de leitura de planilhas não carregou. Verifique a conexão com a internet.','err');return;}
+  var fr=new FileReader();
+  fr.onload=function(){
+    try{
+      var wb=XLSX.read(new Uint8Array(fr.result),{type:'array'}), parsed=null, err=null;
+      wb.SheetNames.some(function(n){ try{ parsed=parseRows(XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:null})); return true;}catch(e){err=e;return false;} });
+      if(!parsed) throw err||new Error('Planilha sem dados reconhecíveis.');
+      var old={}; state.studies.forEach(function(s){old[norm(s.nome)]=s.id;});
+      parsed.studies.forEach(function(s){ if(old[norm(s.nome)]) s.id=old[norm(s.nome)]; });
+      state=parsed; pendingOrigin='Planilha importada ('+file.name+')';
+      markDirty(); view.version=null; render(); openSave();
+    }catch(e){ toast('Não foi possível ler a planilha: '+e.message,'err'); }
+  };
+  fr.readAsArrayBuffer(file);
+}
+
+/* ===================== componentes visuais ===================== */
+function stBadge(k){return '<span class="st '+k+'"><i>'+ST[k].icon+'</i>'+ST[k].label+'</span>';}
+function stackBar(c,total,sm){
+  if(!total) return '<div class="stack'+(sm?' sm':'')+'"></div>';
+  return '<div class="stack'+(sm?' sm':'')+'">'+KEYS.filter(function(k){return c[k];}).map(function(k){
+    return '<div class="s-'+k+'" style="flex:'+c[k]+';background:'+ST[k].hex+'" data-tip="'+esc(ST[k].label+': '+c[k]+' de '+total)+'">'+c[k]+'</div>';}).join('')+'</div>';
+}
+function legend(){return '<div class="legend">'+KEYS.map(function(k){return '<span><b style="background:'+ST[k].hex+'"></b>'+ST[k].label+'</span>';}).join('')+'</div>';}
+function donut(c,total){
+  var R=62,W=16,C=2*Math.PI*R,off=0,gap=total>1?3:0,out='';
+  KEYS.forEach(function(k){ if(!c[k]) return; var len=c[k]/total*C;
+    out+='<circle cx="80" cy="80" r="'+R+'" fill="none" stroke="'+ST[k].hex+'" stroke-width="'+W+'" stroke-dasharray="'+Math.max(len-gap,0.5)+' '+(C-Math.max(len-gap,0.5))+'" stroke-dashoffset="'+(-off)+'" transform="rotate(-90 80 80)" data-tip="'+esc(ST[k].label+': '+c[k]+' ('+Math.round(c[k]/total*100)+'%)')+'" style="cursor:default"/>'; off+=len; });
+  return '<svg class="donut" viewBox="0 0 160 160" width="170" height="170" role="img" aria-label="Distribuição das cotações por situação">'+
+    '<circle cx="80" cy="80" r="'+R+'" fill="none" stroke="var(--surface-3)" stroke-width="'+W+'"/>'+out+
+    '<text x="80" y="78" text-anchor="middle" style="font:800 30px Manrope,Inter,sans-serif">'+total+'</text><text x="80" y="98" text-anchor="middle" style="font:600 11px Inter;fill:var(--muted)">cotações</text></svg>';
+}
+function timeline(rows,ref,opt){
+  opt=opt||{};
+  var W=1000,L=opt.labelW||180,R=70,rowH=opt.rowH||44,top=34,H=top+rows.length*rowH+10;
+  var all=[ref]; rows.forEach(function(r){ if(r.start) all.push(r.start); r.points.forEach(function(p){if(p.date) all.push(p.date);}); });
+  all.sort(); var t0=utc(all[0])-2*864e5, t1=utc(ref)+2*864e5; if(t1-t0<20*864e5) t0=t1-20*864e5;
+  var x=function(iso){return L+(utc(iso)-t0)/(t1-t0)*(W-L-R);};
+  var g='', span=(t1-t0)/864e5, step=span>120?30:span>50?14:7;
+  for(var t=t0+864e5;t<t1;t+=step*864e5){var iso=isoFromUTC(t); var xx=x(iso);
+    g+='<line class="grid" x1="'+xx+'" x2="'+xx+'" y1="'+(top-8)+'" y2="'+(H-6)+'"/><text class="tick" x="'+xx+'" y="'+(top-14)+'" text-anchor="middle">'+brShort(iso)+'</text>';}
+  var xr=x(ref);
+  g+='<line class="today" x1="'+xr+'" x2="'+xr+'" y1="'+(top-8)+'" y2="'+(H-6)+'"/><text class="todayt" x="'+(xr+6)+'" y="'+(top-14)+'">'+(opt.refLabel||'Hoje')+' '+brShort(ref)+'</text>';
+  rows.forEach(function(r,i){
+    var cy=top+i*rowH+rowH/2;
+    g+='<text class="lab" x="0" y="'+(r.sub?cy-2:cy+4)+'">'+esc(r.label)+'</text>';
+    if(r.sub) g+='<text class="labs" x="0" y="'+(cy+13)+'">'+esc(r.sub)+'</text>';
+    if(opt.mode==='study'){
+      var p=r.points[0];
+      if(r.start && p && p.date){ var a=x(r.start<p.date?r.start:p.date), b=x(p.date);
+        g+='<line class="resp" x1="'+x(r.start)+'" x2="'+b+'" y1="'+cy+'" y2="'+cy+'" stroke="'+ST[p.status].hex+'" stroke-opacity=".45"/>';
+        if(p.status!=='declinou' && p.status!=='proposta') g+='<line class="stale" x1="'+b+'" x2="'+xr+'" y1="'+cy+'" y2="'+cy+'"/>';
+      } else if(r.start){ g+='<line class="stale" x1="'+x(r.start)+'" x2="'+xr+'" y1="'+cy+'" y2="'+cy+'"/>'; }
+      if(r.start) g+='<circle class="start" cx="'+x(r.start)+'" cy="'+cy+'" r="5" data-tip="'+esc('Solicitação: '+br(r.start))+'"/>';
+      if(p && p.date) g+='<circle class="dot" cx="'+x(p.date)+'" cy="'+cy+'" r="8" fill="'+ST[p.status].hex+'" data-tip="'+esc(p.tip)+'"/>';
+      if(r.end) g+='<text class="end" x="'+(W-R+8)+'" y="'+(cy+4)+'">'+esc(r.end)+'</text>';
+    } else {
+      if(r.start){ g+='<line class="track" x1="'+x(r.start)+'" x2="'+xr+'" y1="'+cy+'" y2="'+cy+'"/><line class="fill" x1="'+x(r.start)+'" x2="'+xr+'" y1="'+cy+'" y2="'+cy+'"/>';
+        g+='<circle class="start" cx="'+x(r.start)+'" cy="'+cy+'" r="6" data-tip="'+esc('Solicitação: '+br(r.start))+'"/>'; }
+      var by={}; r.points.forEach(function(p){ if(!p.date) return; (by[p.date]=by[p.date]||[]).push(p); });
+      Object.keys(by).forEach(function(dt){ var ps=by[dt]; ps.forEach(function(p,k){ var dy=(k-(ps.length-1)/2)*9;
+        g+='<circle class="dot" cx="'+x(dt)+'" cy="'+(cy+dy)+'" r="6.5" fill="'+ST[p.status].hex+'" data-tip="'+esc(p.tip)+'"/>'; }); });
+      if(r.end) g+='<text class="end" x="'+(W-R+8)+'" y="'+(cy+4)+'">'+esc(r.end)+'</text>';
+    }
+  });
+  return '<div class="scroll"><svg class="tl" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Linha do tempo">'+g+'</svg></div>';
+}
+
+/* ===================== telas ===================== */
+function kpi(l,v,s,color){return '<div class="kpi">'+(color?'<div class="bar" style="background:'+color+'"></div>':'')+'<div class="l">'+l+'</div><div class="v">'+v+'</div><div class="s">'+(s||'&nbsp;')+'</div></div>';}
+function pct(a,b){return b?Math.round(a/b*100)+'%':'0%';}
+
+function renderOverview(d,ref){
+  var o=overall(d,ref), al=alertsOf(d,ref);
+  var classes={}; d.studies.forEach(function(s){var k=(s.classe||'Sem classe').replace(/^medicamento\s*/i,''); classes[k]=(classes[k]||0)+1;});
+  var clsTxt=Object.keys(classes).map(function(k){return classes[k]+' '+k.toLowerCase();}).join(' · ');
+  var sumV=o.vals.reduce(function(a,b){return a+b;},0);
+  var h='<div class="kpis">'+
+    kpi('Estudos no portfólio',d.studies.length,clsTxt,'var(--brand-2)')+
+    kpi('Cotações em curso',o.total,plural(o.labs.length,'laboratório consultado','laboratórios consultados'),'var(--muted)')+
+    kpi('Em análise',o.c.analise+'<small>'+pct(o.c.analise,o.total)+'</small>',o.c.pendente?o.c.pendente+' com retorno pendente':'aguardando proposta',ST.analise.hex)+
+    kpi('Propostas recebidas',o.c.proposta,o.vals.length?(o.vals.length===1?'Valor: ':'Total: ')+brl(sumV):'nenhuma até o momento',ST.proposta.hex)+
+    kpi('Declinaram',o.c.declinou+'<small>'+pct(o.c.declinou,o.total)+'</small>','taxa de declínio das cotações',ST.declinou.hex)+
+    kpi('Prazo médio em aberto',(o.avg!=null?o.avg:'0')+'<small>dias</small>',o.oldest?'mais antigo: '+esc(o.oldest.s.nome)+' ('+o.oldest.m.dias+' d)':'','var(--brand-2)')+
+  '</div>';
+
+  h+='<div class="sec-title"><h2>Estudos</h2><span class="sub">Visão individual de cada estudo. Clique para abrir o detalhamento.</span></div><div class="grid3">';
+  o.ms.forEach(function(x){var s=x.s,m=x.m;
+    h+='<div class="scard" data-open="'+s.id+'"><div class="top"><div><h3>'+esc(s.nome)+'</h3><div class="ref">'+esc(s.referencia||'s/ referência')+(s.companhia?' · '+esc(s.companhia):'')+'</div></div><span class="health '+m.health.k+'">'+m.health.label+'</span></div>'+
+      '<div style="display:flex;gap:6px;flex-wrap:wrap">'+(s.classe?'<span class="chip">'+esc(s.classe)+'</span>':'')+(s.apresentacoes?'<span class="chip">'+esc(s.apresentacoes)+'</span>':'')+'</div>'+
+      stackBar(m.c,m.total)+
+      '<div class="nums"><div><div class="l">Em aberto</div><div class="v">'+(m.dias!=null?m.dias+' d':'s/ data')+'</div></div><div><div class="l">Ativos</div><div class="v">'+m.ativos+'/'+m.total+'</div></div><div><div class="l">Melhor proposta</div><div class="v" style="font-size:'+(m.best!=null?'14px':'17px')+'">'+(m.best!=null?brl(m.best):'sem proposta')+'</div></div></div>'+
+      '<div class="go">Abrir estudo →</div></div>';});
+  h+='</div>';
+
+  h+='<div class="sec-title"><h2>Panorama das cotações</h2></div><div class="grid2">'+
+    '<div class="card"><h3>Situação consolidada</h3><div class="cap">Todas as cotações de todos os estudos</div><div class="donut-wrap">'+donut(o.c,o.total)+'<div class="donut-legend">'+
+      KEYS.map(function(k){return '<div class="dl"><span class="st '+k+'"><i>'+ST[k].icon+'</i></span><span>'+ST[k].label+'</span><span class="num">'+o.c[k]+'</span><span class="pct">'+pct(o.c[k],o.total)+'</span></div>';}).join('')+'</div></div></div>'+
+    '<div class="card"><h3>Distribuição por estudo</h3><div class="cap">Situação de cada laboratório cotado, por estudo</div>'+
+      o.ms.map(function(x){return '<div class="srow"><div class="n" data-tip="'+esc(x.s.nome)+'">'+esc(x.s.nome)+'</div>'+stackBar(x.m.c,x.m.total)+'<div class="t">'+x.m.total+' labs</div></div>';}).join('')+
+      '<div style="margin-top:12px">'+legend()+'</div></div></div>';
+
+  var labs=o.labs;
+  h+='<div class="sec-title"><h2>Matriz estudo × laboratório</h2><span class="sub">Situação e data da última atualização em cada cruzamento</span></div><div class="card"><div class="scroll"><div class="matrix" style="grid-template-columns:170px repeat('+labs.length+',minmax(120px,1fr))"><div class="h">Estudo</div>'+
+    labs.map(function(l){return '<div class="h">'+esc(l)+'</div>';}).join('');
+  d.studies.forEach(function(s){
+    h+='<div class="rn" data-open="'+s.id+'">'+esc(s.nome)+'<small>Solicitado em '+br(s.solicitacao)+'</small></div>';
+    labs.forEach(function(ln){ var l=s.labs.filter(function(x){return x.lab===ln;})[0];
+      if(!l){h+='<div class="mcell vazio"><div class="a">Não cotado</div></div>';return;}
+      var tip=ln+' · '+s.nome+'\n'+ST[l.status].label+'\nÚltima atualização: '+br(l.data)+(l.obs?'\nObs.: '+l.obs:'')+(l.valor!=null?'\nProposta: '+brl(l.valor):'');
+      h+='<div class="mcell '+l.status+'" data-tip="'+esc(tip)+'"><div class="a"><i>'+ST[l.status].icon+'</i>'+ST[l.status].short+'</div><div class="d">'+(l.valor!=null?brl(l.valor):br(l.data))+'</div></div>';});
+  });
+  h+='</div></div><div style="margin-top:14px">'+legend()+'</div></div>';
+
+  h+='<div class="sec-title"><h2>Linha do tempo</h2><span class="sub">Da solicitação até hoje; cada ponto é a última atualização de um laboratório</span></div><div class="card">'+
+    timeline(d.studies.map(function(s){var m=metrics(s,ref);return {label:s.nome,sub:'Solicitado em '+br(s.solicitacao),start:s.solicitacao,end:m.dias!=null?m.dias+' dias':'',
+      points:s.labs.map(function(l){return {date:l.data,status:l.status,tip:l.lab+': '+ST[l.status].label+'\n'+br(l.data)};})};}),ref,{refLabel:view.version!=null?'Ref.':'Hoje'})+
+    '<div style="margin-top:12px">'+legend()+'</div></div>';
+
+  h+='<div class="sec-title"><h2>Pontos de atenção</h2><span class="sub">'+plural(al.length,'item identificado','itens identificados')+' automaticamente a partir dos dados</span></div>';
+  h+=al.length?'<div class="alerts">'+al.map(function(a){return '<div class="al '+a.lvl+'"><div class="ic">'+(a.lvl==='crit'?'!':a.lvl==='warn'?'!':'i')+'</div><div><div class="meta">'+esc(a.study)+'</div>'+esc(a.text)+'</div></div>';}).join('')+'</div>':'<div class="empty">Nenhum ponto de atenção no momento.</div>';
+  return h;
+}
+
+function fieldView(s,k,label,cls,wide){
+  var v=s[k]||'';
+  if(canEdit()){
+    var inp = k==='solicitacao' ? '<input class="fld" type="date" data-b="s:'+k+'" value="'+esc(v)+'">' :
+      k==='indicacao' ? '<textarea class="fld" data-b="s:'+k+'">'+esc(v)+'</textarea>' :
+      '<input class="fld" data-b="s:'+k+'" value="'+esc(v)+'">';
+    return '<div'+(wide?' class="wide"':'')+'><div class="l">'+label+'</div>'+inp+'</div>';
+  }
+  return '<div'+(wide?' class="wide"':'')+'><div class="l">'+label+'</div><div class="v '+(cls||'')+'">'+(k==='solicitacao'?br(v||null):esc(v||'s/ informação'))+'</div></div>';
+}
+function renderStudies(d,ref){
+  if(!d.studies.length) return '<div class="empty">Nenhum estudo cadastrado.'+(canEdit()?' <button class="lnk" data-act="addStudy">Incluir estudo</button>':'')+'</div>';
+  var s=d.studies.filter(function(x){return x.id===view.study;})[0]||d.studies[0]; view.study=s.id;
+  var m=metrics(s,ref), ed=canEdit();
+  var h='<div class="selector">'+d.studies.map(function(x){var mm=metrics(x,ref);var col={good:ST.proposta.hex,info:ST.analise.hex,warn:ST.pendente.hex,crit:ST.declinou.hex}[mm.health.k];
+    return '<button data-study="'+x.id+'" class="'+(x.id===s.id?'on':'')+'"><span class="dot" style="background:'+col+'"></span>'+esc(x.nome)+'</button>';}).join('')+(ed?'<button class="add" data-act="addStudy">+ Novo estudo</button>':'')+'</div>';
+  h+='<div class="'+(ed?'editing':'')+'"><div class="shead"><div><h1>'+(ed?'<input class="fld" style="font:800 24px Manrope,Inter,sans-serif;max-width:420px" data-b="s:nome" value="'+esc(s.nome)+'">':esc(s.nome))+'</h1><div class="chips"><span class="health '+m.health.k+'">'+m.health.label+'</span>'+(s.classe?'<span class="chip">'+esc(s.classe)+'</span>':'')+(ed?'<span class="edit-flag">Editando</span>':'')+'</div></div><div class="sp"></div>'+
+    '<button class="btn2" data-act="pdfStudy">PDF deste estudo</button>'+(ed?'<button class="btn2 danger" data-act="delStudy">Excluir estudo</button>':'')+'</div>';
+  h+='<div class="info-grid">'+fieldView(s,'apresentacoes','Apresentações')+fieldView(s,'classe','Classe')+fieldView(s,'referencia','Medicamento de referência')+fieldView(s,'companhia','Companhia')+fieldView(s,'solicitacao','Data de solicitação')+
+    '<div><div class="l">Dias em aberto</div><div class="v">'+(m.dias!=null?m.dias+' dias':'s/ data')+'</div></div>'+fieldView(s,'indicacao','Para que serve','txt',true)+'</div>';
+  h+='<div class="kpis" style="margin-top:16px">'+kpi('Laboratórios cotados',m.total,'','var(--muted)')+kpi('Em análise',m.c.analise,m.c.pendente?m.c.pendente+' pendente(s)':'',ST.analise.hex)+kpi('Propostas',m.c.proposta,m.best!=null?'menor: '+brl(m.best):'',ST.proposta.hex)+kpi('Declinaram',m.c.declinou+'<small>'+pct(m.c.declinou,m.total)+'</small>','',ST.declinou.hex)+
+    kpi('Última movimentação',m.last?br(m.last).slice(0,5):'s/ data',m.semMov!=null?'há '+plural(m.semMov,'dia','dias'):'','var(--brand-2)')+'</div>';
+  var fun=[['Cotados',m.total,'#184f95'],['Ainda ativos',m.ativos,'#2a78d6'],['Com proposta',m.c.proposta,'#0ca30c']];
+  h+='<div class="grid2" style="margin-top:16px"><div class="card"><h3>Funil de cotação</h3><div class="cap">Quantos laboratórios seguem no processo</div><div class="funnel">'+
+    fun.map(function(f){return '<div class="fr"><span>'+f[0]+'</span><div class="bw">'+(f[1]?'<div class="b" style="width:'+Math.max(f[1]/m.total*100,10)+'%;background:'+f[2]+'">'+f[1]+'</div>':'<div style="padding:6px 10px;color:var(--muted);font-weight:700;font-size:12.5px">0</div>')+'</div></div>';}).join('')+'</div></div>'+
+    '<div class="card"><h3>Composição</h3><div class="cap">Situação dos '+m.total+' laboratórios</div>'+stackBar(m.c,m.total)+'<div style="margin-top:14px" class="donut-legend">'+
+      KEYS.map(function(k){return '<div class="dl"><span class="st '+k+'"><i>'+ST[k].icon+'</i></span><span>'+ST[k].label+'</span><span class="num">'+m.c[k]+'</span><span class="pct">'+pct(m.c[k],m.total)+'</span></div>';}).join('')+'</div></div></div>';
+  h+='<div class="card" style="margin-top:16px"><h3>Linha do tempo por laboratório</h3><div class="cap">Traço colorido: tempo da solicitação até a última atualização. Tracejado: tempo sem nova atualização.</div>'+
+    timeline(s.labs.map(function(l){return {label:l.lab,start:s.solicitacao,end:l.data?(days(l.data,ref)+' d'):'s/ data',points:[{date:l.data,status:l.status,tip:l.lab+': '+ST[l.status].label+'\nÚltima atualização: '+br(l.data)+(l.obs?'\n'+l.obs:'')}]};}),ref,{mode:'study',rowH:38,labelW:120,refLabel:view.version!=null?'Ref.':'Hoje'})+
+    '<div style="margin-top:12px">'+legend()+'</div></div>';
+  h+='<div class="card" style="margin-top:16px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div><h3>Laboratórios cotados</h3><div class="cap" style="margin:0">Situação, última atualização e observações</div></div><div style="flex:1"></div>'+(ed?'<button class="btn2 pri" data-act="addLab">+ Incluir laboratório</button>':'')+'</div><div class="scroll" style="margin-top:10px"><table class="t" style="min-width:760px"><thead><tr><th>Laboratório</th><th>Situação</th><th>Última atualização</th><th class="num">Dias</th><th>Observação</th><th class="num">Valor da proposta</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
+  s.labs.forEach(function(l,i){
+    if(ed){
+      h+='<tr><td><input class="fld" data-b="l:'+i+':lab" value="'+esc(l.lab)+'" style="min-width:110px"></td><td><select class="fld" data-b="l:'+i+':status">'+KEYS.map(function(k){return '<option value="'+k+'"'+(k===l.status?' selected':'')+'>'+ST[k].label+'</option>';}).join('')+'</select></td>'+
+        '<td><input class="fld" type="date" data-b="l:'+i+':data" value="'+esc(l.data||'')+'"></td><td class="num mut">'+(l.data?days(l.data,ref):'')+'</td><td><input class="fld" data-b="l:'+i+':obs" value="'+esc(l.obs||'')+'" placeholder="Observação"></td>'+
+        '<td><input class="fld" type="number" step="0.01" min="0" data-b="l:'+i+':valor" value="'+(l.valor!=null?l.valor:'')+'" placeholder="R$" style="text-align:right;min-width:120px"></td><td><button class="xbtn" data-act="delLab" data-i="'+i+'" title="Remover laboratório">×</button></td></tr>';
+    } else {
+      var warn=l.data&&s.solicitacao&&l.data<s.solicitacao;
+      h+='<tr><td><b>'+esc(l.lab)+'</b></td><td>'+stBadge(l.status)+'</td><td>'+br(l.data)+(warn?' <span class="st pendente" data-tip="Data anterior à solicitação. Conferir."><i>!</i>conferir</span>':'')+'</td><td class="num">'+(l.data?days(l.data,ref):'<span class="mut">s/ data</span>')+'</td><td>'+(l.obs?esc(l.obs):'<span class="mut">s/ observação</span>')+'</td><td class="num">'+(l.valor!=null?brl(l.valor):'<span class="mut">s/ proposta</span>')+'</td></tr>';
+    }
+  });
+  h+='</tbody></table></div></div>';
+  var props=s.labs.filter(function(l){return l.valor!=null;});
+  if(props.length){ var mx=Math.max.apply(null,props.map(function(l){return l.valor;}));
+    h+='<div class="card" style="margin-top:16px"><h3>Comparativo de propostas</h3><div class="cap">'+plural(props.length,'proposta recebida','propostas recebidas')+'</div><div class="funnel">'+
+      props.sort(function(a,b){return a.valor-b.valor;}).map(function(l,i){return '<div class="fr"><span><b>'+esc(l.lab)+'</b>'+(i===0&&props.length>1?' <span class="mut">menor</span>':'')+'</span><div class="bw"><div class="b" style="width:'+(l.valor/mx*100)+'%;background:'+ST.proposta.hex+'">'+brl(l.valor)+'</div></div></div>';}).join('')+'</div></div>';}
+  h+='</div>';
+  return h;
+}
+
+function renderLabs(d,ref){
+  var labs=labOrder(d), rows=labs.map(function(ln){
+    var c={proposta:0,analise:0,pendente:0,declinou:0},n=0,last=null,resp=[];
+    d.studies.forEach(function(s){s.labs.forEach(function(l){ if(l.lab!==ln) return; n++; c[l.status]++; if(l.data&&(!last||l.data>last)) last=l.data; if(l.data&&s.solicitacao&&l.data>=s.solicitacao) resp.push(days(s.solicitacao,l.data)); });});
+    return {lab:ln,c:c,n:n,last:last,resp:resp.length?Math.round(resp.reduce(function(a,b){return a+b;},0)/resp.length):null};
+  });
+  var h='<div class="sec-title" style="margin-top:6px"><h2>Desempenho por laboratório</h2><span class="sub">Consolidado de todos os estudos cotados</span></div><div class="card"><div class="scroll"><table class="t" style="min-width:820px"><thead><tr><th>Laboratório</th><th class="num">Estudos</th><th style="width:28%">Situação</th><th class="num">Propostas</th><th class="num">Em aberto</th><th class="num">Declinou</th><th class="num">Taxa de declínio</th><th class="num">Resposta média</th><th>Última interação</th></tr></thead><tbody>'+
+    rows.map(function(r){return '<tr><td><b>'+esc(r.lab)+'</b></td><td class="num">'+r.n+'</td><td>'+stackBar(r.c,r.n,true)+'</td><td class="num">'+r.c.proposta+'</td><td class="num">'+(r.c.analise+r.c.pendente)+'</td><td class="num">'+r.c.declinou+'</td><td class="num">'+pct(r.c.declinou,r.n)+'</td><td class="num">'+(r.resp!=null?r.resp+' d':'<span class="mut">s/ dado</span>')+'</td><td>'+br(r.last)+'</td></tr>';}).join('')+
+    '</tbody></table></div><div style="margin-top:12px">'+legend()+'</div></div>';
+  h+='<div class="sec-title"><h2>Laboratório × estudo</h2></div><div class="grid3">'+rows.map(function(r){
+    return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="font-size:16px">'+esc(r.lab)+'</h3><span class="chip">'+plural(r.n,'estudo','estudos')+'</span></div><div style="display:grid;gap:8px;margin-top:12px">'+
+      d.studies.map(function(s){var l=s.labs.filter(function(x){return x.lab===r.lab;})[0]; return '<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:13px"><span style="font-weight:600">'+esc(s.nome)+'</span>'+(l?stBadge(l.status):'<span class="mut">não cotado</span>')+'</div>';}).join('')+'</div></div>';}).join('')+'</div>';
+  return h;
+}
+
+function renderHistory(){
+  var H=store.history, h='';
+  if(H.length>1){
+    var mx=0; H.forEach(function(e){var t=0;e.snapshot.studies.forEach(function(s){t+=s.labs.length;}); mx=Math.max(mx,t);});
+    h+='<div class="card" style="margin-bottom:18px"><h3>Evolução entre versões</h3><div class="cap">Situação das cotações registrada em cada versão salva</div><div class="evo">'+H.map(function(e){
+      var c={proposta:0,analise:0,pendente:0,declinou:0},t=0; e.snapshot.studies.forEach(function(s){s.labs.forEach(function(l){c[l.status]++;t++;});});
+      return '<div class="col"><div class="tt">'+t+'</div><div class="bars">'+KEYS.slice().reverse().filter(function(k){return c[k];}).map(function(k){return '<div style="height:'+(c[k]/mx*140)+'px;background:'+ST[k].hex+'" data-tip="'+esc('v'+e.v+' · '+ST[k].label+': '+c[k])+'"></div>';}).join('')+'</div><div class="lb">v'+e.v+'</div><div class="lb" style="font-weight:500">'+br(e.ts).slice(0,5)+'</div></div>';}).join('')+'</div><div style="margin-top:12px">'+legend()+'</div></div>';
+  }
+  h+='<div class="vlist">'+H.slice().reverse().map(function(e){
+    var idx=e.v-1, latest=idx===H.length-1, ch=e.changes||[];
+    return '<div class="vitem'+(latest?' latest':'')+'"><div class="vnum">v'+e.v+'</div><div><div class="vh"><h3>Versão '+e.v+'</h3>'+(latest?'<span class="health good">Atual</span>':'')+'<span class="chip">'+esc(e.origem||'Edição manual')+'</span></div>'+
+      '<div class="meta">'+brTs(e.ts)+(e.autor?' · por '+esc(e.autor):'')+' · '+plural(ch.length,'alteração','alterações')+'</div>'+(e.nota?'<div class="note">'+esc(e.nota)+'</div>':'')+
+      (ch.length?'<ul>'+ch.slice(0,8).map(function(c){return '<li>'+esc(c)+'</li>';}).join('')+(ch.length>8?'<li class="mut">e mais '+(ch.length-8)+' (ver no PDF da versão)</li>':'')+'</ul>':'')+
+      '<div class="acts">'+(view.version===idx?'<button class="btn2" data-act="viewCurrent">Voltar à versão atual</button>':(latest&&view.version==null?'':'<button class="btn2" data-act="viewVer" data-i="'+idx+'">Visualizar esta versão</button>'))+'<button class="btn2" data-act="pdfVer" data-i="'+idx+'">Baixar PDF da versão</button>'+
+      (!RO&&!latest?'<button class="btn2" data-act="restoreVer" data-i="'+idx+'">Restaurar como nova versão</button>':'')+'</div></div></div>';}).join('')+'</div>';
+  return h;
+}
+
+function render(){
+  var d=data(), ref=refDate(), L=lastEntry();
+  document.body.classList.toggle('is-ro',RO);
+  $('#docTitle').textContent=niceTitle(d.meta&&d.meta.titulo);
+  $('#objetivo').textContent=(d.meta&&d.meta.objetivo)||'';
+  $('#verBadge').textContent='Versão '+L.v+' · '+br(L.ts);
+  $('#roPill').hidden=!RO;
+  $('#dirtyPill').hidden=!dirty;
+  ['#btnImport','#btnEdit','#btnSave'].forEach(function(s){$(s).hidden=RO;});
+  $$('.edit-ctl').forEach(function(b){b.hidden=RO;});
+  $('#btnEdit').classList.toggle('on',editMode);
+  $('#btnEdit').textContent=editMode?'Sair da edição':'Modo edição';
+  $('#btnSave').disabled=!dirty;
+  $('#histCount').textContent=store.history.length;
+  $$('#tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.tab===view.tab);});
+  var bn='';
+  if(view.version!=null){var e=store.history[view.version]; bn+='<div class="b info"><span>Você está visualizando a <b>versão '+e.v+'</b>, salva em '+brTs(e.ts)+'. Os dados são somente leitura nesta visualização.</span><span class="sp"></span><button class="lnk" data-act="viewCurrent">Voltar à versão atual</button></div>';}
+  else if(editMode) bn+='<div class="b warn"><span><b>Modo edição ativo.</b> Altere os dados na aba Estudos. Ao terminar, clique em <b>Salvar versão + PDF</b> para registrar no histórico e gerar o PDF somente leitura.</span></div>';
+  if(draftOffer) bn+='<div class="b warn" style="margin-top:8px"><span>Existem alterações não salvas deste painel guardadas neste navegador.</span><span class="sp"></span><button class="lnk" data-act="restoreDraft">Recuperar</button><button class="lnk" data-act="dropDraft">Descartar</button></div>';
+  $('#banner').innerHTML=bn;
+  var html = view.tab==='overview'?renderOverview(d,ref):view.tab==='studies'?renderStudies(d,ref):view.tab==='labs'?renderLabs(d,ref):renderHistory();
+  $('#app').innerHTML=html;
+  $('#foot').innerHTML='Painel de Estudos de Equivalência · Versão '+L.v+' salva em '+brTs(L.ts)+(L.autor?' por '+esc(L.autor):'')+' · Dias calculados até '+br(ref)+(RO?' · Cópia somente leitura':'');
+}
+
+/* ===================== edição ===================== */
+var draftOffer=false;
+function markDirty(){dirty=true; lsSet(KEY+':draft',JSON.stringify({base:store.history.length,state:state,origin:pendingOrigin}));}
+function curStudy(){return state.studies.filter(function(s){return s.id===view.study;})[0];}
+document.addEventListener('change',function(ev){
+  var el=ev.target, b=el.dataset&&el.dataset.b; if(!b||!canEdit()) return;
+  var s=curStudy(); if(!s) return; var p=b.split(':'), v=el.value;
+  if(p[0]==='s'){ s[p[1]] = p[1]==='nome'?v.trim().toUpperCase():(p[1]==='solicitacao'?(v||null):v); }
+  else { var l=s.labs[+p[1]]; var f=p[2];
+    if(f==='valor') l.valor=v===''?null:Math.round(parseFloat(v)*100)/100;
+    else if(f==='data') l.data=v||null;
+    else if(f==='obs'){ l.obs=v; if(l.valor==null){var mv=parseMoney(v); if(mv!=null) l.valor=mv;} }
+    else l[f]=v; }
+  markDirty(); keepScroll(render);
+});
+function keepScroll(fn){var y=window.scrollY; fn(); window.scrollTo(0,y);}
+
+document.addEventListener('click',function(ev){
+  var t=ev.target.closest('[data-act],[data-open],[data-study],[data-tab]'); if(!t) return;
+  if(t.dataset.tab){view.tab=t.dataset.tab; render(); window.scrollTo(0,0); return;}
+  if(t.dataset.open){view.tab='studies'; view.study=t.dataset.open; render(); window.scrollTo(0,0); return;}
+  if(t.dataset.study){view.study=t.dataset.study; keepScroll(render); return;}
+  var a=t.dataset.act, i=+t.dataset.i;
+  if(a==='addStudy'){var n={id:uid(),nome:'NOVO ESTUDO',apresentacoes:'',classe:'',indicacao:'',referencia:'',companhia:'',solicitacao:todayISO(),labs:labOrder(state).map(function(l){return {lab:l,data:null,status:'pendente',obs:'',valor:null};})}; state.studies.push(n); view.study=n.id; markDirty(); render();}
+  else if(a==='delStudy'){var s=curStudy(); confirmBox('Excluir o estudo '+s.nome+'?','O estudo sairá da versão atual, mas continuará registrado nas versões anteriores do histórico.',function(){state.studies=state.studies.filter(function(x){return x!==s;}); view.study=null; markDirty(); render();});}
+  else if(a==='addLab'){curStudy().labs.push({lab:'Novo laboratório',data:todayISO(),status:'analise',obs:'',valor:null}); markDirty(); keepScroll(render);}
+  else if(a==='delLab'){var s2=curStudy(); s2.labs.splice(i,1); markDirty(); keepScroll(render);}
+  else if(a==='pdfStudy'){ var e=view.version!=null?store.history[view.version]:lastEntry(); var snap=view.version!=null?e.snapshot:(dirty?null:e.snapshot);
+    if(!snap){toast('Há alterações não salvas. O PDF usa a última versão salva (v'+e.v+'). Salve uma nova versão para incluí-las.');snap=e.snapshot;}
+    if(!snap.studies.some(function(s){return s.id===view.study;})){toast('Este estudo ainda não existe na versão salva.','err');return;}
+    makePDF(e,{studyId:view.study}); }
+  else if(a==='viewVer'){view.version=i; render(); window.scrollTo(0,0);}
+  else if(a==='viewCurrent'){view.version=null; render();}
+  else if(a==='pdfVer'){makePDF(store.history[i]);}
+  else if(a==='restoreVer'){confirmBox('Restaurar a versão '+(i+1)+'?','Os dados da versão '+(i+1)+' serão carregados para edição. Nada é apagado: ao salvar, eles entram como uma nova versão no histórico.',function(){state=clone(store.history[i].snapshot); pendingOrigin='Restauração da versão '+(i+1); view.version=null; editMode=true; markDirty(); view.tab='studies'; render();});}
+  else if(a==='restoreDraft'){try{var dr=JSON.parse(lsGet(KEY+':draft')); state=dr.state; pendingOrigin=dr.origin; dirty=true;}catch(e){} draftOffer=false; render();}
+  else if(a==='dropDraft'){lsDel(KEY+':draft'); draftOffer=false; render();}
+});
+
+$('#btnEdit').onclick=function(){ if(view.version!=null){view.version=null;} editMode=!editMode; if(editMode&&view.tab!=='studies'){view.tab='studies';} render(); };
+$('#btnImport').onclick=function(){$('#fileInput').value='';$('#fileInput').click();};
+$('#fileInput').onchange=function(){ if(this.files[0]) importFile(this.files[0]); };
+$('#btnSave').onclick=openSave;
+$('#btnExport').onclick=function(e){e.stopPropagation(); $('#exportMenu').hidden=!$('#exportMenu').hidden;};
+document.addEventListener('click',function(e){ if(!e.target.closest('.menu')) $('#exportMenu').hidden=true; });
+$('#exportMenu').onclick=function(e){var b=e.target.closest('button'); if(!b) return; $('#exportMenu').hidden=true;
+  if(b.dataset.act==='pdf'){ if(dirty) toast('O PDF reflete a última versão salva (v'+lastEntry().v+'). Salve para incluir as alterações em andamento.'); makePDF(lastEntry()); }
+};
+$('#btnTheme').onclick=function(){var r=document.documentElement; var cur=r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'); var nx=cur==='dark'?'light':'dark'; r.setAttribute('data-theme',nx); lsSet('eqdash:theme',nx);};
+
+/* ===================== modal / salvar ===================== */
+function modal(html){$('#modalCard').innerHTML=html; $('#modal').hidden=false;}
+function closeModal(){$('#modal').hidden=true;}
+$('#modal').addEventListener('click',function(e){ if(e.target.id==='modal') closeModal(); });
+function confirmBox(title,text,ok){
+  modal('<h2>'+esc(title)+'</h2><div class="cap">'+esc(text)+'</div><div class="row"><button class="btn2" id="cNo">Cancelar</button><button class="btn2 pri" id="cOk">Confirmar</button></div>');
+  $('#cNo').onclick=closeModal; $('#cOk').onclick=function(){closeModal(); ok();};
+}
+function openSave(){
+  var ch=diff(store.current,state);
+  if(!ch.length){ toast('Nenhuma alteração em relação à versão '+lastEntry().v+'.'); dirty=false; lsDel(KEY+':draft'); render(); return; }
+  var nv=store.history.length+1;
+  modal('<h2>Salvar versão '+nv+'</h2><div class="cap">'+esc(pendingOrigin||'Edição manual')+' · '+plural(ch.length,'alteração identificada','alterações identificadas')+' em relação à versão '+lastEntry().v+'.</div>'+
+    '<div class="changes"><ul style="margin:0;padding-left:18px">'+ch.map(function(c){return '<li>'+esc(c)+'</li>';}).join('')+'</ul></div>'+
+    '<label for="svAutor">Responsável pela atualização</label><input class="fld" id="svAutor" value="'+esc((firebase.auth().currentUser||{}).email||'')+'" placeholder="Seu nome">'+
+    '<label for="svNota">Nota da versão (aparece no histórico e no PDF)</label><textarea class="fld" id="svNota" placeholder="Ex.: Retorno do CSA com orçamento do Paricalcitol"></textarea>'+
+    '<label class="check"><input type="checkbox" checked disabled> Gerar PDF somente leitura desta versão</label>'+
+    '<div class="row">'+(pendingOrigin&&/Planilha/.test(pendingOrigin)?'<button class="btn2 danger" id="svDrop">Descartar importação</button>':'')+'<button class="btn2" id="svLater">Revisar antes</button><button class="btn2 pri" id="svOk">Salvar versão '+nv+'</button></div>');
+  $('#svLater').onclick=closeModal;
+  if($('#svDrop')) $('#svDrop').onclick=function(){state=clone(store.current); dirty=false; pendingOrigin=null; lsDel(KEY+':draft'); closeModal(); render();};
+  $('#svOk').onclick=function(){
+    var autor=$('#svAutor').value.trim(), nota=$('#svNota').value.trim();
+    var e={v:nv,ts:nowLocal(),autor:autor,origem:pendingOrigin||'Edição manual',nota:nota,changes:ch,snapshot:clone(state)};
+    $('#svOk').disabled=true;
+    salvarNoBanco(e).then(function(){
+      closeModal(); render(); makePDF(e);
+      modal('<h2>Versão '+nv+' registrada</h2><div class="cap">Salva na Estante. Quem abrir o app já vê esta versão. O PDF somente leitura foi gerado.</div>'+
+        '<div class="row"><button class="btn2" id="dlP">Baixar PDF novamente</button><button class="btn2 pri" id="dlOk">Concluir</button></div>');
+      $('#dlP').onclick=function(){makePDF(e);}; $('#dlOk').onclick=closeModal;
+    }).catch(function(err){
+      $('#svOk').disabled=false;
+      toast(err&&err.message?err.message:'Não foi possível salvar. Tente de novo.',true);
+    });
+  };
+}
+
+/* ===================== nome do arquivo do PDF ===================== */
+function fileBase(){return 'Estudos_Equivalencia';}
+function downloadBlob(blob,name){var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){URL.revokeObjectURL(a.href); a.remove();},1500);}
+
+/* ===================== PDF somente leitura ===================== */
+function rgb(h){h=h.replace('#','');return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)];}
+function tint(h,a){var c=rgb(h);return c.map(function(v){return Math.round(255-(255-v)*a);});}
+var INK={proposta:[10,110,10],analise:[28,92,171],pendente:[122,80,0],declinou:[167,43,43]};
+function pdfSafe(s){return String(s==null?'':s).replace(/[→]/g,'>').replace(/[—–]/g,'-').replace(/[✓✕◔]/g,'');}
+function makePDF(entry,opt){
+  opt=opt||{};
+  return new Promise(function(resolve){
+  if(!window.jspdf||!window.jspdf.jsPDF){toast('A biblioteca de PDF não carregou. Verifique a conexão com a internet e recarregue.','err');resolve();return;}
+  var J=window.jspdf.jsPDF, owner=(Math.random().toString(36)+Date.now().toString(36)).slice(2)+Math.random().toString(36).slice(2);
+  var doc=new J({orientation:'landscape',unit:'mm',format:'a4',compress:true,encryption:{userPassword:'',ownerPassword:owner,userPermissions:['print']}});
+  var snap=entry.snapshot, ref=entry.ts.slice(0,10), Wd=297, M=12, CW=Wd-2*M;
+  var hist=store.history.slice(0,entry.v);
+  var titulo=niceTitle(snap.meta&&snap.meta.titulo);
+  doc.setProperties({title:titulo+' - Versão '+entry.v, subject:'Relatório somente leitura', author:entry.autor||'', creator:'Painel de Estudos de Equivalência', keywords:'estudos de equivalência'});
+  var navy=[15,42,68];
+  function header(t,sub){
+    doc.setFillColor.apply(doc,navy); doc.rect(0,0,Wd,24,'F');
+    doc.setFillColor(42,120,214); doc.rect(0,24,Wd,1.2,'F');
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(17); doc.text(pdfSafe(t),M,11);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(200,212,226);
+    if(sub) doc.text(doc.splitTextToSize(pdfSafe(sub),175)[0],M,18);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(255,255,255); doc.text('Versão '+entry.v,Wd-M,10,{align:'right'});
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(200,212,226);
+    doc.text('Gerada em '+brTs(entry.ts)+(entry.autor?' · '+pdfSafe(entry.autor):''),Wd-M,15,{align:'right'});
+    doc.text('Dias calculados até '+br(ref),Wd-M,19.5,{align:'right'});
+  }
+  function kbox(x,y,w,h,l,v,s,col){
+    doc.setDrawColor(222,226,232); doc.setFillColor(255,255,255); doc.roundedRect(x,y,w,h,2,2,'FD');
+    doc.setFillColor.apply(doc,col); doc.rect(x,y+2,1.2,h-4,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.8); doc.setTextColor(132,139,150); doc.text(pdfSafe(l).toUpperCase(),x+4,y+5.5);
+    doc.setFontSize(15); doc.setTextColor(15,23,32); doc.text(pdfSafe(String(v)),x+4,y+13);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(75,85,99); if(s) doc.text(doc.splitTextToSize(pdfSafe(s),w-6)[0],x+4,y+17.5);
+  }
+  function secT(t,y,x){doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(15,23,32); doc.text(pdfSafe(t),x==null?M:x,y);}
+  function stackPDF(x,y,w,h,c,total){ var cx=x; KEYS.forEach(function(k){ if(!c[k]) return; var ww=c[k]/total*w; doc.setFillColor.apply(doc,rgb(ST[k].hex)); doc.rect(cx,y,Math.max(ww-0.6,0.3),h,'F');
+      if(ww>5){doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(k==='pendente'?58:255,k==='pendente'?39:255,k==='pendente'?0:255); doc.text(String(c[k]),cx+ww/2-0.3,y+h/2+1.2,{align:'center'});} cx+=ww; }); }
+  function legendPDF(x,y){ doc.setFont('helvetica','normal'); doc.setFontSize(7.2); KEYS.forEach(function(k){ doc.setFillColor.apply(doc,rgb(ST[k].hex)); doc.roundedRect(x,y-2.4,3,3,0.6,0.6,'F'); doc.setTextColor(75,85,99); doc.text(ST[k].label,x+4.5,y); x+=doc.getTextWidth(ST[k].label)+11; }); }
+  var stCell=function(data,k){ if(!k) return; data.cell.styles.fillColor=tint(ST[k].hex,0.16); data.cell.styles.textColor=INK[k]; data.cell.styles.fontStyle='bold'; };
+
+  var studies=opt.studyId?snap.studies.filter(function(s){return s.id===opt.studyId;}):snap.studies;
+
+  if(!opt.studyId){
+    var o=overall(snap,ref);
+    header(titulo,(snap.meta&&snap.meta.objetivo)||'');
+    var kw=(CW-5*4)/6, y=31, sumV=o.vals.reduce(function(a,b){return a+b;},0);
+    kbox(M,y,kw,20,'Estudos no portfólio',snap.studies.length,'',[29,78,137]);
+    kbox(M+(kw+4),y,kw,20,'Cotações em curso',o.total,plural(o.labs.length,'laboratório','laboratórios'),[132,139,150]);
+    kbox(M+2*(kw+4),y,kw,20,'Em análise',o.c.analise+' ('+pct(o.c.analise,o.total)+')',o.c.pendente?o.c.pendente+' com retorno pendente':'',rgb(ST.analise.hex));
+    kbox(M+3*(kw+4),y,kw,20,'Propostas recebidas',o.c.proposta,o.vals.length?brl(sumV):'nenhuma até o momento',rgb(ST.proposta.hex));
+    kbox(M+4*(kw+4),y,kw,20,'Declinaram',o.c.declinou+' ('+pct(o.c.declinou,o.total)+')','taxa de declínio',rgb(ST.declinou.hex));
+    kbox(M+5*(kw+4),y,kw,20,'Prazo médio em aberto',(o.avg||0)+' dias',o.oldest?'mais antigo: '+o.oldest.s.nome:'',[29,78,137]);
+    y=60; secT('Matriz estudo × laboratório',y);
+    var labs=o.labs;
+    doc.autoTable({startY:y+3,margin:{left:M,right:Wd-M-178},tableWidth:178,theme:'grid',
+      head:[['Estudo'].concat(labs)],
+      body:snap.studies.map(function(s){return [s.nome+'\nSolic. '+br(s.solicitacao)].concat(labs.map(function(ln){var l=s.labs.filter(function(x){return x.lab===ln;})[0]; return l?ST[l.status].short+'\n'+(l.valor!=null?brl(l.valor):br(l.data)):'não cotado';}));}),
+      styles:{fontSize:7.4,cellPadding:2,lineColor:[255,255,255],lineWidth:0.8,valign:'middle',textColor:[15,23,32]},
+      headStyles:{fillColor:[238,241,245],textColor:[75,85,99],fontStyle:'bold',fontSize:7},
+      columnStyles:{0:{fontStyle:'bold',cellWidth:38,fillColor:[248,249,251]}},
+      didParseCell:function(dd){ if(dd.section==='body'&&dd.column.index>0){ var s=snap.studies[dd.row.index], l=s.labs.filter(function(x){return x.lab===labs[dd.column.index-1];})[0]; if(l) stCell(dd,l.status); } }
+    });
+    var my=doc.lastAutoTable.finalY;
+    var rx=M+184, rw=Wd-M-rx; secT('Distribuição por estudo',y,rx); doc.setFont('helvetica','normal');
+    var by=y+7; o.ms.forEach(function(x){ doc.setFont('helvetica','bold'); doc.setFontSize(7.6); doc.setTextColor(15,23,32); doc.text(pdfSafe(x.s.nome),rx,by+2.5);
+      doc.setFont('helvetica','normal'); doc.setFontSize(6.8); doc.setTextColor(132,139,150); doc.text(x.m.health.label+' · '+(x.m.dias!=null?x.m.dias+' dias':''),rx+rw,by+2.5,{align:'right'});
+      stackPDF(rx,by+4,rw,5.5,x.m.c,x.m.total||1); by+=14; });
+    legendPDF(M,Math.max(my,by)+6);
+    y=Math.max(my,by)+14;
+    var al=alertsOf(snap,ref);
+    secT('Pontos de atenção',y);
+    doc.autoTable({startY:y+3,margin:{left:M,right:M},theme:'plain',
+      body:al.length?al.map(function(a){return [a.lvl==='crit'?'Crítico':a.lvl==='warn'?'Atenção':'Conferir',a.study,pdfSafe(a.text)];}):[['','','Nenhum ponto de atenção.']],
+      styles:{fontSize:7.6,cellPadding:{top:1.6,bottom:1.6,left:2,right:2},textColor:[40,48,58]},
+      columnStyles:{0:{cellWidth:18,fontStyle:'bold'},1:{cellWidth:32,fontStyle:'bold'}},
+      didParseCell:function(dd){ if(dd.column.index===0&&al[dd.row.index]){var lv=al[dd.row.index].lvl; dd.cell.styles.textColor=lv==='crit'?[167,43,43]:lv==='warn'?[122,80,0]:[100,108,118];} },
+      alternateRowStyles:{fillColor:[248,249,251]}
+    });
+  }
+
+  studies.forEach(function(s){
+    doc.addPage(); if(opt.studyId && doc.getNumberOfPages()===2) doc.deletePage(1);
+    var m=metrics(s,ref);
+    header(s.nome,[s.classe,s.referencia&&('Referência: '+s.referencia+(s.companhia?' ('+s.companhia+')':''))].filter(Boolean).join(' · '));
+    var hc={good:[10,110,10],info:[28,92,171],warn:[122,80,0],crit:[167,43,43]}[m.health.k];
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); var tw=doc.getTextWidth(m.health.label)+8;
+    doc.setFillColor.apply(doc,hc.map(function(v){return Math.round(255-(255-v)*0.14);})); doc.roundedRect(M,29,tw,6,3,3,'F'); doc.setTextColor.apply(doc,hc); doc.text(m.health.label,M+4,33.1);
+    doc.autoTable({startY:38,margin:{left:M,right:M},theme:'grid',
+      body:[[{content:'APRESENTAÇÕES',styles:{fontStyle:'bold',textColor:[132,139,150],fontSize:6.6}},s.apresentacoes||'',{content:'CLASSE',styles:{fontStyle:'bold',textColor:[132,139,150],fontSize:6.6}},s.classe||'',{content:'SOLICITAÇÃO',styles:{fontStyle:'bold',textColor:[132,139,150],fontSize:6.6}},br(s.solicitacao)+(m.dias!=null?' ('+m.dias+' dias em aberto)':'')],
+        [{content:'REFERÊNCIA',styles:{fontStyle:'bold',textColor:[132,139,150],fontSize:6.6}},s.referencia||'',{content:'COMPANHIA',styles:{fontStyle:'bold',textColor:[132,139,150],fontSize:6.6}},s.companhia||'',{content:'ÚLT. MOVIMENTAÇÃO',styles:{fontStyle:'bold',textColor:[132,139,150],fontSize:6.6}},m.last?br(m.last)+' (há '+plural(m.semMov,'dia','dias')+')':'s/ data'],
+        [{content:'PARA QUE SERVE',styles:{fontStyle:'bold',textColor:[132,139,150],fontSize:6.6}},{content:pdfSafe(s.indicacao||''),colSpan:5}]],
+      styles:{fontSize:8,cellPadding:2.2,lineColor:[227,230,235],lineWidth:0.2,textColor:[15,23,32]},
+      columnStyles:{0:{cellWidth:28,fillColor:[248,249,251]},2:{cellWidth:22,fillColor:[248,249,251]},4:{cellWidth:30,fillColor:[248,249,251]}}
+    });
+    var y=doc.lastAutoTable.finalY+4, kw=(CW-4*4)/5, kh=18;
+    kbox(M,y,kw,19,'Laboratórios cotados',m.total,'',[132,139,150]);
+    kbox(M+(kw+4),y,kw,19,'Em análise',m.c.analise,m.c.pendente?m.c.pendente+' pendente(s)':'',rgb(ST.analise.hex));
+    kbox(M+2*(kw+4),y,kw,19,'Propostas',m.c.proposta,m.best!=null?'menor: '+brl(m.best):'',rgb(ST.proposta.hex));
+    kbox(M+3*(kw+4),y,kw,19,'Declinaram',m.c.declinou+' ('+pct(m.c.declinou,m.total)+')','',rgb(ST.declinou.hex));
+    kbox(M+4*(kw+4),y,kw,19,'Ativos no processo',m.ativos+' de '+m.total,'',[29,78,137]);
+    y+=25;
+    secT('Laboratórios cotados',y);
+    doc.autoTable({startY:y+2.5,margin:{left:M,right:M,bottom:16,top:30},theme:'striped',rowPageBreak:'avoid',
+      head:[['Laboratório','Situação','Última atualização','Dias desde a atualização','Observação','Valor da proposta']],
+      body:s.labs.map(function(l){return [l.lab,ST[l.status].label,br(l.data),l.data?String(days(l.data,ref)):'s/ data',pdfSafe(l.obs||''),l.valor!=null?brl(l.valor):''];}),
+      styles:{fontSize:7.8,cellPadding:1.8,textColor:[15,23,32]},
+      headStyles:{fillColor:navy,textColor:[255,255,255],fontSize:7.2},
+      alternateRowStyles:{fillColor:[248,249,251]},
+      columnStyles:{0:{fontStyle:'bold',cellWidth:32},1:{cellWidth:40},2:{cellWidth:30},3:{cellWidth:30,halign:'right'},5:{cellWidth:34,halign:'right',fontStyle:'bold'}},
+      didParseCell:function(dd){ if(dd.section==='body'&&dd.column.index===1) stCell(dd,s.labs[dd.row.index].status); }
+    });
+    y=doc.lastAutoTable.finalY+7;
+    var rh=5.6, h=s.labs.length*rh+6;
+    if(y+h+10>197){ doc.addPage(); header(s.nome+' (continuação)',''); y=34; }
+    secT('Linha do tempo por laboratório',y); legendPDF(M+75,y); y+=4;
+    var L=40, R=24, dates=[ref]; if(s.solicitacao) dates.push(s.solicitacao); s.labs.forEach(function(l){if(l.data)dates.push(l.data);}); dates.sort();
+    var t0=utc(dates[0])-2*864e5, t1=utc(ref)+2*864e5; if(t1-t0<20*864e5) t0=t1-20*864e5;
+    var X=function(iso){return M+L+(utc(iso)-t0)/(t1-t0)*(CW-L-R);};
+    var span=(t1-t0)/864e5, step=span>120?30:span>50?14:7;
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(132,139,150); doc.setDrawColor(230,232,236); doc.setLineWidth(0.2);
+    for(var tt=t0+864e5;tt<t1;tt+=step*864e5){var iso=isoFromUTC(tt); doc.line(X(iso),y+2,X(iso),y+h); doc.text(brShort(iso),X(iso),y+0.8,{align:'center'});}
+    doc.setDrawColor(75,85,99); doc.setLineDashPattern([1,1],0); doc.line(X(ref),y+2,X(ref),y+h); doc.setLineDashPattern([],0);
+    doc.setFont('helvetica','bold'); doc.setTextColor(75,85,99); doc.text('Ref. '+brShort(ref),X(ref)+1,y+0.8);
+    s.labs.forEach(function(l,i){ var cy=y+5+i*rh;
+      doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(15,23,32); doc.text(pdfSafe(l.lab),M,cy+1);
+      if(s.solicitacao && l.data){ doc.setDrawColor.apply(doc,tint(ST[l.status].hex,0.5)); doc.setLineWidth(1); doc.line(X(s.solicitacao),cy,X(l.data),cy);
+        if(l.status==='analise'||l.status==='pendente'){doc.setDrawColor(200,204,210); doc.setLineWidth(0.4); doc.setLineDashPattern([0.8,1],0); doc.line(X(l.data),cy,X(ref),cy); doc.setLineDashPattern([],0);} }
+      else if(s.solicitacao){doc.setDrawColor(200,204,210); doc.setLineWidth(0.4); doc.setLineDashPattern([0.8,1],0); doc.line(X(s.solicitacao),cy,X(ref),cy); doc.setLineDashPattern([],0);}
+      if(s.solicitacao){doc.setDrawColor(75,85,99); doc.setLineWidth(0.4); doc.setFillColor(255,255,255); doc.circle(X(s.solicitacao),cy,1,'FD');}
+      if(l.data){doc.setFillColor.apply(doc,rgb(ST[l.status].hex)); doc.setDrawColor(255,255,255); doc.setLineWidth(0.5); doc.circle(X(l.data),cy,1.6,'FD');}
+      doc.setFont('helvetica','normal'); doc.setFontSize(6.8); doc.setTextColor(75,85,99); doc.text(l.data?days(l.data,ref)+' d':'s/ data',Wd-M,cy+1,{align:'right'});
+      doc.setLineWidth(0.2);
+    });
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(132,139,150);
+    doc.text('Círculo vazado: data da solicitação. Traço colorido: tempo até a última atualização. Pontilhado: tempo sem nova atualização.',M,y+h+3);
+  });
+
+  if(!opt.studyId){
+    doc.addPage(); header('Histórico de versões','Registro das atualizações até a versão '+entry.v);
+    doc.autoTable({startY:31,margin:{left:M,right:M},theme:'striped',
+      head:[['Versão','Data','Responsável','Origem','Nota','Alterações']],
+      body:hist.slice().reverse().map(function(e){return ['v'+e.v,brTs(e.ts),pdfSafe(e.autor||''),pdfSafe(e.origem||''),pdfSafe(e.nota||''),String((e.changes||[]).length)];}),
+      styles:{fontSize:8,cellPadding:2.2},headStyles:{fillColor:navy,textColor:[255,255,255],fontSize:7.4},columnStyles:{0:{cellWidth:16,fontStyle:'bold'},1:{cellWidth:32},2:{cellWidth:36},3:{cellWidth:60},5:{cellWidth:22,halign:'right'}}});
+    var yy=doc.lastAutoTable.finalY+8; secT('Alterações registradas nesta versão (v'+entry.v+')',yy);
+    doc.autoTable({startY:yy+3,margin:{left:M,right:M},theme:'plain',body:(entry.changes&&entry.changes.length?entry.changes:['Carga inicial dos dados.']).map(function(c,i){return [String(i+1),pdfSafe(c)];}),
+      styles:{fontSize:8,cellPadding:1.8,textColor:[40,48,58]},columnStyles:{0:{cellWidth:10,textColor:[132,139,150]}},alternateRowStyles:{fillColor:[248,249,251]}});
+  }
+
+  var n=doc.getNumberOfPages();
+  for(var p=1;p<=n;p++){ doc.setPage(p); doc.setDrawColor(227,230,235); doc.setLineWidth(0.2); doc.line(M,200,Wd-M,200);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(132,139,150);
+    doc.text(pdfSafe(titulo)+' · Documento somente leitura · Versão '+entry.v+' de '+brTs(entry.ts),M,204);
+    doc.text('Página '+p+' de '+n,Wd-M,204,{align:'right'}); }
+  var name=fileBase()+'_v'+entry.v+'_'+entry.ts.slice(0,10)+(opt.studyId?'_'+studies[0].nome.replace(/[^A-Za-z0-9]+/g,'_'):'')+'.pdf';
+  doc.save(name);
+  toast('PDF somente leitura gerado: '+name,'ok');
+  setTimeout(resolve,300);
+  });
+}
+
+/* ===================== tooltip / toast ===================== */
+var tip=$('#tip');
+document.addEventListener('mouseover',function(e){var t=e.target.closest&&e.target.closest('[data-tip]'); if(!t){tip.classList.remove('on');return;} tip.innerHTML=esc(t.getAttribute('data-tip')).replace(/\n/g,'<br>'); tip.classList.add('on');});
+document.addEventListener('mousemove',function(e){ if(!tip.classList.contains('on')) return; var x=e.clientX+14,y=e.clientY+14,r=tip.getBoundingClientRect(); if(x+r.width>innerWidth-8)x=e.clientX-r.width-14; if(y+r.height>innerHeight-8)y=e.clientY-r.height-14; tip.style.left=x+'px'; tip.style.top=y+'px';});
+function toast(msg,kind){var t=document.createElement('div'); t.className='toast '+(kind||''); t.textContent=msg; $('#toasts').appendChild(t); setTimeout(function(){t.remove();},5200);}
+
+/* ===================== banco (Estante / Firebase) ===================== */
+function aplicaBanco(v){
+  var h=v.history||{};
+  store.history=Object.keys(h).sort(function(a,b){return +a.slice(1)-+b.slice(1);}).map(function(k){return h[k];});
+  store.current=clone(v.current);
+  if(!dirty) state=clone(store.current);
+}
+function checkDraft(){
+  try{ var dr=JSON.parse(lsGet(KEY+':draft')||'null'); if(dr && dr.base===store.history.length && diff(store.current,dr.state).length) draftOffer=true; else if(dr) lsDel(KEY+':draft'); }catch(e){}
+}
+function carregaBanco(){
+  var ref=firebase.database().ref('eqEstudos');
+  ref.once('value').then(function(snap){
+    var v=snap.val();
+    if(!v||!v.current){
+      v={current:clone(SEED_DATA.current), history:{}};
+      SEED_DATA.history.forEach(function(h){v.history['v'+h.v]=h;});
+      return ref.set(v).then(function(){return v;});
+    }
+    return v;
+  }).then(function(v){
+    aplicaBanco(v); checkDraft(); render();
+    ref.on('value',function(s){ var nv=s.val(); if(!nv||!nv.current||dirty||editMode) return; aplicaBanco(nv); render(); });
+  }).catch(function(){ toast('Não foi possível carregar os dados. Verifique seu acesso e recarregue a página.',true); });
+}
+function salvarNoBanco(e){
+  var ref=firebase.database().ref('eqEstudos');
+  return ref.child('history').once('value').then(function(snap){
+    if(snap.numChildren()!==store.history.length) throw new Error('Outra pessoa salvou uma versão agora. Recarregue a página, confira e salve de novo.');
+    var upd={}; upd['current']=clone(state); upd['history/v'+e.v]=e;
+    return ref.update(upd);
+  }).then(function(){
+    store.history.push(e); store.current=clone(state); dirty=false; pendingOrigin=null; editMode=false; lsDel(KEY+':draft');
+  });
+}
+window.__startApp=carregaBanco;
+
+/* ===================== init ===================== */
+var th=lsGet('eqdash:theme'); if(th) document.documentElement.setAttribute('data-theme',th);
+window.addEventListener('beforeunload',function(e){ if(dirty){e.preventDefault(); e.returnValue='';} });
+})();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
+<script>
+(function(){
+  /* CADEADO PADRÃO DA ESTANTE. Só esta linha muda (o ✎ Editar troca ela). */
+  var GRUPOS_PERMITIDOS = ["PESQUISA CLINICA"];
+  var firebaseConfig = {
+    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+    authDomain: "stinpharma-qualidade.firebaseapp.com",
+    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+    projectId: "stinpharma-qualidade",
+    storageBucket: "stinpharma-qualidade.firebasestorage.app",
+    messagingSenderId: "422803826984",
+    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+    measurementId: "G-6C0TLHH2VP"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  function norm(x){ return String(x).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().trim(); }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  function liberar(){
+    var st = document.getElementById('__gateStyle');
+    var ov = document.getElementById('__gateOverlay');
+    if(st) st.remove();
+    if(ov) ov.remove();
+    window.__gateOk = true;
+    if(window.__startApp) window.__startApp();
+  }
+  function negar(msg){
+    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Estante</a>';
+  }
+  var jaResolveu = false;
+  setTimeout(function(){
+    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
+  }, 10000);
+  firebase.auth().onAuthStateChanged(function(user){
+    jaResolveu = true;
+    if(!user){ negar('Você precisa entrar pela Estante.'); return; }
+    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
+      var dados = snap.val() || {};
+      var lista = (dados.grupos || []).slice();
+      if(dados.gruposMap && typeof dados.gruposMap === 'object'){ Object.keys(dados.gruposMap).forEach(function(k){ if(dados.gruposMap[k]) lista.push(k); }); }
+      var chave = function(x){ return norm(x).replace(/[^A-Z0-9]/g,'_'); };
+      var meus = lista.map(chave);
+      var permitido = dados.admin === true || GRUPOS_PERMITIDOS.some(function(g){ return meus.indexOf(chave(g)) !== -1; });
+      if(permitido){ liberar(); return; }
+      negar('Você não tem permissão pra acessar este app.<br><span style="font-size:12px;">Seus grupos: ' + esc(lista.join(', ') || 'nenhum') + '<br>Grupos com acesso: ' + esc(GRUPOS_PERMITIDOS.join(', ')) + '</span>');
+    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
+  });
+})();
+</script>
+</body>
+</html>
