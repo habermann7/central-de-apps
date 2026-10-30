@@ -309,13 +309,13 @@ footer.foot{max-width:1320px;margin:0 auto;padding:0 28px 32px;color:var(--muted
     </div>
   </div>
   <div class="actions">
-    <span class="pill ver" id="verBadge"></span>
-    <span class="pill ro" id="roPill" hidden>Somente leitura</span>
+        <span class="pill ro" id="roPill" hidden>Somente leitura</span>
     <span class="pill dirty" id="dirtyPill" hidden>Alterações não salvas</span>
     <button class="btn" id="btnImport" title="Carregar uma nova versão da planilha (.xlsx)">Importar planilha</button>
     <input type="file" id="fileInput" accept=".xlsx,.xls" hidden>
     <button class="btn" id="btnEdit">Modo edição</button>
-    <button class="btn primary" id="btnSave" disabled>Salvar versão + PDF</button>
+    <button class="btn primary" id="btnSave" disabled>Salvar versão</button>
+    <button class="btn" id="btnPdf" title="Gera o PDF somente leitura da última versão salva">Gerar PDF</button>
     <div class="menu">
       <button class="btn" id="btnExport">Exportar ▾</button>
       <div class="menu-list" id="exportMenu" hidden>
@@ -730,19 +730,18 @@ function render(){
   document.body.classList.toggle('is-ro',RO);
   $('#docTitle').textContent=niceTitle(d.meta&&d.meta.titulo);
   $('#objetivo').textContent=(d.meta&&d.meta.objetivo)||'';
-  $('#verBadge').textContent='Versão '+L.v+' · '+br(L.ts);
   $('#roPill').hidden=!RO;
   $('#dirtyPill').hidden=!dirty;
   ['#btnImport','#btnEdit','#btnSave'].forEach(function(s){$(s).hidden=RO;});
   $$('.edit-ctl').forEach(function(b){b.hidden=RO;});
   $('#btnEdit').classList.toggle('on',editMode);
   $('#btnEdit').textContent=editMode?'Sair da edição':'Modo edição';
-  $('#btnSave').disabled=!dirty;
+  $('#btnSave').disabled=!(dirty || diff(store.current,state).length);
   $('#histCount').textContent=store.history.length;
   $$('#tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.tab===view.tab);});
   var bn='';
   if(view.version!=null){var e=store.history[view.version]; bn+='<div class="b info"><span>Você está visualizando a <b>versão '+e.v+'</b>, salva em '+brTs(e.ts)+'. Os dados são somente leitura nesta visualização.</span><span class="sp"></span><button class="lnk" data-act="viewCurrent">Voltar à versão atual</button></div>';}
-  else if(editMode) bn+='<div class="b warn"><span><b>Modo edição ativo.</b> Altere os dados na aba Estudos. Ao terminar, clique em <b>Salvar versão + PDF</b> para registrar no histórico e gerar o PDF somente leitura.</span></div>';
+  else if(editMode) bn+='<div class="b warn"><span><b>Modo edição ativo.</b> Altere os dados na aba Estudos. Ao terminar, clique em <b>Salvar versão</b> para registrar no histórico. Para o PDF, use o botão <b>Gerar PDF</b>.</span></div>';
   if(draftOffer) bn+='<div class="b warn" style="margin-top:8px"><span>Existem alterações não salvas deste painel guardadas neste navegador.</span><span class="sp"></span><button class="lnk" data-act="restoreDraft">Recuperar</button><button class="lnk" data-act="dropDraft">Descartar</button></div>';
   $('#banner').innerHTML=bn;
   var html = view.tab==='overview'?renderOverview(d,ref):view.tab==='studies'?renderStudies(d,ref):view.tab==='labs'?renderLabs(d,ref):renderHistory();
@@ -754,9 +753,9 @@ function render(){
 var draftOffer=false;
 function markDirty(){dirty=true; lsSet(KEY+':draft',JSON.stringify({base:store.history.length,state:state,origin:pendingOrigin}));}
 function curStudy(){ if(!state) return undefined; return state.studies.filter(function(s){return s.id===view.study;})[0];}
-document.addEventListener('change',function(ev){
-  var el=ev.target, b=el.dataset&&el.dataset.b; if(!b||!canEdit()) return;
-  var s=curStudy(); if(!s) return; var p=b.split(':'), v=el.value;
+function aplicaCampo(el){
+  var b=el.dataset&&el.dataset.b; if(!b||!canEdit()) return false;
+  var s=curStudy(); if(!s) return false; var p=b.split(':'), v=el.value;
   if(p[0]==='s'){ s[p[1]] = p[1]==='nome'?v.trim().toUpperCase():(p[1]==='solicitacao'?(v||null):v); }
   else { var l=s.labs[+p[1]]; var f=p[2];
     if(f==='valor') l.valor=v===''?null:Math.round(parseFloat(v)*100)/100;
@@ -764,7 +763,17 @@ document.addEventListener('change',function(ev){
     else if(f==='validade') l.validade=v||null;
     else if(f==='obs'){ l.obs=v; if(l.valor==null){var mv=parseMoney(v); if(mv!=null) l.valor=mv;} }
     else l[f]=v; }
-  markDirty(); keepScroll(render);
+  return true;
+}
+/* digitando: guarda na hora (sem redesenhar, para não perder o cursor) */
+document.addEventListener('input',function(ev){
+  if(ev.target.tagName==='SELECT') return;
+  if(aplicaCampo(ev.target)){ markDirty(); var bt=$('#btnSave'); if(bt) bt.disabled=false; $('#dirtyPill').hidden=false; }
+});
+/* seleção e data: redesenha a tela (campos de texto já foram guardados ao digitar) */
+document.addEventListener('change',function(ev){
+  var t=ev.target; if(t.tagName==='INPUT' && (t.type==='text'||t.type==='number'||!t.type)) return; /* já guardado na digitação; não redesenha para não atrapalhar o clique */
+  if(aplicaCampo(t)){ markDirty(); keepScroll(render); }
 });
 function keepScroll(fn){var y=window.scrollY; fn(); window.scrollTo(0,y);}
 
@@ -790,10 +799,25 @@ document.addEventListener('click',function(ev){
   else if(a==='dropDraft'){lsDel(KEY+':draft'); draftOffer=false; render();}
 });
 
-$('#btnEdit').onclick=function(){ if(view.version!=null){view.version=null;} editMode=!editMode; if(editMode&&view.tab!=='studies'){view.tab='studies';} render(); };
+function descartaEdicao(){
+  if(store.current) state=clone(store.current);
+  dirty=false; pendingOrigin=null; lsDel(KEY+':draft'); editMode=false; render();
+}
+$('#btnEdit').onclick=function(){
+  if(editMode && dirty){
+    modal('<h2>Você tem alterações não salvas</h2><div class="cap">Escolha o que fazer com elas antes de sair da edição.</div><div class="row" style="flex-wrap:wrap;gap:8px"><button class="btn2" id="eCont">Continuar editando</button><button class="btn2" id="eDesc" style="color:#e5484d">Descartar e sair</button><button class="btn2 pri" id="eSalv">Salvar versão</button></div>');
+    $('#eCont').onclick=closeModal;
+    $('#eDesc').onclick=function(){ closeModal(); descartaEdicao(); };
+    $('#eSalv').onclick=function(){ closeModal(); openSave(); };
+    return;
+  }
+  if(view.version!=null){view.version=null;}
+  editMode=!editMode; if(editMode&&view.tab!=='studies'){view.tab='studies';} render();
+};
 $('#btnImport').onclick=function(){$('#fileInput').value='';$('#fileInput').click();};
 $('#fileInput').onchange=function(){ if(this.files[0]) importFile(this.files[0]); };
 $('#btnSave').onclick=openSave;
+$('#btnPdf').onclick=function(){ if(dirty) toast('O PDF reflete a última versão salva (v'+lastEntry().v+'). Salve para incluir as alterações em andamento.'); makePDF(lastEntry()); };
 $('#btnExport').onclick=function(e){e.stopPropagation(); $('#exportMenu').hidden=!$('#exportMenu').hidden;};
 document.addEventListener('click',function(e){ if(!e.target.closest('.menu')) $('#exportMenu').hidden=true; });
 $('#exportMenu').onclick=function(e){var b=e.target.closest('button'); if(!b) return; $('#exportMenu').hidden=true;
@@ -817,7 +841,6 @@ function openSave(){
     '<div class="changes"><ul style="margin:0;padding-left:18px">'+ch.map(function(c){return '<li>'+esc(c)+'</li>';}).join('')+'</ul></div>'+
     '<label for="svAutor">Responsável pela atualização</label><input class="fld" id="svAutor" value="'+esc((firebase.auth().currentUser||{}).email||'')+'" placeholder="Seu nome">'+
     '<label for="svNota">Nota da versão (aparece no histórico e no PDF)</label><textarea class="fld" id="svNota" placeholder="Ex.: Retorno do CSA com orçamento do Paricalcitol"></textarea>'+
-    '<label class="check"><input type="checkbox" checked disabled> Gerar PDF somente leitura desta versão</label>'+
     '<div class="row">'+(pendingOrigin&&/Planilha/.test(pendingOrigin)?'<button class="btn2 danger" id="svDrop">Descartar importação</button>':'')+'<button class="btn2" id="svLater">Revisar antes</button><button class="btn2 pri" id="svOk">Salvar versão '+nv+'</button></div>');
   $('#svLater').onclick=closeModal;
   if($('#svDrop')) $('#svDrop').onclick=function(){state=clone(store.current); dirty=false; pendingOrigin=null; lsDel(KEY+':draft'); closeModal(); render();};
@@ -826,10 +849,10 @@ function openSave(){
     var e={v:nv,ts:nowLocal(),autor:autor,origem:pendingOrigin||'Edição manual',nota:nota,changes:ch,snapshot:clone(state)};
     $('#svOk').disabled=true;
     salvarNoBanco(e).then(function(){
-      closeModal(); render(); makePDF(e);
-      modal('<h2>Versão '+nv+' registrada</h2><div class="cap">Salva na Estante. Quem abrir o app já vê esta versão. O PDF somente leitura foi gerado.</div>'+
-        '<div class="row"><button class="btn2" id="dlP">Baixar PDF novamente</button><button class="btn2 pri" id="dlOk">Concluir</button></div>');
-      $('#dlP').onclick=function(){makePDF(e);}; $('#dlOk').onclick=closeModal;
+      closeModal(); render();
+      modal('<h2>Versão '+nv+' salva</h2><div class="cap">Salva na Estante. Quem abrir o app já vê esta versão. Para o PDF, use o botão <b>Gerar PDF</b>.</div>'+
+        '<div class="row"><button class="btn2 pri" id="dlOk">Concluir</button></div>');
+      $('#dlOk').onclick=closeModal;
     }).catch(function(err){
       $('#svOk').disabled=false;
       toast(err&&err.message?err.message:'Não foi possível salvar. Tente de novo.',true);
@@ -1018,6 +1041,7 @@ function checkDraft(){
   try{ var dr=JSON.parse(lsGet(KEY+':draft')||'null'); if(dr && dr.base===store.history.length && diff(store.current,dr.state).length) draftOffer=true; else if(dr) lsDel(KEY+':draft'); }catch(e){}
 }
 var remotoPendente=null;
+function canon(o){ return JSON.stringify(o, function(k,v){ if(v===null||v===undefined) return undefined; if(v&&typeof v==='object'&&!Array.isArray(v)){ var r={}; Object.keys(v).sort().forEach(function(x){ if(v[x]!==null&&v[x]!==undefined) r[x]=v[x]; }); return r; } return v; }); }
 function mostraAvisoRemoto(){
   var el=document.getElementById('__remoto');
   if(!el){
@@ -1049,7 +1073,7 @@ function carregaBanco(){
     ref.on('value',function(s){
       var nv=s.val(); if(!nv||!nv.current) return;
       var novaVersao = nv.history && Object.keys(nv.history).length !== store.history.length;
-      var mudouAtual = JSON.stringify(nv.current)!==JSON.stringify(store.current);
+      var mudouAtual = canon(nv.current)!==canon(store.current);
       if(!novaVersao && !mudouAtual) return;
       if(dirty||editMode){ remotoPendente=nv; mostraAvisoRemoto(); return; }
       aplicaBanco(nv); render();
