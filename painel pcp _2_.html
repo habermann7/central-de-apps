@@ -2047,6 +2047,7 @@
       })
       .catch(function(err){
         console.error('Erro ao salvar override:', err);
+        alert('Não foi possível salvar este pedido. Verifique se o Firebase está com as regras atualizadas (prioridade "desconsiderar") e tente de novo.');
       });
   });
 
