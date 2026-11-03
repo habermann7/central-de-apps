@@ -590,6 +590,13 @@ function timeline(rows,ref,opt){
 function kpi(l,v,s,color){return '<div class="kpi">'+(color?'<div class="bar" style="background:'+color+'"></div>':'')+'<div class="l">'+l+'</div><div class="v">'+v+'</div><div class="s">'+(s||'&nbsp;')+'</div></div>';}
 function pct(a,b){return b?Math.round(a/b*100)+'%':'0%';}
 
+function menorTxt(d){
+  /* soma de propostas misturaria produtos diferentes: mostra a menor proposta, com laboratório e estudo */
+  var best=null;
+  d.studies.forEach(function(s){s.labs.forEach(function(l){ if(l.valor!=null && (!best||l.valor<best.valor)) best={valor:l.valor,lab:l.lab,estudo:s.nome}; });});
+  if(!best) return 'nenhuma até o momento';
+  return 'Menor: '+brl(best.valor)+' · '+esc(best.lab)+' ('+esc(best.estudo)+')';
+}
 function renderOverview(d,ref){
   var o=overall(d,ref), al=alertsOf(d,ref);
   var classes={}; d.studies.forEach(function(s){var k=(s.classe||'Sem classe').replace(/^medicamento\s*/i,''); classes[k]=(classes[k]||0)+1;});
@@ -599,7 +606,7 @@ function renderOverview(d,ref){
     kpi('Estudos no portfólio',d.studies.length,clsTxt,'var(--brand-2)')+
     kpi('Cotações em curso',o.total,plural(o.labs.length,'laboratório consultado','laboratórios consultados'),'var(--muted)')+
     kpi('Em análise',o.c.analise+'<small>'+pct(o.c.analise,o.total)+'</small>',o.c.pendente?o.c.pendente+' com retorno pendente':'aguardando proposta',ST.analise.hex)+
-    kpi('Propostas recebidas',o.c.proposta,o.vals.length?(o.vals.length===1?'Valor: ':'Total: ')+brl(sumV):'nenhuma até o momento',ST.proposta.hex)+
+    kpi('Propostas recebidas',o.c.proposta,menorTxt(d),ST.proposta.hex)+
     kpi('Declinaram',o.c.declinou+'<small>'+pct(o.c.declinou,o.total)+'</small>','taxa de declínio das cotações',ST.declinou.hex)+
     kpi('Prazo médio em aberto',(o.avg!=null?o.avg:'0')+'<small>dias</small>',o.oldest?'mais antigo: '+esc(o.oldest.s.nome)+' ('+o.oldest.m.dias+' d)':'','var(--brand-2)')+
   '</div>';
