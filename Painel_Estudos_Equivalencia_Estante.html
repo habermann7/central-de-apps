@@ -597,18 +597,28 @@ function menorTxt(d){
   if(!best) return 'nenhuma até o momento';
   return 'Menor: '+brl(best.valor)+' · '+esc(best.lab)+' ('+esc(best.estudo)+')';
 }
+function retornoMaisParado(d,ref){
+  /* laboratório que ainda não respondeu (em análise ou com retorno pendente) e está há mais tempo sem atualização */
+  var best=null;
+  d.studies.forEach(function(s){s.labs.forEach(function(l){
+    if((l.status==='analise'||l.status==='pendente') && l.data){
+      var dd=days(l.data,ref); if(!best||dd>best.dd) best={dd:dd,data:l.data,lab:l.lab,estudo:s.nome};
+    }
+  });});
+  return best;
+}
 function renderOverview(d,ref){
-  var o=overall(d,ref), al=alertsOf(d,ref);
+  var o=overall(d,ref), al=alertsOf(d,ref), pa=retornoMaisParado(d,ref);
   var classes={}; d.studies.forEach(function(s){var k=(s.classe||'Sem classe').replace(/^medicamento\s*/i,''); classes[k]=(classes[k]||0)+1;});
   var clsTxt=Object.keys(classes).map(function(k){return classes[k]+' '+k.toLowerCase();}).join(' · ');
   var sumV=o.vals.reduce(function(a,b){return a+b;},0);
   var h='<div class="kpis">'+
     kpi('Estudos no portfólio',d.studies.length,clsTxt,'var(--brand-2)')+
-    kpi('Cotações em curso',o.total,plural(o.labs.length,'laboratório consultado','laboratórios consultados'),'var(--muted)')+
+    kpi('Cotações enviadas',o.total,(o.c.analise+o.c.pendente+o.c.proposta)+' ainda ativas · '+plural(o.labs.length,'laboratório consultado','laboratórios consultados'),'var(--muted)')+
     kpi('Em análise',o.c.analise+'<small>'+pct(o.c.analise,o.total)+'</small>',o.c.pendente?o.c.pendente+' com retorno pendente':'aguardando proposta',ST.analise.hex)+
     kpi('Propostas recebidas',o.c.proposta,menorTxt(d),ST.proposta.hex)+
     kpi('Declinaram',o.c.declinou+'<small>'+pct(o.c.declinou,o.total)+'</small>','taxa de declínio das cotações',ST.declinou.hex)+
-    kpi('Prazo médio em aberto',(o.avg!=null?o.avg:'0')+'<small>dias</small>',o.oldest?'mais antigo: '+esc(o.oldest.s.nome)+' ('+o.oldest.m.dias+' d)':'','var(--brand-2)')+
+    kpi('Retorno mais parado',(pa?pa.dd:0)+'<small>dias</small>',pa?esc(pa.lab)+' · '+esc(pa.estudo)+': sem atualização desde '+br(pa.data):'nenhum laboratório aguardando retorno','var(--brand-2)')+
   '</div>';
 
   h+='<div class="sec-title"><h2>Estudos</h2><span class="sub">Visão individual de cada estudo. Clique para abrir o detalhamento.</span></div><div class="grid3">';
@@ -616,7 +626,7 @@ function renderOverview(d,ref){
     h+='<div class="scard" data-open="'+s.id+'"><div class="top"><div><h3>'+esc(s.nome)+'</h3><div class="ref">'+esc(s.referencia||'s/ referência')+(s.companhia?' · '+esc(s.companhia):'')+'</div></div><span class="health '+m.health.k+'">'+m.health.label+'</span></div>'+
       '<div style="display:flex;gap:6px;flex-wrap:wrap">'+(s.classe?'<span class="chip">'+esc(s.classe)+'</span>':'')+(s.apresentacoes?'<span class="chip">'+esc(s.apresentacoes)+'</span>':'')+'</div>'+
       stackBar(m.c,m.total)+
-      '<div class="nums"><div><div class="l">Em aberto</div><div class="v">'+(m.dias!=null?m.dias+' d':'s/ data')+'</div></div><div><div class="l">Ativos</div><div class="v">'+m.ativos+'/'+m.total+'</div></div><div><div class="l">Melhor proposta</div><div class="v" style="font-size:'+(m.best!=null?'14px':'17px')+'">'+(m.best!=null?brl(m.best):'sem proposta')+'</div></div></div>'+
+      '<div class="nums"><div><div class="l">Desde a solicitação</div><div class="v">'+(m.dias!=null?m.dias+' d':'s/ data')+'</div></div><div><div class="l">Ativos</div><div class="v">'+m.ativos+'/'+m.total+'</div></div><div><div class="l">Melhor proposta</div><div class="v" style="font-size:'+(m.best!=null?'14px':'17px')+'">'+(m.best!=null?brl(m.best):'sem proposta')+'</div></div></div>'+
       '<div class="go">Abrir estudo →</div></div>';});
   h+='</div>';
 
@@ -679,7 +689,7 @@ function renderStudies(d,ref){
   h+='<div class="card" style="margin-top:16px"><h3>Linha do tempo por laboratório</h3><div class="cap">Traço colorido: tempo da solicitação até a última atualização. Tracejado: tempo sem nova atualização.</div>'+
     timeline(s.labs.map(function(l){return {label:l.lab,start:s.solicitacao,end:l.data?(days(l.data,ref)+' d'):'s/ data',points:[{date:l.data,status:l.status,tip:l.lab+': '+ST[l.status].label+'\nÚltima atualização: '+br(l.data)+(l.obs?'\n'+l.obs:'')}]};}),ref,{mode:'study',rowH:38,labelW:120,refLabel:view.version!=null?'Ref.':'Hoje'})+
     '<div style="margin-top:12px">'+legend()+'</div></div>';
-  h+='<div class="card" style="margin-top:16px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div><h3>Laboratórios cotados</h3><div class="cap" style="margin:0">Situação, última atualização e observações</div></div><div style="flex:1"></div>'+(ed?'<button class="btn2 pri" data-act="addLab">+ Incluir laboratório</button>':'')+'</div><div class="scroll" style="margin-top:10px"><table class="t" style="min-width:1080px"><thead><tr><th>Laboratório</th><th>Situação</th><th>Última atualização</th><th class="num">Dias</th><th>Observação</th><th class="num">Valor da proposta</th><th>Validade da proposta</th><th>Vencimento</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
+  h+='<div class="card" style="margin-top:16px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div><h3>Laboratórios cotados</h3><div class="cap" style="margin:0">Situação, última atualização e observações</div></div><div style="flex:1"></div>'+(ed?'<button class="btn2 pri" data-act="addLab">+ Incluir laboratório</button>':'')+'</div><div class="scroll" style="margin-top:10px"><table class="t" style="min-width:1080px"><thead><tr><th>Laboratório</th><th>Situação</th><th>Última atualização</th><th class="num">Dias sem atualização</th><th>Observação</th><th class="num">Valor da proposta</th><th>Validade da proposta</th><th>Vencimento</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
   s.labs.forEach(function(l,i){
     if(ed){
       h+='<tr><td><input class="fld" data-b="l:'+i+':lab" value="'+esc(l.lab)+'" style="min-width:110px"></td><td><select class="fld" data-b="l:'+i+':status">'+KEYS.map(function(k){return '<option value="'+k+'"'+(k===l.status?' selected':'')+'>'+ST[k].label+'</option>';}).join('')+'</select></td>'+
