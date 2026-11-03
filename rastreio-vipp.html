@@ -1266,13 +1266,14 @@ function statusIgnorado(status){
 // "Etiqueta emitida" vale 10 dias: depois disso a etiqueta venceu e some do painel.
 // Usa a data do último evento (ou da postagem). Sem nenhuma data, mantém visível.
 var VALIDADE_ETIQUETA_DIAS = 10;
-// "Carteiro não atendido" e "Tentativa de entrega" valem 10 dias pelo último evento (ou postagem); depois sai do painel.
+// Carteiro não atendido, tentativa de entrega, postagem estornada, suspensão e "favor desconsiderar" valem 10 dias pelo último evento (ou postagem); depois sai do painel.
 // Não apaga nada no banco: só deixa de aparecer nas listas e contadores.
 var VALIDADE_CARTEIRO_DIAS = 10;
 function pedidoIgnorado(r){
   if(statusIgnorado(r.status)) return true;
   var nst=_norm(r.status);
-  if(nst.indexOf("carteiro nao atendido")>-1 || nst.indexOf("tentativa de entrega")>-1){
+  var CATEGORIAS_10_DIAS=["carteiro nao atendido","tentativa de entrega","postagem estornada","suspensao de entrega","favor desconsiderar"];
+  if(CATEGORIAS_10_DIAS.some(function(c){return nst.indexOf(c)>-1;})){
     var dc = dataValidaOuNula(r.dataEvento) || dataValidaOuNula(r.dataPostagem);
     if(dc && (Date.now()-dc.getTime()) > VALIDADE_CARTEIRO_DIAS*86400000) return true;
   }
