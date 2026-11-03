@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Estudos de Equivalência · Painel</title>
+<title>EquivLab · Inteligência em Estudos de Equivalência</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
@@ -294,6 +294,74 @@ footer.foot{max-width:1320px;margin:0 auto;padding:0 28px 32px;color:var(--muted
   .topbar{position:static}
   body{background:#fff}
 }
+
+/* ============== EQUIVLAB V11 · Design system ============== */
+:root{
+  --bg:#f5f7fb; --surface:#fff;--surface-2:#fafbfd;--surface-3:#edf1f7;
+  --ink:#16233b; --ink-2:#58667a;--muted:#8794a6;--line:#e6eaf1;--line-2:#dce2ed;
+  --brand:#162b50;--brand-2:#385e9b;--accent:#4b7bec;--accent-ink:#355fbd;
+  --good:#0e9f84;--good-ink:#087c68;--good-bg:#e6f7f1;
+  --info:#4b7bec;--info-ink:#355fbd;--info-bg:#e9efff;
+  --warn:#e7a43c;--warn-ink:#8e5d14;--warn-bg:#fff4df;
+  --crit:#df6267;--crit-ink:#ae3c47;--crit-bg:#ffedf0;
+  --shadow:0 3px 18px rgba(20,35,67,.035);--radius:17px;
+}
+:root[data-theme="dark"]{
+  --bg:#0d1523;--surface:#182337;--surface-2:#1c2940;--surface-3:#27354b;
+  --ink:#edf3fc;--ink-2:#bdc9dc;--muted:#8fa0b9;--line:#2c3a51;--line-2:#3a4b65;
+  --brand:#111d30;--brand-2:#7c9be1;--accent:#82a8ff;--accent-ink:#a9c0ff;
+  --good-ink:#73e4c4;--good-bg:rgba(14,159,132,.14);
+  --info-ink:#9bb8ff;--info-bg:rgba(75,123,236,.18);
+  --warn-ink:#f5c576;--warn-bg:rgba(231,164,60,.14);
+  --crit-ink:#ff9fa5;--crit-bg:rgba(223,98,103,.15);
+  --shadow:0 4px 20px rgba(0,0,0,.13);
+}
+@media(prefers-color-scheme:dark){
+ :root:not([data-theme="light"]){
+  --bg:#0d1523;--surface:#182337;--surface-2:#1c2940;--surface-3:#27354b;
+  --ink:#edf3fc;--ink-2:#bdc9dc;--muted:#8fa0b9;--line:#2c3a51;--line-2:#3a4b65;
+  --brand:#111d30;--brand-2:#7c9be1;--accent:#82a8ff;--accent-ink:#a9c0ff;
+  --good-ink:#73e4c4;--good-bg:rgba(14,159,132,.14);
+  --info-ink:#9bb8ff;--info-bg:rgba(75,123,236,.18);
+  --warn-ink:#f5c576;--warn-bg:rgba(231,164,60,.14);
+  --crit-ink:#ff9fa5;--crit-bg:rgba(223,98,103,.15);
+  --shadow:0 4px 20px rgba(0,0,0,.13);
+ }
+}
+body{font-size:13.5px;letter-spacing:-.005em}
+.topbar{background:var(--surface);color:var(--ink);padding:14px max(30px,calc((100vw - 1440px)/2));gap:16px;box-shadow:none;border-bottom:1px solid var(--line);position:sticky;top:0}
+.brand{flex:1 1 300px;gap:12px}.logo{width:43px;height:43px;background:linear-gradient(140deg,#203d7c,#446fcb);border-radius:12px;font-size:14px;position:relative;color:#fff;box-shadow:0 6px 16px rgba(57,101,192,.18)}.logo-dot{position:absolute;width:6px;height:6px;border-radius:50%;background:#51d3bb;right:6px;top:6px;box-shadow:0 0 0 2px rgba(255,255,255,.24)}
+.t1{font-size:16px;letter-spacing:-.03em}.t2{font-size:11.5px;opacity:1;color:var(--muted);max-width:350px;margin-top:2px}
+.actions{gap:7px}.btn{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);font-size:12px;padding:9px 12px;border-radius:9px;font-weight:650;transition:background .15s,border-color .15s,transform .15s}.btn:hover{background:var(--surface-3);border-color:var(--line-2)}.btn.primary{background:#355ec0;border-color:#355ec0;color:#fff;box-shadow:0 4px 10px rgba(48,91,184,.14)}.btn.primary:hover{background:#2c51aa;border-color:#2c51aa}.btn.on{background:var(--warn-bg);color:var(--warn-ink);border-color:#efc98e}
+.pill.ro{background:var(--surface-3);color:var(--ink-2)}.pill.dirty{background:var(--warn-bg);color:var(--warn-ink)}#btnExport{display:none!important}#btnTheme{width:35px;height:35px;justify-content:center;padding:0;font-size:19px}
+.tabs{background:var(--surface);padding:0 max(30px,calc((100vw - 1440px)/2));position:sticky;top:72px;z-index:21;border-bottom:1px solid var(--line);gap:26px}
+.tabs button{padding:15px 2px 14px;color:var(--muted);border-bottom:2px solid transparent;font-size:12.8px;transition:color .16s}.tabs button:hover{color:var(--ink)}.tabs button.on{border-color:#4878dd;color:var(--accent-ink)}.tabs .count{background:var(--surface-3);color:var(--ink-2)}.nav-icon{font-size:15px;margin-right:5px;color:var(--muted)}.tabs button.on .nav-icon{color:var(--accent)}
+main,.banner,footer.foot{max-width:1440px}main{padding:32px 30px 60px}.banner{padding:0 30px}.sec-title{margin-top:28px}.sec-title h2{font-size:19px}
+.card{border-radius:var(--radius);box-shadow:var(--shadow);padding:22px}.card h3{font-size:15px}.card .cap{font-size:12px}.grid2,.grid3{gap:15px}
+.kpi{box-shadow:none}.kpi .bar{width:3px}.kpi .l{font-size:10px}.kpi .v{font-size:27px}
+.page-intro{margin:6px 0 30px}.page-intro h1{font:800 clamp(25px,3vw,33px)/1.2 Manrope,Inter,sans-serif;letter-spacing:-.05em;margin-top:10px}.page-intro p{color:var(--muted);margin:8px 0 0;font-size:13px}
+.section-kicker,.eyebrow{font-size:10px;letter-spacing:.12em;font-weight:800;color:var(--accent-ink)}
+.exec-hero{min-height:267px;background:linear-gradient(115deg,#17284c 0%,#1d3d6f 62%,#254c85 100%);border:1px solid #274a82;color:#fff;border-radius:22px;display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:28px;padding:33px 34px;overflow:hidden;position:relative;box-shadow:0 14px 28px rgba(22,52,103,.10)}
+.exec-hero:after{content:"";position:absolute;inset:-180px -110px auto auto;width:550px;height:550px;border:1px solid rgba(255,255,255,.1);border-radius:50%;box-shadow:0 0 0 65px rgba(255,255,255,.023),0 0 0 132px rgba(255,255,255,.018);pointer-events:none}
+.hero-main,.hero-aside{position:relative;z-index:1}.eyebrow{display:flex;align-items:center;gap:10px;color:#b9d0fa;font-size:10px}.signal-dot{height:6px;width:6px;background:#63dfc4;border-radius:50%;box-shadow:0 0 0 4px rgba(99,223,196,.12)}.eyebrow-line{width:22px;height:1px;background:#7094cf}
+.exec-hero h1{font:800 clamp(28px,3vw,38px)/1.22 Manrope,Inter,sans-serif;letter-spacing:-.055em;margin:23px 0 12px}.exec-hero h1 span{color:#9ec0ff}.exec-hero p{max-width:560px;color:#c9d8ef;font-size:12.8px;margin:0;line-height:1.7}
+.hero-meta{display:flex;gap:11px;align-items:center;margin-top:23px;flex-wrap:wrap;color:#bdd0ea;font-size:11px}.hero-aside{align-self:stretch;background:rgba(255,255,255,.095);border:1px solid rgba(255,255,255,.13);border-radius:16px;padding:21px 22px;backdrop-filter:blur(8px)}.aside-label{font-size:9px;letter-spacing:.12em;color:#bcd1ef;font-weight:800;display:flex;justify-content:space-between}.aside-glow{color:#52d5b9}.aside-title{font:800 39px/1.1 Manrope,Inter,sans-serif;margin:16px 0 6px;color:#fff}.hero-aside strong{display:block;font-size:13px}.hero-aside p{margin:7px 0 14px;font-size:11px;line-height:1.6}.hero-link{background:none;border:0;color:#bfe4ff;padding:0;font-weight:750;font-size:11px;display:flex;gap:14px;align-items:center}.hero-link:hover{color:#fff}
+.exec-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:13px;margin-top:18px}.exec-kpi{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:19px 19px 18px;min-width:0;box-shadow:var(--shadow)}.exec-kpi-head{display:flex;align-items:center;justify-content:space-between;gap:7px;color:var(--ink-2);font-size:11.5px;font-weight:700}.exec-kpi-icon{width:27px;height:27px;border-radius:8px;background:var(--surface-3);color:var(--brand-2);font-weight:800;display:grid;place-items:center;font-size:14px}.kpi-green .exec-kpi-icon{background:var(--good-bg);color:var(--good-ink)}.kpi-rose .exec-kpi-icon{background:var(--crit-bg);color:var(--crit-ink)}.kpi-blue .exec-kpi-icon{background:var(--info-bg);color:var(--info-ink)}.exec-kpi-value{font:800 clamp(26px,2.8vw,35px)/1.18 Manrope,Inter,sans-serif;letter-spacing:-.055em;color:var(--ink);margin-top:18px}.exec-kpi-foot{font-size:11px;color:var(--muted);line-height:1.4;min-height:30px;margin-top:7px}
+.section-block{margin-top:40px;scroll-margin-top:145px}.section-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:18px}.section-heading h2{font:800 21px/1.25 Manrope,Inter,sans-serif;letter-spacing:-.035em;margin-top:7px}.section-heading p{font-size:12px;color:var(--muted);margin:6px 0 0}.section-count{background:var(--surface);border:1px solid var(--line);color:var(--ink-2);border-radius:30px;padding:7px 12px;white-space:nowrap;font-size:11px;font-weight:700}.outline-action{border:1px solid var(--line-2);background:var(--surface);color:var(--accent-ink);border-radius:9px;padding:10px 14px;font-weight:700;font-size:12px}
+.focus-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(270px,.8fr);gap:16px}.focus-list{padding:0;overflow:hidden}.focus-item{width:100%;background:transparent;border:0;border-bottom:1px solid var(--line);text-align:left;padding:15px 20px;display:flex;align-items:flex-start;gap:13px;color:var(--ink);transition:background .15s}.focus-item:hover{background:var(--surface-2)}.focus-index{font-size:11px;color:var(--muted);font-weight:800;padding-top:1px;min-width:23px}.focus-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.focus-item-line{font-size:10.5px;display:block;color:var(--ink-2)}.focus-item-line strong{font-weight:800;color:var(--accent-ink)}.focus-item-line small{font-size:10.5px}.focus-item-title{font-weight:800;font-size:12.6px}.focus-item-detail{color:var(--muted);font-size:11px;line-height:1.45}.focus-marker{border-radius:20px;font-size:9.5px;font-weight:750;padding:4px 8px;white-space:nowrap}.focus-marker.urgent{color:var(--crit-ink);background:var(--crit-bg)}.focus-marker.review{color:var(--warn-ink);background:var(--warn-bg)}.focus-arrow{font-size:15px;color:var(--muted)}.focus-foot{padding:13px 19px;display:flex;gap:6px;flex-wrap:wrap;font-size:10.5px;color:var(--muted);align-items:center}.quiet-link{border:0;background:none;padding:0;color:var(--accent-ink);font-weight:750;font-size:10.5px}.signal-summary{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}.summary-top{display:flex;justify-content:space-between}.mini-icon{color:var(--accent);font-size:18px}.signal-summary h3{margin:9px 0 6px;font:800 18px/1.25 Manrope,sans-serif;letter-spacing:-.03em}.signal-summary>p{font-size:11px;color:var(--muted);margin:0 0 13px;line-height:1.5}.signal-metric{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding:11px 0;gap:15px}.signal-metric span{display:flex;gap:12px;align-items:center}.signal-metric b{font:800 23px Manrope,sans-serif;min-width:26px}.signal-metric small{max-width:180px;font-size:10.5px;color:var(--ink-2);line-height:1.4}.sm-indicator{width:5px;height:25px;border-radius:8px;flex:none}.sm-indicator.amber{background:#e7a43c}.sm-indicator.blue{background:#4b7bec}.sm-indicator.pink{background:#df6267}.summary-note{background:var(--surface-2);border-radius:9px;padding:11px;color:var(--muted);font-size:10px;line-height:1.5;margin-top:5px}
+.portfolio-toolbar{display:flex;gap:10px;justify-content:space-between;margin-bottom:15px}.search-wrap{flex:1;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line-2);border-radius:11px;padding:0 15px;max-width:480px}.search-symbol{font-size:24px;color:var(--muted);line-height:1}.search-wrap input{border:0;outline:0;color:var(--ink);background:transparent;padding:12px 0;width:100%;min-width:0;font-size:12px}.search-wrap input::placeholder{color:var(--muted)}.filter-wrap{font-size:11px;color:var(--ink-2);font-weight:700;display:flex;align-items:center;gap:9px}.filter-wrap select{background:var(--surface);border:1px solid var(--line-2);color:var(--ink);border-radius:10px;padding:10px 12px;font-size:12px}
+.portfolio-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.portfolio-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:21px;display:flex;flex-direction:column;gap:0;text-align:left;color:var(--ink);min-width:0;box-shadow:var(--shadow);transition:transform .18s,border-color .18s,box-shadow .18s}.portfolio-card:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));transform:translateY(-3px);box-shadow:0 12px 26px rgba(36,67,128,.095)}.portfolio-top{display:flex;gap:8px;justify-content:space-between;align-items:center;min-height:26px}.portfolio-type{font-size:10px;color:var(--muted);max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.portfolio-status{border-radius:30px;padding:5px 8px;display:flex;align-items:center;gap:5px;white-space:nowrap;font-size:10px;font-weight:800}.portfolio-status i{border-radius:50%;height:6px;width:6px;background:currentColor}.portfolio-status.good{background:var(--good-bg);color:var(--good-ink)}.portfolio-status.info{background:var(--info-bg);color:var(--info-ink)}.portfolio-status.warn{background:var(--warn-bg);color:var(--warn-ink)}.portfolio-card h3{font:800 20px/1.3 Manrope,sans-serif;letter-spacing:-.04em;margin:19px 0 4px}.portfolio-ref{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.portfolio-ref strong{color:var(--ink-2)}.portfolio-split{margin:20px 0 17px;display:grid;grid-template-columns:1fr 1fr;gap:10px}.portfolio-split span{display:flex;flex-direction:column;gap:3px}.portfolio-split small,.portfolio-bottom small{font-size:9px;font-weight:800;color:var(--muted);letter-spacing:.055em}.portfolio-split b{font:800 17px Manrope,sans-serif}.portfolio-split em{font-style:normal;font-size:12px;color:var(--muted)}.portfolio-progress{margin:0 0 17px}.portfolio-progress .stack{height:7px;gap:3px;background:var(--surface-3)}.portfolio-bottom{display:flex;gap:10px;align-items:flex-end;justify-content:space-between;border-top:1px solid var(--line);padding-top:13px;margin-top:auto}.portfolio-bottom>div{display:flex;flex-direction:column;gap:4px;min-width:0}.portfolio-bottom strong{font-size:11px;font-weight:750;line-height:1.45}.card-next{height:29px;width:29px;border-radius:9px;background:var(--surface-3);color:var(--accent-ink);display:grid;place-items:center;font-size:17px;flex:none}.portfolio-help{font-size:10.5px;color:var(--muted);margin-top:12px}
+.analytic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.viz-card{min-height:260px}.viz-card h3{font-size:14px}.viz-card .cap{margin:5px 0 22px}.viz-legend{margin-top:21px}.legend{gap:8px 15px;font-size:11px}.donut-wrap{gap:22px}.donut-legend{min-width:170px;gap:13px}.legend-dot{height:10px;width:10px;border-radius:3px}.dl{grid-template-columns:auto 1fr auto auto;gap:9px;font-size:11px}.dl .pct{font-size:11px;width:37px}.composition-bars{display:flex;flex-direction:column;gap:19px;margin-top:30px}.composition-row{display:grid;gap:7px}.composition-label{display:flex;justify-content:space-between;font-size:11px}.composition-label b{font-weight:750}.composition-label small{color:var(--muted)}.composition-bars .stack{height:11px;border-radius:5px}.composition-bars .stack div{font-size:0}
+.analysis-disclosure{border:1px solid var(--line);border-radius:14px;background:var(--surface);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow)}.analysis-disclosure>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:14px;padding:17px 19px;color:var(--ink)}.analysis-disclosure>summary::-webkit-details-marker{display:none}.analysis-disclosure>summary>span:nth-child(2){flex:1;display:flex;flex-direction:column;gap:4px}.analysis-disclosure strong{font-size:12.5px}.analysis-disclosure small{color:var(--muted);font-size:11px}.disclosure-icon{height:34px;width:34px;display:grid;place-items:center;color:var(--accent-ink);background:var(--info-bg);border-radius:9px;font-size:17px}.disclosure-chevron{font-size:23px;color:var(--muted);transition:transform .2s}.analysis-disclosure[open] .disclosure-chevron{transform:rotate(180deg)}.disclosure-body{border-top:1px solid var(--line);padding:20px}.matrix{min-width:720px}.mcell{border-radius:8px}.alert-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.al{padding:14px;background:var(--surface);border-radius:12px;font-size:11.5px}.al .meta{margin-bottom:3px}.al .ic{height:24px;width:24px}
+/* All secondary screens keep their previous operations, with refined visual styling */
+.selector{margin:0 0 8px}.selector button{border-radius:10px;font-size:12px;padding:9px 13px}.selector button.on{background:var(--info-bg);color:var(--accent-ink);box-shadow:none}.shead{margin-top:26px}.shead h1{font-size:29px}.info-grid{border-radius:15px}.info-grid .l{font-size:10px}.info-grid .v{font-size:13px}.st{font-size:11px;border-radius:7px;padding:4px 8px}.health{font-size:11px}.chip{font-size:11px}.btn2{font-size:12px;border-radius:9px}.btn2.pri{background:#355ec0;border-color:#355ec0}.card:focus-within{border-color:var(--line-2)}table.t th{font-size:10.5px;background:var(--surface-2)}table.t tr:hover td{background:var(--surface-2)}table.t td{font-size:12px}.vitem{box-shadow:var(--shadow)}
+#foot{border-top:1px solid var(--line);padding-top:20px;font-size:10.5px;line-height:1.6}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media(max-width:1200px){.exec-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.portfolio-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.topbar{padding:12px 22px}.tabs{padding:0 22px;top:67px}main{padding:25px 22px 55px}}
+@media(max-width:850px){.topbar{position:relative}.tabs{top:0;position:sticky}.exec-hero{grid-template-columns:1fr;gap:22px}.hero-aside{max-width:none;display:grid;grid-template-columns:75px 1fr;gap:6px 15px;align-items:center}.aside-label{grid-column:1/-1}.aside-title{grid-row:2/5;margin:0}.hero-aside p{margin:0}.hero-link{align-self:end}.focus-layout{grid-template-columns:1fr}.analytic-grid{grid-template-columns:1fr}}
+@media(max-width:620px){.topbar{padding:11px 15px}.brand{flex-basis:100%}.actions{width:100%;overflow-x:auto;flex-wrap:nowrap;padding:2px 0 4px}.btn{padding:8px 10px;font-size:11px}.tabs{padding:0 15px;gap:21px}.tabs button{font-size:11px;padding:12px 0}.nav-icon{display:none}main{padding:20px 15px 42px}.banner{padding:0 15px}.exec-hero{padding:24px 21px;border-radius:16px}.exec-hero h1{font-size:30px}.hero-meta{gap:7px;font-size:10px}.hero-aside{padding:17px}.exec-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.exec-kpi{padding:15px}.exec-kpi-head{font-size:10px}.exec-kpi-value{font-size:29px}.exec-kpi-foot{font-size:10px}.section-block{margin-top:32px}.section-heading{align-items:flex-start}.section-heading h2{font-size:19px}.section-heading p{font-size:11px}.portfolio-grid{grid-template-columns:1fr}.portfolio-toolbar{flex-wrap:wrap}.search-wrap{flex-basis:100%;max-width:none}.focus-item{padding:13px 12px;gap:8px;flex-wrap:wrap}.focus-marker{margin-left:auto}.focus-arrow{display:none}.alert-grid{grid-template-columns:1fr}.donut-wrap{justify-content:center}.section-count{font-size:10px}.page-intro{margin-bottom:22px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;scroll-behavior:auto!important}}
+@media print{.tabs,.topbar .actions,.portfolio-toolbar,.hero-link,.focus-arrow,.outline-action{display:none!important}.exec-hero{-webkit-print-color-adjust:exact;print-color-adjust:exact}.analysis-disclosure{break-inside:avoid}}
 </style>
 </head>
 <body>
@@ -302,20 +370,20 @@ footer.foot{max-width:1320px;margin:0 auto;padding:0 28px 32px;color:var(--muted
 </div>
 <header class="topbar">
   <div class="brand">
-    <div class="logo">EQ</div>
+    <div class="logo" aria-hidden="true"><span>EQ</span><span class="logo-dot"></span></div>
     <div style="min-width:0">
       <div class="t1" id="docTitle">Estudos de Equivalência</div>
-      <div class="t2" id="objetivo"></div>
+      <div class="t2" id="objetivo">Gestão e inteligência do portfólio</div>
     </div>
   </div>
   <div class="actions">
         <span class="pill ro" id="roPill" hidden>Somente leitura</span>
     <span class="pill dirty" id="dirtyPill" hidden>Alterações não salvas</span>
-    <button class="btn" id="btnImport" title="Carregar uma nova versão da planilha (.xlsx)">Importar planilha</button>
+    <button class="btn" id="btnImport" title="Carregar uma nova versão da planilha (.xlsx)">Importar dados</button>
     <input type="file" id="fileInput" accept=".xlsx,.xls" hidden>
-    <button class="btn" id="btnEdit">Modo edição</button>
-    <button class="btn primary" id="btnSave" disabled>Salvar versão</button>
-    <button class="btn" id="btnPdf" title="Gera o PDF somente leitura da última versão salva">Gerar PDF</button>
+    <button class="btn" id="btnEdit">Editar dados</button>
+    <button class="btn primary" id="btnSave" disabled>Salvar alterações</button>
+    <button class="btn" id="btnPdf" title="Gera o PDF somente leitura da última versão salva">Exportar PDF</button>
     <div class="menu">
       <button class="btn" id="btnExport">Exportar ▾</button>
       <div class="menu-list" id="exportMenu" hidden>
@@ -326,10 +394,10 @@ footer.foot{max-width:1320px;margin:0 auto;padding:0 28px 32px;color:var(--muted
   </div>
 </header>
 <nav class="tabs" id="tabs">
-  <button data-tab="overview" class="on">Visão geral</button>
-  <button data-tab="studies">Estudos</button>
-  <button data-tab="labs">Laboratórios</button>
-  <button data-tab="history">Histórico de versões <span class="count" id="histCount"></span></button>
+  <button data-tab="overview" class="on"><span class="nav-icon">◫</span> Visão geral</button>
+  <button data-tab="studies"><span class="nav-icon">▤</span> Estudos</button>
+  <button data-tab="labs"><span class="nav-icon">◈</span> Laboratórios</button>
+  <button data-tab="history"><span class="nav-icon">◷</span> Histórico <span class="count" id="histCount"></span></button>
 </nav>
 <div class="banner" id="banner"></div>
 <main id="app"></main>
@@ -357,10 +425,10 @@ var view = {tab:'overview', study:null, version:null};
 var editMode = false, dirty = false, pendingOrigin = null;
 
 var ST = {
-  proposta:{label:'Proposta recebida', short:'Proposta', hex:'#0ca30c', icon:'✓'},
-  analise:{label:'Em análise', short:'Em análise', hex:'#2a78d6', icon:'◔'},
-  pendente:{label:'Retorno pendente', short:'Pendente', hex:'#fab219', icon:'!'},
-  declinou:{label:'Não consegue atender', short:'Declinou', hex:'#d03b3b', icon:'✕'}
+  proposta:{label:'Proposta recebida', short:'Proposta', hex:'#0e9f84', icon:'✓'},
+  analise:{label:'Em análise', short:'Em análise', hex:'#4b7bec', icon:'◔'},
+  pendente:{label:'Retorno pendente', short:'Pendente', hex:'#e7a43c', icon:'!'},
+  declinou:{label:'Não consegue atender', short:'Declinou', hex:'#df6267', icon:'✕'}
 };
 var KEYS = ['proposta','analise','pendente','declinou'];
 var FIELDS = [['apresentacoes','Apresentações'],['classe','Classe'],['indicacao','Para que serve'],['referencia','Medicamento de referência'],['companhia','Companhia'],['solicitacao','Data de solicitação']];
@@ -607,56 +675,135 @@ function retornoMaisParado(d,ref){
   });});
   return best;
 }
+/* ===================== inteligência e visão executiva ===================== */
+var dashFilter={query:'',status:'all'};
+function liveSignals(d,ref){
+  var signals=[],seen={};
+  function add(severity,rank,study,studyId,lab,title,detail,age){
+    var key=studyId+'|'+lab;
+    var r={severity:severity,rank:rank,study:study,studyId:studyId,lab:lab,title:title,detail:detail,age:age||0};
+    if(!seen[key] || rank>seen[key].rank){seen[key]=r;}
+  }
+  d.studies.forEach(function(s){
+    var m=metrics(s,ref);
+    if(m.c.proposta===0 && m.dias!=null && m.dias>30){
+      add('urgent',85,s.nome,s.id,'Todos os laboratórios','Sem proposta após '+m.dias+' dias','Revisar as cotações em andamento e buscar alternativas.',m.dias);
+    }
+    s.labs.forEach(function(l){
+      var nd=l.data?days(l.data,ref):null;
+      if(l.data && s.solicitacao && l.data<s.solicitacao){
+        add('review',95,s.nome,s.id,l.lab,'Data anterior à solicitação','Conferir cadastro: atualização de '+br(l.data)+' e solicitação de '+br(s.solicitacao)+'.',0);
+      }
+      if(l.status==='proposta' && l.validade && days(ref,l.validade)<0){
+        add('urgent',100,s.nome,s.id,l.lab,'Proposta com validade vencida','Validade registrada em '+br(l.validade)+'. Solicitar confirmação.',0);
+      }
+      if(l.status==='pendente'){
+        add('urgent',90+(nd!=null&&nd>21?2:0),s.nome,s.id,l.lab,'Retorno pendente',nd!=null?'Sem atualização registrada há '+nd+' dias.':'Sem data de atualização informada.',nd);
+      }else if(l.status==='analise' && nd!=null && nd>=14){
+        add('review',Math.min(80,50+Math.floor(nd/7)),s.nome,s.id,l.lab,'Acompanhamento recomendado','Em análise, sem nova atualização registrada há '+nd+' dias.',nd);
+      }else if(l.status==='analise' && nd===null){
+        add('review',55,s.nome,s.id,l.lab,'Atualização sem data','Registrar a data da última movimentação.',0);
+      }
+    });
+  });
+  return Object.keys(seen).map(function(k){return seen[k];}).sort(function(a,b){return b.rank-a.rank||b.age-a.age;});
+}
+function insightStats(d,ref){
+  var o=overall(d,ref), active=o.c.analise+o.c.pendente;
+  var withOffer=o.ms.filter(function(x){return x.m.c.proposta>0;}).length;
+  var over14=0,missing=0,invalid=0,stale=[];
+  d.studies.forEach(function(s){s.labs.forEach(function(l){
+    if(l.data && s.solicitacao && l.data<s.solicitacao) invalid++;
+    if(l.status==='analise'||l.status==='pendente'){
+      if(!l.data) missing++;
+      else if(days(l.data,ref)>=14){over14++;stale.push({days:days(l.data,ref),lab:l.lab,study:s.nome});}
+    }
+  });});
+  return {o:o,active:active,withOffer:withOffer,withoutOffer:d.studies.length-withOffer,over14:over14,missing:missing,invalid:invalid,stale:stale};
+}
+function statCard(label,value,detail,tone,icon){
+  return '<article class="exec-kpi kpi-'+tone+'"><div class="exec-kpi-head"><span>'+label+'</span><span class="exec-kpi-icon" aria-hidden="true">'+icon+'</span></div>'+ 
+    '<div class="exec-kpi-value">'+value+'</div><div class="exec-kpi-foot">'+detail+'</div></article>';
+}
 function renderOverview(d,ref){
-  var o=overall(d,ref), al=alertsOf(d,ref), pa=retornoMaisParado(d,ref);
-  var classes={}; d.studies.forEach(function(s){var k=(s.classe||'Sem classe').replace(/^medicamento\s*/i,''); classes[k]=(classes[k]||0)+1;});
-  var clsTxt=Object.keys(classes).map(function(k){return classes[k]+' '+k.toLowerCase();}).join(' · ');
-  var sumV=o.vals.reduce(function(a,b){return a+b;},0);
-  var h='<div class="kpis">'+
-    kpi('Estudos no portfólio',d.studies.length,clsTxt,'var(--brand-2)')+
-    kpi('Cotações enviadas',o.total,(o.c.analise+o.c.pendente+o.c.proposta)+' ainda ativas · '+plural(o.labs.length,'laboratório consultado','laboratórios consultados'),'var(--muted)')+
-    kpi('Em análise',o.c.analise+'<small>'+pct(o.c.analise,o.total)+'</small>',o.c.pendente?o.c.pendente+' com retorno pendente':'aguardando proposta',ST.analise.hex)+
-    kpi('Propostas recebidas',o.c.proposta,menorTxt(d),ST.proposta.hex)+
-    kpi('Declinaram',o.c.declinou+'<small>'+pct(o.c.declinou,o.total)+'</small>','taxa de declínio das cotações',ST.declinou.hex)+
-    kpi('Retorno mais parado',(pa?pa.dd:0)+'<small>dias</small>',pa?esc(pa.lab)+' · '+esc(pa.estudo)+': sem atualização desde '+br(pa.data):'nenhum laboratório aguardando retorno','var(--brand-2)')+
-  '</div>';
+  var x=insightStats(d,ref),o=x.o,signals=liveSignals(d,ref),al=alertsOf(d,ref),labs=o.labs;
+  var classes={}; d.studies.forEach(function(s){var key=s.classe||'Sem classificação';classes[key]=(classes[key]||0)+1;});
+  var priority=!d.studies.length?'Nenhum estudo cadastrado':x.withoutOffer?x.withoutOffer+' '+(x.withoutOffer===1?'estudo sem proposta':'estudos sem proposta'):'Todos os estudos têm proposta';
+  var subhead=!d.studies.length?'Adicione estudos para começar a acompanhar o portfólio.':x.withoutOffer?'Priorize os estudos ainda sem proposta e os retornos sem atualização.':'Acompanhe a validade e a comparação das propostas recebidas.';
+  var h='<section class="exec-hero"><div class="hero-main"><div class="eyebrow"><span class="signal-dot"></span> CENTRAL DE ACOMPANHAMENTO <span class="eyebrow-line"></span> '+br(ref)+'</div>'+ 
+    '<h1>Clareza para decidir.<br><span>Controle para avançar.</span></h1><p>Uma visão do portfólio de equivalência: cotações, propostas e movimentações que precisam da sua atenção.</p>'+ 
+    '<div class="hero-meta"><span>↗ Dados da versão '+(view.version!=null?store.history[view.version].v:lastEntry().v)+'</span><span>•</span><span>'+plural(o.labs.length,'laboratório consultado','laboratórios consultados')+'</span><span>•</span><span>'+(view.version!=null?'Visão histórica':'Visão atual')+'</span></div></div>'+ 
+    '<div class="hero-aside"><div class="aside-label">LEITURA EXECUTIVA <span class="aside-glow">●</span></div><div class="aside-title">'+(x.withoutOffer?x.withoutOffer:'✓')+'</div>'+ 
+    '<strong>'+priority+'</strong><p>'+subhead+'</p><button class="hero-link" data-act="jumpPriorities">Conferir prioridades <span>↗</span></button></div></section>';
+  h+='<section class="exec-kpis" aria-label="Indicadores do portfólio">'+
+    statCard('Estudos no portfólio',d.studies.length,'Itens monitorados','navy','▤')+
+    statCard('Cotações registradas',o.total,plural(o.labs.length,'laboratório único','laboratórios únicos'),'blue','◫')+
+    statCard('Em acompanhamento',x.active,'Em análise: '+o.c.analise+' · Pendentes: '+o.c.pendente,'blue','◷')+
+    statCard('Propostas recebidas',o.c.proposta,x.withOffer+' de '+d.studies.length+' estudos com proposta','green','✓')+
+    statCard('Não atendidas',o.c.declinou,pct(o.c.declinou,o.total)+' das cotações','rose','↘')+
+    '</section>';
 
-  h+='<div class="sec-title"><h2>Estudos</h2><span class="sub">Visão individual de cada estudo. Clique para abrir o detalhamento.</span></div><div class="grid3">';
-  o.ms.forEach(function(x){var s=x.s,m=x.m;
-    h+='<div class="scard" data-open="'+s.id+'"><div class="top"><div><h3>'+esc(s.nome)+'</h3><div class="ref">'+esc(s.referencia||'s/ referência')+(s.companhia?' · '+esc(s.companhia):'')+'</div></div><span class="health '+m.health.k+'">'+m.health.label+'</span></div>'+
-      '<div style="display:flex;gap:6px;flex-wrap:wrap">'+(s.classe?'<span class="chip">'+esc(s.classe)+'</span>':'')+(s.apresentacoes?'<span class="chip">'+esc(s.apresentacoes)+'</span>':'')+'</div>'+
-      stackBar(m.c,m.total)+
-      '<div class="nums"><div><div class="l">Desde a solicitação</div><div class="v">'+(m.dias!=null?m.dias+' d':'s/ data')+'</div></div><div><div class="l">Ativos</div><div class="v">'+m.ativos+'/'+m.total+'</div></div><div><div class="l">Melhor proposta</div><div class="v" style="font-size:'+(m.best!=null?'14px':'17px')+'">'+(m.best!=null?brl(m.best):'sem proposta')+'</div></div></div>'+
-      '<div class="go">Abrir estudo →</div></div>';});
-  h+='</div>';
+  h+='<section class="section-block" id="prioritySection"><div class="section-heading"><div><div class="section-kicker">FOCO OPERACIONAL</div><h2>O que merece atenção agora</h2><p>Sinais calculados com base nos registros disponíveis, sem presumir prazos contratuais.</p></div><span class="section-count">'+signals.length+' sinais</span></div>'+ 
+    '<div class="focus-layout"><div class="focus-list card">'+(signals.length?signals.slice(0,5).map(function(a,i){
+      return '<button class="focus-item" data-open="'+esc(a.studyId)+'"><span class="focus-index">'+String(i+1).padStart(2,'0')+'</span><span class="focus-copy"><span class="focus-item-line"><strong>'+esc(a.study)+'</strong><small> / '+esc(a.lab)+'</small></span><span class="focus-item-title">'+esc(a.title)+'</span><span class="focus-item-detail">'+esc(a.detail)+'</span></span><span class="focus-marker '+a.severity+'">'+(a.severity==='urgent'?'Prioritário':'Revisar')+'</span><span class="focus-arrow">↗</span></button>';
+    }).join(''):'<div class="empty">Nenhuma movimentação prioritária identificada pelos critérios do painel.</div>')+
+    '<div class="focus-foot">Exibindo os 5 sinais de maior prioridade. <button class="quiet-link" data-act="jumpAlerts">Ver todos os alertas →</button></div></div>'+ 
+    '<aside class="signal-summary"><div class="summary-top"><span class="section-kicker">QUALIDADE DOS DADOS</span><span class="mini-icon">✦</span></div><h3>Um olhar além dos números</h3><p>Indicadores para conferir a atualização e a confiabilidade dos registros.</p>'+ 
+    '<div class="signal-metric"><span><b>'+x.over14+'</b><small>cotações em análise/pendentes há 14+ dias sem atualização</small></span><div class="sm-indicator amber"></div></div>'+ 
+    '<div class="signal-metric"><span><b>'+x.missing+'</b><small>registros ativos sem data de atualização</small></span><div class="sm-indicator blue"></div></div>'+ 
+    '<div class="signal-metric"><span><b>'+x.invalid+'</b><small>datas de atualização anteriores à solicitação</small></span><div class="sm-indicator pink"></div></div>'+ 
+    '<div class="summary-note">A data de atualização não é, necessariamente, a data de resposta do laboratório.</div></aside></div></section>';
 
-  h+='<div class="sec-title"><h2>Panorama das cotações</h2></div><div class="grid2">'+
-    '<div class="card"><h3>Situação consolidada</h3><div class="cap">Todas as cotações de todos os estudos</div><div class="donut-wrap">'+donut(o.c,o.total)+'<div class="donut-legend">'+
-      KEYS.map(function(k){return '<div class="dl"><span class="st '+k+'"><i>'+ST[k].icon+'</i></span><span>'+ST[k].label+'</span><span class="num">'+o.c[k]+'</span><span class="pct">'+pct(o.c[k],o.total)+'</span></div>';}).join('')+'</div></div></div>'+
-    '<div class="card"><h3>Distribuição por estudo</h3><div class="cap">Situação de cada laboratório cotado, por estudo</div>'+
-      o.ms.map(function(x){return '<div class="srow"><div class="n" data-tip="'+esc(x.s.nome)+'">'+esc(x.s.nome)+'</div>'+stackBar(x.m.c,x.m.total)+'<div class="t">'+x.m.total+' labs</div></div>';}).join('')+
-      '<div style="margin-top:12px">'+legend()+'</div></div></div>';
+  h+='<section class="section-block" id="studiesSection"><div class="section-heading"><div><div class="section-kicker">PORTFÓLIO</div><h2>Estudos em acompanhamento</h2><p>Abra um estudo para conferir todos os laboratórios e as respectivas propostas.</p></div><button class="outline-action" data-act="goStudies">Visualizar detalhes ↗</button></div>'+ 
+    '<div class="portfolio-toolbar"><label class="search-wrap"><span class="search-symbol">⌕</span><input id="overviewSearch" aria-label="Buscar estudo" placeholder="Buscar estudo ou medicamento de referência..." value="'+esc(dashFilter.query)+'" autocomplete="off"></label><label class="filter-wrap">Situação <select id="overviewFilter" aria-label="Filtrar situação"><option value="all"'+(dashFilter.status==='all'?' selected':'')+'>Todos</option><option value="good"'+(dashFilter.status==='good'?' selected':'')+'>Com proposta</option><option value="warn"'+(dashFilter.status==='warn'?' selected':'')+'>Atenção</option><option value="info"'+(dashFilter.status==='info'?' selected':'')+'>Em andamento</option></select></label></div>'+ 
+    '<div class="portfolio-grid" id="portfolioGrid">';
+  o.ms.forEach(function(z){var s=z.s,m=z.m;
+    var labQuote=s.labs.filter(function(l){return l.valor!=null;}).sort(function(a,b){return a.valor-b.valor;})[0];
+    var cl=m.health.k==='crit'?'warn':m.health.k;
+    var summary=labQuote?'A partir de '+brl(labQuote.valor)+' · '+esc(labQuote.lab):'Nenhuma proposta recebida';
+    h+='<button class="portfolio-card" data-open="'+esc(s.id)+'" data-health="'+cl+'" data-find="'+esc(norm([s.nome,s.referencia,s.companhia,s.classe].join(' ')))+'">'+
+      '<div class="portfolio-top"><span class="portfolio-type">'+esc(s.classe||'Estudo de equivalência')+'</span><span class="portfolio-status '+cl+'"><i></i>'+esc(m.health.label)+'</span></div>'+ 
+      '<h3>'+esc(s.nome)+'</h3><div class="portfolio-ref">Referência: <strong>'+esc(s.referencia||'Não informada')+'</strong></div>'+ 
+      '<div class="portfolio-split"><span><small>DESDE A SOLICITAÇÃO</small><b>'+(m.dias!=null?m.dias+' dias':'Sem data')+'</b></span><span><small>COTAÇÕES ATIVAS*</small><b>'+m.ativos+' <em>/ '+m.total+'</em></b></span></div>'+ 
+      '<div class="portfolio-progress">'+stackBar(m.c,m.total,true)+'</div>'+ 
+      '<div class="portfolio-bottom"><div><small>PROPOSTAS</small><strong>'+summary+'</strong></div><span class="card-next">↗</span></div></button>';
+  });
+  h+='</div><div class="empty" id="studySearchEmpty" hidden>Nenhum estudo encontrado para este filtro.</div><div class="portfolio-help">*Cotações ativas: em análise, pendentes ou com proposta. As cores representam a situação dos laboratórios.</div></section>';
 
-  var labs=o.labs;
-  h+='<div class="sec-title"><h2>Matriz estudo × laboratório</h2><span class="sub">Situação e data da última atualização em cada cruzamento</span></div><div class="card"><div class="scroll"><div class="matrix" style="grid-template-columns:170px repeat('+labs.length+',minmax(120px,1fr))"><div class="h">Estudo</div>'+
+  h+='<section class="section-block"><div class="section-heading"><div><div class="section-kicker">INTELIGÊNCIA DO PORTFÓLIO</div><h2>Como as cotações estão distribuídas</h2><p>Composição real dos registros, por situação e por estudo.</p></div></div><div class="analytic-grid">'+
+    '<div class="card viz-card"><h3>Panorama das cotações</h3><p class="cap">Todos os laboratórios e estudos consolidados</p><div class="donut-wrap">'+donut(o.c,o.total)+'<div class="donut-legend">'+
+    KEYS.map(function(k){return '<div class="dl"><span class="legend-dot" style="background:'+ST[k].hex+'"></span><span>'+ST[k].label+'</span><span class="num">'+o.c[k]+'</span><span class="pct">'+pct(o.c[k],o.total)+'</span></div>';}).join('')+'</div></div></div>'+ 
+    '<div class="card viz-card"><h3>Composição por estudo</h3><p class="cap">Distribuição dos retornos de cada estudo</p><div class="composition-bars">'+
+      o.ms.map(function(z){return '<div class="composition-row"><div class="composition-label"><b>'+esc(z.s.nome)+'</b><small>'+z.m.total+' cotações</small></div>'+stackBar(z.m.c,z.m.total)+'</div>';}).join('')+'</div><div class="viz-legend">'+legend()+'</div></div></div></section>';
+
+  h+='<section class="section-block"><div class="section-heading"><div><div class="section-kicker">ANÁLISES COMPLEMENTARES</div><h2>Explore o detalhamento</h2><p>Abra somente a análise de que precisar. Tudo continua disponível.</p></div></div>'+ 
+    '<details class="analysis-disclosure"><summary><span class="disclosure-icon">▦</span><span><strong>Matriz estudo × laboratório</strong><small>Visualize o status de cada laboratório em cada estudo</small></span><span class="disclosure-chevron">⌄</span></summary><div class="disclosure-body"><div class="scroll"><div class="matrix" style="grid-template-columns:170px repeat('+labs.length+',minmax(120px,1fr))"><div class="h">Estudo</div>'+ 
     labs.map(function(l){return '<div class="h">'+esc(l)+'</div>';}).join('');
   d.studies.forEach(function(s){
-    h+='<div class="rn" data-open="'+s.id+'">'+esc(s.nome)+'<small>Solicitado em '+br(s.solicitacao)+'</small></div>';
-    labs.forEach(function(ln){ var l=s.labs.filter(function(x){return x.lab===ln;})[0];
+    h+='<div class="rn" data-open="'+esc(s.id)+'">'+esc(s.nome)+'<small>Solicitado em '+br(s.solicitacao)+'</small></div>';
+    labs.forEach(function(ln){var l=s.labs.filter(function(v){return v.lab===ln;})[0];
       if(!l){h+='<div class="mcell vazio"><div class="a">Não cotado</div></div>';return;}
-      var tip=ln+' · '+s.nome+'\n'+ST[l.status].label+'\nÚltima atualização: '+br(l.data)+(l.obs?'\nObs.: '+l.obs:'')+(l.valor!=null?'\nProposta: '+brl(l.valor):'');
-      h+='<div class="mcell '+l.status+'" data-tip="'+esc(tip)+'"><div class="a"><i>'+ST[l.status].icon+'</i>'+ST[l.status].short+'</div><div class="d">'+(l.valor!=null?brl(l.valor):br(l.data))+'</div></div>';});
+      var tip=ln+' · '+s.nome+'\n'+ST[l.status].label+'\nAtualização: '+br(l.data)+(l.obs?'\n'+l.obs:'')+(l.valor!=null?'\nProposta: '+brl(l.valor):'');
+      h+='<div class="mcell '+l.status+'" data-tip="'+esc(tip)+'"><div class="a"><i>'+ST[l.status].icon+'</i>'+ST[l.status].short+'</div><div class="d">'+(l.valor!=null?brl(l.valor):br(l.data))+'</div></div>';
+    });
   });
-  h+='</div></div><div style="margin-top:14px">'+legend()+'</div></div>';
+  h+='</div></div><div class="viz-legend">'+legend()+'</div></div></details>';
+  h+='<details class="analysis-disclosure"><summary><span class="disclosure-icon">◷</span><span><strong>Linha do tempo dos estudos</strong><small>Acompanhe as datas de solicitação e última atualização</small></span><span class="disclosure-chevron">⌄</span></summary><div class="disclosure-body">'+
+    timeline(d.studies.map(function(s){var m=metrics(s,ref);return {label:s.nome,sub:'Solicitado em '+br(s.solicitacao),start:s.solicitacao,end:m.dias!=null?m.dias+' dias':'',points:s.labs.map(function(l){return {date:l.data,status:l.status,tip:l.lab+': '+ST[l.status].label+'\n'+br(l.data)};})};}),ref,{refLabel:view.version!=null?'Ref.':'Hoje'})+
+    '<div class="viz-legend">'+legend()+'</div></div></details></section>';
 
-  h+='<div class="sec-title"><h2>Linha do tempo</h2><span class="sub">Da solicitação até hoje; cada ponto é a última atualização de um laboratório</span></div><div class="card">'+
-    timeline(d.studies.map(function(s){var m=metrics(s,ref);return {label:s.nome,sub:'Solicitado em '+br(s.solicitacao),start:s.solicitacao,end:m.dias!=null?m.dias+' dias':'',
-      points:s.labs.map(function(l){return {date:l.data,status:l.status,tip:l.lab+': '+ST[l.status].label+'\n'+br(l.data)};})};}),ref,{refLabel:view.version!=null?'Ref.':'Hoje'})+
-    '<div style="margin-top:12px">'+legend()+'</div></div>';
-
-  h+='<div class="sec-title"><h2>Pontos de atenção</h2><span class="sub">'+plural(al.length,'item identificado','itens identificados')+' automaticamente a partir dos dados</span></div>';
-  h+=al.length?'<div class="alerts">'+al.map(function(a){return '<div class="al '+a.lvl+'"><div class="ic">'+(a.lvl==='crit'?'!':a.lvl==='warn'?'!':'i')+'</div><div><div class="meta">'+esc(a.study)+'</div>'+esc(a.text)+'</div></div>';}).join('')+'</div>':'<div class="empty">Nenhum ponto de atenção no momento.</div>';
+  h+='<section class="section-block" id="allAlerts"><div class="section-heading"><div><div class="section-kicker">CONFERÊNCIA</div><h2>Todos os pontos de atenção</h2><p>Alertas automáticos: retorno, atualização, recusas e consistência de datas.</p></div><span class="section-count">'+al.length+' registros</span></div>'+
+    (al.length?'<div class="alerts alert-grid">'+al.map(function(a){return '<div class="al '+a.lvl+'"><div class="ic">'+(a.lvl==='info'?'i':'!')+'</div><div><div class="meta">'+esc(a.study)+'</div>'+esc(a.text)+'</div></div>';}).join('')+'</div>':'<div class="empty">Nenhum ponto de atenção identificado.</div>')+'</section>';
   return h;
+}
+function applyOverviewFilter(){
+  var cards=$$('.portfolio-card'),q=norm(dashFilter.query),n=0;
+  cards.forEach(function(card){
+    var t=card.getAttribute('data-health'),v=card.getAttribute('data-find')||'';
+    var ok=(!q||v.indexOf(q)>=0) && (dashFilter.status==='all'||t===dashFilter.status||dashFilter.status==='warn'&&t==='crit');
+    card.hidden=!ok;if(ok)n++;
+  });
+  var empty=$('#studySearchEmpty');if(empty)empty.hidden=n>0;
 }
 
 function fieldView(s,k,label,cls,wide){
@@ -673,7 +820,7 @@ function renderStudies(d,ref){
   if(!d.studies.length) return '<div class="empty">Nenhum estudo cadastrado.'+(canEdit()?' <button class="lnk" data-act="addStudy">Incluir estudo</button>':'')+'</div>';
   var s=d.studies.filter(function(x){return x.id===view.study;})[0]||d.studies[0]; view.study=s.id;
   var m=metrics(s,ref), ed=canEdit();
-  var h='<div class="selector">'+d.studies.map(function(x){var mm=metrics(x,ref);var col={good:ST.proposta.hex,info:ST.analise.hex,warn:ST.pendente.hex,crit:ST.declinou.hex}[mm.health.k];
+  var h='<div class="selector" aria-label="Selecionar estudo">'+d.studies.map(function(x){var mm=metrics(x,ref);var col={good:ST.proposta.hex,info:ST.analise.hex,warn:ST.pendente.hex,crit:ST.declinou.hex}[mm.health.k];
     return '<button data-study="'+x.id+'" class="'+(x.id===s.id?'on':'')+'"><span class="dot" style="background:'+col+'"></span>'+esc(x.nome)+'</button>';}).join('')+(ed?'<button class="add" data-act="addStudy">+ Novo estudo</button>':'')+'</div>';
   h+='<div class="'+(ed?'editing':'')+'"><div class="shead"><div><h1>'+(ed?'<input class="fld" style="font:800 24px Manrope,Inter,sans-serif;max-width:420px" data-b="s:nome" value="'+esc(s.nome)+'">':esc(s.nome))+'</h1><div class="chips"><span class="health '+m.health.k+'">'+m.health.label+'</span>'+(s.classe?'<span class="chip">'+esc(s.classe)+'</span>':'')+(ed?'<span class="edit-flag">Editando</span>':'')+'</div></div><div class="sp"></div>'+
     '<button class="btn2" data-act="pdfStudy">PDF deste estudo</button>'+(ed?'<button class="btn2 danger" data-act="delStudy">Excluir estudo</button>':'')+'</div>';
@@ -715,7 +862,7 @@ function renderLabs(d,ref){
     d.studies.forEach(function(s){s.labs.forEach(function(l){ if(l.lab!==ln) return; n++; c[l.status]++; if(l.data&&(!last||l.data>last)) last=l.data; if(l.data&&s.solicitacao&&l.data>=s.solicitacao) resp.push(days(s.solicitacao,l.data)); });});
     return {lab:ln,c:c,n:n,last:last,resp:resp.length?Math.round(resp.reduce(function(a,b){return a+b;},0)/resp.length):null};
   });
-  var h='<div class="sec-title" style="margin-top:6px"><h2>Desempenho por laboratório</h2><span class="sub">Consolidado de todos os estudos cotados</span></div><div class="card"><div class="scroll"><table class="t" style="min-width:820px"><thead><tr><th>Laboratório</th><th class="num">Estudos</th><th style="width:28%">Situação</th><th class="num">Propostas</th><th class="num">Em aberto</th><th class="num">Declinou</th><th class="num">Taxa de declínio</th><th class="num">Resposta média</th><th>Última interação</th></tr></thead><tbody>'+
+  var h='<div class="sec-title" style="margin-top:6px"><h2>Panorama por laboratório</h2><span class="sub">Consolidado de todos os estudos cotados · média calculada pela última atualização registrada, não pelo tempo de resposta</span></div><div class="card"><div class="scroll"><table class="t" style="min-width:820px"><thead><tr><th>Laboratório</th><th class="num">Estudos</th><th style="width:28%">Situação</th><th class="num">Propostas</th><th class="num">Em aberto</th><th class="num">Declinou</th><th class="num">Taxa de declínio</th><th class="num" data-tip="Dias entre a solicitação e a última atualização registrada (não representa tempo de resposta)">Média até atualização</th><th>Última atualização</th></tr></thead><tbody>'+
     rows.map(function(r){return '<tr><td><b>'+esc(r.lab)+'</b></td><td class="num">'+r.n+'</td><td>'+stackBar(r.c,r.n,true)+'</td><td class="num">'+r.c.proposta+'</td><td class="num">'+(r.c.analise+r.c.pendente)+'</td><td class="num">'+r.c.declinou+'</td><td class="num">'+pct(r.c.declinou,r.n)+'</td><td class="num">'+(r.resp!=null?r.resp+' d':'<span class="mut">s/ dado</span>')+'</td><td>'+br(r.last)+'</td></tr>';}).join('')+
     '</tbody></table></div><div style="margin-top:12px">'+legend()+'</div></div>';
   h+='<div class="sec-title"><h2>Laboratório × estudo</h2></div><div class="grid3">'+rows.map(function(r){
@@ -754,7 +901,7 @@ function render(){
   ['#btnImport','#btnEdit','#btnSave'].forEach(function(s){$(s).hidden=RO;});
   $$('.edit-ctl').forEach(function(b){b.hidden=RO;});
   $('#btnEdit').classList.toggle('on',editMode);
-  $('#btnEdit').textContent=editMode?'Sair da edição':'Modo edição';
+  $('#btnEdit').textContent=editMode?'Concluir edição':'Editar dados';
   $('#btnSave').disabled=!(dirty || diff(store.current,state).length);
   $('#histCount').textContent=store.history.length;
   $$('#tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.tab===view.tab);});
@@ -764,8 +911,15 @@ function render(){
   if(draftOffer) bn+='<div class="b warn" style="margin-top:8px"><span>Existem alterações não salvas deste painel guardadas neste navegador.</span><span class="sp"></span><button class="lnk" data-act="restoreDraft">Recuperar</button><button class="lnk" data-act="dropDraft">Descartar</button></div>';
   $('#banner').innerHTML=bn;
   var html = view.tab==='overview'?renderOverview(d,ref):view.tab==='studies'?renderStudies(d,ref):view.tab==='labs'?renderLabs(d,ref):renderHistory();
+  if(view.tab!=='overview'){
+    var pageInfo=view.tab==='studies'?['ESTUDOS','Detalhamento dos estudos','Dados técnicos, propostas e acompanhamento de cada laboratório.']:
+      view.tab==='labs'?['REDE DE LABORATÓRIOS','Laboratórios consultados','Panorama consolidado das participações e últimas movimentações.']:
+      ['RASTREABILIDADE','Histórico de versões','Consulte mudanças, responsáveis e versões anteriores.'];
+    html='<div class="page-intro"><span class="section-kicker">'+pageInfo[0]+'</span><h1>'+pageInfo[1]+'</h1><p>'+pageInfo[2]+'</p></div>'+html;
+  }
   $('#app').innerHTML=html;
-  $('#foot').innerHTML='Painel de Estudos de Equivalência · Versão '+L.v+' salva em '+brTs(L.ts)+(L.autor?' por '+esc(L.autor):'')+' · Dias calculados até '+br(ref)+(RO?' · Cópia somente leitura':'');
+  if(view.tab==='overview')applyOverviewFilter();
+  $('#foot').innerHTML='EQUIVLAB  /  Estudos de Equivalência · Versão '+L.v+' salva em '+brTs(L.ts)+(L.autor?' por '+esc(L.autor):'')+' · Dias calculados até '+br(ref)+(RO?' · Cópia somente leitura':'');
 }
 
 /* ===================== edição ===================== */
@@ -794,6 +948,18 @@ document.addEventListener('change',function(ev){
   var t=ev.target; if(t.tagName==='INPUT' && (t.type==='text'||t.type==='number'||!t.type)) return; /* já guardado na digitação; não redesenha para não atrapalhar o clique */
   if(aplicaCampo(t)){ markDirty(); keepScroll(render); }
 });
+document.addEventListener('input',function(ev){
+  if(ev.target && ev.target.id==='overviewSearch'){
+    dashFilter.query=ev.target.value;
+    applyOverviewFilter();
+  }
+});
+document.addEventListener('change',function(ev){
+  if(ev.target && ev.target.id==='overviewFilter'){
+    dashFilter.status=ev.target.value;
+    applyOverviewFilter();
+  }
+});
 function keepScroll(fn){var y=window.scrollY; fn(); window.scrollTo(0,y);}
 
 document.addEventListener('click',function(ev){
@@ -802,6 +968,9 @@ document.addEventListener('click',function(ev){
   if(t.dataset.open){view.tab='studies'; view.study=t.dataset.open; render(); window.scrollTo(0,0); return;}
   if(t.dataset.study){view.study=t.dataset.study; keepScroll(render); return;}
   var a=t.dataset.act, i=+t.dataset.i;
+  if(a==='jumpPriorities'){var p=$('#prioritySection');if(p)p.scrollIntoView({behavior:'smooth',block:'start'});return;}
+  if(a==='jumpAlerts'){var p2=$('#allAlerts');if(p2)p2.scrollIntoView({behavior:'smooth',block:'start'});return;}
+  if(a==='goStudies'){view.tab='studies';render();window.scrollTo(0,0);return;}
   if(a==='addStudy'){var n={id:uid(),nome:'NOVO ESTUDO',apresentacoes:'',classe:'',indicacao:'',referencia:'',companhia:'',solicitacao:todayISO(),labs:labOrder(state).map(function(l){return {lab:l,data:null,status:'pendente',obs:'',valor:null};})}; state.studies.push(n); view.study=n.id; markDirty(); render();}
   else if(a==='delStudy'){var s=curStudy(); confirmBox('Excluir o estudo '+s.nome+'?','O estudo sairá da versão atual, mas continuará registrado nas versões anteriores do histórico.',function(){state.studies=state.studies.filter(function(x){return x!==s;}); view.study=null; markDirty(); render();});}
   else if(a==='addLab'){curStudy().labs.push({lab:'Novo laboratório',data:todayISO(),status:'analise',obs:'',valor:null,validade:null}); markDirty(); keepScroll(render);}
@@ -824,7 +993,7 @@ function descartaEdicao(){
 }
 $('#btnEdit').onclick=function(){
   if(editMode && dirty){
-    modal('<h2>Você tem alterações não salvas</h2><div class="cap">Escolha o que fazer com elas antes de sair da edição.</div><div class="row" style="flex-wrap:wrap;gap:8px"><button class="btn2" id="eCont">Continuar editando</button><button class="btn2" id="eDesc" style="color:#e5484d">Descartar e sair</button><button class="btn2 pri" id="eSalv">Salvar versão</button></div>');
+    modal('<h2>Você tem alterações não salvas</h2><div class="cap">Escolha o que fazer com elas antes de sair da edição.</div><div class="row" style="flex-wrap:wrap;gap:8px"><button class="btn2" id="eCont">Continuar editando</button><button class="btn2" id="eDesc" style="color:#e5484d">Descartar e sair</button><button class="btn2 pri" id="eSalv">Salvar alterações</button></div>');
     $('#eCont').onclick=closeModal;
     $('#eDesc').onclick=function(){ closeModal(); descartaEdicao(); };
     $('#eSalv').onclick=function(){ closeModal(); openSave(); };
@@ -930,11 +1099,11 @@ function makePDF(entry,opt){
     header(titulo,(snap.meta&&snap.meta.objetivo)||'');
     var kw=(CW-5*4)/6, y=31, sumV=o.vals.reduce(function(a,b){return a+b;},0);
     kbox(M,y,kw,20,'Estudos no portfólio',snap.studies.length,'',[29,78,137]);
-    kbox(M+(kw+4),y,kw,20,'Cotações em curso',o.total,plural(o.labs.length,'laboratório','laboratórios'),[132,139,150]);
+    kbox(M+(kw+4),y,kw,20,'Cotações registradas',o.total,plural(o.labs.length,'laboratório','laboratórios'),[132,139,150]);
     kbox(M+2*(kw+4),y,kw,20,'Em análise',o.c.analise+' ('+pct(o.c.analise,o.total)+')',o.c.pendente?o.c.pendente+' com retorno pendente':'',rgb(ST.analise.hex));
-    kbox(M+3*(kw+4),y,kw,20,'Propostas recebidas',o.c.proposta,o.vals.length?brl(sumV):'nenhuma até o momento',rgb(ST.proposta.hex));
+    kbox(M+3*(kw+4),y,kw,20,'Propostas recebidas',o.c.proposta,o.vals.length?plural(o.vals.length,'valor registrado','valores registrados'):'sem valores',rgb(ST.proposta.hex));
     kbox(M+4*(kw+4),y,kw,20,'Declinaram',o.c.declinou+' ('+pct(o.c.declinou,o.total)+')','taxa de declínio',rgb(ST.declinou.hex));
-    kbox(M+5*(kw+4),y,kw,20,'Prazo médio em aberto',(o.avg||0)+' dias',o.oldest?'mais antigo: '+o.oldest.s.nome:'',[29,78,137]);
+    kbox(M+5*(kw+4),y,kw,20,'Idade média dos estudos',(o.avg||0)+' dias',o.oldest?'mais antigo: '+o.oldest.s.nome:'',[29,78,137]);
     y=60; secT('Matriz estudo × laboratório',y);
     var labs=o.labs;
     doc.autoTable({startY:y+3,margin:{left:M,right:Wd-M-178},tableWidth:178,theme:'grid',
