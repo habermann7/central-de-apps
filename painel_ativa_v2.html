@@ -357,6 +357,10 @@
 </style>
 </head>
 <body>
+<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0d0f12;color:#f3f5f8;display:flex;align-items:center;justify-content:center;font-family:Inter,system-ui,sans-serif;text-align:center;padding:20px;">
+  <div style="max-width:320px;width:100%;"><div id="__gateMsg" style="font-size:14px;color:#8a919c;line-height:1.6;">Verificando acesso...</div></div>
+</div>
+
 <div class="wrap">
 
   <header class="top">
@@ -622,7 +626,7 @@ function mostrarCarregando(msg){
 }
 
 function mostrarInicio(){
-  mostrarCarregando('📂 Clique em <b>"Carregar planilha"</b> e selecione a base de remessas da ATIVA (.xlsx) para gerar o painel.<br><small>Os dados são lidos só no seu computador — nada é enviado para a internet.</small>');
+  mostrarCarregando('📂 Clique em <b>"Carregar planilha"</b> e selecione a base de remessas da ATIVA (.xlsx) para gerar o painel.<br><small>Os dados ficam salvos no banco da Estante e aparecem para toda a equipe para a internet.</small>');
   document.getElementById('sourcePill').textContent = 'Nenhuma planilha carregada';
 }
 
@@ -1342,41 +1346,101 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
   e.target.value = '';
 });
 
-/* ---------- Guarda a última planilha no navegador ----------
-   Assim, ao atualizar a página (F5) os dados continuam. Vale só para este navegador/computador. */
-const CHAVE_DADOS = 'painelEntregas.ultimaPlanilha.v1';
-function salvaDados(nomeArq, quando, records){
-  try{
-    localStorage.setItem(CHAVE_DADOS, JSON.stringify({nome: nomeArq, quando: quando.getTime(), records: records}));
-    document.getElementById('sourcePill').title = 'Dados guardados neste navegador';
-  }catch(err){
-    showUploadStatus('Painel carregado, mas não deu para guardar no navegador (planilha grande ou navegador bloqueando). Ao atualizar a página será preciso carregar de novo.', true);
-  }
-}
-function restauraDados(){
-  try{
-    const txt = localStorage.getItem(CHAVE_DADOS);
-    if(!txt) return false;
-    const salvo = JSON.parse(txt);
-    if(!salvo || !Array.isArray(salvo.records) || !salvo.records.length) return false;
-    ALL = salvo.records;
-    DEFAULT_DATA = salvo.records;
-    dadosCarregados = true;
-    refreshDateBounds();
-    setActiveChip(document.querySelector('.chip-btn[data-range="all"]'));
-    applyFilters();
-    const d = new Date(salvo.quando);
-    const hh = String(d.getHours()).padStart(2,'0'), mm = String(d.getMinutes()).padStart(2,'0');
-    const pill = document.getElementById('sourcePill');
-    pill.textContent = `${salvo.nome} · carregado às ${hh}:${mm} (${salvo.records.length} registros)`;
-    pill.classList.add('custom');
-    return true;
-  }catch(err){
-    return false;
-  }
-}
+/* ---------- Dados no banco da Estante (compartilhados com a equipe) ----------
+   A última planilha fica salva no Firebase, em painelAtiva/ultimaPlanilha.
+   Quem entra vê os mesmos dados, e atualizações de outra pessoa aparecem sozinhas. */
+const CAMINHO_DADOS = 'painelAtiva/ultimaPlanilha';
+let ultimoQuando = null; // evita reaplicar o que este computador acabou de salvar
 
-if(!restauraDados()) mostrarInicio();
+function salvaDados(nomeArq, quando, records){
+  const pacote = {nome: nomeArq, quando: quando.getTime(), records: JSON.parse(JSON.stringify(records))};
+  ultimoQuando = pacote.quando;
+  firebase.database().ref(CAMINHO_DADOS).set(pacote)
+    .then(()=>{ document.getElementById('sourcePill').title = 'Salvo no banco da Estante'; })
+    .catch(err=>{ showUploadStatus('Painel carregado, mas NÃO foi salvo no banco (' + (err && err.message ? err.message : err) + '). Avise o admin.', true); });
+}
+function aplicaPacote(salvo){
+  if(!salvo || !Array.isArray(salvo.records) || !salvo.records.length) return false;
+  ultimoQuando = salvo.quando;
+  ALL = salvo.records;
+  DEFAULT_DATA = salvo.records;
+  dadosCarregados = true;
+  refreshDateBounds();
+  setActiveChip(document.querySelector('.chip-btn[data-range="all"]'));
+  applyFilters();
+  const d = new Date(salvo.quando);
+  const hh = String(d.getHours()).padStart(2,'0'), mm = String(d.getMinutes()).padStart(2,'0');
+  const pill = document.getElementById('sourcePill');
+  pill.textContent = `${salvo.nome} · carregado às ${hh}:${mm} (${salvo.records.length} registros)`;
+  pill.classList.add('custom');
+  return true;
+}
+function carregaDoBanco(){
+  const ref = firebase.database().ref(CAMINHO_DADOS);
+  ref.once('value').then(snap=>{
+    if(!aplicaPacote(snap.val())) mostrarInicio();
+    ref.on('value', s=>{
+      const v = s.val();
+      if(!v || v.quando === ultimoQuando) return;
+      aplicaPacote(v);
+    });
+  }).catch(err=>{
+    mostrarCarregando('Não consegui carregar os dados do banco. ' + (err && err.message ? err.message : '') + ' Recarregue a página ou avise o admin.');
+  });
+}
+window.__startApp = carregaDoBanco;
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
+<script>
+(function(){
+  /* CADEADO PADRÃO DA ESTANTE. Só esta linha muda (o ✎ Editar troca ela). */
+  var GRUPOS_PERMITIDOS = ["PCP"];
+  var firebaseConfig = {
+    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+    authDomain: "stinpharma-qualidade.firebaseapp.com",
+    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+    projectId: "stinpharma-qualidade",
+    storageBucket: "stinpharma-qualidade.firebasestorage.app",
+    messagingSenderId: "422803826984",
+    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+    measurementId: "G-6C0TLHH2VP"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  function norm(x){ return String(x).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().trim(); }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  function liberar(){
+    var st = document.getElementById('__gateStyle');
+    var ov = document.getElementById('__gateOverlay');
+    if(st) st.remove();
+    if(ov) ov.remove();
+    window.__gateOk = true;
+    if(window.__startApp) window.__startApp();
+  }
+  function negar(msg){
+    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Estante</a>';
+  }
+  var jaResolveu = false;
+  setTimeout(function(){
+    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
+  }, 10000);
+  firebase.auth().onAuthStateChanged(function(user){
+    jaResolveu = true;
+    if(!user){ negar('Você precisa entrar pela Estante.'); return; }
+    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
+      var dados = snap.val() || {};
+      var lista = (dados.grupos || []).slice();
+      if(dados.gruposMap && typeof dados.gruposMap === 'object'){ Object.keys(dados.gruposMap).forEach(function(k){ if(dados.gruposMap[k]) lista.push(k); }); }
+      var chave = function(x){ return norm(x).replace(/[^A-Z0-9]/g,'_'); };
+      var meus = lista.map(chave);
+      var permitido = dados.admin === true || GRUPOS_PERMITIDOS.some(function(g){ return meus.indexOf(chave(g)) !== -1; });
+      if(permitido){ liberar(); return; }
+      negar('Você não tem permissão pra acessar este app.<br><span style="font-size:12px;">Seus grupos: ' + esc(lista.join(', ') || 'nenhum') + '<br>Grupos com acesso: ' + esc(GRUPOS_PERMITIDOS.join(', ')) + '</span>');
+    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
+  });
+})();
 </script>
 
 </body>
