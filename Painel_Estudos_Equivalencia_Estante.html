@@ -725,7 +725,9 @@ function renderHistory(){
   return h;
 }
 
+var diaRenderizado=null;
 function render(){
+  diaRenderizado=todayISO();
   var d=data(), ref=refDate(), L=lastEntry();
   document.body.classList.toggle('is-ro',RO);
   $('#docTitle').textContent=niceTitle(d.meta&&d.meta.titulo);
@@ -1100,6 +1102,14 @@ window.__startApp=carregaBanco;
 /* ===================== init ===================== */
 var th=lsGet('eqdash:theme'); if(th) document.documentElement.setAttribute('data-theme',th);
 window.addEventListener('beforeunload',function(e){ if(dirty){e.preventDefault(); e.returnValue='';} });
+/* Virada do dia: se a página ficou aberta, os "Dias" precisam ser recalculados sozinhos */
+function checaViradaDoDia(){
+  if(!state || editMode || dirty) return;          /* não redesenha no meio de uma edição */
+  if(diaRenderizado && todayISO()!==diaRenderizado) render();
+}
+setInterval(checaViradaDoDia, 60000);
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) checaViradaDoDia(); });
+window.addEventListener('focus', checaViradaDoDia);
 })();
 </script>
 
