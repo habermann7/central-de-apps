@@ -198,17 +198,6 @@
     "category": "Projetos"
   },
   {
-    "title": "Pesquisa",
-    "description": "",
-    "file": "Painel_Estudos_Equivalencia_Estante.html",
-    "icon": "🧩",
-    "color": "#4d9fff",
-    "grupos": [
-      "EQUIVALENCIA"
-    ],
-    "category": "Equivalencia"
-  },
-  {
     "title": "BOOK CIENTIFICO",
     "description": "INTERLIGADO COM APP PESQUISA",
     "file": "Equivalencia_em_movimento_v2.html",
