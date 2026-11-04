@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Equivalência em movimento</title>
+<style>
+  :root{
+    --bg:#fbfaf7; --ink:#1d1d1b; --muted:#6b6a64; --line:#e4e1d8; --accent:#0e6e5c; --accent-soft:#e3f1ee;
+    --card:#ffffff; --warn:#7a5000; --warn-bg:#fbf1dc;
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#161714; --ink:#ecebe6; --muted:#9c9a92; --line:#2c2d29; --accent:#5fd0b8; --accent-soft:#1d2f2b;
+      --card:#1d1e1b; --warn:#f3c96b; --warn-bg:#2c2516;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#161714; --ink:#ecebe6; --muted:#9c9a92; --line:#2c2d29; --accent:#5fd0b8; --accent-soft:#1d2f2b;
+    --card:#1d1e1b; --warn:#f3c96b; --warn-bg:#2c2516;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:18px;line-height:1.7}
+  a{color:var(--accent)}
+
+  /* barra de progresso */
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:var(--accent);z-index:20;transition:width .1s}
+
+  /* cabeçalho */
+  header.top{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:10px 16px;font-family:var(--sans);font-size:14px}
+  header.top .title{font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  header.top button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 10px;cursor:pointer}
+  header.top button:hover{border-color:var(--accent);color:var(--accent)}
+
+  /* layout */
+  .wrap{display:grid;grid-template-columns:260px minmax(0,1fr);gap:0;max-width:1200px;margin:0 auto}
+  nav.toc{position:sticky;top:53px;align-self:start;height:calc(100vh - 53px);overflow:auto;padding:24px 16px;border-right:1px solid var(--line);font-family:var(--sans);font-size:14px}
+  nav.toc h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:18px 8px 6px}
+  nav.toc h2:first-child{margin-top:0}
+  nav.toc a{display:block;padding:6px 8px;border-radius:6px;color:var(--ink);text-decoration:none;line-height:1.35}
+  nav.toc a:hover{background:var(--accent-soft)}
+  nav.toc a.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+
+  main{padding:40px 24px 80px;min-width:0}
+  article{max-width:680px;margin:0 auto}
+
+  /* capa */
+  .cover{padding:24px 0 36px;border-bottom:1px solid var(--line);margin-bottom:12px}
+  .kicker{font-family:var(--sans);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:600}
+  .cover h1{font-size:44px;line-height:1.15;margin:10px 0 12px;font-weight:700;letter-spacing:-.01em}
+  .cover .sub{font-size:21px;color:var(--muted);margin:0 0 18px;font-style:italic}
+  .byline{font-family:var(--sans);font-size:14px;color:var(--muted)}
+
+  section.chap{padding-top:40px;scroll-margin-top:70px}
+  section.chap + section.chap{border-top:1px solid var(--line);margin-top:20px}
+  h2{font-size:30px;line-height:1.25;margin:0 0 18px;font-weight:700}
+  h3{font-size:20px;margin:28px 0 8px}
+  p{margin:0 0 16px}
+  strong{font-weight:700}
+  em{font-style:italic}
+  ol,ul{padding-left:24px;margin:0 0 18px}
+  li{margin-bottom:8px}
+
+  /* tabelas */
+  .tbl{overflow-x:auto;margin:20px 0 22px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+  table{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:15px;line-height:1.45}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--accent-soft);color:var(--ink);font-weight:600}
+  tr:last-child td{border-bottom:0}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  td b{color:var(--accent)}
+
+  /* caixas */
+  .note{font-family:var(--sans);font-size:15px;background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:14px 16px;margin:20px 0}
+  .note b{display:block;margin-bottom:4px}
+  .idea{font-family:var(--sans);font-size:15px;border-left:4px solid var(--accent);background:var(--card);padding:14px 18px;border-radius:0 10px 10px 0;margin:22px 0}
+  .idea b{color:var(--accent)}
+  .formula{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:16px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:18px 0;overflow-x:auto;white-space:pre}
+  .formula small{display:block;font-family:var(--sans);color:var(--muted);margin-top:8px;white-space:normal}
+
+  .refs li{font-size:16px}
+  .refs{font-family:var(--sans);font-size:15px}
+
+  footer{max-width:680px;margin:48px auto 0;padding-top:20px;border-top:1px solid var(--line);font-family:var(--sans);font-size:13px;color:var(--muted)}
+
+  /* menu de capítulos no celular */
+  #mobileToc{display:none}
+
+  @media (max-width: 900px){
+    .wrap{grid-template-columns:1fr}
+    nav.toc{display:none}
+    nav.toc.open{display:block;position:fixed;top:53px;left:0;right:0;bottom:0;height:auto;background:var(--bg);z-index:15;border-right:0}
+    #mobileToc{display:inline-block}
+    main{padding:28px 18px 60px}
+    .cover h1{font-size:34px}
+    h2{font-size:26px}
+    body{font-size:17px}
+  }
+
+  @media print{
+    header.top,nav.toc,#progress,footer,#mobileToc,#statusBar,.banner,.painel{display:none!important}
+    .wrap{display:block}
+    body{background:#fff;color:#000;font-size:11pt}
+    main{padding:0}
+    article{max-width:none}
+    section.chap{break-inside:auto;padding-top:14pt}
+    h2{break-after:avoid}
+    .tbl,.formula,.idea,.note{break-inside:avoid}
+    a{color:#000;text-decoration:none}
+  }
+
+  [hidden]{display:none!important}
+  header.top button.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+  header.top button:disabled{opacity:.5;cursor:default}
+  .edit-acoes{display:flex;gap:8px}
+  article[contenteditable="true"]{outline:2px dashed var(--accent);outline-offset:10px;border-radius:4px;cursor:text}
+  article[contenteditable="true"] table td, article[contenteditable="true"] table th{min-width:60px}
+  .banner{max-width:680px;margin:16px auto 0;background:var(--warn-bg);color:var(--warn);font-family:var(--sans);font-size:14px;padding:12px 14px;border-radius:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .banner button{font:inherit;border:1px solid currentColor;background:transparent;color:inherit;border-radius:8px;padding:5px 10px;cursor:pointer}
+  #statusBar{position:fixed;left:0;right:0;bottom:0;z-index:12;background:var(--card);border-top:1px solid var(--line);font-family:var(--sans);font-size:13px;color:var(--muted);padding:8px 16px;display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap}
+  #status{color:var(--ink)}
+  .painel{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:30;display:flex;align-items:center;justify-content:center;padding:16px}
+  .caixa{background:var(--card);color:var(--ink);font-family:var(--sans);border-radius:14px;max-width:520px;width:100%;max-height:85vh;overflow:auto;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+  .caixa h3{margin:0 0 12px;font-size:18px}
+  .caixa textarea{width:100%;min-height:90px;font:inherit;font-size:15px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);resize:vertical}
+  .caixa .acoes{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+  .caixa .acoes button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:8px 14px;cursor:pointer}
+  .caixa .acoes button.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+  .ver{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .ver:last-child{border-bottom:0}
+  .ver small{color:var(--muted)}
+  .ver button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 10px;cursor:pointer;white-space:nowrap}
+  .ver span{color:var(--accent);font-weight:600;font-size:13px;white-space:nowrap}
+  body{padding-bottom:56px}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0d0f12;color:#f3f5f8;display:flex;align-items:center;justify-content:center;font-family:Inter,system-ui,sans-serif;text-align:center;padding:20px;">
+  <div style="max-width:320px;width:100%;"><div id="__gateMsg" style="font-size:14px;color:#8a919c;line-height:1.6;">Verificando acesso...</div></div>
+</div>
+
+<header class="top">
+  <button id="mobileToc" aria-label="Abrir sumário">Sumário</button>
+  <span class="title">Equivalência em movimento</span>
+  <span class="edit-acoes">
+    <button id="btnVersoes">Versões</button>
+    <button id="btnCancelar" hidden>Cancelar</button>
+    <button id="btnSalvar" class="pri" hidden>Salvar versão</button>
+    <button id="btnEditar" class="pri">Editar</button>
+  </span>
+  <button id="themeBtn" aria-label="Alternar tema">Tema</button>
+  <button id="printBtn" aria-label="Imprimir ou salvar em PDF">Imprimir / PDF</button>
+</header>
+
+<div class="wrap">
+  <nav class="toc" id="toc" aria-label="Sumário">
+    <h2>Sumário</h2>
+    <a href="#capa">Capa</a>
+    <a href="#prefacio">Prefácio</a>
+    <h2>Capítulos</h2>
+    <a href="#cap1">1. O que significa "equivalente"</a>
+    <a href="#cap2">2. O painel como instrumento de medida</a>
+    <a href="#cap3">3. Tempo de resposta e sobrevivência</a>
+    <a href="#cap4">4. Validade da proposta e risco</a>
+    <a href="#cap5">5. Comparar além do menor preço</a>
+    <a href="#cap6">6. Laboratórios como fontes</a>
+    <a href="#cap7">7. Governança e confiança</a>
+    <a href="#cap8">8. Agenda de pesquisa</a>
+    <h2>Apoio</h2>
+    <a href="#glossario">Glossário</a>
+    <a href="#referencias">Referências</a>
+  </nav>
+
+  <main>
+    <div id="bannerRemoto" class="banner" hidden><span>Outra pessoa salvou uma versão nova enquanto você editava.</span><button id="btnCarregarRemoto">Carregar versão nova (descarta suas edições)</button></div>
+    <article>
+
+      <header class="cover" id="capa">
+        <div class="kicker">Livro · Estudos de equivalência</div>
+        <h1>Equivalência em movimento</h1>
+        <p class="sub">Como comparar, cotar e decidir com dados: do estudo de equivalência à compra que se sustenta.</p>
+        <div class="byline">4 de novembro de 2026 · David Damazio Habermann</div>
+      </header>
+
+      <section class="chap" id="prefacio">
+        <h2>Prefácio: por que um livro sobre um painel</h2>
+        <p>Este livro nasce de uma planilha que virou painel. Cada estudo de equivalência reúne laboratórios que cotam o mesmo produto, e cada cotação tem data, situação, valor e prazo de validade. Parece burocracia, mas é um processo de medição. Quando a medição é feita com cuidado, a decisão de compra fica mais segura.</p>
+        <p>O objetivo é tratar o painel como um caso de estudo: o que medimos, como medimos e o que as medidas dizem sobre o fornecimento. Cada capítulo parte de uma pergunta prática do dia a dia e termina com uma ideia que pode ser testada.</p>
+        <p>Uma nota de leitura: quando o texto disser "o painel", refere-se ao app Estudos de Equivalência, na versão atual.</p>
+      </section>
+
+      <section class="chap" id="cap1">
+        <h2>Capítulo 1: o que significa "equivalente"</h2>
+        <p>"Equivalente" não é uma propriedade que o produto tem sozinho. É uma comparação feita com critérios escolhidos. Por isso a primeira pergunta de qualquer estudo é: equivalente em quê?</p>
+        <p>A legislação e a literatura separam três níveis:</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Nível</th><th>Pergunta que responde</th><th>Critério central</th></tr></thead>
+          <tbody>
+            <tr><td>Equivalência farmacêutica</td><td>Tem a mesma composição?</td><td>Mesma substância ativa, forma, concentração e via</td></tr>
+            <tr><td>Bioequivalência</td><td>Entrega o fármaco ao organismo do mesmo jeito?</td><td>Taxa e extensão de absorção dentro de limites estatísticos</td></tr>
+            <tr><td>Equivalência terapêutica</td><td>Produz o mesmo efeito clínico?</td><td>Eficácia e segurança comparadas em desfecho clínico</td></tr>
+          </tbody>
+        </table></div>
+        <p>Quem trabalha com cotação geralmente lida com o primeiro nível, e a decisão de compra depende dos outros dois. Isso cria um ponto cego: o painel mede cotações, não desfechos clínicos. Este livro não tenta substituir esses estudos.</p>
+        <div class="note"><b>Premissa de trabalho (confirmar)</b>Neste livro, "estudo de equivalência" é o conjunto de cotações de laboratórios para um mesmo produto, usado para escolher fornecedor. Se o termo tiver outro sentido no seu processo, os capítulos seguintes se ajustam.</div>
+        <div class="idea"><b>Ideia central:</b> equivalência é uma escolha de critérios. Um estudo que não declara seus critérios não pode ser repetido por outra pessoa, e isso já é um problema científico.</div>
+      </section>
+
+      <section class="chap" id="cap2">
+        <h2>Capítulo 2: o painel como instrumento de medida</h2>
+        <p>Um instrumento de medida precisa de três coisas: registrar o que aconteceu, registrar quando e registrar quem. O conceito ALCOA, usado por agências reguladoras para integridade de dados (FDA, guia de 2018), resume isso em atribuível, legível, contemporâneo, original e exato.</p>
+        <p>O painel já atende a parte mais difícil: cada salvamento vira uma versão numerada, com data, nota e a comparação com a versão anterior. Nada é apagado do histórico. Isso permite reconstruir qualquer decisão.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Princípio</th><th>Como o painel atende hoje</th><th>Lacuna</th></tr></thead>
+          <tbody>
+            <tr><td>Atribuível</td><td>Cada versão guarda o responsável</td><td>O nome é um campo livre, pode ser digitado por qualquer um</td></tr>
+            <tr><td>Contemporâneo</td><td>Data e hora do salvamento</td><td>Dia da cotação e dia do registro podem ser diferentes, e o app não diferencia</td></tr>
+            <tr><td>Original</td><td>A planilha importada fica registrada como origem</td><td>Após importar, a origem não fica vinculada ao arquivo</td></tr>
+            <tr><td>Exato</td><td>Alertas de data anterior à solicitação</td><td>Nenhuma checagem de valor fora de faixa</td></tr>
+            <tr><td>Completo</td><td>Histórico de versões</td><td>Campos apagados não são listados como exclusão de forma destacada</td></tr>
+          </tbody>
+        </table></div>
+        <div class="idea"><b>Ideia para o capítulo:</b> trate cada versão como uma observação datada. Assim, "o que sabíamos em 3 de outubro" vira uma pergunta que o painel responde sozinho. Isso é o que separa um painel de uma planilha que só guarda o último estado.</div>
+      </section>
+
+      <section class="chap" id="cap3">
+        <h2>Capítulo 3: o tempo de resposta como análise de sobrevivência</h2>
+        <p>A pergunta "quanto tempo o laboratório demora para responder?" parece simples, mas tem um problema: alguns laboratórios ainda não responderam. Em estatística, isso é uma <strong>censura</strong>: sabemos que o evento não aconteceu até hoje, mas não sabemos quando vai acontecer.</p>
+        <p>Se a média considerar só quem respondeu, os laboratórios lentos somem da conta e o resultado parece melhor do que é. A análise de sobrevivência, clássica desde Kaplan e Meier (1958), usa os dois grupos. Ela estima, dia a dia, a fração de laboratórios que ainda não respondeu.</p>
+        <p>A fórmula central é o produto-limite:</p>
+        <div class="formula">S(t) = ∏ (1 − dᵢ / nᵢ)   para todo tᵢ ≤ t
+<small>dᵢ = laboratórios que responderam no dia tᵢ · nᵢ = laboratórios ainda sem resposta até o dia tᵢ</small></div>
+        <p>Em palavras: a cada dia em que alguém responde, a fração "ainda sem resposta" diminui na proporção de quem respondeu entre os que ainda estavam esperando.</p>
+        <p><strong>Exemplo fictício, com 5 laboratórios:</strong> três responderam nos dias 3, 7 e 12. Dois seguem pendentes no dia 20.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Medida</th><th class="num">Valor</th><th>O que mostra</th></tr></thead>
+          <tbody>
+            <tr><td>Média só de quem respondeu</td><td class="num">7,3 dias</td><td>Ignora os dois pendentes</td></tr>
+            <tr><td>Mediana de Kaplan-Meier</td><td class="num"><b>12 dias</b></td><td>Metade já respondeu até o dia 12</td></tr>
+            <tr><td>Pendentes no dia 20</td><td class="num">2 de 5</td><td>São censuras, não zeros</td></tr>
+          </tbody>
+        </table></div>
+        <p>O cartão "Retorno mais parado" do painel hoje mostra quem tem a última atualização mais antiga. Isso é útil para cobrar, mas não é uma medida de tempo de resposta. A proposta do capítulo é separar as duas coisas: uma métrica de cobrança e uma métrica de desempenho, estimada com Kaplan-Meier.</p>
+      </section>
+
+      <section class="chap" id="cap4">
+        <h2>Capítulo 4: validade da proposta e risco de vencimento</h2>
+        <p>Hoje o painel é cuidadoso com os termos: "validade da proposta" é o prazo comercial em que o laboratório sustenta o preço. Não é a validade do produto. Confundir os dois é um erro comum, e o estudo de estabilidade (ICH Q1, com a avaliação estatística do ICH Q1E) trata do segundo, não do primeiro.</p>
+        <p>O problema que este capítulo estuda é outro: uma proposta boa que vence antes de a compra ser aprovada. Isso é um problema de prazo. A pergunta certa não é "quantos dias faltam?", mas "quantos dias faltam para a decisão, e quanto tempo a aprovação interna costuma levar?".</p>
+        <p>Uma regra simples de janela de decisão, como ponto de partida para discussão:</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Dias até o vencimento</th><th>Situação</th><th>Ação sugerida</th></tr></thead>
+          <tbody>
+            <tr><td>Mais que o dobro do tempo de aprovação</td><td>Confortável</td><td>Seguir a análise normal</td></tr>
+            <tr><td>Entre 1 e 2 vezes o tempo de aprovação</td><td>Apertado</td><td>Priorizar a decisão e pedir prorrogação se necessário</td></tr>
+            <tr><td>Menos que o tempo de aprovação</td><td>Crítico</td><td>Decidir agora ou renegociar com o laboratório</td></tr>
+          </tbody>
+        </table></div>
+        <div class="note"><b>Atenção</b>Essa tabela é uma proposta, não uma regra do painel. Os limites de aviso que o app usa hoje devem ser comparados com ela, e a escolha dos limites é uma decisão sua.</div>
+        <div class="idea"><b>Ideia para o capítulo:</b> vale medir quantas propostas venceram sem decisão. Essa taxa é um indicador de processo. Se ela sobe, o problema é de tempo interno, não do fornecedor.</div>
+      </section>
+
+      <section class="chap" id="cap5">
+        <h2>Capítulo 5: comparar propostas além do menor preço</h2>
+        <p>O menor preço é o critério mais fácil de defender e, muitas vezes, o pior para a decisão. Ralph Keeney e Howard Raiffa, em <em>Decisions with Multiple Objectives</em> (1976), mostraram que decisões com vários objetivos precisam de pesos explícitos. Sem pesos, a decisão vira um palpite com cara de número.</p>
+        <p>O método básico tem três passos: dar nota a cada proposta em cada critério (de 0 a 10), definir pesos que somem 100%, e somar. O exemplo abaixo é <strong>fictício</strong>, só para mostrar o mecanismo:</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Laboratório</th><th class="num">Preço (nota)</th><th class="num">Tempo de retorno</th><th class="num">Folga de validade</th><th class="num">Completude dos dados</th><th class="num">Total com pesos 40/25/20/15</th></tr></thead>
+          <tbody>
+            <tr><td>L1</td><td class="num">9</td><td class="num">5</td><td class="num">6</td><td class="num">8</td><td class="num">7,25</td></tr>
+            <tr><td>L2</td><td class="num">7</td><td class="num">9</td><td class="num">9</td><td class="num">7</td><td class="num"><b>7,90</b></td></tr>
+            <tr><td>L3</td><td class="num">10</td><td class="num">3</td><td class="num">4</td><td class="num">9</td><td class="num">6,90</td></tr>
+          </tbody>
+        </table></div>
+        <p>Com esses pesos, L2 vence, mesmo não sendo o mais barato. Agora o teste que importa: se o peso do preço sobe de 40% para 60%, e os outros três caem na mesma proporção, L3 passa a liderar com 7,93, contra 7,60 de L2.</p>
+        <p>A decisão, portanto, não está nos dados. Está no peso. Isso não é defeito do método: é a parte honesta dele. A recomendação prática é registrar os pesos junto com cada decisão, na nota da versão, para que quem revisar entenda por que o menor preço não foi escolhido.</p>
+        <div class="idea"><b>Ideia para o capítulo:</b> faça a análise de sensibilidade sempre. Se a escolha muda com pequenas mudanças de peso, a decisão precisa de uma conversa, não só de uma planilha.</div>
+      </section>
+
+      <section class="chap" id="cap6">
+        <h2>Capítulo 6: laboratórios como fontes de informação</h2>
+        <p>Cada laboratório é uma fonte que responde com viés próprio. Tratá-lo como um instrumento de medida ajuda a enxergar esse viés. Três ideias práticas:</p>
+        <ul>
+          <li><strong>Silêncio também é dado.</strong> Um laboratório que não responde pode estar sem interesse, sem capacidade ou com um produto fora de especificação. A ausência precisa ser registrada como ausência, não como zero.</li>
+          <li><strong>Recusa tem causa.</strong> Quando um laboratório declina, vale anotar o motivo. Sem motivo, a taxa de recusa mistura falta de produto com falta de preço, e os dois pedem ações diferentes.</li>
+          <li><strong>Poucos laboratórios concentram o resultado.</strong> A regra de Pareto (80/20) costuma aparecer em fornecimento: poucos fornecedores respondem pela maior parte das propostas úteis. Vale checar isso nos seus dados antes de presumir.</li>
+        </ul>
+        <p>A pergunta que sai deste capítulo: qual laboratório tem a melhor combinação de resposta rápida, proposta competitiva e recusa baixa? Essa pergunta exige o histórico do capítulo 2 e a análise do capítulo 3, e não cabe em um único número.</p>
+      </section>
+
+      <section class="chap" id="cap7">
+        <h2>Capítulo 7: governança e confiança nos números</h2>
+        <p>Um número só é confiável se alguém consegue questioná-lo e refazê-lo. Três mecanismos do painel ajudam nisso:</p>
+        <ol>
+          <li><strong>Conflito de salvamento.</strong> Se duas pessoas tentam salvar ao mesmo tempo, o app recusa a segunda e pede para recarregar. Isso evita que uma versão apague silenciosamente a outra.</li>
+          <li><strong>Histórico sem exclusão.</strong> Restaurar uma versão antiga cria uma versão nova, e nada é apagado. A pergunta "o que mudou?" sempre tem resposta.</li>
+          <li><strong>Comparação antes de salvar.</strong> A lista de alterações mostra o que mudou em relação à versão anterior.</li>
+        </ol>
+        <p>A lacuna que ainda existe: o responsável é digitado, não vem da identidade de quem salvou. Para uma trilha de auditoria completa, o ideal é usar o e-mail do login como autor, e deixar a nota para o motivo.</p>
+        <p>Sobre a planilha: enquanto a planilha continuar sendo importada, o painel vira o registro oficial e a planilha vira apenas uma fonte. Vale decidir qual das duas é a verdade, por escrito, antes que surjam duas versões dos mesmos dados.</p>
+      </section>
+
+      <section class="chap" id="cap8">
+        <h2>Capítulo 8: agenda de pesquisa com perguntas testáveis</h2>
+        <p>Uma boa pesquisa começa com uma afirmação que pode estar errada. Estas são as cinco que o próprio histórico do painel pode testar, sem coletar dados novos:</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Hipótese</th><th>Como testar</th><th>Limitação</th></tr></thead>
+          <tbody>
+            <tr><td>H1: laboratórios que respondem em até 5 dias fecham mais propostas</td><td>Comparar a taxa de proposta por faixa de tempo de resposta, com Kaplan-Meier</td><td>Poucos estudos por laboratório</td></tr>
+            <tr><td>H2: propostas com pouca folga de validade são menos aproveitadas</td><td>Cruzar dias até o vencimento com o status final</td><td>Vencimento e decisão podem ser simultâneos</td></tr>
+            <tr><td>H3: registrar o motivo da recusa muda o comportamento do laboratório</td><td>Comparar taxa de recusa antes e depois do registro</td><td>Mudança de equipe pode explicar a diferença</td></tr>
+            <tr><td>H4: 20% dos laboratórios respondem por 80% das propostas úteis</td><td>Curva de Pareto por laboratório</td><td>Depende de quantos laboratórios existem</td></tr>
+            <tr><td>H5: pesos explícitos reduzem a troca de fornecedor em seis meses</td><td>Comparar trocas em períodos com e sem pesos registrados</td><td>Amostra pequena e decisão não aleatória</td></tr>
+          </tbody>
+        </table></div>
+        <p>A ordem sugerida é H1, depois H2. São as que já têm dados no painel hoje. As outras dependem de registrar campos novos, como motivo de recusa e pesos.</p>
+        <div class="idea"><b>Regra de ouro:</b> se quiser que uma dessas vire um estudo de verdade, defina a regra de corte antes de olhar os dados. Olhar primeiro e definir depois é a forma mais comum de achar padrões que não existem.</div>
+      </section>
+
+      <section class="chap" id="glossario">
+        <h2>Glossário</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Termo</th><th>O que significa, em uma frase</th></tr></thead>
+          <tbody>
+            <tr><td>Bioequivalência</td><td>Dois produtos entregam o mesmo fármaco ao organismo, dentro de limites estatísticos.</td></tr>
+            <tr><td>Censura</td><td>Dado incompleto: sabemos que o evento ainda não aconteceu, sem saber quando vai acontecer.</td></tr>
+            <tr><td>Curva de Pareto</td><td>Gráfico que mostra quais poucas causas ou fornecedores explicam a maior parte do resultado.</td></tr>
+            <tr><td>Kaplan-Meier</td><td>Método que estima, dia a dia, a fração que ainda não aconteceu, usando também os casos incompletos.</td></tr>
+            <tr><td>Mediana</td><td>O valor que divide os casos ao meio: metade antes, metade depois.</td></tr>
+            <tr><td>Análise de sensibilidade</td><td>Teste de quanto a decisão muda quando um peso ou premissa muda um pouco.</td></tr>
+            <tr><td>Integridade de dados</td><td>Garantia de que o dado é atribuível, legível, contemporâneo, original e exato.</td></tr>
+            <tr><td>Ponderação (pesos)</td><td>Importância atribuída a cada critério, com soma igual a 100%.</td></tr>
+            <tr><td>Validade da proposta</td><td>Prazo comercial em que o laboratório mantém o preço cotado.</td></tr>
+            <tr><td>Validade do produto</td><td>Prazo em que o medicamento mantém qualidade, definido por estudos de estabilidade.</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section class="chap refs" id="referencias">
+        <h2>Referências e pontos a verificar</h2>
+        <h3>Referências citadas</h3>
+        <ol>
+          <li>Kaplan, E. L.; Meier, P. Nonparametric estimation from incomplete observations. <em>Journal of the American Statistical Association</em>, 1958.</li>
+          <li>Keeney, R. L.; Raiffa, H. <em>Decisions with Multiple Objectives: Preferences and Value Trade-offs</em>. Wiley, 1976.</li>
+          <li>Hosmer, D. W.; Lemeshow, S.; May, S. <em>Applied Survival Analysis</em>. 2. ed. Wiley, 2008.</li>
+          <li>ICH Q1A(R2): Stability Testing of New Drug Substances and Products.</li>
+          <li>ICH Q1E: Evaluation for Stability Data.</li>
+          <li>FDA. <em>Data Integrity and Compliance With Drug CGMP: Questions and Answers</em>. Guia, 2018.</li>
+          <li>Brasil. Lei nº 9.787, de 10 de fevereiro de 1999 (Lei dos Genéricos).</li>
+        </ol>
+        <h3>Pontos a verificar antes de publicar</h3>
+        <ul>
+          <li>A resolução atual da ANVISA sobre bioequivalência e intercambialidade não foi conferida nesta versão. Antes de citar um número de RDC, confirme no site da ANVISA.</li>
+          <li>A premissa de "estudo de equivalência" do capítulo 1 precisa ser confirmada com o seu processo.</li>
+          <li>Os limites da janela de decisão (capítulo 4) e os pesos do exemplo (capítulo 5) são propostas ilustrativas.</li>
+          <li>As referências 1 a 3 são clássicas e as 4 a 6 são guias oficiais. Confira as edições e os textos completos antes de citar em documento formal.</li>
+        </ul>
+      </section>
+
+    </article>
+    <footer>Equivalência em movimento · versão 1 · 4 de novembro de 2026</footer>
+  </main>
+</div>
+
+<div id="statusBar"><span id="status"></span><span id="versaoTxt">Carregando...</span></div>
+
+<div id="salvarPainel" class="painel" hidden>
+  <div class="caixa">
+    <h3>Salvar nova versão</h3>
+    <div style="font-size:14px;color:var(--muted);margin-bottom:10px">Essa versão fica no histórico. Nada é apagado, e você pode voltar a qualquer versão.</div>
+    <textarea id="notaSalvar" placeholder="O que mudou? (opcional)"></textarea>
+    <div class="acoes"><button id="btnSalvarVoltar">Voltar</button><button id="btnSalvarOk" class="pri">Salvar</button></div>
+  </div>
+</div>
+
+<div id="versoesPainel" class="painel" hidden>
+  <div class="caixa">
+    <h3>Versões do livro</h3>
+    <div id="listaVersoes"></div>
+    <div class="acoes"><button id="btnVersoesFechar">Fechar</button></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
+<script>
+(function(){
+  /* CADEADO PADRÃO DA ESTANTE. Só esta linha muda. */
+  var GRUPOS_PERMITIDOS = ["EQUIVALENCIA"];
+  var firebaseConfig = {
+    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+    authDomain: "stinpharma-qualidade.firebaseapp.com",
+    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+    projectId: "stinpharma-qualidade",
+    storageBucket: "stinpharma-qualidade.firebasestorage.app",
+    messagingSenderId: "422803826984",
+    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+    measurementId: "G-6C0TLHH2VP"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  function norm(x){ return String(x).normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().trim(); }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function liberar(){
+    var ov = document.getElementById('__gateOverlay');
+    if(ov) ov.remove();
+    window.__gateOk = true;
+    if(window.__startApp) window.__startApp();
+  }
+  function negar(msg){
+    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Estante</a>';
+  }
+  var jaResolveu = false;
+  setTimeout(function(){
+    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
+  }, 10000);
+  firebase.auth().onAuthStateChanged(function(user){
+    jaResolveu = true;
+    if(!user){ negar('Você precisa entrar pela Estante.'); return; }
+    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
+      var dados = snap.val() || {};
+      var lista = (dados.grupos || []).slice();
+      if(dados.gruposMap && typeof dados.gruposMap === 'object'){ Object.keys(dados.gruposMap).forEach(function(k){ if(dados.gruposMap[k]) lista.push(k); }); }
+      var chave = function(x){ return norm(x).replace(/[^A-Z0-9]/g,'_'); };
+      var meus = lista.map(chave);
+      var permitido = dados.admin === true || GRUPOS_PERMITIDOS.some(function(g){ return meus.indexOf(chave(g)) !== -1; });
+      if(permitido){ liberar(); return; }
+      negar('Você não tem permissão pra acessar este app.<br><span style="font-size:12px;">Seus grupos: ' + esc(lista.join(', ') || 'nenhum') + '<br>Grupos com acesso: ' + esc(GRUPOS_PERMITIDOS.join(', ')) + '</span>');
+    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
+  });
+})();
+</script>
+<script>
+(function(){
+  var art = document.querySelector('article');
+  var base = null;      /* versão carregada, como está salva */
+  var editando = false;
+  var remoto = null;    /* versão nova salva por outra pessoa enquanto você edita */
+  var historicoCache = [];
+
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function ref(){ return firebase.database().ref('livroEquivalencia'); }
+  function setStatus(msg, err){ $('status').textContent = msg || ''; $('status').style.color = err ? '#b00020' : ''; }
+  function dt(ts){ return new Date(ts).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+  function atualizaRodape(){ $('versaoTxt').textContent = 'Versão ' + base.v + ' · salva em ' + dt(base.ts) + ' por ' + base.autor; }
+
+  /* mostra uma versão salva no texto */
+  function aplica(v){ base = v; art.innerHTML = v.html; atualizaRodape(); marcaAtivo(); }
+
+  function setModo(){
+    $('btnEditar').hidden = editando;
+    $('btnCancelar').hidden = !editando;
+    $('btnSalvar').hidden = !editando;
+    $('btnVersoes').hidden = editando;
+    art.contentEditable = editando ? 'true' : 'false';
+  }
+  function entrar(){ editando = true; setModo(); setStatus('Modo edição: clique em qualquer texto ou tabela para alterar.'); }
+  function sair(){ editando = false; setModo(); }
+
+  function carregaLivro(){
+    ref().child('atual').once('value').then(function(snap){
+      var v = snap.val();
+      if(!v){
+        /* primeira vez: o texto que está na página vira a versão 1 */
+        v = {v:1, ts:Date.now(), autor:'Versão inicial', nota:'Texto original', html:art.innerHTML};
+        return ref().child('historico/v1').set(v).then(function(){ return ref().child('atual').set(v); }).then(function(){ return v; });
+      }
+      return v;
+    }).then(function(v){
+      aplica(v);
+      setStatus('');
+      ref().child('atual').on('value', function(s){
+        var nv = s.val();
+        if(!nv || !base || nv.v === base.v) return;
+        if(editando){ remoto = nv; $('bannerRemoto').hidden = false; return; }
+        aplica(nv);
+      });
+    }).catch(function(e){
+      setStatus('Não consegui carregar o livro: ' + (e && e.message ? e.message : e), true);
+    });
+  }
+  window.__startApp = carregaLivro;
+
+  /* salvar */
+  function abreSalvar(){ $('notaSalvar').value = ''; $('salvarPainel').hidden = false; setTimeout(function(){ $('notaSalvar').focus(); }, 50); }
+  function fechaSalvar(){ $('salvarPainel').hidden = true; }
+  function salvar(){
+    var nota = $('notaSalvar').value.trim();
+    var autor = (firebase.auth().currentUser || {}).email || 'sem identificação';
+    var html = art.innerHTML;
+    var botao = $('btnSalvarOk'); botao.disabled = true;
+    ref().child('atual').once('value').then(function(snap){
+      var cur = snap.val();
+      if(cur && base && cur.v !== base.v) throw new Error('Outra pessoa salvou uma versão agora. Cancele, carregue a versão nova e refaça a alteração.');
+      var novo = {v:(base ? base.v : 0) + 1, ts:Date.now(), autor:autor, nota:nota || 'Sem nota', html:html};
+      return ref().child('historico/v' + novo.v).set(novo)
+        .then(function(){ return ref().child('atual').set(novo); })
+        .then(function(){ return novo; });
+    }).then(function(novo){
+      base = novo; remoto = null; $('bannerRemoto').hidden = true;
+      sair(); atualizaRodape(); fechaSalvar();
+      setStatus('Versão ' + novo.v + ' salva.');
+    }).catch(function(e){
+      setStatus(e && e.message ? e.message : String(e), true);
+      fechaSalvar();
+    }).then(function(){ botao.disabled = false; });
+  }
+
+  /* cancelar: volta para a última versão salva */
+  function cancelar(){
+    if(!confirm('Descartar as alterações não salvas?')) return;
+    sair();
+    if(remoto){ var r = remoto; remoto = null; $('bannerRemoto').hidden = true; aplica(r); }
+    else aplica(base);
+    setStatus('Alterações descartadas.');
+  }
+
+  /* histórico */
+  function abreVersoes(){
+    $('listaVersoes').innerHTML = 'Carregando...';
+    $('versoesPainel').hidden = false;
+    ref().child('historico').once('value').then(function(snap){
+      var h = snap.val() || {};
+      historicoCache = Object.keys(h).map(function(k){ return h[k]; }).sort(function(a,b){ return b.v - a.v; });
+      $('listaVersoes').innerHTML = historicoCache.map(function(e){
+        var atual = base && e.v === base.v;
+        return '<div class="ver"><div><b>Versão ' + e.v + '</b> · ' + esc(dt(e.ts)) + '<br><small>' + esc(e.autor) + ' · ' + esc(e.nota) + '</small></div>' +
+          (atual ? '<span>atual</span>' : '<button data-v="' + e.v + '">Restaurar</button>') + '</div>';
+      }).join('') || 'Nenhuma versão.';
+    }).catch(function(e){ $('listaVersoes').textContent = 'Não consegui carregar o histórico: ' + (e.message || e); });
+  }
+  function restaura(v){
+    var e = historicoCache.filter(function(x){ return x.v === v; })[0];
+    if(!e) return;
+    if(!confirm('Trazer o texto da versão ' + v + ' para edição? Nada é apagado: ao salvar, vira uma versão nova.')) return;
+    $('versoesPainel').hidden = true;
+    if(!editando) entrar();
+    art.innerHTML = e.html;
+    setStatus('Texto da versão ' + v + ' carregado. Revise e clique em Salvar versão.');
+  }
+
+  /* sumário e progresso */
+  var links = [].slice.call(document.querySelectorAll('nav.toc a[href^="#"]'));
+  function marcaAtivo(){
+    var y = window.scrollY + 120, atual = null;
+    links.forEach(function(a){
+      var s = document.querySelector(a.getAttribute('href'));
+      if(s && s.offsetTop <= y) atual = a.getAttribute('href');
+    });
+    links.forEach(function(a){ a.classList.toggle('on', a.getAttribute('href') === atual); });
+  }
+  var bar = $('progress');
+  function onScroll(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = (h > 0 ? (window.scrollY / h * 100) : 0) + '%';
+    marcaAtivo();
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+  var toc = $('toc');
+  $('mobileToc').addEventListener('click', function(){ toc.classList.toggle('open'); });
+  links.forEach(function(a){ a.addEventListener('click', function(){ toc.classList.remove('open'); }); });
+
+  $('themeBtn').addEventListener('click', function(){
+    var root = document.documentElement;
+    var dark = root.getAttribute('data-theme') === 'dark' || (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    root.setAttribute('data-theme', dark ? 'light' : 'dark');
+  });
+  $('printBtn').addEventListener('click', function(){ window.print(); });
+
+  $('btnEditar').addEventListener('click', entrar);
+  $('btnCancelar').addEventListener('click', cancelar);
+  $('btnSalvar').addEventListener('click', abreSalvar);
+  $('btnSalvarVoltar').addEventListener('click', fechaSalvar);
+  $('btnSalvarOk').addEventListener('click', salvar);
+  $('btnVersoes').addEventListener('click', abreVersoes);
+  $('btnVersoesFechar').addEventListener('click', function(){ $('versoesPainel').hidden = true; });
+  $('versoesPainel').addEventListener('click', function(ev){ if(ev.target.dataset && ev.target.dataset.v) restaura(+ev.target.dataset.v); });
+  $('btnCarregarRemoto').addEventListener('click', function(){
+    if(!remoto) return;
+    if(!confirm('Carregar a versão nova e descartar suas alterações não salvas?')) return;
+    var r = remoto; remoto = null; $('bannerRemoto').hidden = true; sair(); aplica(r);
+  });
+  window.addEventListener('beforeunload', function(e){ if(editando){ e.preventDefault(); e.returnValue = ''; } });
+  setModo();
+})();
+</script>
+
+</body>
+</html>
