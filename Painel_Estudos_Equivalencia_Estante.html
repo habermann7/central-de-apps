@@ -915,7 +915,7 @@ function render(){
   $$('#tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.tab===view.tab);});
   var bn='';
   if(view.version!=null){var e=store.history[view.version]; bn+='<div class="b info"><span>Você está visualizando a <b>versão '+e.v+'</b>, salva em '+brTs(e.ts)+'. Os dados são somente leitura nesta visualização.</span><span class="sp"></span><button class="lnk" data-act="viewCurrent">Voltar à versão atual</button></div>';}
-  else if(editMode) bn+='<div class="b warn"><span><b>Modo edição ativo.</b> Altere os dados na aba Estudos. Ao terminar, clique em <b>Salvar versão</b> para registrar no histórico. Para o PDF, use o botão <b>Gerar PDF</b>.</span></div>';
+  else if(editMode) bn+='<div class="b warn"><span><b>Modo edição ativo.</b> Altere os dados nas abas Estudos e Produtos. Ao terminar, clique em <b>Salvar versão</b> para registrar no histórico. Para o PDF, use o botão <b>Gerar PDF</b>.</span></div>';
   if(draftOffer) bn+='<div class="b warn" style="margin-top:8px"><span>Existem alterações não salvas deste painel guardadas neste navegador.</span><span class="sp"></span><button class="lnk" data-act="restoreDraft">Recuperar</button><button class="lnk" data-act="dropDraft">Descartar</button></div>';
   $('#banner').innerHTML=bn;
   var html = view.tab==='overview'?renderOverview(d,ref):view.tab==='studies'?renderStudies(d,ref):view.tab==='labs'?renderLabs(d,ref):view.tab==='produtos'?renderProdutos(d):renderHistory();
@@ -1035,7 +1035,7 @@ $('#btnEdit').onclick=function(){
     return;
   }
   if(view.version!=null){view.version=null;}
-  editMode=!editMode; if(editMode&&view.tab!=='studies'){view.tab='studies';} render();
+  editMode=!editMode; if(editMode&&view.tab!=='studies'&&view.tab!=='produtos'){view.tab='studies';} render();
 };
 $('#btnImport').onclick=function(){$('#fileInput').value='';$('#fileInput').click();};
 $('#fileInput').onchange=function(){ if(this.files[0]) importFile(this.files[0]); };
