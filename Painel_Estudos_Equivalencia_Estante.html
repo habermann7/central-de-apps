@@ -916,7 +916,7 @@ function render(){
   var bn='';
   if(view.version!=null){var e=store.history[view.version]; bn+='<div class="b info"><span>Você está visualizando a <b>versão '+e.v+'</b>, salva em '+brTs(e.ts)+'. Os dados são somente leitura nesta visualização.</span><span class="sp"></span><button class="lnk" data-act="viewCurrent">Voltar à versão atual</button></div>';}
   else if(editMode) bn+='<div class="b warn"><span><b>Modo edição ativo.</b> Altere os dados nas abas Estudos e Produtos. Ao terminar, clique em <b>Salvar versão</b> para registrar no histórico. Para o PDF, use o botão <b>Gerar PDF</b>.</span></div>';
-  if(draftOffer) bn+='<div class="b warn" style="margin-top:8px"><span>Existem alterações não salvas deste painel guardadas neste navegador.</span><span class="sp"></span><button class="lnk" data-act="restoreDraft">Recuperar</button><button class="lnk" data-act="dropDraft">Descartar</button></div>';
+  if(draftOffer) bn+='<div class="b warn" style="margin-top:8px"><span>Existe um rascunho não salvo deste painel '+(draftCloud?'guardado na nuvem por <b>'+esc(draftCloud.autor||'alguém')+'</b>':'guardado neste navegador')+'.</span><span class="sp"></span><button class="lnk" data-act="restoreDraft">Recuperar</button><button class="lnk" data-act="dropDraft">Descartar</button></div>';
   $('#banner').innerHTML=bn;
   var html = view.tab==='overview'?renderOverview(d,ref):view.tab==='studies'?renderStudies(d,ref):view.tab==='labs'?renderLabs(d,ref):view.tab==='produtos'?renderProdutos(d):renderHistory();
   if(state) html+='<datalist id="dlProdutos">'+prodList(state).map(function(p){return '<option value="'+esc(p.nome)+'">';}).join('')+'</datalist>';
@@ -955,7 +955,19 @@ function renderProdutos(d){
 
 /* ===================== edição ===================== */
 var draftOffer=false;
-function markDirty(){dirty=true; lsSet(KEY+':draft',JSON.stringify({base:store.history.length,state:state,origin:pendingOrigin}));}
+function markDirty(){dirty=true; lsSet(KEY+':draft',JSON.stringify({base:store.history.length,state:state,origin:pendingOrigin})); agendaRascunhoNuvem();}
+/* rascunho compartilhado na nuvem (eqEstudos/rascunho): salva sozinho alguns segundos após a última alteração */
+var cloudTimer=null, draftCloud=null;
+function agendaRascunhoNuvem(){ clearTimeout(cloudTimer); cloudTimer=setTimeout(salvaRascunhoNuvem,2000); }
+function salvaRascunhoNuvem(){
+  if(!dirty||!state||RO) return;
+  try{ firebase.database().ref('eqEstudos/rascunho').set({base:store.history.length, state:clone(state), origin:pendingOrigin||'Edição manual', autor:(firebase.auth().currentUser||{}).email||'', ts:Date.now()}).catch(function(){}); }catch(e){}
+}
+function apagaDraft(){
+  lsDel(KEY+':draft'); clearTimeout(cloudTimer); draftCloud=null;
+  try{ firebase.database().ref('eqEstudos/rascunho').remove().catch(function(){}); }catch(e){}
+}
+window.addEventListener('pagehide',function(){ if(dirty) salvaRascunhoNuvem(); });
 function curStudy(){ if(!state) return undefined; return state.studies.filter(function(s){return s.id===view.study;})[0];}
 function aplicaCampo(el){
   var b=el.dataset&&el.dataset.b; if(!b||!canEdit()) return false;
@@ -1018,13 +1030,13 @@ document.addEventListener('click',function(ev){
   else if(a==='viewCurrent'){view.version=null; render();}
   else if(a==='pdfVer'){makePDF(store.history[i]);}
   else if(a==='restoreVer'){confirmBox('Restaurar a versão '+(i+1)+'?','Os dados da versão '+(i+1)+' serão carregados para edição. Nada é apagado: ao salvar, eles entram como uma nova versão no histórico.',function(){state=clone(store.history[i].snapshot); pendingOrigin='Restauração da versão '+(i+1); view.version=null; editMode=true; markDirty(); view.tab='studies'; render();});}
-  else if(a==='restoreDraft'){try{var dr=JSON.parse(lsGet(KEY+':draft')); state=dr.state; pendingOrigin=dr.origin; dirty=true;}catch(e){} draftOffer=false; render();}
-  else if(a==='dropDraft'){lsDel(KEY+':draft'); draftOffer=false; render();}
+  else if(a==='restoreDraft'){try{var dr=draftCloud||JSON.parse(lsGet(KEY+':draft')); state=clone(dr.state); pendingOrigin=dr.origin; dirty=true; editMode=true;}catch(e){} draftOffer=false; draftCloud=null; render();}
+  else if(a==='dropDraft'){apagaDraft(); draftOffer=false; render();}
 });
 
 function descartaEdicao(){
   if(store.current) state=clone(store.current);
-  dirty=false; pendingOrigin=null; lsDel(KEY+':draft'); editMode=false; render();
+  dirty=false; pendingOrigin=null; apagaDraft(); editMode=false; render();
 }
 $('#btnEdit').onclick=function(){
   if(editMode && dirty){
@@ -1058,7 +1070,7 @@ function confirmBox(title,text,ok){
 }
 function openSave(){
   var ch=diff(store.current,state);
-  if(!ch.length){ toast('Nenhuma alteração em relação à versão '+lastEntry().v+'.'); dirty=false; lsDel(KEY+':draft'); render(); return; }
+  if(!ch.length){ toast('Nenhuma alteração em relação à versão '+lastEntry().v+'.'); dirty=false; apagaDraft(); render(); return; }
   var nv=store.history.length+1;
   modal('<h2>Salvar versão '+nv+'</h2><div class="cap">'+esc(pendingOrigin||'Edição manual')+' · '+plural(ch.length,'alteração identificada','alterações identificadas')+' em relação à versão '+lastEntry().v+'.</div>'+
     '<div class="changes"><ul style="margin:0;padding-left:18px">'+ch.map(function(c){return '<li>'+esc(c)+'</li>';}).join('')+'</ul></div>'+
@@ -1066,7 +1078,7 @@ function openSave(){
     '<label for="svNota">Nota da versão (aparece no histórico e no PDF)</label><textarea class="fld" id="svNota" placeholder="Ex.: Retorno do CSA com orçamento do Paricalcitol"></textarea>'+
     '<div class="row">'+(pendingOrigin&&/Planilha/.test(pendingOrigin)?'<button class="btn2 danger" id="svDrop">Descartar importação</button>':'')+'<button class="btn2" id="svLater">Revisar antes</button><button class="btn2 pri" id="svOk">Salvar versão '+nv+'</button></div>');
   $('#svLater').onclick=closeModal;
-  if($('#svDrop')) $('#svDrop').onclick=function(){state=clone(store.current); dirty=false; pendingOrigin=null; lsDel(KEY+':draft'); closeModal(); render();};
+  if($('#svDrop')) $('#svDrop').onclick=function(){state=clone(store.current); dirty=false; pendingOrigin=null; apagaDraft(); closeModal(); render();};
   $('#svOk').onclick=function(){
     var autor=$('#svAutor').value.trim(), nota=$('#svNota').value.trim();
     var e={v:nv,ts:nowLocal(),autor:autor,origem:pendingOrigin||'Edição manual',nota:nota,changes:ch,snapshot:clone(state)};
@@ -1275,7 +1287,7 @@ function mostraAvisoRemoto(){
     document.getElementById('__remotoX').onclick=function(){ el.remove(); };
     document.getElementById('__remotoOk').onclick=function(){
       if(dirty && !confirm('Suas alterações não salvas serão descartadas para mostrar a versão nova. Continuar?')) return;
-      var nv=remotoPendente; remotoPendente=null; dirty=false; editMode=false; pendingOrigin=null; lsDel(KEY+':draft');
+      var nv=remotoPendente; remotoPendente=null; dirty=false; editMode=false; pendingOrigin=null; apagaDraft();
       if(nv) aplicaBanco(nv);
       el.remove(); render();
     };
@@ -1293,6 +1305,10 @@ function carregaBanco(){
     return v;
   }).then(function(v){
     aplicaBanco(v); checkDraft(); render();
+    firebase.database().ref('eqEstudos/rascunho').once('value').then(function(sn){
+      var d=sn.val();
+      if(d && d.state && d.base===store.history.length && diff(store.current,d.state).length){ draftCloud=d; draftOffer=true; render(); }
+    }).catch(function(){});
     ref.on('value',function(s){
       var nv=s.val(); if(!nv||!nv.current) return;
       var novaVersao = nv.history && Object.keys(nv.history).length !== store.history.length;
@@ -1315,7 +1331,7 @@ function salvarNoBanco(e){
     var upd={}; upd['current']=clone(state); upd['history/v'+e.v]=e;
     return ref.update(upd);
   }).then(function(){
-    store.history.push(e); store.current=clone(state); dirty=false; pendingOrigin=null; editMode=false; lsDel(KEY+':draft');
+    store.history.push(e); store.current=clone(state); dirty=false; pendingOrigin=null; editMode=false; apagaDraft();
   });
 }
 window.__startApp=carregaBanco;
