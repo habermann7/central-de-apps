@@ -207,5 +207,15 @@
       "EQUIVALENCIA"
     ],
     "category": "Equivalencia"
+  },
+  {
+    "title": "BOOK CIENTIFICO",
+    "description": "",
+    "file": "Equivalencia_em_movimento_v2.html",
+    "icon": "🧩",
+    "color": "#4d9fff",
+    "grupos": [
+      "EQUIVALENCIA"
+    ]
   }
 ]
