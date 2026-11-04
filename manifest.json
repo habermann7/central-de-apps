@@ -209,13 +209,14 @@
     "category": "Equivalencia"
   },
   {
-    "title": "BOOK CIENTIFICO",
+    "title": "BOOK CIENTIFICO (TESTE)",
     "description": "",
     "file": "Equivalencia_em_movimento_v2.html",
     "icon": "🧩",
     "color": "#4d9fff",
     "grupos": [
       "EQUIVALENCIA"
-    ]
+    ],
+    "category": "Equivalencia"
   }
 ]
