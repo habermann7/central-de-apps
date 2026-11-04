@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portfólio</title>
+<style>
+  :root{--bg:#f6f7f9;--card:#fff;--ink:#1c2230;--muted:#6b7280;--line:#e3e6ec;--accent:#0e6e5c;--accent-soft:#e3f1ee;--warn:#7a5000;--warn-bg:#fbf1dc;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#121417;--card:#1b1e24;--ink:#e8eaf0;--muted:#9aa1ad;--line:#2a2f38;--accent:#5fd0b8;--accent-soft:#1d2f2b;--warn:#f3c96b;--warn-bg:#2c2516}}
+  :root[data-theme="dark"]{--bg:#121417;--card:#1b1e24;--ink:#e8eaf0;--muted:#9aa1ad;--line:#2a2f38;--accent:#5fd0b8;--accent-soft:#1d2f2b;--warn:#f3c96b;--warn-bg:#2c2516}
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;padding-bottom:56px}
+  header.top{position:sticky;top:0;z-index:10;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:10px 16px;flex-wrap:wrap}
+  header.top .title{font-weight:700;font-size:17px;flex:1;min-width:120px}
+  button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:7px 12px;cursor:pointer}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  button.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.pri:hover{color:#fff;opacity:.92}
+  button:disabled{opacity:.5;cursor:default}
+  .acoes{display:flex;gap:8px;flex-wrap:wrap}
+  nav#tabs{display:flex;gap:4px;padding:10px 16px 0;border-bottom:1px solid var(--line);background:var(--card);overflow-x:auto}
+  nav#tabs button{border:0;border-bottom:3px solid transparent;border-radius:0;background:transparent;padding:10px 14px;color:var(--muted);white-space:nowrap}
+  nav#tabs button.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+  main{max-width:1200px;margin:0 auto;padding:18px 16px}
+  .modo{color:var(--muted);font-size:14px;min-height:20px;margin-bottom:8px}
+  .banner{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:12px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .banner button{background:transparent;color:inherit;border-color:currentColor}
+  .barra{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  .mut{color:var(--muted)}
+  .vazio{background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:30px;text-align:center}
+  .tbl{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+  table.t{border-collapse:collapse;width:100%;min-width:1100px;font-size:14px}
+  table.t th,table.t td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  table.t th{background:var(--accent-soft);font-weight:600;position:sticky;top:0}
+  table.t td.ativo{background:var(--bg);min-width:170px}
+  table.t td.num,table.t th.num{text-align:right;white-space:nowrap}
+  .fld{width:100%;font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--ink);min-width:110px}
+  textarea.fld{resize:vertical;min-width:160px}
+  .acoes-ativo{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+  .lnk{border:0;background:transparent;color:var(--accent);padding:2px 0;font-size:13px}
+  .lnk.perigo{color:#b00020}
+  .xbtn{border:0;background:transparent;color:#b00020;font-size:18px;padding:2px 8px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .kl{color:var(--muted);font-size:13px}
+  .kv{font-size:26px;font-weight:700;margin-top:4px}
+  .kv.sm{font-size:16px;margin-top:8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px}
+  .card h3{margin:0 0 12px;font-size:16px}
+  .barras{display:flex;align-items:flex-end;gap:8px;height:200px;padding-top:10px;overflow-x:auto}
+  .bcol{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:42px;flex:1}
+  .bcol span{font-size:12px;color:var(--muted);margin-bottom:4px}
+  .bar{width:100%;max-width:56px;background:var(--accent);border-radius:6px 6px 0 0;min-height:3px}
+  .bcol small{font-size:12px;color:var(--muted);margin-top:6px}
+  .ver{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+  .ver:last-child{border-bottom:0}
+  .ver small{color:var(--muted)}
+  .ver span{color:var(--accent);font-weight:600;font-size:13px}
+  #statusBar{position:fixed;left:0;right:0;bottom:0;z-index:12;background:var(--card);border-top:1px solid var(--line);font-size:13px;color:var(--muted);padding:8px 16px;display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap}
+  #status{color:var(--ink)}
+  .painel{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:30;display:flex;align-items:center;justify-content:center;padding:16px}
+  .caixa{background:var(--card);border-radius:14px;max-width:480px;width:100%;padding:22px}
+  .caixa h3{margin:0 0 10px}
+  .caixa textarea{width:100%;min-height:90px;font:inherit;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+  .caixa .acoes{justify-content:flex-end;margin-top:14px}
+  @media (max-width:700px){ main{padding:12px} .kv{font-size:22px} }
+</style>
+</head>
+<body>
+<div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0d0f12;color:#f3f5f8;display:flex;align-items:center;justify-content:center;font-family:Inter,system-ui,sans-serif;text-align:center;padding:20px;">
+  <div style="max-width:320px;width:100%;"><div id="__gateMsg" style="font-size:14px;color:#8a919c;line-height:1.6;">Verificando acesso...</div></div>
+</div>
+
+<header class="top">
+  <span class="title">Portfólio</span>
+  <button id="btnCsv">Exportar planilha</button>
+  <button id="btnEditar" class="pri">Editar</button>
+  <button id="btnCancelar" hidden>Cancelar</button>
+  <button id="btnSalvar" class="pri" hidden>Salvar versão</button>
+  <button id="themeBtn">Tema</button>
+</header>
+<nav id="tabs">
+  <button data-tab="ativos" class="on">Ativos</button>
+  <button data-tab="visao">Visão geral</button>
+  <button data-tab="historico">Histórico</button>
+</nav>
+
+<main>
+  <div id="bannerRemoto" class="banner" hidden><span>Outra pessoa salvou uma versão nova enquanto você editava.</span><button id="btnCarregarRemoto">Carregar versão nova (descarta suas edições)</button></div>
+  <div id="bannerRascunho" class="banner" hidden><span>Existe um rascunho não salvo guardado na nuvem por <b id="autorRascunho"></b>.</span><button id="btnRecuperarRascunho">Recuperar</button><button id="btnDescartarRascunho">Descartar</button></div>
+  <div id="modoTxt" class="modo"></div>
+  <div id="conteudo"></div>
+</main>
+
+<div id="statusBar"><span id="status"></span><span id="versaoTxt">Carregando...</span></div>
+
+<div id="salvarPainel" class="painel" hidden>
+  <div class="caixa">
+    <h3>Salvar nova versão</h3>
+    <div class="mut" style="margin-bottom:10px">Essa versão fica no histórico. Nada é apagado, e você pode voltar a qualquer versão.</div>
+    <textarea id="notaSalvar" placeholder="O que mudou? (opcional)"></textarea>
+    <div class="acoes"><button id="btnSalvarVoltar">Voltar</button><button id="btnSalvarOk" class="pri">Salvar</button></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
+<script>
+(function(){
+  /* CADEADO PADRÃO DA ESTANTE. Só esta linha muda. */
+  var GRUPOS_PERMITIDOS = ["EQUIVALENCIA"];
+  var firebaseConfig = {
+    apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
+    authDomain: "stinpharma-qualidade.firebaseapp.com",
+    databaseURL: "https://stinpharma-qualidade-default-rtdb.firebaseio.com",
+    projectId: "stinpharma-qualidade",
+    storageBucket: "stinpharma-qualidade.firebasestorage.app",
+    messagingSenderId: "422803826984",
+    appId: "1:422803826984:web:6e72e2470f3678eb8d881d",
+    measurementId: "G-6C0TLHH2VP"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  function norm(x){ return String(x).normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().trim(); }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function liberar(){
+    var ov = document.getElementById('__gateOverlay');
+    if(ov) ov.remove();
+    window.__gateOk = true;
+    if(window.__startApp) window.__startApp();
+  }
+  function negar(msg){
+    document.getElementById('__gateMsg').innerHTML = msg + '<br><br><a href="./index.html" style="color:#4d9fff;">&larr; Voltar pra Estante</a>';
+  }
+  var jaResolveu = false;
+  setTimeout(function(){
+    if(!jaResolveu) negar('Não foi possível confirmar seu acesso (conexão lenta ou instável). <a href="javascript:location.reload()" style="color:#4d9fff;">Tentar de novo</a>');
+  }, 10000);
+  firebase.auth().onAuthStateChanged(function(user){
+    jaResolveu = true;
+    if(!user){ negar('Você precisa entrar pela Estante.'); return; }
+    firebase.database().ref('centralApps/usuarios/' + user.uid).once('value').then(function(snap){
+      var dados = snap.val() || {};
+      var lista = (dados.grupos || []).slice();
+      if(dados.gruposMap && typeof dados.gruposMap === 'object'){ Object.keys(dados.gruposMap).forEach(function(k){ if(dados.gruposMap[k]) lista.push(k); }); }
+      var chave = function(x){ return norm(x).replace(/[^A-Z0-9]/g,'_'); };
+      var meus = lista.map(chave);
+      var permitido = dados.admin === true || GRUPOS_PERMITIDOS.some(function(g){ return meus.indexOf(chave(g)) !== -1; });
+      if(permitido){ liberar(); return; }
+      negar('Você não tem permissão pra acessar este app.<br><span style="font-size:12px;">Seus grupos: ' + esc(lista.join(', ') || 'nenhum') + '<br>Grupos com acesso: ' + esc(GRUPOS_PERMITIDOS.join(', ')) + '</span>');
+    }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
+  });
+})();
+</script>
+<script>
+(function(){
+  var state={ativos:[]}, base=null, editando=false, dirty=false, remoto=null, draftCloud=null, cloudTimer=null, escrevendo=null;
+  var tab='ativos', historicoCache=null;
+  var $=function(id){return document.getElementById(id);};
+  function uid(){return Math.random().toString(36).slice(2,10);}
+  function clone(o){return JSON.parse(JSON.stringify(o));}
+  function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function dt(ts){return new Date(ts).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+  function ref(){return firebase.database().ref('eqEstudos/portfolio');}
+  function quem(){return (firebase.auth().currentUser||{}).email||'sem identificação';}
+  function setStatus(m,err){$('status').textContent=m||'';$('status').style.color=err?'#b00020':'';}
+  function norm(st){
+    st=st||{};
+    st.ativos=(st.ativos||[]).map(function(a){return {
+      id:a.id||uid(), apresentacao:a.apresentacao||'', descricao:a.descricao||'', filtros:a.filtros||'',
+      artigos:(a.artigos||[]).map(function(r){return {id:r.id||uid(), titulo:r.titulo||'', ano:r.ano||'', base:r.base||'', revista:r.revista||'', link:r.link||'', tipo:r.tipo||''};})
+    };});
+    return st;
+  }
+  function iguais(a,b){return JSON.stringify(norm(clone(a)))===JSON.stringify(norm(clone(b)));}
+  function totais(st){var n=0; st.ativos.forEach(function(a){n+=a.artigos.length;}); return {ativos:st.ativos.length, artigos:n};}
+
+  /* ---------- rascunho na nuvem ---------- */
+  function agendaRascunho(){ clearTimeout(cloudTimer); cloudTimer=setTimeout(salvaRascunho,2000); }
+  function salvaRascunho(){
+    if(!editando||!dirty) return;
+    try{ ref().child('rascunho').set({base:base.v, state:clone(state), autor:quem(), ts:Date.now()}).catch(function(){}); }catch(e){}
+  }
+  function apagaRascunho(){
+    clearTimeout(cloudTimer); draftCloud=null; $('bannerRascunho').hidden=true;
+    try{ ref().child('rascunho').remove().catch(function(){}); }catch(e){}
+  }
+  function marcaAlterado(){ dirty=true; agendaRascunho(); }
+
+  /* ---------- render ---------- */
+  function fld(attr,val,kind,list,ph){
+    if(kind==='textarea') return '<textarea class="fld" data-b="'+attr+'" rows="2"'+(ph?' placeholder="'+esc(ph)+'"':'')+'>'+esc(val)+'</textarea>';
+    return '<input class="fld" data-b="'+attr+'" value="'+esc(val)+'" type="'+(kind||'text')+'"'+(list?' list="'+list+'"':'')+(ph?' placeholder="'+esc(ph)+'"':'')+'>';
+  }
+  function renderAtivos(){
+    var ed=editando;
+    if(!state.ativos.length){
+      return '<div class="vazio"><p>Nenhum ativo cadastrado ainda.</p>'+(ed?'<button class="btn pri" data-act="addAtivo">+ Incluir ativo</button>':'')+'</div>';
+    }
+    var h='<div class="barra">'+(ed?'<button class="btn pri" data-act="addAtivo">+ Incluir ativo</button>':'')+'<span class="mut">Cada ativo agrupa os artigos encontrados. Uma linha por artigo.</span></div>';
+    h+='<div class="tbl"><table class="t"><thead><tr><th>Apresentação do ativo</th><th>Descrição do ativo</th><th>Filtros utilizados</th><th class="num">Nº de artigos</th><th>Título do artigo</th><th class="num">Ano</th><th>Base científica</th><th>Revista</th><th>Link para acesso</th><th>Tipo de estudo</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
+    state.ativos.forEach(function(a,i){
+      var n=a.artigos.length, rs=n>1?' rowspan="'+n+'"':'';
+      var ativoCells=
+        '<td'+rs+' class="ativo">'+(ed?fld('a:'+i+':apresentacao',a.apresentacao,'text',null,'Nome do ativo'):'<b>'+esc(a.apresentacao||'—')+'</b>')+
+          (ed?'<div class="acoes-ativo"><button class="lnk" data-act="addArt" data-i="'+i+'">+ artigo</button><button class="lnk perigo" data-act="delAtivo" data-i="'+i+'">remover ativo</button></div>':'')+'</td>'+
+        '<td'+rs+'>'+(ed?fld('a:'+i+':descricao',a.descricao,'textarea'):(esc(a.descricao)||'<span class="mut">—</span>'))+'</td>'+
+        '<td'+rs+'>'+(ed?fld('a:'+i+':filtros',a.filtros,'textarea',null,'ex.: ativo AND nutrition medicine AND via de administração'):(esc(a.filtros)||'<span class="mut">—</span>'))+'</td>'+
+        '<td'+rs+' class="num"><b>'+n+'</b></td>';
+      if(!n){ h+='<tr>'+ativoCells+'<td colspan="6" class="mut">Nenhum artigo neste ativo ainda.</td>'+(ed?'<td></td>':'')+'</tr>'; return; }
+      a.artigos.forEach(function(r,j){
+        var k='r:'+i+':'+j+':';
+        h+='<tr>'+(j===0?ativoCells:'')+
+          '<td>'+(ed?fld(k+'titulo',r.titulo,'textarea'):esc(r.titulo))+'</td>'+
+          '<td class="num">'+(ed?fld(k+'ano',r.ano,'number'):esc(r.ano))+'</td>'+
+          '<td>'+(ed?fld(k+'base',r.base,'text','dlBase'):esc(r.base))+'</td>'+
+          '<td>'+(ed?fld(k+'revista',r.revista,'text'):esc(r.revista))+'</td>'+
+          '<td>'+(ed?fld(k+'link',r.link,'url'):(r.link?'<a href="'+esc(r.link)+'" target="_blank" rel="noopener">Abrir</a>':'<span class="mut">—</span>'))+'</td>'+
+          '<td>'+(ed?fld(k+'tipo',r.tipo,'text','dlTipo'):esc(r.tipo))+'</td>'+
+          (ed?'<td><button class="xbtn" data-act="delArt" data-i="'+i+'" data-j="'+j+'" title="Remover artigo">×</button></td>':'')+'</tr>';
+      });
+    });
+    return h+'</tbody></table></div>'+
+      '<datalist id="dlBase"><option value="PubMed"><option value="Scopus"><option value="Web of Science"><option value="SciELO"><option value="Google Acadêmico"><option value="Cochrane"><option value="Embase"></datalist>'+
+      '<datalist id="dlTipo"><option value="Ensaio clínico randomizado"><option value="Estudo de coorte"><option value="Caso-controle"><option value="Estudo transversal"><option value="Revisão sistemática"><option value="Metanálise"><option value="Relato de caso"><option value="Estudo de farmacocinética"></datalist>';
+  }
+  function renderVisao(){
+    var t=totais(state), anos={}, maior=null;
+    state.ativos.forEach(function(a){
+      if(!maior||a.artigos.length>maior.artigos.length) maior=a;
+      a.artigos.forEach(function(r){ if(r.ano) anos[r.ano]=(anos[r.ano]||0)+1; });
+    });
+    var ks=Object.keys(anos).sort(), mx=Math.max.apply(null,[1].concat(ks.map(function(k){return anos[k];})));
+    var h='<div class="kpis">'+
+      kpi('Ativos',t.ativos)+kpi('Artigos',t.artigos)+kpi('Anos com artigos',ks.length)+
+      kpi('Ativo com mais artigos',maior&&maior.artigos.length?esc(maior.apresentacao||'—')+' ('+maior.artigos.length+')':'—',true)+'</div>';
+    h+='<div class="card"><h3>Artigos por ano</h3>';
+    if(!ks.length) h+='<p class="mut">Sem anos registrados ainda.</p>';
+    else h+='<div class="barras">'+ks.map(function(k){return '<div class="bcol"><span>'+anos[k]+'</span><div class="bar" style="height:'+Math.round(anos[k]/mx*100)+'%"></div><small>'+esc(k)+'</small></div>';}).join('')+'</div>';
+    return h+'</div>';
+  }
+  function kpi(l,v,txt){return '<div class="kpi"><div class="kl">'+l+'</div><div class="kv'+(txt?' sm':'')+'">'+v+'</div></div>';}
+  function renderHistorico(){
+    if(historicoCache===null) return '<p class="mut">Carregando histórico...</p>';
+    if(!historicoCache.length) return '<p class="mut">Nenhuma versão salva ainda.</p>';
+    return '<div class="card">'+historicoCache.map(function(e){
+      var atual=base&&e.v===base.v;
+      return '<div class="ver"><div><b>Versão '+e.v+'</b> · '+esc(dt(e.ts))+'<br><small>'+esc(e.autor)+' · '+esc(e.nota)+'</small></div>'+
+        (atual?'<span>atual</span>':(editando?'':'<button data-act="restaura" data-v="'+e.v+'">Restaurar</button>'))+'</div>';
+    }).join('')+'</div>';
+  }
+  function render(){
+    $('btnEditar').hidden=editando; $('btnCancelar').hidden=!editando; $('btnSalvar').hidden=!editando;
+    document.querySelectorAll('#tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.tab===tab);});
+    $('conteudo').innerHTML = tab==='ativos'?renderAtivos():tab==='visao'?renderVisao():renderHistorico();
+    $('versaoTxt').textContent = base&&base.v ? 'Versão '+base.v+' · salva em '+dt(base.ts)+' por '+base.autor : 'Ainda sem versão salva';
+    $('modoTxt').textContent = editando ? 'Modo edição: altere os campos e clique em Salvar versão.' : '';
+  }
+  function trocaAba(t){
+    tab=t; render(); window.scrollTo(0,0);
+    if(t==='historico') carregaHistorico();
+  }
+
+  /* ---------- carga ---------- */
+  function carregaHistorico(){
+    historicoCache=null; render();
+    ref().child('historico').once('value').then(function(s){
+      var h=s.val()||{};
+      historicoCache=Object.keys(h).map(function(k){return h[k];}).sort(function(a,b){return b.v-a.v;});
+      render();
+    }).catch(function(e){ historicoCache=[]; setStatus('Não consegui carregar o histórico: '+(e.message||e),true); render(); });
+  }
+  function carrega(){
+    ref().child('atual').once('value').then(function(s){
+      var v=s.val()||{v:0, ts:Date.now(), autor:'—', nota:'Sem versão', state:{ativos:[]}};
+      base=v; state=norm(clone(v.state||{ativos:[]}));
+      return ref().child('rascunho').once('value');
+    }).then(function(sn){
+      var d=sn.val();
+      if(d&&d.state&&d.base===base.v&&!iguais(d.state,base.state)){ draftCloud=d; $('bannerRascunho').hidden=false; $('autorRascunho').textContent=d.autor||'alguém'; }
+      render();
+      ref().child('atual').on('value',function(s2){
+        var nv=s2.val();
+        if(!nv||!base||nv.v===base.v||nv.v===escrevendo) return;
+        if(editando){ remoto=nv; $('bannerRemoto').hidden=false; return; }
+        base=nv; state=norm(clone(nv.state)); render();
+      });
+    }).catch(function(e){ setStatus('Não consegui carregar o Portfólio: '+(e.message||e),true); });
+  }
+  window.__startApp=carrega;
+
+  /* ---------- edição ---------- */
+  function entrar(){ editando=true; dirty=false; render(); setStatus(''); }
+  function cancelar(){
+    if(dirty && !confirm('Descartar as alterações não salvas?')) return;
+    editando=false; dirty=false; apagaRascunho();
+    if(remoto){ base=remoto; state=norm(clone(remoto.state)); remoto=null; $('bannerRemoto').hidden=true; }
+    else state=norm(clone(base.state));
+    render(); setStatus('Alterações descartadas.');
+  }
+  function abreSalvar(){ $('notaSalvar').value=''; $('salvarPainel').hidden=false; setTimeout(function(){$('notaSalvar').focus();},50); }
+  function fechaSalvar(){ $('salvarPainel').hidden=true; }
+  function salvar(){
+    var nota=$('notaSalvar').value.trim(), botao=$('btnSalvarOk'); botao.disabled=true;
+    ref().child('atual').once('value').then(function(s){
+      var cur=s.val();
+      if(cur && base && cur.v!==base.v) throw new Error('Outra pessoa salvou uma versão agora. Cancele, carregue a versão nova e refaça a alteração.');
+      var novo={v:(base?base.v:0)+1, ts:Date.now(), autor:quem(), nota:nota||'Sem nota', state:clone(state)};
+      escrevendo=novo.v;
+      return ref().child('historico/v'+novo.v).set(novo)
+        .then(function(){ return ref().child('atual').set(novo); })
+        .then(function(){ return novo; });
+    }).then(function(novo){
+      base=novo; remoto=null; $('bannerRemoto').hidden=true; editando=false; dirty=false;
+      apagaRascunho(); fechaSalvar(); render(); setStatus('Versão '+novo.v+' salva.');
+      historicoCache=null;
+    }).catch(function(e){
+      escrevendo=null; setStatus(e.message||String(e),true); fechaSalvar();
+    }).then(function(){ botao.disabled=false; });
+  }
+  function restaura(v){
+    ref().child('historico/v'+v).once('value').then(function(s){
+      var e=s.val(); if(!e) return;
+      if(!confirm('Trazer a versão '+v+' para edição? Nada é apagado: ao salvar, vira uma versão nova.')) return;
+      editando=true; dirty=true; state=norm(clone(e.state)); tab='ativos'; render();
+      setStatus('Versão '+v+' carregada. Revise e clique em Salvar versão.');
+      agendaRascunho();
+    });
+  }
+
+  /* ---------- eventos ---------- */
+  function onField(ev){
+    var t=ev.target, attr=t.dataset&&t.dataset.b; if(!attr||!editando) return;
+    var p=attr.split(':'), v=t.value;
+    if(p[0]==='a'){ state.ativos[+p[1]][p[2]]=v; }
+    else if(p[0]==='r'){ state.ativos[+p[1]].artigos[+p[2]][p[3]]=v; }
+    marcaAlterado();
+  }
+  document.addEventListener('input',onField);
+  document.addEventListener('change',onField);
+  document.addEventListener('click',function(ev){
+    var t=ev.target.closest('[data-act],[data-tab]'); if(!t) return;
+    if(t.dataset.tab){ trocaAba(t.dataset.tab); return; }
+    var a=t.dataset.act, i=+t.dataset.i, j=+t.dataset.j;
+    if(a==='addAtivo'){ state.ativos.push({id:uid(),apresentacao:'Novo ativo',descricao:'',filtros:'',artigos:[]}); marcaAlterado(); render(); }
+    else if(a==='delAtivo'){ if(confirm('Remover o ativo '+state.ativos[i].apresentacao+' e todos os seus artigos?')){ state.ativos.splice(i,1); marcaAlterado(); render(); } }
+    else if(a==='addArt'){ state.ativos[i].artigos.push({id:uid(),titulo:'',ano:'',base:'',revista:'',link:'',tipo:''}); marcaAlterado(); render(); }
+    else if(a==='delArt'){ if(confirm('Remover este artigo?')){ state.ativos[i].artigos.splice(j,1); marcaAlterado(); render(); } }
+    else if(a==='restaura'){ restaura(+t.dataset.v); }
+  });
+  $('btnEditar').addEventListener('click',entrar);
+  $('btnCancelar').addEventListener('click',cancelar);
+  $('btnSalvar').addEventListener('click',abreSalvar);
+  $('btnSalvarVoltar').addEventListener('click',fechaSalvar);
+  $('btnSalvarOk').addEventListener('click',salvar);
+  $('btnRecuperarRascunho').addEventListener('click',function(){
+    if(!draftCloud) return;
+    editando=true; dirty=true; state=norm(clone(draftCloud.state)); draftCloud=null;
+    $('bannerRascunho').hidden=true; render(); setStatus('Rascunho recuperado. Revise e salve.');
+  });
+  $('btnDescartarRascunho').addEventListener('click',function(){ if(confirm('Descartar o rascunho para todos?')) apagaRascunho(); });
+  $('btnCarregarRemoto').addEventListener('click',function(){
+    if(!remoto) return;
+    if(!confirm('Carregar a versão nova e descartar suas alterações não salvas?')) return;
+    base=remoto; state=norm(clone(remoto.state)); remoto=null; editando=false; dirty=false;
+    $('bannerRemoto').hidden=true; apagaRascunho(); render();
+  });
+  $('btnCsv').addEventListener('click',function(){
+    var cab=['Apresentação do ativo','Descrição do ativo','Filtros utilizados','Nº de artigos','Título do artigo','Ano','Base científica','Revista','Link para acesso','Tipo de estudo'];
+    var linhas=[cab];
+    state.ativos.forEach(function(a){
+      if(!a.artigos.length) linhas.push([a.apresentacao,a.descricao,a.filtros,0,'','','','','','']);
+      a.artigos.forEach(function(r){ linhas.push([a.apresentacao,a.descricao,a.filtros,a.artigos.length,r.titulo,r.ano,r.base,r.revista,r.link,r.tipo]); });
+    });
+    var csv='﻿'+linhas.map(function(l){return l.map(function(c){return '"'+String(c==null?'':c).replace(/"/g,'""')+'"';}).join(';');}).join('\r\n');
+    var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+    a.download='Portfolio_ativos.csv'; document.body.appendChild(a); a.click(); setTimeout(function(){URL.revokeObjectURL(a.href); a.remove();},1500);
+  });
+  $('themeBtn').addEventListener('click',function(){
+    var r=document.documentElement;
+    var dark=r.getAttribute('data-theme')==='dark'||(!r.getAttribute('data-theme')&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+    r.setAttribute('data-theme',dark?'light':'dark');
+  });
+  window.addEventListener('beforeunload',function(e){ if(editando&&dirty){ e.preventDefault(); e.returnValue=''; } });
+  render();
+})();
+</script>
+</body>
+</html>
