@@ -397,6 +397,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
   <button data-tab="overview" class="on"><span class="nav-icon">◫</span> Visão geral</button>
   <button data-tab="studies"><span class="nav-icon">▤</span> Estudos</button>
   <button data-tab="labs"><span class="nav-icon">◈</span> Laboratórios</button>
+  <button data-tab="produtos"><span class="nav-icon">▦</span> Produtos</button>
   <button data-tab="history"><span class="nav-icon">◷</span> Histórico <span class="count" id="histCount"></span></button>
 </nav>
 <div class="banner" id="banner"></div>
@@ -521,6 +522,11 @@ function diff(a,b){
   var ch=[], am={}, bm={};
   a.studies.forEach(function(s){am[norm(s.nome)]=s;});
   b.studies.forEach(function(s){bm[norm(s.nome)]=s;});
+  var op={}, np={};
+  prodList(a).forEach(function(p){op[norm(p.nome)]=p;});
+  prodList(b).forEach(function(p){np[norm(p.nome)]=p;});
+  prodList(b).forEach(function(p){ var q=op[norm(p.nome)]; if(!q) ch.push('Produto cadastrado: '+p.nome); else if((q.desc||'').trim()!==(p.desc||'').trim()) ch.push('Produto '+p.nome+': descrição '+(p.desc?'atualizada':'removida')); });
+  prodList(a).forEach(function(p){ if(!np[norm(p.nome)]) ch.push('Produto removido do cadastro: '+p.nome); });
   b.studies.forEach(function(s){ if(!am[norm(s.nome)]) ch.push('Estudo incluído: '+s.nome+' ('+plural(s.labs.length,'laboratório','laboratórios')+')'); });
   a.studies.forEach(function(s){ if(!bm[norm(s.nome)]) ch.push('Estudo removido: '+s.nome); });
   b.studies.forEach(function(s){
@@ -596,6 +602,7 @@ function importFile(file){
       if(!state) throw new Error('Os dados do painel ainda não carregaram. Recarregue a página e tente de novo.');
       var old={}; state.studies.forEach(function(s){old[norm(s.nome)]=s.id;});
       parsed.studies.forEach(function(s){ if(old[norm(s.nome)]) s.id=old[norm(s.nome)]; });
+      parsed.produtos=clone(prodList(state));
       state=parsed; pendingOrigin='Planilha importada ('+file.name+')';
       markDirty(); view.version=null; render(); openSave();
     }catch(e){ toast('Não foi possível ler a planilha: '+e.message,'err'); }
@@ -840,7 +847,7 @@ function renderStudies(d,ref){
   h+='<div class="card" style="margin-top:16px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div><h3>Laboratórios cotados</h3><div class="cap" style="margin:0">Situação, última atualização e observações</div></div><div style="flex:1"></div>'+(ed?'<button class="btn2 pri" data-act="addLab">+ Incluir laboratório</button>':'')+'</div><div class="scroll" style="margin-top:10px"><table class="t" style="min-width:1080px"><thead><tr><th>Laboratório</th><th>Produto</th><th>Situação</th><th>Última atualização</th><th>Observação</th><th class="num">Valor da proposta</th><th>Validade da proposta</th><th>Vencimento</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
   s.labs.forEach(function(l,i){
     if(ed){
-      h+='<tr><td><input class="fld" data-b="l:'+i+':lab" value="'+esc(l.lab)+'" style="min-width:110px"></td><td><input class="fld" data-b="l:'+i+':produto" value="'+esc(l.produto||'')+'" placeholder="Produto" style="min-width:150px"></td><td><select class="fld" data-b="l:'+i+':status">'+KEYS.map(function(k){return '<option value="'+k+'"'+(k===l.status?' selected':'')+'>'+ST[k].label+'</option>';}).join('')+'</select></td>'+
+      h+='<tr><td><input class="fld" data-b="l:'+i+':lab" value="'+esc(l.lab)+'" style="min-width:110px"></td><td><input class="fld" list="dlProdutos" data-b="l:'+i+':produto" value="'+esc(l.produto||'')+'" placeholder="Produto" style="min-width:150px"></td><td><select class="fld" data-b="l:'+i+':status">'+KEYS.map(function(k){return '<option value="'+k+'"'+(k===l.status?' selected':'')+'>'+ST[k].label+'</option>';}).join('')+'</select></td>'+
         '<td><input class="fld" type="date" data-b="l:'+i+':data" value="'+esc(l.data||'')+'"></td><td><input class="fld" data-b="l:'+i+':obs" value="'+esc(l.obs||'')+'" placeholder="Observação"></td>'+
         '<td><input class="fld" type="number" step="0.01" min="0" data-b="l:'+i+':valor" value="'+(l.valor!=null?l.valor:'')+'" placeholder="R$" style="text-align:right;min-width:120px"></td><td><input class="fld" type="date" data-b="l:'+i+':validade" value="'+esc(l.validade||'')+'" style="min-width:140px"></td><td>'+vencimentoHtml(l.validade)+'</td><td><button class="xbtn" data-act="delLab" data-i="'+i+'" title="Remover laboratório">×</button></td></tr>';
     } else {
@@ -911,9 +918,11 @@ function render(){
   else if(editMode) bn+='<div class="b warn"><span><b>Modo edição ativo.</b> Altere os dados na aba Estudos. Ao terminar, clique em <b>Salvar versão</b> para registrar no histórico. Para o PDF, use o botão <b>Gerar PDF</b>.</span></div>';
   if(draftOffer) bn+='<div class="b warn" style="margin-top:8px"><span>Existem alterações não salvas deste painel guardadas neste navegador.</span><span class="sp"></span><button class="lnk" data-act="restoreDraft">Recuperar</button><button class="lnk" data-act="dropDraft">Descartar</button></div>';
   $('#banner').innerHTML=bn;
-  var html = view.tab==='overview'?renderOverview(d,ref):view.tab==='studies'?renderStudies(d,ref):view.tab==='labs'?renderLabs(d,ref):renderHistory();
+  var html = view.tab==='overview'?renderOverview(d,ref):view.tab==='studies'?renderStudies(d,ref):view.tab==='labs'?renderLabs(d,ref):view.tab==='produtos'?renderProdutos(d):renderHistory();
+  if(state) html+='<datalist id="dlProdutos">'+prodList(state).map(function(p){return '<option value="'+esc(p.nome)+'">';}).join('')+'</datalist>';
   if(view.tab!=='overview'){
     var pageInfo=view.tab==='studies'?['ESTUDOS','Detalhamento dos estudos','Dados técnicos, propostas e acompanhamento de cada laboratório.']:
+      view.tab==='produtos'?['CADASTRO','Produtos','Cadastro geral dos produtos. Os nomes cadastrados aqui aparecem ao preencher o campo Produto dos laboratórios.']:
       view.tab==='labs'?['REDE DE LABORATÓRIOS','Laboratórios consultados','Panorama consolidado das participações e últimas movimentações.']:
       ['RASTREABILIDADE','Histórico de versões','Consulte mudanças, responsáveis e versões anteriores.'];
     html='<div class="page-intro"><span class="section-kicker">'+pageInfo[0]+'</span><h1>'+pageInfo[1]+'</h1><p>'+pageInfo[2]+'</p></div>'+html;
@@ -923,13 +932,36 @@ function render(){
   $('#foot').innerHTML='EQUIVLAB  /  Estudos de Equivalência · Versão '+L.v+' salva em '+brTs(L.ts)+(L.autor?' por '+esc(L.autor):'')+' · Dias calculados até '+br(ref)+(RO?' · Cópia somente leitura':'');
 }
 
+/* ===================== produtos (cadastro independente dos estudos) ===================== */
+function prodList(d){ if(d && !d.produtos) d.produtos=[]; return d?d.produtos:[]; }
+function vinculosProduto(d,nome){
+  var k=norm(nome), e={}, n=0;
+  if(!k) return {estudos:0,labs:0};
+  d.studies.forEach(function(s){ s.labs.forEach(function(l){ if(norm(l.produto)===k){ n++; e[s.id]=1; } }); });
+  return {estudos:Object.keys(e).length, labs:n};
+}
+function renderProdutos(d){
+  var ed=canEdit(), lista=prodList(d);
+  var h='<div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div><h3>Produtos cadastrados</h3><div class="cap" style="margin:0">Cadastro geral, separado dos estudos. Mostra em quantos estudos e laboratórios cada produto aparece.</div></div><div style="flex:1"></div>'+(ed?'<button class="btn2 pri" data-act="addProd">+ Incluir produto</button>':'')+'</div>';
+  if(!lista.length){ return h+'<div style="padding:24px 0;text-align:center"><span class="mut">Nenhum produto cadastrado ainda.'+(ed?' Use “+ Incluir produto”.':'')+'</span></div></div>'; }
+  h+='<div class="scroll" style="margin-top:10px"><table class="t" style="min-width:720px"><thead><tr><th>Produto</th><th>Descrição / observação</th><th class="num">Estudos</th><th class="num">Cotações</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
+  lista.forEach(function(p,i){
+    var v=vinculosProduto(d,p.nome);
+    if(ed) h+='<tr><td><input class="fld" data-b="p:'+i+':nome" value="'+esc(p.nome)+'" placeholder="Nome do produto" style="min-width:160px"></td><td><input class="fld" data-b="p:'+i+':desc" value="'+esc(p.desc||'')+'" placeholder="Descrição" style="min-width:240px"></td><td class="num">'+v.estudos+'</td><td class="num">'+v.labs+'</td><td><button class="xbtn" data-act="delProd" data-i="'+i+'" title="Remover produto">×</button></td></tr>';
+    else h+='<tr><td><b>'+esc(p.nome)+'</b></td><td>'+(p.desc?esc(p.desc):'<span class="mut">s/ descrição</span>')+'</td><td class="num">'+v.estudos+'</td><td class="num">'+v.labs+'</td></tr>';
+  });
+  return h+'</tbody></table></div></div>';
+}
+
 /* ===================== edição ===================== */
 var draftOffer=false;
 function markDirty(){dirty=true; lsSet(KEY+':draft',JSON.stringify({base:store.history.length,state:state,origin:pendingOrigin}));}
 function curStudy(){ if(!state) return undefined; return state.studies.filter(function(s){return s.id===view.study;})[0];}
 function aplicaCampo(el){
   var b=el.dataset&&el.dataset.b; if(!b||!canEdit()) return false;
-  var s=curStudy(); if(!s) return false; var p=b.split(':'), v=el.value;
+  var p=b.split(':'), v=el.value;
+  if(p[0]==='p'){ var pl=prodList(state), pr=pl[+p[1]]; if(pr) pr[p[2]]=v; return true; }
+  var s=curStudy(); if(!s) return false;
   if(p[0]==='s'){ s[p[1]] = p[1]==='nome'?v.trim().toUpperCase():(p[1]==='solicitacao'?(v||null):v); }
   else { var l=s.labs[+p[1]]; var f=p[2];
     if(f==='valor') l.valor=v===''?null:Math.round(parseFloat(v)*100)/100;
@@ -975,6 +1007,8 @@ document.addEventListener('click',function(ev){
   if(a==='addStudy'){var n={id:uid(),nome:'NOVO ESTUDO',apresentacoes:'',classe:'',indicacao:'',referencia:'',companhia:'',solicitacao:todayISO(),labs:labOrder(state).map(function(l){return {lab:l,data:null,status:'pendente',obs:'',valor:null};})}; state.studies.push(n); view.study=n.id; markDirty(); render();}
   else if(a==='delStudy'){var s=curStudy(); confirmBox('Excluir o estudo '+s.nome+'?','O estudo sairá da versão atual, mas continuará registrado nas versões anteriores do histórico.',function(){state.studies=state.studies.filter(function(x){return x!==s;}); view.study=null; markDirty(); render();});}
   else if(a==='addLab'){curStudy().labs.push({lab:'Novo laboratório',produto:'',data:todayISO(),status:'analise',obs:'',valor:null,validade:null}); markDirty(); keepScroll(render);}
+  else if(a==='addProd'){prodList(state).push({nome:'Novo produto',desc:''}); markDirty(); keepScroll(render);}
+  else if(a==='delProd'){prodList(state).splice(i,1); markDirty(); keepScroll(render);}
   else if(a==='delLab'){var s2=curStudy(); s2.labs.splice(i,1); markDirty(); keepScroll(render);}
   else if(a==='pdfStudy'){ var e=view.version!=null?store.history[view.version]:lastEntry(); var snap=view.version!=null?e.snapshot:(dirty?null:e.snapshot);
     if(!snap){toast('Há alterações não salvas. O PDF usa a última versão salva (v'+e.v+'). Salve uma nova versão para incluí-las.');snap=e.snapshot;}
