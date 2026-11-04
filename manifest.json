@@ -207,5 +207,15 @@
       "EQUIVALENCIA"
     ],
     "category": "Equivalencia"
+  },
+  {
+    "title": "portfólio",
+    "description": "",
+    "file": "Portfolio_v1.html",
+    "icon": "🧩",
+    "color": "#4d9fff",
+    "grupos": [
+      "EQUIVALENCIA"
+    ]
   }
 ]
