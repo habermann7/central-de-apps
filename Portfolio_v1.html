@@ -891,15 +891,17 @@ function renderMedicamentos(d,ref){
   var m=meds.filter(function(x){return x.id===view.med;})[0]||meds[0]; view.med=m.id;
   var forn=m.fornecedores||[];
   var h='<div class="selector" aria-label="Selecionar medicamento">'+meds.map(function(x){return '<button data-med="'+x.id+'" class="'+(x.id===m.id?'on':'')+'">'+esc(x.nome||'(sem nome)')+' <span class="mut">'+plural((x.fornecedores||[]).length,'fornecedor','fornecedores')+'</span></button>';}).join('')+(ed?'<button class="add" data-act="addMed">+ Novo medicamento</button>':'')+'</div>';
-  h+='<div class="'+(ed?'editing':'')+'"><div class="shead"><div><h1>'+(ed?'<input class="fld" style="font:800 24px Manrope,Inter,sans-serif;max-width:420px" data-b="m:nome" value="'+esc(m.nome||'')+'" placeholder="Nome do medicamento de referência">':esc(m.nome||'(sem nome)'))+'</h1><div class="chips"><span class="chip">'+plural(forn.length,'fornecedor','fornecedores')+'</span>'+(ed?'<span class="edit-flag">Editando</span>':'')+'</div></div><div class="sp"></div>'+(ed?'<button class="btn2 danger" data-act="delMed">Excluir medicamento</button>':'')+'</div>';
-  h+='<div class="card" style="margin-top:16px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div><h3>Fornecedores</h3><div class="cap" style="margin:0">Fornecedores ligados a este medicamento de referência</div></div><div style="flex:1"></div>'+(ed?'<button class="btn2 pri" data-act="addForn">+ Incluir fornecedor</button>':'')+'</div>';
-  if(!forn.length){ return h+'<div class="empty" style="margin-top:12px">Nenhum fornecedor cadastrado para este medicamento.</div></div></div>'; }
-  h+='<div class="scroll" style="margin-top:10px"><table class="t" style="min-width:720px"><thead><tr><th>Fornecedor</th><th>Data</th><th>Observação</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
+  h+='<div class="'+(ed?'editing':'')+'"><div class="shead"><div><h1>'+esc(m.nome||'(sem nome)')+'</h1><div class="chips">'+(ed?'<span class="edit-flag">Editando</span>':'')+'</div></div><div class="sp"></div>'+(ed?'<button class="btn2 danger" data-act="delMed">Excluir medicamento</button>':'')+'</div>';
+  h+='<div class="grid2" style="margin-top:16px">';
+  h+='<div class="card"><div class="l" style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700">Medicamento referência</div>'+
+     (ed?'<input class="fld" style="margin-top:10px;font-size:17px;font-weight:700" data-b="m:nome" value="'+esc(m.nome||'')+'" placeholder="Ex.: ZEMPLAR 5 MCG/ML">':'<div style="margin-top:10px;font-size:17px;font-weight:700">'+esc(m.nome||'')+'</div>')+'</div>';
+  h+='<div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div class="l" style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700">Fornecedores ('+forn.length+')</div><div style="flex:1"></div>'+(ed?'<button class="btn2 pri" data-act="addForn">+ Incluir fornecedor</button>':'')+'</div>';
+  if(!forn.length){ h+='<div class="mut" style="margin-top:12px">Nenhum fornecedor ligado a este medicamento.</div>'; }
   forn.forEach(function(f,i){
-    if(ed){ h+='<tr><td><input class="fld" data-b="f:'+i+':nome" value="'+esc(f.nome||'')+'" placeholder="Fornecedor" style="min-width:160px"></td><td><input class="fld" type="date" data-b="f:'+i+':data" value="'+esc(f.data||'')+'"></td><td><input class="fld" data-b="f:'+i+':obs" value="'+esc(f.obs||'')+'" placeholder="Observação" style="min-width:220px"></td><td><button class="xbtn" data-act="delForn" data-i="'+i+'" title="Remover fornecedor">×</button></td></tr>'; }
-    else { h+='<tr><td><b>'+esc(f.nome||'')+'</b></td><td>'+br(f.data)+'</td><td>'+(f.obs?esc(f.obs):'<span class="mut">s/ observação</span>')+'</td></tr>'; }
+    if(ed){ h+='<div style="display:grid;gap:6px;padding:10px 0;border-top:1px solid var(--line-2)"><div style="display:flex;gap:8px;align-items:center"><input class="fld" data-b="f:'+i+':nome" value="'+esc(f.nome||'')+'" placeholder="Fornecedor" style="flex:1"><button class="xbtn" data-act="delForn" data-i="'+i+'" title="Remover fornecedor">×</button></div><div style="display:flex;gap:8px"><input class="fld" type="date" data-b="f:'+i+':data" value="'+esc(f.data||'')+'"><input class="fld" data-b="f:'+i+':obs" value="'+esc(f.obs||'')+'" placeholder="Observação" style="flex:1"></div></div>'; }
+    else { h+='<div style="padding:10px 0;border-top:1px solid var(--line-2)"><div style="font-weight:700">'+esc(f.nome||'')+'</div><div class="mut" style="font-size:13px;margin-top:3px">'+br(f.data)+(f.obs?' · '+esc(f.obs):'')+'</div></div>'; }
   });
-  h+='</tbody></table></div></div></div>';
+  h+='</div></div></div>';
   return h;
 }
 
