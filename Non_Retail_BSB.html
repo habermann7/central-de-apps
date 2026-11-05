@@ -542,18 +542,21 @@ function diff(a,b){
     });
     o.labs.forEach(function(l){ if(!nl[norm(l.lab)]) ch.push(s.nome+' · '+l.lab+' removido'); });
   });
-  var ma=a.medicamentos||[], mb=b.medicamentos||[], mam={}, mbm={}, fa=a.fornecedoresMed||[], fb=b.fornecedoresMed||[], fam={}, fbm={};
+  var ma=a.medicamentos||[], mb=b.medicamentos||[], mam={}, mbm={};
   ma.forEach(function(m){mam[m.id]=m;}); mb.forEach(function(m){mbm[m.id]=m;});
-  fa.forEach(function(f){fam[f.id]=f;}); fb.forEach(function(f){fbm[f.id]=f;});
-  fb.forEach(function(f){ var o=fam[f.id]; if(!o) ch.push('Fornecedor incluído (medicamentos): '+(f.nome||'')); else if((o.nome||'')!==(f.nome||'')||(o.obs||'').trim()!==(f.obs||'').trim()) ch.push('Fornecedor atualizado (medicamentos): '+(f.nome||'')); });
-  fa.forEach(function(f){ if(!fbm[f.id]) ch.push('Fornecedor removido (medicamentos): '+(f.nome||'')); });
   mb.forEach(function(m){
-    var o=mam[m.id]; if(!o){ch.push('Medicamento incluído: '+(m.nome||'(sem nome)'));return;}
-    if((o.nome||'')!==(m.nome||'')) ch.push('Medicamento renomeado: '+(o.nome||'')+' para '+(m.nome||''));
-    fb.forEach(function(f){ var p=(o.cot||{})[f.id]||{}, n=(m.cot||{})[f.id]||{};
-      if((p.preco==null?null:+p.preco)!==(n.preco==null?null:+n.preco)||(p.validade||'')!==(n.validade||'')||(p.lote||'')!==(n.lote||'')) ch.push((m.nome||'')+' · '+(f.nome||'')+': cotação atualizada'); });
+    var nm=m.nome||'(sem nome)', o=mam[m.id];
+    if(!o){ch.push('Medicamento incluído: '+nm+' ('+plural((m.linhas||[]).length,'fornecedor','fornecedores')+')');return;}
+    if((o.nome||'')!==(m.nome||'')) ch.push('Medicamento renomeado: '+(o.nome||'(sem nome)')+' para '+nm);
+    var or={}, nr={}; (o.linhas||[]).forEach(function(r){or[r.id]=r;}); (m.linhas||[]).forEach(function(r){nr[r.id]=r;});
+    (m.linhas||[]).forEach(function(r){ var q=or[r.id], fn=r.fornecedor||'(sem nome)';
+      if(!q){ch.push(nm+' · fornecedor incluído: '+fn);return;}
+      if((q.preco==null?null:+q.preco)!==(r.preco==null?null:+r.preco)) ch.push(nm+' · '+fn+': preço '+(r.preco!=null?'registrado em '+brl(r.preco):'removido'));
+      ['fornecedor','validade','lote','obs'].forEach(function(c){ if(String(q[c]||'').trim()!==String(r[c]||'').trim()) ch.push(nm+' · '+fn+': '+({fornecedor:'nome do fornecedor',validade:'validade',lote:'lote',obs:'observação'})[c]+' atualizado'); });
+    });
+    (o.linhas||[]).forEach(function(r){ if(!nr[r.id]) ch.push(nm+' · fornecedor removido: '+(r.fornecedor||'(sem nome)')); });
   });
-  ma.forEach(function(m){ if(!mbm[m.id]) ch.push('Medicamento removido: '+(m.nome||'')); });
+  ma.forEach(function(m){ if(!mbm[m.id]) ch.push('Medicamento removido: '+(m.nome||'(sem nome)')); });
   return ch;
 }
 
@@ -885,30 +888,31 @@ function renderLabs(d,ref){
 }
 
 function renderMedicamentos(d,ref){
-  var meds=d.medicamentos||[], forns=d.fornecedoresMed||[], ed=canEdit();
+  var meds=d.medicamentos||[], ed=canEdit();
   var lbl='font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700';
-  var h='<div class="'+(ed?'editing':'')+'"><div class="scroll"><table class="t" style="min-width:'+(230+meds.length*330+170)+'px"><thead>';
-  h+='<tr><th rowspan="2" style="min-width:210px">Fornecedores</th>';
+  var h='<div class="'+(ed?'editing':'')+'">';
+  if(!meds.length) h+='<div class="empty">Nenhum medicamento de referência cadastrado.'+(ed?'':' Clique em "Editar dados" para incluir.')+'</div>';
   meds.forEach(function(md,i){
-    h+='<th colspan="3" style="min-width:300px"><div style="'+lbl+'">Medicamento referência</div>'+
-      (ed?'<div style="display:flex;gap:6px;align-items:center;margin-top:4px"><input class="fld" data-b="m:'+i+':nome" value="'+esc(md.nome||'')+'" placeholder="Nome do medicamento" style="min-width:180px"><button class="xbtn" data-act="delMed" data-i="'+i+'" title="Remover medicamento">×</button></div>':'<div style="font-weight:800;margin-top:4px;text-transform:none;letter-spacing:0">'+esc(md.nome||'(sem nome)')+'</div>')+'</th>';
-  });
-  h+='<th rowspan="2" style="min-width:200px">Observação</th></tr><tr>'+meds.map(function(){return '<th class="num">Preço</th><th>Validade</th><th>Lote</th>';}).join('')+'</tr></thead><tbody>';
-  forns.forEach(function(f,j){
-    h+='<tr><td>'+(ed?'<div style="display:flex;gap:6px;align-items:center"><input class="fld" data-b="f:'+j+':nome" value="'+esc(f.nome||'')+'" placeholder="Fornecedor" style="min-width:150px"><button class="xbtn" data-act="delForn" data-i="'+j+'" title="Remover fornecedor">×</button></div>':'<b>'+esc(f.nome||'')+'</b>')+'</td>';
-    meds.forEach(function(md,i){
-      var c=(md.cot&&md.cot[f.id])||{};
-      if(ed) h+='<td class="num"><input class="fld" type="number" step="0.01" min="0" data-b="c:'+i+':'+j+':preco" value="'+(c.preco!=null?c.preco:'')+'" placeholder="R$" style="text-align:right;min-width:110px"></td><td><input class="fld" data-b="c:'+i+':'+j+':validade" value="'+esc(c.validade||'')+'" placeholder="mm/aaaa" style="min-width:90px"></td><td><input class="fld" data-b="c:'+i+':'+j+':lote" value="'+esc(c.lote||'')+'" style="min-width:110px"></td>';
-      else h+='<td class="num">'+(c.preco!=null?brl(c.preco):'<span class="mut">–</span>')+'</td><td>'+(c.validade?esc(c.validade):'<span class="mut">–</span>')+'</td><td>'+(c.lote?esc(c.lote):'<span class="mut">–</span>')+'</td>';
+    var rows=md.linhas||[];
+    h+='<div class="card" style="margin-top:16px"><div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap"><div style="flex:1;min-width:240px"><div style="'+lbl+'">Medicamento referência</div>'+
+      (ed?'<input class="fld" data-b="m:'+i+':nome" value="'+esc(md.nome||'')+'" placeholder="Ex.: MERONEM 500MG 10FA" style="margin-top:6px;font-size:16px;font-weight:700;max-width:520px">':'<div style="margin-top:6px;font-size:18px;font-weight:800">'+esc(md.nome||'(sem nome)')+'</div>')+
+      '</div><span class="chip">'+plural(rows.length,'fornecedor','fornecedores')+'</span>'+(ed?'<button class="btn2 danger" data-act="delMed" data-i="'+i+'">Excluir medicamento</button>':'')+'</div>';
+    h+='<div class="scroll" style="margin-top:12px"><table class="t" style="min-width:860px"><thead><tr><th>Fornecedor / distribuidor</th><th class="num">Preço</th><th>Validade</th><th>Lote</th><th>Observação</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
+    if(!rows.length) h+='<tr><td colspan="'+(ed?6:5)+'" class="mut">Nenhum fornecedor cadastrado para este medicamento.</td></tr>';
+    rows.forEach(function(r,j){
+      var k='r:'+i+':'+j+':';
+      if(ed) h+='<tr><td><input class="fld" data-b="'+k+'fornecedor" value="'+esc(r.fornecedor||'')+'" placeholder="Ex.: DRS Group" style="min-width:170px"></td>'+
+        '<td><input class="fld" type="number" step="0.01" min="0" data-b="'+k+'preco" value="'+(r.preco!=null?r.preco:'')+'" placeholder="R$" style="text-align:right;min-width:110px"></td>'+
+        '<td><input class="fld" data-b="'+k+'validade" value="'+esc(r.validade||'')+'" placeholder="Ex.: fev/27" style="min-width:100px"></td>'+
+        '<td><input class="fld" data-b="'+k+'lote" value="'+esc(r.lote||'')+'" placeholder="Ex.: C000620R" style="min-width:120px"></td>'+
+        '<td><input class="fld" data-b="'+k+'obs" value="'+esc(r.obs||'')+'" placeholder="Ex.: caixa com 10, estoque zerado" style="min-width:200px"></td>'+
+        '<td><button class="xbtn" data-act="delLinha" data-i="'+i+'" data-j="'+j+'" title="Remover fornecedor">×</button></td></tr>';
+      else h+='<tr><td><b>'+esc(r.fornecedor||'')+'</b></td><td class="num">'+(r.preco!=null?brl(r.preco):'<span class="mut">–</span>')+'</td><td>'+(r.validade?esc(r.validade):'<span class="mut">–</span>')+'</td><td>'+(r.lote?esc(r.lote):'<span class="mut">–</span>')+'</td><td>'+(r.obs?esc(r.obs):'<span class="mut">–</span>')+'</td></tr>';
     });
-    h+='<td>'+(ed?'<input class="fld" data-b="f:'+j+':obs" value="'+esc(f.obs||'')+'" placeholder="Observação" style="min-width:180px">':(f.obs?esc(f.obs):'<span class="mut">–</span>'))+'</td></tr>';
+    h+='</tbody></table></div>'+(ed?'<div style="margin-top:10px"><button class="btn2" data-act="addLinha" data-i="'+i+'">+ Incluir fornecedor</button></div>':'')+'</div>';
   });
-  if(!forns.length) h+='<tr><td colspan="'+(3+meds.length*3)+'" class="mut">Nenhum fornecedor cadastrado.</td></tr>';
-  h+='</tbody></table></div>';
-  if(ed) h+='<div class="row" style="margin-top:12px;gap:8px;flex-wrap:wrap"><button class="btn2 pri" data-act="addForn">+ Incluir fornecedor</button><button class="btn2" data-act="addMed">+ Incluir medicamento</button></div>';
-  h+='</div>';
-  if(!meds.length && !ed) h+='<div class="mut" style="margin-top:10px;font-size:13px">Clique em "Editar dados" para incluir medicamentos e fornecedores.</div>';
-  return h;
+  if(ed) h+='<div style="margin-top:16px"><button class="btn2 pri" data-act="addMed">+ Incluir medicamento</button></div>';
+  return h+'</div>';
 }
 
 function renderHistory(){
@@ -947,7 +951,7 @@ function render(){
   $$('#tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.tab===view.tab);});
   var bn='';
   if(view.version!=null){var e=store.history[view.version]; bn+='<div class="b info"><span>Você está visualizando a <b>versão '+e.v+'</b>, salva em '+brTs(e.ts)+'. Os dados são somente leitura nesta visualização.</span><span class="sp"></span><button class="lnk" data-act="viewCurrent">Voltar à versão atual</button></div>';}
-  else if(editMode) bn+='<div class="b warn"><span><b>Modo edição ativo.</b> Altere os dados na aba Estudos. Ao terminar, clique em <b>Salvar versão</b> para registrar no histórico. Para o PDF, use o botão <b>Gerar PDF</b>.</span></div>';
+  else if(editMode) bn+='<div class="b warn"><span><b>Modo edição ativo.</b> Altere os dados na aba Estudos ou Medicamentos. Ao terminar, clique em <b>Salvar versão</b> para registrar no histórico. Para o PDF, use o botão <b>Gerar PDF</b>.</span></div>';
   if(draftOffer) bn+='<div class="b warn" style="margin-top:8px"><span>Existem alterações não salvas deste painel guardadas neste navegador.</span><span class="sp"></span><button class="lnk" data-act="restoreDraft">Recuperar</button><button class="lnk" data-act="dropDraft">Descartar</button></div>';
   $('#banner').innerHTML=bn;
   var html = view.tab==='overview'?renderOverview(d,ref):view.tab==='studies'?renderStudies(d,ref):view.tab==='labs'?renderLabs(d,ref):view.tab==='medicamentos'?renderMedicamentos(d,ref):renderHistory();
@@ -972,10 +976,8 @@ function aplicaCampo(el){
   var b=el.dataset&&el.dataset.b; if(!b||!canEdit()) return false;
   var p=b.split(':'), v=el.value;
   if(p[0]==='m'){ var mm=(state.medicamentos||[])[+p[1]]; if(!mm) return false; mm.nome=v; return true; }
-  if(p[0]==='f'){ var ff=(state.fornecedoresMed||[])[+p[1]]; if(!ff) return false; ff[p[2]]=v; return true; }
-  if(p[0]==='c'){ var mc=(state.medicamentos||[])[+p[1]], fx=(state.fornecedoresMed||[])[+p[2]]; if(!mc||!fx) return false;
-    mc.cot=mc.cot||{}; var cc=mc.cot[fx.id]=mc.cot[fx.id]||{};
-    if(p[3]==='preco') cc.preco=v===''?null:Math.round(parseFloat(v)*100)/100; else cc[p[3]]=v||null; return true; }
+  if(p[0]==='r'){ var mr=(state.medicamentos||[])[+p[1]]; var rr=mr&&(mr.linhas||[])[+p[2]]; if(!rr) return false;
+    if(p[3]==='preco') rr.preco=v===''?null:Math.round(parseFloat(v)*100)/100; else rr[p[3]]=v; return true; }
   var s=curStudy(); if(!s) return false;
   if(p[0]==='s'){ s[p[1]] = p[1]==='nome'?v.trim().toUpperCase():(p[1]==='solicitacao'?(v||null):v); }
   else { var l=s.labs[+p[1]]; var f=p[2];
@@ -1024,10 +1026,10 @@ document.addEventListener('click',function(ev){
   else if(a==='delStudy'){var s=curStudy(); confirmBox('Excluir o estudo '+s.nome+'?','O estudo sairá da versão atual, mas continuará registrado nas versões anteriores do histórico.',function(){state.studies=state.studies.filter(function(x){return x!==s;}); view.study=null; markDirty(); render();});}
   else if(a==='addLab'){curStudy().labs.push({lab:'Novo laboratório',data:todayISO(),status:'analise',obs:'',valor:null,validade:null}); markDirty(); keepScroll(render);}
   else if(a==='delLab'){var s2=curStudy(); s2.labs.splice(i,1); markDirty(); keepScroll(render);}
-  else if(a==='addMed'){ state.medicamentos=state.medicamentos||[]; state.medicamentos.push({id:uid(),nome:'NOVO MEDICAMENTO',cot:{}}); markDirty(); keepScroll(render); }
-  else if(a==='delMed'){ confirmBox('Excluir este medicamento?','Ele sai da versão atual, mas continua registrado nas versões anteriores do histórico.',function(){ state.medicamentos.splice(i,1); markDirty(); render(); }); }
-  else if(a==='addForn'){ state.fornecedoresMed=state.fornecedoresMed||[]; state.fornecedoresMed.push({id:uid(),nome:'Novo fornecedor',obs:''}); markDirty(); keepScroll(render); }
-  else if(a==='delForn'){ confirmBox('Excluir este fornecedor?','Ele sai de todos os medicamentos na versão atual, mas continua no histórico.',function(){ state.fornecedoresMed.splice(i,1); markDirty(); render(); }); }
+  else if(a==='addMed'){ state.medicamentos=state.medicamentos||[]; state.medicamentos.push({id:uid(),nome:'',linhas:[{id:uid(),fornecedor:'',preco:null,validade:'',lote:'',obs:''}]}); markDirty(); keepScroll(render); }
+  else if(a==='delMed'){ confirmBox('Excluir este medicamento?','Ele sai da versão atual com os fornecedores dele, mas continua registrado nas versões anteriores do histórico.',function(){ state.medicamentos.splice(i,1); markDirty(); render(); }); }
+  else if(a==='addLinha'){ var ml=state.medicamentos[i]; ml.linhas=ml.linhas||[]; ml.linhas.push({id:uid(),fornecedor:'',preco:null,validade:'',lote:'',obs:''}); markDirty(); keepScroll(render); }
+  else if(a==='delLinha'){ var md2=state.medicamentos[i]; md2.linhas.splice(+t.dataset.j,1); markDirty(); keepScroll(render); }
   else if(a==='pdfStudy'){ var e=view.version!=null?store.history[view.version]:lastEntry(); var snap=view.version!=null?e.snapshot:(dirty?null:e.snapshot);
     if(!snap){toast('Há alterações não salvas. O PDF usa a última versão salva (v'+e.v+'). Salve uma nova versão para incluí-las.');snap=e.snapshot;}
     if(!snap.studies.some(function(s){return s.id===view.study;})){toast('Este estudo ainda não existe na versão salva.','err');return;}
