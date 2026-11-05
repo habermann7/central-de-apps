@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>EquivLab · Inteligência em Estudos de Equivalência</title>
+<title>Non Retail BSB</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
@@ -372,7 +372,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
   <div class="brand">
     <div class="logo" aria-hidden="true"><span>EQ</span><span class="logo-dot"></span></div>
     <div style="min-width:0">
-      <div class="t1" id="docTitle">Estudos de Equivalência</div>
+      <div class="t1" id="docTitle">Non Retail BSB</div>
       <div class="t2" id="objetivo">Gestão e inteligência do portfólio</div>
     </div>
   </div>
@@ -397,6 +397,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
   <button data-tab="overview" class="on"><span class="nav-icon">◫</span> Visão geral</button>
   <button data-tab="studies"><span class="nav-icon">▤</span> Estudos</button>
   <button data-tab="labs"><span class="nav-icon">◈</span> Laboratórios</button>
+  <button data-tab="medicamentos"><span class="nav-icon">◉</span> Medicamentos</button>
   <button data-tab="history"><span class="nav-icon">◷</span> Histórico <span class="count" id="histCount"></span></button>
 </nav>
 <div class="banner" id="banner"></div>
@@ -464,7 +465,7 @@ function isoFromUTC(t){var d=new Date(t);return d.getUTCFullYear()+'-'+pad(d.get
 function uid(){return 's'+Math.random().toString(36).slice(2,9);}
 function plural(n,s,p){return n+' '+(n===1?s:p);}
 
-function niceTitle(t){return !t||norm(t)==='estudos de equivalencia'?'Estudos de Equivalência':t;}
+function niceTitle(t){return !t||norm(t)==='estudos de equivalencia'||norm(t)==='non retail bsb'?'Non Retail BSB':t;}
 function data(){return view.version!=null ? store.history[view.version].snapshot : state;}
 function refDate(){return view.version!=null ? store.history[view.version].ts.slice(0,10) : todayISO();}
 function lastEntry(){return store.history[store.history.length-1];}
@@ -541,6 +542,19 @@ function diff(a,b){
     });
     o.labs.forEach(function(l){ if(!nl[norm(l.lab)]) ch.push(s.nome+' · '+l.lab+' removido'); });
   });
+  var ma=a.medicamentos||[], mb=b.medicamentos||[], mam={}, mbm={};
+  ma.forEach(function(m){mam[m.id]=m;}); mb.forEach(function(m){mbm[m.id]=m;});
+  mb.forEach(function(m){
+    var o=mam[m.id]; if(!o){ch.push('Medicamento incluído: '+(m.nome||'(sem nome)'));return;}
+    if((o.nome||'')!==(m.nome||'')) ch.push('Medicamento renomeado: '+(o.nome||'')+' para '+(m.nome||''));
+    var ofo={}, nfo={}; (o.fornecedores||[]).forEach(function(f){ofo[f.id]=f;}); (m.fornecedores||[]).forEach(function(f){nfo[f.id]=f;});
+    (m.fornecedores||[]).forEach(function(f){
+      var p=ofo[f.id]; if(!p){ch.push((m.nome||'')+' · fornecedor incluído: '+(f.nome||'(sem nome)'));return;}
+      if((p.nome||'')!==(f.nome||'')||(p.data||'')!==(f.data||'')||(p.obs||'').trim()!==(f.obs||'').trim()) ch.push((m.nome||'')+' · fornecedor '+(f.nome||'')+' atualizado');
+    });
+    (o.fornecedores||[]).forEach(function(f){ if(!nfo[f.id]) ch.push((m.nome||'')+' · fornecedor removido: '+(f.nome||'')); });
+  });
+  ma.forEach(function(m){ if(!mbm[m.id]) ch.push('Medicamento removido: '+(m.nome||'')); });
   return ch;
 }
 
@@ -558,7 +572,7 @@ function parseRows(rows){
   var hdr=-1;
   for(var i=0;i<rows.length;i++){ if(norm(rows[i][0]).indexOf('estudo')===0 && norm(rows[i][1]).indexOf('apresenta')===0){hdr=i;break;} }
   if(hdr<0) throw new Error('Não encontrei o cabeçalho "Estudos | Apresentações | Classe ..." na planilha.');
-  var head=S(rows[0]&&rows[0][0]).split('\n'), meta={titulo:head[0]?head[0].trim():'Estudos de Equivalência', objetivo:head.slice(1).join(' ').trim()};
+  var head=S(rows[0]&&rows[0][0]).split('\n'), meta={titulo:head[0]?head[0].trim():'Non Retail BSB', objetivo:head.slice(1).join(' ').trim()};
   var studies=[];
   for(i=hdr+1;i<rows.length;i++){
     var r=rows[i], a=S(r[0]); if(!a) break; if(norm(a).indexOf('estudos no portfolio')===0||norm(a).indexOf('laboratorios cotados')===0) break;
@@ -595,7 +609,7 @@ function importFile(file){
       if(!state) throw new Error('Os dados do painel ainda não carregaram. Recarregue a página e tente de novo.');
       var old={}; state.studies.forEach(function(s){old[norm(s.nome)]=s.id;});
       parsed.studies.forEach(function(s){ if(old[norm(s.nome)]) s.id=old[norm(s.nome)]; });
-      state=parsed; pendingOrigin='Planilha importada ('+file.name+')';
+      parsed.medicamentos=(state.medicamentos||[]); state=parsed; pendingOrigin='Planilha importada ('+file.name+')';
       markDirty(); view.version=null; render(); openSave();
     }catch(e){ toast('Não foi possível ler a planilha: '+e.message,'err'); }
   };
@@ -871,6 +885,24 @@ function renderLabs(d,ref){
   return h;
 }
 
+function renderMedicamentos(d,ref){
+  var meds=d.medicamentos||[], ed=canEdit();
+  if(!meds.length) return '<div class="empty">Nenhum medicamento de referência cadastrado.'+(ed?' <button class="lnk" data-act="addMed">Incluir medicamento</button>':'')+'</div>';
+  var m=meds.filter(function(x){return x.id===view.med;})[0]||meds[0]; view.med=m.id;
+  var forn=m.fornecedores||[];
+  var h='<div class="selector" aria-label="Selecionar medicamento">'+meds.map(function(x){return '<button data-med="'+x.id+'" class="'+(x.id===m.id?'on':'')+'">'+esc(x.nome||'(sem nome)')+' <span class="mut">'+plural((x.fornecedores||[]).length,'fornecedor','fornecedores')+'</span></button>';}).join('')+(ed?'<button class="add" data-act="addMed">+ Novo medicamento</button>':'')+'</div>';
+  h+='<div class="'+(ed?'editing':'')+'"><div class="shead"><div><h1>'+(ed?'<input class="fld" style="font:800 24px Manrope,Inter,sans-serif;max-width:420px" data-b="m:nome" value="'+esc(m.nome||'')+'" placeholder="Nome do medicamento de referência">':esc(m.nome||'(sem nome)'))+'</h1><div class="chips"><span class="chip">'+plural(forn.length,'fornecedor','fornecedores')+'</span>'+(ed?'<span class="edit-flag">Editando</span>':'')+'</div></div><div class="sp"></div>'+(ed?'<button class="btn2 danger" data-act="delMed">Excluir medicamento</button>':'')+'</div>';
+  h+='<div class="card" style="margin-top:16px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div><h3>Fornecedores</h3><div class="cap" style="margin:0">Fornecedores ligados a este medicamento de referência</div></div><div style="flex:1"></div>'+(ed?'<button class="btn2 pri" data-act="addForn">+ Incluir fornecedor</button>':'')+'</div>';
+  if(!forn.length){ return h+'<div class="empty" style="margin-top:12px">Nenhum fornecedor cadastrado para este medicamento.</div></div></div>'; }
+  h+='<div class="scroll" style="margin-top:10px"><table class="t" style="min-width:720px"><thead><tr><th>Fornecedor</th><th>Data</th><th>Observação</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
+  forn.forEach(function(f,i){
+    if(ed){ h+='<tr><td><input class="fld" data-b="f:'+i+':nome" value="'+esc(f.nome||'')+'" placeholder="Fornecedor" style="min-width:160px"></td><td><input class="fld" type="date" data-b="f:'+i+':data" value="'+esc(f.data||'')+'"></td><td><input class="fld" data-b="f:'+i+':obs" value="'+esc(f.obs||'')+'" placeholder="Observação" style="min-width:220px"></td><td><button class="xbtn" data-act="delForn" data-i="'+i+'" title="Remover fornecedor">×</button></td></tr>'; }
+    else { h+='<tr><td><b>'+esc(f.nome||'')+'</b></td><td>'+br(f.data)+'</td><td>'+(f.obs?esc(f.obs):'<span class="mut">s/ observação</span>')+'</td></tr>'; }
+  });
+  h+='</tbody></table></div></div></div>';
+  return h;
+}
+
 function renderHistory(){
   var H=store.history, h='';
   if(H.length>1){
@@ -910,25 +942,31 @@ function render(){
   else if(editMode) bn+='<div class="b warn"><span><b>Modo edição ativo.</b> Altere os dados na aba Estudos. Ao terminar, clique em <b>Salvar versão</b> para registrar no histórico. Para o PDF, use o botão <b>Gerar PDF</b>.</span></div>';
   if(draftOffer) bn+='<div class="b warn" style="margin-top:8px"><span>Existem alterações não salvas deste painel guardadas neste navegador.</span><span class="sp"></span><button class="lnk" data-act="restoreDraft">Recuperar</button><button class="lnk" data-act="dropDraft">Descartar</button></div>';
   $('#banner').innerHTML=bn;
-  var html = view.tab==='overview'?renderOverview(d,ref):view.tab==='studies'?renderStudies(d,ref):view.tab==='labs'?renderLabs(d,ref):renderHistory();
+  var html = view.tab==='overview'?renderOverview(d,ref):view.tab==='studies'?renderStudies(d,ref):view.tab==='labs'?renderLabs(d,ref):view.tab==='medicamentos'?renderMedicamentos(d,ref):renderHistory();
   if(view.tab!=='overview'){
     var pageInfo=view.tab==='studies'?['ESTUDOS','Detalhamento dos estudos','Dados técnicos, propostas e acompanhamento de cada laboratório.']:
       view.tab==='labs'?['REDE DE LABORATÓRIOS','Laboratórios consultados','Panorama consolidado das participações e últimas movimentações.']:
+      view.tab==='medicamentos'?['MEDICAMENTOS','Medicamentos de referência','Cada medicamento de referência com os fornecedores ligados a ele.']:
       ['RASTREABILIDADE','Histórico de versões','Consulte mudanças, responsáveis e versões anteriores.'];
     html='<div class="page-intro"><span class="section-kicker">'+pageInfo[0]+'</span><h1>'+pageInfo[1]+'</h1><p>'+pageInfo[2]+'</p></div>'+html;
   }
   $('#app').innerHTML=html;
   if(view.tab==='overview')applyOverviewFilter();
-  $('#foot').innerHTML='EQUIVLAB  /  Estudos de Equivalência · Versão '+L.v+' salva em '+brTs(L.ts)+(L.autor?' por '+esc(L.autor):'')+' · Dias calculados até '+br(ref)+(RO?' · Cópia somente leitura':'');
+  $('#foot').innerHTML='EQUIVLAB  /  Non Retail BSB · Versão '+L.v+' salva em '+brTs(L.ts)+(L.autor?' por '+esc(L.autor):'')+' · Dias calculados até '+br(ref)+(RO?' · Cópia somente leitura':'');
 }
 
 /* ===================== edição ===================== */
 var draftOffer=false;
 function markDirty(){dirty=true; lsSet(KEY+':draft',JSON.stringify({base:store.history.length,state:state,origin:pendingOrigin}));}
 function curStudy(){ if(!state) return undefined; return state.studies.filter(function(s){return s.id===view.study;})[0];}
+function curMed(){ if(!state) return undefined; return (state.medicamentos||[]).filter(function(m){return m.id===view.med;})[0];}
 function aplicaCampo(el){
   var b=el.dataset&&el.dataset.b; if(!b||!canEdit()) return false;
-  var s=curStudy(); if(!s) return false; var p=b.split(':'), v=el.value;
+  var p=b.split(':'), v=el.value;
+  if(p[0]==='m'||p[0]==='f'){ var md=curMed(); if(!md) return false;
+    if(p[0]==='m'){ md.nome=v; return true; }
+    var fo=(md.fornecedores||[])[+p[1]]; if(!fo) return false; fo[p[2]]=v; return true; }
+  var s=curStudy(); if(!s) return false;
   if(p[0]==='s'){ s[p[1]] = p[1]==='nome'?v.trim().toUpperCase():(p[1]==='solicitacao'?(v||null):v); }
   else { var l=s.labs[+p[1]]; var f=p[2];
     if(f==='valor') l.valor=v===''?null:Math.round(parseFloat(v)*100)/100;
@@ -963,10 +1001,11 @@ document.addEventListener('change',function(ev){
 function keepScroll(fn){var y=window.scrollY; fn(); window.scrollTo(0,y);}
 
 document.addEventListener('click',function(ev){
-  var t=ev.target.closest('[data-act],[data-open],[data-study],[data-tab]'); if(!t) return;
+  var t=ev.target.closest('[data-act],[data-open],[data-study],[data-tab],[data-med]'); if(!t) return;
   if(t.dataset.tab){view.tab=t.dataset.tab; render(); window.scrollTo(0,0); return;}
   if(t.dataset.open){view.tab='studies'; view.study=t.dataset.open; render(); window.scrollTo(0,0); return;}
   if(t.dataset.study){view.study=t.dataset.study; keepScroll(render); return;}
+  if(t.dataset.med){view.med=t.dataset.med; keepScroll(render); return;}
   var a=t.dataset.act, i=+t.dataset.i;
   if(a==='jumpPriorities'){var p=$('#prioritySection');if(p)p.scrollIntoView({behavior:'smooth',block:'start'});return;}
   if(a==='jumpAlerts'){var p2=$('#allAlerts');if(p2)p2.scrollIntoView({behavior:'smooth',block:'start'});return;}
@@ -975,6 +1014,10 @@ document.addEventListener('click',function(ev){
   else if(a==='delStudy'){var s=curStudy(); confirmBox('Excluir o estudo '+s.nome+'?','O estudo sairá da versão atual, mas continuará registrado nas versões anteriores do histórico.',function(){state.studies=state.studies.filter(function(x){return x!==s;}); view.study=null; markDirty(); render();});}
   else if(a==='addLab'){curStudy().labs.push({lab:'Novo laboratório',data:todayISO(),status:'analise',obs:'',valor:null,validade:null}); markDirty(); keepScroll(render);}
   else if(a==='delLab'){var s2=curStudy(); s2.labs.splice(i,1); markDirty(); keepScroll(render);}
+  else if(a==='addMed'){ if(!state.medicamentos) state.medicamentos=[]; var nm={id:uid(),nome:'NOVO MEDICAMENTO',fornecedores:[]}; state.medicamentos.push(nm); view.med=nm.id; markDirty(); render(); }
+  else if(a==='delMed'){ var dm=curMed(); if(!dm) return; confirmBox('Excluir '+(dm.nome||'este medicamento')+'?','O medicamento e seus fornecedores sairão da versão atual, mas continuarão registrados nas versões anteriores do histórico.',function(){ state.medicamentos=state.medicamentos.filter(function(x){return x!==dm;}); view.med=null; markDirty(); render(); }); }
+  else if(a==='addForn'){ var cm=curMed(); if(!cm) return; cm.fornecedores=cm.fornecedores||[]; cm.fornecedores.push({id:uid(),nome:'Novo fornecedor',data:todayISO(),obs:''}); markDirty(); keepScroll(render); }
+  else if(a==='delForn'){ var cm2=curMed(); if(!cm2) return; cm2.fornecedores.splice(i,1); markDirty(); keepScroll(render); }
   else if(a==='pdfStudy'){ var e=view.version!=null?store.history[view.version]:lastEntry(); var snap=view.version!=null?e.snapshot:(dirty?null:e.snapshot);
     if(!snap){toast('Há alterações não salvas. O PDF usa a última versão salva (v'+e.v+'). Salve uma nova versão para incluí-las.');snap=e.snapshot;}
     if(!snap.studies.some(function(s){return s.id===view.study;})){toast('Este estudo ainda não existe na versão salva.','err');return;}
@@ -1000,7 +1043,7 @@ $('#btnEdit').onclick=function(){
     return;
   }
   if(view.version!=null){view.version=null;}
-  editMode=!editMode; if(editMode&&view.tab!=='studies'){view.tab='studies';} render();
+  editMode=!editMode; if(editMode&&view.tab!=='studies'&&view.tab!=='medicamentos'){view.tab='studies';} render();
 };
 $('#btnImport').onclick=function(){$('#fileInput').value='';$('#fileInput').click();};
 $('#fileInput').onchange=function(){ if(this.files[0]) importFile(this.files[0]); };
