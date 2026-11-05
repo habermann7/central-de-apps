@@ -25,25 +25,6 @@
     --header: #2A2420;
     --header-mute: #B8AC98;
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #1C1815;
-      --paper: #262019;
-      --ink: #EFEAE0;
-      --ink-soft: #C9BEA9;
-      --ink-mute: #9A8D78;
-      --border: #3A322A;
-      --border-strong: #443A30;
-      --accent: #C98A5E;
-      --green: #6FA08D;
-      --green-bg: #24332C;
-      --orange: #D98457;
-      --orange-bg: #362920;
-      --track: #332C24;
-      --header: #14110E;
-      --header-mute: #8A7D6B;
-    }
-  }
   :root[data-theme="dark"] {
     --bg: #1C1815;
     --paper: #262019;
@@ -241,14 +222,14 @@
 [hidden]:not([hidden=until-found i]){display:none!important}
 </style>
 <script>
-/* Tema claro/escuro: por padrão segue o celular/computador; o botão grava a escolha neste navegador */
+/* Tema claro/escuro: padrão fixo é o claro (não segue o sistema); o botão grava a escolha neste navegador */
 (function(){
   try{ var t=localStorage.getItem('frete:tema'); if(t==='light'||t==='dark') document.documentElement.setAttribute('data-theme',t); }catch(e){}
 })();
 function temaAtual(){
   var t=document.documentElement.getAttribute('data-theme');
   if(t==='light'||t==='dark') return t;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+  return 'light';
 }
 function toggleTema(){
   var n=temaAtual()==='dark'?'light':'dark';
