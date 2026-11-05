@@ -887,7 +887,7 @@ function renderLabs(d,ref){
 
 function renderMedicamentos(d,ref){
   var meds=d.medicamentos||[], ed=canEdit();
-  if(!meds.length) return '<div class="empty">Nenhum medicamento de referência cadastrado.'+(ed?' <button class="lnk" data-act="addMed">Incluir medicamento</button>':'')+'</div>';
+  if(!meds.length) return '<div class="grid2" style="margin-top:16px"><div class="card"><div class="l" style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700">Medicamento referência</div><div class="mut" style="margin-top:10px">Nenhum medicamento cadastrado ainda.</div>'+(ed?'<button class="btn2 pri" data-act="addMed" style="margin-top:12px">+ Incluir medicamento</button>':'<div class="mut" style="margin-top:10px;font-size:13px">Clique em "Editar dados" para incluir.</div>')+'</div><div class="card"><div class="l" style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700">Fornecedores</div><div class="mut" style="margin-top:12px">Os fornecedores aparecem aqui depois que o medicamento for incluído.</div></div></div>';
   var m=meds.filter(function(x){return x.id===view.med;})[0]||meds[0]; view.med=m.id;
   var forn=m.fornecedores||[];
   var h='<div class="selector" aria-label="Selecionar medicamento">'+meds.map(function(x){return '<button data-med="'+x.id+'" class="'+(x.id===m.id?'on':'')+'">'+esc(x.nome||'(sem nome)')+' <span class="mut">'+plural((x.fornecedores||[]).length,'fornecedor','fornecedores')+'</span></button>';}).join('')+(ed?'<button class="add" data-act="addMed">+ Novo medicamento</button>':'')+'</div>';
