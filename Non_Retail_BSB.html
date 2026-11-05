@@ -552,7 +552,7 @@ function diff(a,b){
     (m.linhas||[]).forEach(function(r){ var q=or[r.id], fn=r.fornecedor||'(sem nome)';
       if(!q){ch.push(nm+' · fornecedor incluído: '+fn);return;}
       if((q.preco==null?null:+q.preco)!==(r.preco==null?null:+r.preco)) ch.push(nm+' · '+fn+': preço '+(r.preco!=null?'registrado em '+brl(r.preco):'removido'));
-      ['fornecedor','validade','lote','obs'].forEach(function(c){ if(String(q[c]||'').trim()!==String(r[c]||'').trim()) ch.push(nm+' · '+fn+': '+({fornecedor:'nome do fornecedor',validade:'validade',lote:'lote',obs:'observação'})[c]+' atualizado'); });
+      ['fornecedor','validade','lote','validade2','lote2','validade3','lote3','obs'].forEach(function(c){ if(String(q[c]||'').trim()!==String(r[c]||'').trim()) ch.push(nm+' · '+fn+': '+({fornecedor:'nome do fornecedor',validade:'validade 1',lote:'lote 1',validade2:'validade 2',lote2:'lote 2',validade3:'validade 3',lote3:'lote 3',obs:'observação'})[c]+' atualizado'); });
     });
     (o.linhas||[]).forEach(function(r){ if(!nr[r.id]) ch.push(nm+' · fornecedor removido: '+(r.fornecedor||'(sem nome)')); });
   });
@@ -897,17 +897,17 @@ function renderMedicamentos(d,ref){
     h+='<div class="card" style="margin-top:16px"><div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap"><div style="flex:1;min-width:240px"><div style="'+lbl+'">Medicamento referência</div>'+
       (ed?'<input class="fld" data-b="m:'+i+':nome" value="'+esc(md.nome||'')+'" placeholder="Ex.: MERONEM 500MG 10FA" style="margin-top:6px;font-size:16px;font-weight:700;max-width:520px">':'<div style="margin-top:6px;font-size:18px;font-weight:800">'+esc(md.nome||'(sem nome)')+'</div>')+
       '</div><span class="chip">'+plural(rows.length,'fornecedor','fornecedores')+'</span>'+(ed?'<button class="btn2 danger" data-act="delMed" data-i="'+i+'">Excluir medicamento</button>':'')+'</div>';
-    h+='<div class="scroll" style="margin-top:12px"><table class="t" style="min-width:860px"><thead><tr><th>Fornecedor / distribuidor</th><th class="num">Preço</th><th>Validade</th><th>Lote</th><th>Observação</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
-    if(!rows.length) h+='<tr><td colspan="'+(ed?6:5)+'" class="mut">Nenhum fornecedor cadastrado para este medicamento.</td></tr>';
+    h+='<div class="scroll" style="margin-top:12px"><table class="t" style="min-width:1400px"><thead><tr><th>Fornecedor / distribuidor</th><th class="num">Preço</th><th>Validade 1</th><th>Lote 1</th><th>Validade 2</th><th>Lote 2</th><th>Validade 3</th><th>Lote 3</th><th>Observação</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
+    if(!rows.length) h+='<tr><td colspan="'+(ed?10:9)+'" class="mut">Nenhum fornecedor cadastrado para este medicamento.</td></tr>';
     rows.forEach(function(r,j){
       var k='r:'+i+':'+j+':';
       if(ed) h+='<tr><td><input class="fld" data-b="'+k+'fornecedor" value="'+esc(r.fornecedor||'')+'" placeholder="Ex.: DRS Group" style="min-width:170px"></td>'+
         '<td><input class="fld" type="number" step="0.01" min="0" data-b="'+k+'preco" value="'+(r.preco!=null?r.preco:'')+'" placeholder="R$" style="text-align:right;min-width:110px"></td>'+
-        '<td><input class="fld" data-b="'+k+'validade" value="'+esc(r.validade||'')+'" placeholder="Ex.: fev/27" style="min-width:100px"></td>'+
-        '<td><input class="fld" data-b="'+k+'lote" value="'+esc(r.lote||'')+'" placeholder="Ex.: C000620R" style="min-width:120px"></td>'+
+        ['','2','3'].map(function(n){ return '<td><input class="fld" data-b="'+k+'validade'+n+'" value="'+esc(r['validade'+n]||'')+'" placeholder="Ex.: fev/27" style="min-width:95px"></td>'+
+          '<td><input class="fld" data-b="'+k+'lote'+n+'" value="'+esc(r['lote'+n]||'')+'" placeholder="Ex.: C000620R" style="min-width:115px"></td>'; }).join('')+
         '<td><input class="fld" data-b="'+k+'obs" value="'+esc(r.obs||'')+'" placeholder="Ex.: caixa com 10, estoque zerado" style="min-width:200px"></td>'+
         '<td><button class="xbtn" data-act="delLinha" data-i="'+i+'" data-j="'+j+'" title="Remover fornecedor">×</button></td></tr>';
-      else h+='<tr><td><b>'+esc(r.fornecedor||'')+'</b></td><td class="num">'+(r.preco!=null?brl(r.preco):'<span class="mut">–</span>')+'</td><td>'+(r.validade?esc(r.validade):'<span class="mut">–</span>')+'</td><td>'+(r.lote?esc(r.lote):'<span class="mut">–</span>')+'</td><td>'+(r.obs?esc(r.obs):'<span class="mut">–</span>')+'</td></tr>';
+      else h+='<tr><td><b>'+esc(r.fornecedor||'')+'</b></td><td class="num">'+(r.preco!=null?brl(r.preco):'<span class="mut">–</span>')+'</td>'+['','2','3'].map(function(n){ var vv=r['validade'+n], ll=r['lote'+n]; return '<td>'+(vv?esc(vv):'<span class="mut">–</span>')+'</td><td>'+(ll?esc(ll):'<span class="mut">–</span>')+'</td>'; }).join('')+'<td>'+(r.obs?esc(r.obs):'<span class="mut">–</span>')+'</td></tr>';
     });
     h+='</tbody></table></div>'+(ed?'<div style="margin-top:10px"><button class="btn2" data-act="addLinha" data-i="'+i+'">+ Incluir fornecedor</button></div>':'')+'</div>';
   });
