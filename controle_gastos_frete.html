@@ -87,6 +87,8 @@
     width:40px; height:40px; border-radius:8px; background: var(--accent);
     display:flex; align-items:center; justify-content:center; flex-shrink:0;
   }
+  .btn-tema { background: transparent; color: var(--bg); border: 1px solid var(--header-mute); border-radius: 8px; padding: 9px 12px; font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  .btn-tema:hover { border-color: var(--bg); }
   .header-title { font-size:19px; font-weight:700; letter-spacing:-0.01em; }
   .header-sub { font-size:12.5px; color: var(--header-mute); }
   .btn-primary {
@@ -238,6 +240,23 @@
   ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius:4px; }
 [hidden]:not([hidden=until-found i]){display:none!important}
 </style>
+<script>
+/* Tema claro/escuro: por padrão segue o celular/computador; o botão grava a escolha neste navegador */
+(function(){
+  try{ var t=localStorage.getItem('frete:tema'); if(t==='light'||t==='dark') document.documentElement.setAttribute('data-theme',t); }catch(e){}
+})();
+function temaAtual(){
+  var t=document.documentElement.getAttribute('data-theme');
+  if(t==='light'||t==='dark') return t;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+}
+function toggleTema(){
+  var n=temaAtual()==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',n);
+  try{ localStorage.setItem('frete:tema',n); }catch(e){}
+  var b=document.getElementById('btnTema'); if(b) b.textContent=n==='dark'?'☀ Claro':'☾ Escuro';
+}
+</script>
 </head>
 <body>
 <div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
@@ -1040,7 +1059,10 @@ function render() {
   html += '    <div class="logo-box">' + ICONS.truck + '</div>';
   html += '    <div><div class="header-title sg">Controle de Gastos com Frete</div><div class="header-sub">Transportadoras, motoboys e frete aéreo</div></div>';
   html += '  </div>';
-  html += '  <button class="btn-primary" onclick="openNewForm()">' + ICONS.plus + ' Lançar gasto</button>';
+  html += '  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
+  html += '    <button id="btnTema" class="btn-tema" onclick="toggleTema()">' + (temaAtual()==='dark'?'☀ Claro':'☾ Escuro') + '</button>';
+  html += '    <button class="btn-primary" onclick="openNewForm()">' + ICONS.plus + ' Lançar gasto</button>';
+  html += '  </div>';
   html += '</div>';
 
   html += '<div class="tabs">';
