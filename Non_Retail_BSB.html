@@ -887,6 +887,20 @@ function renderLabs(d,ref){
   return h;
 }
 
+/* prazo do orçamento: quanto falta para vencer */
+function prazoOrc(iso){
+  if(!iso) return '<span class="mut">sem data</span>';
+  var d=days(todayISO(),iso);
+  if(d<0) return '<span class="st declinou" data-tip="O orçamento passou da validade. Peça um novo ao fornecedor."><i>!</i>Vencido há '+plural(-d,'dia','dias')+'</span>';
+  if(d===0) return '<span class="st declinou"><i>!</i>Vence hoje</span>';
+  if(d<=7) return '<span class="st declinou"><i>!</i>Vence em '+plural(d,'dia','dias')+'</span>';
+  if(d<=15) return '<span class="st pendente"><i>!</i>Vence em '+d+' dias</span>';
+  return '<span class="st proposta"><i>✓</i>Válido · '+d+' dias</span>';
+}
+function resumoOrc(rows){
+  var venc=0, logo=0; rows.forEach(function(r){ if(!r.validadeOrc) return; var d=days(todayISO(),r.validadeOrc); if(d<0) venc++; else if(d<=15) logo++; });
+  return (venc?'<span class="st declinou"><i>!</i>'+plural(venc,'orçamento vencido','orçamentos vencidos')+'</span>':'')+(logo?'<span class="st pendente"><i>!</i>'+plural(logo,'orçamento vencendo','orçamentos vencendo')+'</span>':'');
+}
 function renderMedicamentos(d,ref){
   var meds=d.medicamentos||[], ed=canEdit();
   var lbl='font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700';
@@ -896,19 +910,20 @@ function renderMedicamentos(d,ref){
     var rows=md.linhas||[];
     h+='<div class="card" style="margin-top:16px"><div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap"><div style="flex:1;min-width:240px"><div style="'+lbl+'">Medicamento referência</div>'+
       (ed?'<input class="fld" data-b="m:'+i+':nome" value="'+esc(md.nome||'')+'" placeholder="Ex.: MERONEM 500MG 10FA" style="margin-top:6px;font-size:16px;font-weight:700;max-width:520px">':'<div style="margin-top:6px;font-size:18px;font-weight:800">'+esc(md.nome||'(sem nome)')+'</div>')+
-      '</div><span class="chip">'+plural(rows.length,'fornecedor','fornecedores')+'</span>'+(ed?'<button class="btn2 danger" data-act="delMed" data-i="'+i+'">Excluir medicamento</button>':'')+'</div>';
-    h+='<div class="scroll" style="margin-top:12px"><table class="t" style="min-width:1560px"><thead><tr><th>Fornecedor / distribuidor</th><th class="num">Preço</th><th>Validade do orçamento</th><th>Validade 1</th><th>Lote 1</th><th>Validade 2</th><th>Lote 2</th><th>Validade 3</th><th>Lote 3</th><th>Observação</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
-    if(!rows.length) h+='<tr><td colspan="'+(ed?11:10)+'" class="mut">Nenhum fornecedor cadastrado para este medicamento.</td></tr>';
+      '</div>'+resumoOrc(rows)+'<span class="chip">'+plural(rows.length,'fornecedor','fornecedores')+'</span>'+(ed?'<button class="btn2 danger" data-act="delMed" data-i="'+i+'">Excluir medicamento</button>':'')+'</div>';
+    h+='<div class="scroll" style="margin-top:12px"><table class="t" style="min-width:1720px"><thead><tr><th>Fornecedor / distribuidor</th><th class="num">Preço</th><th>Validade do orçamento</th><th>Prazo do orçamento</th><th>Lote 1</th><th>Validade 1</th><th>Lote 2</th><th>Validade 2</th><th>Lote 3</th><th>Validade 3</th><th>Observação</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
+    if(!rows.length) h+='<tr><td colspan="'+(ed?12:11)+'" class="mut">Nenhum fornecedor cadastrado para este medicamento.</td></tr>';
     rows.forEach(function(r,j){
       var k='r:'+i+':'+j+':';
       if(ed) h+='<tr><td><input class="fld" data-b="'+k+'fornecedor" value="'+esc(r.fornecedor||'')+'" placeholder="Ex.: DRS Group" style="min-width:170px"></td>'+
         '<td><input class="fld" type="number" step="0.01" min="0" data-b="'+k+'preco" value="'+(r.preco!=null?r.preco:'')+'" placeholder="R$" style="text-align:right;min-width:110px"></td>'+
         '<td><input class="fld" type="date" data-b="'+k+'validadeOrc" value="'+esc(r.validadeOrc||'')+'" style="min-width:140px"></td>'+
-        ['','2','3'].map(function(n){ return '<td><input class="fld" data-b="'+k+'validade'+n+'" value="'+esc(r['validade'+n]||'')+'" placeholder="Ex.: fev/27" style="min-width:95px"></td>'+
-          '<td><input class="fld" data-b="'+k+'lote'+n+'" value="'+esc(r['lote'+n]||'')+'" placeholder="Ex.: C000620R" style="min-width:115px"></td>'; }).join('')+
+        '<td>'+prazoOrc(r.validadeOrc)+'</td>'+
+        ['','2','3'].map(function(n){ return '<td><input class="fld" data-b="'+k+'lote'+n+'" value="'+esc(r['lote'+n]||'')+'" placeholder="Ex.: C000620R" style="min-width:115px"></td>'+
+          '<td><input class="fld" data-b="'+k+'validade'+n+'" value="'+esc(r['validade'+n]||'')+'" placeholder="Ex.: fev/27" style="min-width:95px"></td>'; }).join('')+
         '<td><input class="fld" data-b="'+k+'obs" value="'+esc(r.obs||'')+'" placeholder="Ex.: caixa com 10, estoque zerado" style="min-width:200px"></td>'+
         '<td><button class="xbtn" data-act="delLinha" data-i="'+i+'" data-j="'+j+'" title="Remover fornecedor">×</button></td></tr>';
-      else h+='<tr><td><b>'+esc(r.fornecedor||'')+'</b></td><td class="num">'+(r.preco!=null?brl(r.preco):'<span class="mut">–</span>')+'</td><td>'+(r.validadeOrc?br(r.validadeOrc)+' <span style="margin-left:4px">'+vencimentoHtml(r.validadeOrc)+'</span>':'<span class="mut">–</span>')+'</td>'+['','2','3'].map(function(n){ var vv=r['validade'+n], ll=r['lote'+n]; return '<td>'+(vv?esc(vv):'<span class="mut">–</span>')+'</td><td>'+(ll?esc(ll):'<span class="mut">–</span>')+'</td>'; }).join('')+'<td>'+(r.obs?esc(r.obs):'<span class="mut">–</span>')+'</td></tr>';
+      else h+='<tr><td><b>'+esc(r.fornecedor||'')+'</b></td><td class="num">'+(r.preco!=null?brl(r.preco):'<span class="mut">–</span>')+'</td><td>'+(r.validadeOrc?br(r.validadeOrc):'<span class="mut">–</span>')+'</td><td>'+prazoOrc(r.validadeOrc)+'</td>'+['','2','3'].map(function(n){ var vv=r['validade'+n], ll=r['lote'+n]; return '<td>'+(ll?esc(ll):'<span class="mut">–</span>')+'</td><td>'+(vv?esc(vv):'<span class="mut">–</span>')+'</td>'; }).join('')+'<td>'+(r.obs?esc(r.obs):'<span class="mut">–</span>')+'</td></tr>';
     });
     h+='</tbody></table></div>'+(ed?'<div style="margin-top:10px"><button class="btn2" data-act="addLinha" data-i="'+i+'">+ Incluir fornecedor</button></div>':'')+'</div>';
   });
@@ -1315,7 +1330,7 @@ function carregaBanco(){
   }).then(function(v){
     aplicaBanco(v); checkDraft(); render();
     ref.on('value',function(s){
-      var nv=s.val(); if(!nv||!nv.current) return;
+      var nv=s.val(); if(!nv||!nv.current||salvandoAgora) return;
       var novaVersao = nv.history && Object.keys(nv.history).length !== store.history.length;
       var mudouAtual = canon(nv.current)!==canon(store.current);
       if(!novaVersao && !mudouAtual) return;
@@ -1329,15 +1344,18 @@ function carregaBanco(){
     toast('Dados não carregados. Veja a mensagem na tela.',true);
   });
 }
+var salvandoAgora=false;
 function salvarNoBanco(e){
   var ref=firebase.database().ref('eqEstudos');
   return ref.child('history').once('value').then(function(snap){
     if(snap.numChildren()!==store.history.length) throw new Error('Outra pessoa salvou uma versão agora. Recarregue a página, confira e salve de novo.');
     var upd={}; upd['current']=clone(state); upd['history/v'+e.v]=e;
+    salvandoAgora=true;
     return ref.update(upd);
   }).then(function(){
+    salvandoAgora=false;
     store.history.push(e); store.current=clone(state); dirty=false; pendingOrigin=null; editMode=false; lsDel(KEY+':draft');
-  });
+  }).catch(function(err){ salvandoAgora=false; throw err; });
 }
 window.__startApp=carregaBanco;
 
