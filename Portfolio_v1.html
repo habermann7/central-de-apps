@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Portfólio · EquivLab</title>
+<title>EquivLab · Inteligência em Estudos de Equivalência</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
@@ -372,7 +372,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
   <div class="brand">
     <div class="logo" aria-hidden="true"><span>EQ</span><span class="logo-dot"></span></div>
     <div style="min-width:0">
-      <div class="t1" id="docTitle">Portfólio</div>
+      <div class="t1" id="docTitle">Estudos de Equivalência</div>
       <div class="t2" id="objetivo">Gestão e inteligência do portfólio</div>
     </div>
   </div>
@@ -395,9 +395,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 </header>
 <nav class="tabs" id="tabs">
   <button data-tab="overview" class="on"><span class="nav-icon">◫</span> Visão geral</button>
-  <button data-tab="studies"><span class="nav-icon">▤</span> Ativos</button>
-  <button data-tab="produtos"><span class="nav-icon">▦</span> Produtos</button>
-  <button data-tab="fornecedores"><span class="nav-icon">◈</span> Fornecedores</button>
+  <button data-tab="studies"><span class="nav-icon">▤</span> Estudos</button>
+  <button data-tab="labs"><span class="nav-icon">◈</span> Laboratórios</button>
   <button data-tab="history"><span class="nav-icon">◷</span> Histórico <span class="count" id="histCount"></span></button>
 </nav>
 <div class="banner" id="banner"></div>
@@ -465,7 +464,7 @@ function isoFromUTC(t){var d=new Date(t);return d.getUTCFullYear()+'-'+pad(d.get
 function uid(){return 's'+Math.random().toString(36).slice(2,9);}
 function plural(n,s,p){return n+' '+(n===1?s:p);}
 
-function niceTitle(t){return !t||norm(t)==='estudos de equivalencia'||norm(t)==='portfolio'?'Portfólio':t;}
+function niceTitle(t){return !t||norm(t)==='estudos de equivalencia'?'Estudos de Equivalência':t;}
 function data(){return view.version!=null ? store.history[view.version].snapshot : state;}
 function refDate(){return view.version!=null ? store.history[view.version].ts.slice(0,10) : todayISO();}
 function lastEntry(){return store.history[store.history.length-1];}
@@ -522,11 +521,6 @@ function diff(a,b){
   var ch=[], am={}, bm={};
   a.studies.forEach(function(s){am[norm(s.nome)]=s;});
   b.studies.forEach(function(s){bm[norm(s.nome)]=s;});
-  var op={}, np={};
-  prodList(a).forEach(function(p){op[norm(p.nome)]=p;});
-  prodList(b).forEach(function(p){np[norm(p.nome)]=p;});
-  prodList(b).forEach(function(p){ var q=op[norm(p.nome)]; if(!q) ch.push('Produto cadastrado: '+p.nome); else if((q.desc||'').trim()!==(p.desc||'').trim()) ch.push('Produto '+p.nome+': descrição '+(p.desc?'atualizada':'removida')); });
-  prodList(a).forEach(function(p){ if(!np[norm(p.nome)]) ch.push('Produto removido do cadastro: '+p.nome); });
   b.studies.forEach(function(s){ if(!am[norm(s.nome)]) ch.push('Estudo incluído: '+s.nome+' ('+plural(s.labs.length,'laboratório','laboratórios')+')'); });
   a.studies.forEach(function(s){ if(!bm[norm(s.nome)]) ch.push('Estudo removido: '+s.nome); });
   b.studies.forEach(function(s){
@@ -534,7 +528,6 @@ function diff(a,b){
     FIELDS.forEach(function(f){var k=f[0]; var x=o[k]||'', y=s[k]||''; if(String(x).trim()!==String(y).trim()){
       if(k==='solicitacao') ch.push(s.nome+' · data de solicitação alterada de '+br(x||null)+' para '+br(y||null));
       else ch.push(s.nome+' · campo "'+f[1]+'" atualizado');}});
-    if(JSON.stringify(o.artigos||[])!==JSON.stringify(s.artigos||[])) ch.push(s.nome+' · artigos científicos alterados ('+plural((s.artigos||[]).length,'artigo','artigos')+' agora)');
     var ol={}, nl={};
     o.labs.forEach(function(l){ol[norm(l.lab)]=l;}); s.labs.forEach(function(l){nl[norm(l.lab)]=l;});
     s.labs.forEach(function(l){
@@ -543,7 +536,6 @@ function diff(a,b){
       if(p.status!==l.status) ch.push(s.nome+' · '+l.lab+': situação alterada de "'+ST[p.status].label+'" para "'+ST[l.status].label+'"');
       if((p.data||'')!==(l.data||'')) ch.push(s.nome+' · '+l.lab+': última atualização alterada de '+br(p.data)+' para '+br(l.data));
       if((p.obs||'').trim()!==(l.obs||'').trim()) ch.push(s.nome+' · '+l.lab+': observação '+(l.obs?'atualizada para "'+l.obs.trim()+'"':'removida'));
-      if((p.produto||'').trim()!==(l.produto||'').trim()) ch.push(s.nome+' · '+l.lab+': produto '+(l.produto?'informado como "'+l.produto.trim()+'"':'removido'));
       if((p.validade||'')!==(l.validade||'')) ch.push(s.nome+' · '+l.lab+': validade da proposta '+(l.validade?'registrada para '+br(l.validade):'removida'));
       if((p.valor==null?null:+p.valor)!==(l.valor==null?null:+l.valor)) ch.push(s.nome+' · '+l.lab+': valor da proposta '+(l.valor!=null?'registrado em '+brl(l.valor):'removido'));
     });
@@ -566,7 +558,7 @@ function parseRows(rows){
   var hdr=-1;
   for(var i=0;i<rows.length;i++){ if(norm(rows[i][0]).indexOf('estudo')===0 && norm(rows[i][1]).indexOf('apresenta')===0){hdr=i;break;} }
   if(hdr<0) throw new Error('Não encontrei o cabeçalho "Estudos | Apresentações | Classe ..." na planilha.');
-  var head=S(rows[0]&&rows[0][0]).split('\n'), meta={titulo:head[0]?head[0].trim():'Portfólio', objetivo:head.slice(1).join(' ').trim()};
+  var head=S(rows[0]&&rows[0][0]).split('\n'), meta={titulo:head[0]?head[0].trim():'Estudos de Equivalência', objetivo:head.slice(1).join(' ').trim()};
   var studies=[];
   for(i=hdr+1;i<rows.length;i++){
     var r=rows[i], a=S(r[0]); if(!a) break; if(norm(a).indexOf('estudos no portfolio')===0||norm(a).indexOf('laboratorios cotados')===0) break;
@@ -579,12 +571,12 @@ function parseRows(rows){
     s.solicitacao=cellDate(rows[i][1]);
     var j=i+1; while(j<rows.length && norm(rows[j][0]).indexOf('laborat')!==0) j++;
     if(j>=rows.length) continue;
-    var h=rows[j].map(norm), cD=1,cS=2,cO=3,cV=-1,cX=-1,cP=-1;
-    h.forEach(function(x,k){ if(/ultima|atualiza/.test(x))cD=k; else if(/situa|status/.test(x))cS=k; else if(/observa/.test(x))cO=k; else if(/validade/.test(x))cX=k; else if(/produto/.test(x))cP=k; else if(/valor|orcamento/.test(x))cV=k; });
+    var h=rows[j].map(norm), cD=1,cS=2,cO=3,cV=-1,cX=-1;
+    h.forEach(function(x,k){ if(/ultima|atualiza/.test(x))cD=k; else if(/situa|status/.test(x))cS=k; else if(/observa/.test(x))cO=k; else if(/validade/.test(x))cX=k; else if(/valor|orcamento/.test(x))cV=k; });
     for(j=j+1;j<rows.length;j++){
       var rr=rows[j], la=S(rr[0]); if(!la || byName[norm(la)]) break;
       var obs=S(rr[cO]); var val=cV>=0&&rr[cV]!=null&&rr[cV]!==''?(typeof rr[cV]==='number'?rr[cV]:parseMoney('R$ '+rr[cV])):parseMoney(obs);
-      s.labs.push({lab:la.replace(/^\d+\s*[.)-]\s*/,''),produto:cP>=0?S(rr[cP]):'',data:cellDate(rr[cD]),status:normStatus(rr[cS]),obs:obs,valor:val,validade:cX>=0?cellDate(rr[cX]):null});
+      s.labs.push({lab:la.replace(/^\d+\s*[.)-]\s*/,''),data:cellDate(rr[cD]),status:normStatus(rr[cS]),obs:obs,valor:val,validade:cX>=0?cellDate(rr[cX]):null});
     }
   }
   if(!studies.length) throw new Error('Nenhum estudo encontrado abaixo do cabeçalho.');
@@ -603,7 +595,6 @@ function importFile(file){
       if(!state) throw new Error('Os dados do painel ainda não carregaram. Recarregue a página e tente de novo.');
       var old={}; state.studies.forEach(function(s){old[norm(s.nome)]=s.id;});
       parsed.studies.forEach(function(s){ if(old[norm(s.nome)]) s.id=old[norm(s.nome)]; });
-      parsed.produtos=clone(prodList(state));
       state=parsed; pendingOrigin='Planilha importada ('+file.name+')';
       markDirty(); view.version=null; render(); openSave();
     }catch(e){ toast('Não foi possível ler a planilha: '+e.message,'err'); }
@@ -825,40 +816,16 @@ function fieldView(s,k,label,cls,wide){
   }
   return '<div'+(wide?' class="wide"':'')+'><div class="l">'+label+'</div><div class="v '+(cls||'')+'">'+(k==='solicitacao'?br(v||null):esc(v||'s/ informação'))+'</div></div>';
 }
-function artOf(st){ if(!st.artigos) st.artigos=[]; return st.artigos; }
 function renderStudies(d,ref){
-  if(!d.studies.length) return '<div class="empty">Nenhum ativo cadastrado.'+(canEdit()?' <button class="lnk" data-act="addStudy">Incluir ativo</button>':'')+'</div>';
-  var s=d.studies.filter(function(x){return x.id===view.study;})[0]||d.studies[0]; view.study=s.id;
-  var m=metrics(s,ref), ed=canEdit(), arts=artOf(s);
-  var h='<div class="selector" aria-label="Selecionar ativo">'+d.studies.map(function(x){var mm=metrics(x,ref);var col={good:ST.proposta.hex,info:ST.analise.hex,warn:ST.pendente.hex,crit:ST.declinou.hex}[mm.health.k];
-    return '<button data-study="'+x.id+'" class="'+(x.id===s.id?'on':'')+'"><span class="dot" style="background:'+col+'"></span>'+esc(x.nome)+'</button>';}).join('')+(ed?'<button class="add" data-act="addStudy">+ Novo ativo</button>':'')+'</div>';
-  h+='<div class="'+(ed?'editing':'')+'"><div class="shead"><div><h1>'+(ed?'<input class="fld" style="font:800 24px Manrope,Inter,sans-serif;max-width:420px" data-b="s:nome" value="'+esc(s.nome)+'">':esc(s.nome))+'</h1><div class="chips"><span class="health '+m.health.k+'">'+m.health.label+'</span>'+(s.classe?'<span class="chip">'+esc(s.classe)+'</span>':'')+(ed?'<span class="edit-flag">Editando</span>':'')+'</div></div><div class="sp"></div>'+
-    '<button class="btn2" data-act="pdfStudy">PDF deste ativo</button>'+(ed?'<button class="btn2 danger" data-act="delStudy">Excluir estudo</button>':'')+'</div>';
-  h+='<div class="info-grid">'+fieldView(s,'descricao','Descrição do ativo','txt',true)+fieldView(s,'filtros','Filtros utilizados','txt',true)+
-    '<div><div class="l">Nº de artigos científicos</div><div class="v">'+arts.length+'</div></div></div>';
-  h+='<div class="card" style="margin-top:16px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div><h3>Artigos científicos</h3><div class="cap" style="margin:0">Uma linha por artigo encontrado com o filtro deste ativo</div></div><div style="flex:1"></div>'+(ed?'<button class="btn2 pri" data-act="addArt">+ Incluir artigo</button>':'')+'</div>';
-  if(!arts.length){ h+='<div class="empty" style="margin-top:10px">Nenhum artigo cadastrado.</div></div>'; return h; }
-  h+='<div class="scroll" style="margin-top:10px"><table class="t" style="min-width:980px"><thead><tr><th>Título do artigo</th><th>Ano</th><th>Base científica</th><th>Revista</th><th>Link para acesso</th><th>Tipo de estudo</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
-  arts.forEach(function(r,i){
-    if(ed){
-      h+='<tr><td><input class="fld" data-b="ar:'+i+':titulo" value="'+esc(r.titulo||'')+'" style="min-width:240px"></td><td><input class="fld" type="number" data-b="ar:'+i+':ano" value="'+esc(r.ano||'')+'" style="min-width:90px"></td><td><input class="fld" list="dlBase" data-b="ar:'+i+':base" value="'+esc(r.base||'')+'" style="min-width:140px"></td><td><input class="fld" data-b="ar:'+i+':revista" value="'+esc(r.revista||'')+'" style="min-width:150px"></td><td><input class="fld" type="url" data-b="ar:'+i+':link" value="'+esc(r.link||'')+'" placeholder="https://" style="min-width:180px"></td><td><input class="fld" list="dlTipo" data-b="ar:'+i+':tipo" value="'+esc(r.tipo||'')+'" style="min-width:170px"></td><td><button class="xbtn" data-act="delArt" data-i="'+i+'" title="Remover artigo">×</button></td></tr>';
-    } else {
-      h+='<tr><td>'+esc(r.titulo||'')+'</td><td>'+esc(r.ano||'')+'</td><td>'+esc(r.base||'')+'</td><td>'+esc(r.revista||'')+'</td><td>'+(r.link?'<a href="'+esc(r.link)+'" target="_blank" rel="noopener">Abrir</a>':'<span class="mut">s/ link</span>')+'</td><td>'+esc(r.tipo||'')+'</td></tr>';
-    }
-  });
-  h+='</tbody></table></div><datalist id="dlBase"><option value="PubMed"><option value="Scopus"><option value="Web of Science"><option value="SciELO"><option value="Google Acadêmico"><option value="Cochrane"><option value="Embase"></datalist>'+
-    '<datalist id="dlTipo"><option value="Ensaio clínico randomizado"><option value="Estudo de coorte"><option value="Caso-controle"><option value="Estudo transversal"><option value="Revisão sistemática"><option value="Metanálise"><option value="Relato de caso"><option value="Estudo de farmacocinética"></datalist></div>';
-  return h;
-}
-
-/* Fornecedores: cotações (laboratórios) do ativo selecionado */
-function renderFornecedores(d,ref){
-  if(!d.studies.length) return '<div class="empty">Nenhum ativo cadastrado.</div>';
+  if(!d.studies.length) return '<div class="empty">Nenhum estudo cadastrado.'+(canEdit()?' <button class="lnk" data-act="addStudy">Incluir estudo</button>':'')+'</div>';
   var s=d.studies.filter(function(x){return x.id===view.study;})[0]||d.studies[0]; view.study=s.id;
   var m=metrics(s,ref), ed=canEdit();
-  var h='<div class="selector" aria-label="Selecionar ativo">'+d.studies.map(function(x){var mm=metrics(x,ref);var col={good:ST.proposta.hex,info:ST.analise.hex,warn:ST.pendente.hex,crit:ST.declinou.hex}[mm.health.k];
-    return '<button data-study="'+x.id+'" class="'+(x.id===s.id?'on':'')+'"><span class="dot" style="background:'+col+'"></span>'+esc(x.nome)+'</button>';}).join('')+(ed?'<button class="add" data-act="addStudy">+ Novo ativo</button>':'')+'</div>';
-  h+='<h1 style="margin:14px 0 4px">'+esc(s.nome)+'</h1>';
+  var h='<div class="selector" aria-label="Selecionar estudo">'+d.studies.map(function(x){var mm=metrics(x,ref);var col={good:ST.proposta.hex,info:ST.analise.hex,warn:ST.pendente.hex,crit:ST.declinou.hex}[mm.health.k];
+    return '<button data-study="'+x.id+'" class="'+(x.id===s.id?'on':'')+'"><span class="dot" style="background:'+col+'"></span>'+esc(x.nome)+'</button>';}).join('')+(ed?'<button class="add" data-act="addStudy">+ Novo estudo</button>':'')+'</div>';
+  h+='<div class="'+(ed?'editing':'')+'"><div class="shead"><div><h1>'+(ed?'<input class="fld" style="font:800 24px Manrope,Inter,sans-serif;max-width:420px" data-b="s:nome" value="'+esc(s.nome)+'">':esc(s.nome))+'</h1><div class="chips"><span class="health '+m.health.k+'">'+m.health.label+'</span>'+(s.classe?'<span class="chip">'+esc(s.classe)+'</span>':'')+(ed?'<span class="edit-flag">Editando</span>':'')+'</div></div><div class="sp"></div>'+
+    '<button class="btn2" data-act="pdfStudy">PDF deste estudo</button>'+(ed?'<button class="btn2 danger" data-act="delStudy">Excluir estudo</button>':'')+'</div>';
+  h+='<div class="info-grid">'+fieldView(s,'apresentacoes','Apresentações')+fieldView(s,'classe','Classe')+fieldView(s,'referencia','Medicamento de referência')+fieldView(s,'companhia','Companhia')+fieldView(s,'solicitacao','Data de solicitação')+
+    '<div><div class="l">Dias em aberto</div><div class="v">'+(m.dias!=null?m.dias+' dias':'s/ data')+'</div></div>'+fieldView(s,'indicacao','Para que serve','txt',true)+'</div>';
   h+='<div class="kpis" style="margin-top:16px">'+kpi('Laboratórios cotados',m.total,'','var(--muted)')+kpi('Em análise',m.c.analise,m.c.pendente?m.c.pendente+' pendente(s)':'',ST.analise.hex)+kpi('Propostas',m.c.proposta,m.best!=null?'menor: '+brl(m.best):'',ST.proposta.hex)+kpi('Declinaram',m.c.declinou+'<small>'+pct(m.c.declinou,m.total)+'</small>','',ST.declinou.hex)+
     kpi('Última movimentação',m.last?br(m.last).slice(0,5):'s/ data',m.semMov!=null?'há '+plural(m.semMov,'dia','dias'):'','var(--brand-2)')+'</div>';
   var fun=[['Cotados',m.total,'#184f95'],['Ainda ativos',m.ativos,'#2a78d6'],['Com proposta',m.c.proposta,'#0ca30c']];
@@ -869,15 +836,15 @@ function renderFornecedores(d,ref){
   h+='<div class="card" style="margin-top:16px"><h3>Linha do tempo por laboratório</h3><div class="cap">Traço colorido: tempo da solicitação até a última atualização. Tracejado: tempo sem nova atualização.</div>'+
     timeline(s.labs.map(function(l){return {label:l.lab,start:s.solicitacao,end:l.data?(days(l.data,ref)+' d'):'s/ data',points:[{date:l.data,status:l.status,tip:l.lab+': '+ST[l.status].label+'\nÚltima atualização: '+br(l.data)+(l.obs?'\n'+l.obs:'')}]};}),ref,{mode:'study',rowH:38,labelW:120,refLabel:view.version!=null?'Ref.':'Hoje'})+
     '<div style="margin-top:12px">'+legend()+'</div></div>';
-  h+='<div class="card" style="margin-top:16px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div><h3>Laboratórios cotados</h3><div class="cap" style="margin:0">Situação, última atualização e observações</div></div><div style="flex:1"></div>'+(ed?'<button class="btn2 pri" data-act="addLab">+ Incluir laboratório</button>':'')+'</div><div class="scroll" style="margin-top:10px"><table class="t" style="min-width:1080px"><thead><tr><th>Laboratório</th><th>Produto</th><th>Situação</th><th>Última atualização</th><th>Observação</th><th class="num">Valor da proposta</th><th>Validade da proposta</th><th>Vencimento</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
+  h+='<div class="card" style="margin-top:16px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div><h3>Laboratórios cotados</h3><div class="cap" style="margin:0">Situação, última atualização e observações</div></div><div style="flex:1"></div>'+(ed?'<button class="btn2 pri" data-act="addLab">+ Incluir laboratório</button>':'')+'</div><div class="scroll" style="margin-top:10px"><table class="t" style="min-width:1080px"><thead><tr><th>Laboratório</th><th>Situação</th><th>Última atualização</th><th class="num">Dias sem atualização</th><th>Observação</th><th class="num">Valor da proposta</th><th>Validade da proposta</th><th>Vencimento</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
   s.labs.forEach(function(l,i){
     if(ed){
-      h+='<tr><td><input class="fld" data-b="l:'+i+':lab" value="'+esc(l.lab)+'" style="min-width:110px"></td><td><input class="fld" list="dlProdutos" data-b="l:'+i+':produto" value="'+esc(l.produto||'')+'" placeholder="Produto" style="min-width:150px"></td><td><select class="fld" data-b="l:'+i+':status">'+KEYS.map(function(k){return '<option value="'+k+'"'+(k===l.status?' selected':'')+'>'+ST[k].label+'</option>';}).join('')+'</select></td>'+
-        '<td><input class="fld" type="date" data-b="l:'+i+':data" value="'+esc(l.data||'')+'"></td><td><input class="fld" data-b="l:'+i+':obs" value="'+esc(l.obs||'')+'" placeholder="Observação"></td>'+
+      h+='<tr><td><input class="fld" data-b="l:'+i+':lab" value="'+esc(l.lab)+'" style="min-width:110px"></td><td><select class="fld" data-b="l:'+i+':status">'+KEYS.map(function(k){return '<option value="'+k+'"'+(k===l.status?' selected':'')+'>'+ST[k].label+'</option>';}).join('')+'</select></td>'+
+        '<td><input class="fld" type="date" data-b="l:'+i+':data" value="'+esc(l.data||'')+'"></td><td class="num mut">'+(l.data?days(l.data,ref):'')+'</td><td><input class="fld" data-b="l:'+i+':obs" value="'+esc(l.obs||'')+'" placeholder="Observação"></td>'+
         '<td><input class="fld" type="number" step="0.01" min="0" data-b="l:'+i+':valor" value="'+(l.valor!=null?l.valor:'')+'" placeholder="R$" style="text-align:right;min-width:120px"></td><td><input class="fld" type="date" data-b="l:'+i+':validade" value="'+esc(l.validade||'')+'" style="min-width:140px"></td><td>'+vencimentoHtml(l.validade)+'</td><td><button class="xbtn" data-act="delLab" data-i="'+i+'" title="Remover laboratório">×</button></td></tr>';
     } else {
       var warn=l.data&&s.solicitacao&&l.data<s.solicitacao;
-      h+='<tr><td><b>'+esc(l.lab)+'</b></td><td>'+(l.produto?esc(l.produto):'<span class="mut">s/ produto</span>')+'</td><td>'+stBadge(l.status)+'</td><td>'+br(l.data)+(warn?' <span class="st pendente" data-tip="Data anterior à solicitação. Conferir."><i>!</i>conferir</span>':'')+'</td><td>'+(l.obs?esc(l.obs):'<span class="mut">s/ observação</span>')+'</td><td class="num">'+(l.valor!=null?brl(l.valor):'<span class="mut">s/ proposta</span>')+'</td><td>'+(l.validade?br(l.validade):'<span class="mut">s/ validade</span>')+'</td><td>'+vencimentoHtml(l.validade)+'</td></tr>';
+      h+='<tr><td><b>'+esc(l.lab)+'</b></td><td>'+stBadge(l.status)+'</td><td>'+br(l.data)+(warn?' <span class="st pendente" data-tip="Data anterior à solicitação. Conferir."><i>!</i>conferir</span>':'')+'</td><td class="num">'+(l.data?days(l.data,ref):'<span class="mut">s/ data</span>')+'</td><td>'+(l.obs?esc(l.obs):'<span class="mut">s/ observação</span>')+'</td><td class="num">'+(l.valor!=null?brl(l.valor):'<span class="mut">s/ proposta</span>')+'</td><td>'+(l.validade?br(l.validade):'<span class="mut">s/ validade</span>')+'</td><td>'+vencimentoHtml(l.validade)+'</td></tr>';
     }
   });
   h+='</tbody></table></div></div>';
@@ -888,7 +855,6 @@ function renderFornecedores(d,ref){
   h+='</div>';
   return h;
 }
-
 
 function renderLabs(d,ref){
   var labs=labOrder(d), rows=labs.map(function(ln){
@@ -941,66 +907,28 @@ function render(){
   $$('#tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.tab===view.tab);});
   var bn='';
   if(view.version!=null){var e=store.history[view.version]; bn+='<div class="b info"><span>Você está visualizando a <b>versão '+e.v+'</b>, salva em '+brTs(e.ts)+'. Os dados são somente leitura nesta visualização.</span><span class="sp"></span><button class="lnk" data-act="viewCurrent">Voltar à versão atual</button></div>';}
-  else if(editMode) bn+='<div class="b warn"><span><b>Modo edição ativo.</b> Altere os dados nas abas Ativos, Produtos e Fornecedores. Ao terminar, clique em <b>Salvar versão</b> para registrar no histórico. Para o PDF, use o botão <b>Gerar PDF</b>.</span></div>';
-  if(draftOffer) bn+='<div class="b warn" style="margin-top:8px"><span>Existe um rascunho não salvo deste painel '+(draftCloud?'guardado na nuvem por <b>'+esc(draftCloud.autor||'alguém')+'</b>':'guardado neste navegador')+'.</span><span class="sp"></span><button class="lnk" data-act="restoreDraft">Recuperar</button><button class="lnk" data-act="dropDraft">Descartar</button></div>';
+  else if(editMode) bn+='<div class="b warn"><span><b>Modo edição ativo.</b> Altere os dados na aba Estudos. Ao terminar, clique em <b>Salvar versão</b> para registrar no histórico. Para o PDF, use o botão <b>Gerar PDF</b>.</span></div>';
+  if(draftOffer) bn+='<div class="b warn" style="margin-top:8px"><span>Existem alterações não salvas deste painel guardadas neste navegador.</span><span class="sp"></span><button class="lnk" data-act="restoreDraft">Recuperar</button><button class="lnk" data-act="dropDraft">Descartar</button></div>';
   $('#banner').innerHTML=bn;
-  var html = view.tab==='overview'?renderOverview(d,ref):view.tab==='studies'?renderStudies(d,ref):view.tab==='fornecedores'?renderFornecedores(d,ref):view.tab==='produtos'?renderProdutos(d):renderHistory();
-  if(state) html+='<datalist id="dlProdutos">'+prodList(state).map(function(p){return '<option value="'+esc(p.nome)+'">';}).join('')+'</datalist>';
+  var html = view.tab==='overview'?renderOverview(d,ref):view.tab==='studies'?renderStudies(d,ref):view.tab==='labs'?renderLabs(d,ref):renderHistory();
   if(view.tab!=='overview'){
-    var pageInfo=view.tab==='studies'?['ATIVOS','Ativos do portfólio','Informações de cada ativo e seus artigos científicos.']:
-      view.tab==='fornecedores'?['COTAÇÕES','Fornecedores','Cotações de cada fornecedor para o ativo selecionado: situação, valor e validade.']:
-      view.tab==='produtos'?['CADASTRO','Produtos','Cadastro geral dos produtos. Os nomes cadastrados aqui aparecem ao preencher o campo Produto dos laboratórios.']:
+    var pageInfo=view.tab==='studies'?['ESTUDOS','Detalhamento dos estudos','Dados técnicos, propostas e acompanhamento de cada laboratório.']:
+      view.tab==='labs'?['REDE DE LABORATÓRIOS','Laboratórios consultados','Panorama consolidado das participações e últimas movimentações.']:
       ['RASTREABILIDADE','Histórico de versões','Consulte mudanças, responsáveis e versões anteriores.'];
     html='<div class="page-intro"><span class="section-kicker">'+pageInfo[0]+'</span><h1>'+pageInfo[1]+'</h1><p>'+pageInfo[2]+'</p></div>'+html;
   }
   $('#app').innerHTML=html;
   if(view.tab==='overview')applyOverviewFilter();
-  $('#foot').innerHTML='EQUIVLAB  /  Portfólio · Versão '+L.v+' salva em '+brTs(L.ts)+(L.autor?' por '+esc(L.autor):'')+' · Dias calculados até '+br(ref)+(RO?' · Cópia somente leitura':'');
-}
-
-/* ===================== produtos (cadastro independente dos estudos) ===================== */
-function prodList(d){ if(d && !d.produtos) d.produtos=[]; return d?d.produtos:[]; }
-function vinculosProduto(d,nome){
-  var k=norm(nome), e={}, n=0;
-  if(!k) return {estudos:0,labs:0};
-  d.studies.forEach(function(s){ s.labs.forEach(function(l){ if(norm(l.produto)===k){ n++; e[s.id]=1; } }); });
-  return {estudos:Object.keys(e).length, labs:n};
-}
-function renderProdutos(d){
-  var ed=canEdit(), lista=prodList(d);
-  var h='<div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div><h3>Produtos cadastrados</h3><div class="cap" style="margin:0">Cadastro geral, separado dos estudos. Mostra em quantos estudos e laboratórios cada produto aparece.</div></div><div style="flex:1"></div>'+(ed?'<button class="btn2 pri" data-act="addProd">+ Incluir produto</button>':'')+'</div>';
-  if(!lista.length){ return h+'<div style="padding:24px 0;text-align:center"><span class="mut">Nenhum produto cadastrado ainda.'+(ed?' Use “+ Incluir produto”.':'')+'</span></div></div>'; }
-  h+='<div class="scroll" style="margin-top:10px"><table class="t" style="min-width:720px"><thead><tr><th>Produto</th><th>Descrição / observação</th><th class="num">Estudos</th><th class="num">Cotações</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
-  lista.forEach(function(p,i){
-    var v=vinculosProduto(d,p.nome);
-    if(ed) h+='<tr><td><input class="fld" data-b="p:'+i+':nome" value="'+esc(p.nome)+'" placeholder="Nome do produto" style="min-width:160px"></td><td><input class="fld" data-b="p:'+i+':desc" value="'+esc(p.desc||'')+'" placeholder="Descrição" style="min-width:240px"></td><td class="num">'+v.estudos+'</td><td class="num">'+v.labs+'</td><td><button class="xbtn" data-act="delProd" data-i="'+i+'" title="Remover produto">×</button></td></tr>';
-    else h+='<tr><td><b>'+esc(p.nome)+'</b></td><td>'+(p.desc?esc(p.desc):'<span class="mut">s/ descrição</span>')+'</td><td class="num">'+v.estudos+'</td><td class="num">'+v.labs+'</td></tr>';
-  });
-  return h+'</tbody></table></div></div>';
+  $('#foot').innerHTML='EQUIVLAB  /  Estudos de Equivalência · Versão '+L.v+' salva em '+brTs(L.ts)+(L.autor?' por '+esc(L.autor):'')+' · Dias calculados até '+br(ref)+(RO?' · Cópia somente leitura':'');
 }
 
 /* ===================== edição ===================== */
 var draftOffer=false;
-function markDirty(){dirty=true; lsSet(KEY+':draft',JSON.stringify({base:store.history.length,state:state,origin:pendingOrigin})); agendaRascunhoNuvem();}
-/* rascunho compartilhado na nuvem (eqEstudos/rascunho): salva sozinho alguns segundos após a última alteração */
-var cloudTimer=null, draftCloud=null;
-function agendaRascunhoNuvem(){ clearTimeout(cloudTimer); cloudTimer=setTimeout(salvaRascunhoNuvem,2000); }
-function salvaRascunhoNuvem(){
-  if(!dirty||!state||RO) return;
-  try{ firebase.database().ref('eqEstudos/rascunho').set({base:store.history.length, state:clone(state), origin:pendingOrigin||'Edição manual', autor:(firebase.auth().currentUser||{}).email||'', ts:Date.now()}).catch(function(){}); }catch(e){}
-}
-function apagaDraft(){
-  lsDel(KEY+':draft'); clearTimeout(cloudTimer); draftCloud=null;
-  try{ firebase.database().ref('eqEstudos/rascunho').remove().catch(function(){}); }catch(e){}
-}
-window.addEventListener('pagehide',function(){ if(dirty) salvaRascunhoNuvem(); });
+function markDirty(){dirty=true; lsSet(KEY+':draft',JSON.stringify({base:store.history.length,state:state,origin:pendingOrigin}));}
 function curStudy(){ if(!state) return undefined; return state.studies.filter(function(s){return s.id===view.study;})[0];}
 function aplicaCampo(el){
   var b=el.dataset&&el.dataset.b; if(!b||!canEdit()) return false;
-  var p=b.split(':'), v=el.value;
-  if(p[0]==='p'){ var pl=prodList(state), pr=pl[+p[1]]; if(pr) pr[p[2]]=v; return true; }
-  var s=curStudy(); if(!s) return false;
-  if(p[0]==='ar'){ artOf(s)[+p[1]][p[2]]=v; return true; }
+  var s=curStudy(); if(!s) return false; var p=b.split(':'), v=el.value;
   if(p[0]==='s'){ s[p[1]] = p[1]==='nome'?v.trim().toUpperCase():(p[1]==='solicitacao'?(v||null):v); }
   else { var l=s.labs[+p[1]]; var f=p[2];
     if(f==='valor') l.valor=v===''?null:Math.round(parseFloat(v)*100)/100;
@@ -1043,13 +971,9 @@ document.addEventListener('click',function(ev){
   if(a==='jumpPriorities'){var p=$('#prioritySection');if(p)p.scrollIntoView({behavior:'smooth',block:'start'});return;}
   if(a==='jumpAlerts'){var p2=$('#allAlerts');if(p2)p2.scrollIntoView({behavior:'smooth',block:'start'});return;}
   if(a==='goStudies'){view.tab='studies';render();window.scrollTo(0,0);return;}
-  if(a==='addStudy'){var n={id:uid(),nome:'NOVO ATIVO',descricao:'',filtros:'',artigos:[],apresentacoes:'',classe:'',indicacao:'',referencia:'',companhia:'',solicitacao:todayISO(),labs:labOrder(state).map(function(l){return {lab:l,data:null,status:'pendente',obs:'',valor:null};})}; state.studies.push(n); view.study=n.id; markDirty(); render();}
-  else if(a==='delStudy'){var s=curStudy(); confirmBox('Excluir o ativo '+s.nome+'?','O estudo sairá da versão atual, mas continuará registrado nas versões anteriores do histórico.',function(){state.studies=state.studies.filter(function(x){return x!==s;}); view.study=null; markDirty(); render();});}
-  else if(a==='addLab'){curStudy().labs.push({lab:'Novo laboratório',produto:'',data:todayISO(),status:'analise',obs:'',valor:null,validade:null}); markDirty(); keepScroll(render);}
-  else if(a==='addProd'){prodList(state).push({nome:'Novo produto',desc:''}); markDirty(); keepScroll(render);}
-  else if(a==='delProd'){prodList(state).splice(i,1); markDirty(); keepScroll(render);}
-  else if(a==='addArt'){artOf(curStudy()).push({titulo:'',ano:'',base:'',revista:'',link:'',tipo:''}); markDirty(); keepScroll(render);}
-  else if(a==='delArt'){ if(confirm('Remover este artigo?')){ artOf(curStudy()).splice(i,1); markDirty(); keepScroll(render);} }
+  if(a==='addStudy'){var n={id:uid(),nome:'NOVO ESTUDO',apresentacoes:'',classe:'',indicacao:'',referencia:'',companhia:'',solicitacao:todayISO(),labs:labOrder(state).map(function(l){return {lab:l,data:null,status:'pendente',obs:'',valor:null};})}; state.studies.push(n); view.study=n.id; markDirty(); render();}
+  else if(a==='delStudy'){var s=curStudy(); confirmBox('Excluir o estudo '+s.nome+'?','O estudo sairá da versão atual, mas continuará registrado nas versões anteriores do histórico.',function(){state.studies=state.studies.filter(function(x){return x!==s;}); view.study=null; markDirty(); render();});}
+  else if(a==='addLab'){curStudy().labs.push({lab:'Novo laboratório',data:todayISO(),status:'analise',obs:'',valor:null,validade:null}); markDirty(); keepScroll(render);}
   else if(a==='delLab'){var s2=curStudy(); s2.labs.splice(i,1); markDirty(); keepScroll(render);}
   else if(a==='pdfStudy'){ var e=view.version!=null?store.history[view.version]:lastEntry(); var snap=view.version!=null?e.snapshot:(dirty?null:e.snapshot);
     if(!snap){toast('Há alterações não salvas. O PDF usa a última versão salva (v'+e.v+'). Salve uma nova versão para incluí-las.');snap=e.snapshot;}
@@ -1059,13 +983,13 @@ document.addEventListener('click',function(ev){
   else if(a==='viewCurrent'){view.version=null; render();}
   else if(a==='pdfVer'){makePDF(store.history[i]);}
   else if(a==='restoreVer'){confirmBox('Restaurar a versão '+(i+1)+'?','Os dados da versão '+(i+1)+' serão carregados para edição. Nada é apagado: ao salvar, eles entram como uma nova versão no histórico.',function(){state=clone(store.history[i].snapshot); pendingOrigin='Restauração da versão '+(i+1); view.version=null; editMode=true; markDirty(); view.tab='studies'; render();});}
-  else if(a==='restoreDraft'){try{var dr=draftCloud||JSON.parse(lsGet(KEY+':draft')); state=clone(dr.state); pendingOrigin=dr.origin; dirty=true; editMode=true;}catch(e){} draftOffer=false; draftCloud=null; render();}
-  else if(a==='dropDraft'){apagaDraft(); draftOffer=false; render();}
+  else if(a==='restoreDraft'){try{var dr=JSON.parse(lsGet(KEY+':draft')); state=dr.state; pendingOrigin=dr.origin; dirty=true;}catch(e){} draftOffer=false; render();}
+  else if(a==='dropDraft'){lsDel(KEY+':draft'); draftOffer=false; render();}
 });
 
 function descartaEdicao(){
   if(store.current) state=clone(store.current);
-  dirty=false; pendingOrigin=null; apagaDraft(); editMode=false; render();
+  dirty=false; pendingOrigin=null; lsDel(KEY+':draft'); editMode=false; render();
 }
 $('#btnEdit').onclick=function(){
   if(editMode && dirty){
@@ -1076,7 +1000,7 @@ $('#btnEdit').onclick=function(){
     return;
   }
   if(view.version!=null){view.version=null;}
-  editMode=!editMode; if(editMode&&view.tab!=='studies'&&view.tab!=='produtos'&&view.tab!=='fornecedores'){view.tab='studies';} render();
+  editMode=!editMode; if(editMode&&view.tab!=='studies'){view.tab='studies';} render();
 };
 $('#btnImport').onclick=function(){$('#fileInput').value='';$('#fileInput').click();};
 $('#fileInput').onchange=function(){ if(this.files[0]) importFile(this.files[0]); };
@@ -1099,7 +1023,7 @@ function confirmBox(title,text,ok){
 }
 function openSave(){
   var ch=diff(store.current,state);
-  if(!ch.length){ toast('Nenhuma alteração em relação à versão '+lastEntry().v+'.'); dirty=false; apagaDraft(); render(); return; }
+  if(!ch.length){ toast('Nenhuma alteração em relação à versão '+lastEntry().v+'.'); dirty=false; lsDel(KEY+':draft'); render(); return; }
   var nv=store.history.length+1;
   modal('<h2>Salvar versão '+nv+'</h2><div class="cap">'+esc(pendingOrigin||'Edição manual')+' · '+plural(ch.length,'alteração identificada','alterações identificadas')+' em relação à versão '+lastEntry().v+'.</div>'+
     '<div class="changes"><ul style="margin:0;padding-left:18px">'+ch.map(function(c){return '<li>'+esc(c)+'</li>';}).join('')+'</ul></div>'+
@@ -1107,7 +1031,7 @@ function openSave(){
     '<label for="svNota">Nota da versão (aparece no histórico e no PDF)</label><textarea class="fld" id="svNota" placeholder="Ex.: Retorno do CSA com orçamento do Paricalcitol"></textarea>'+
     '<div class="row">'+(pendingOrigin&&/Planilha/.test(pendingOrigin)?'<button class="btn2 danger" id="svDrop">Descartar importação</button>':'')+'<button class="btn2" id="svLater">Revisar antes</button><button class="btn2 pri" id="svOk">Salvar versão '+nv+'</button></div>');
   $('#svLater').onclick=closeModal;
-  if($('#svDrop')) $('#svDrop').onclick=function(){state=clone(store.current); dirty=false; pendingOrigin=null; apagaDraft(); closeModal(); render();};
+  if($('#svDrop')) $('#svDrop').onclick=function(){state=clone(store.current); dirty=false; pendingOrigin=null; lsDel(KEY+':draft'); closeModal(); render();};
   $('#svOk').onclick=function(){
     var autor=$('#svAutor').value.trim(), nota=$('#svNota').value.trim();
     var e={v:nv,ts:nowLocal(),autor:autor,origem:pendingOrigin||'Edição manual',nota:nota,changes:ch,snapshot:clone(state)};
@@ -1142,7 +1066,7 @@ function makePDF(entry,opt){
   var snap=entry.snapshot, ref=entry.ts.slice(0,10), Wd=297, M=12, CW=Wd-2*M;
   var hist=store.history.slice(0,entry.v);
   var titulo=niceTitle(snap.meta&&snap.meta.titulo);
-  doc.setProperties({title:titulo+' - Versão '+entry.v, subject:'Relatório somente leitura', author:entry.autor||'', creator:'Portfólio', keywords:'estudos de equivalência'});
+  doc.setProperties({title:titulo+' - Versão '+entry.v, subject:'Relatório somente leitura', author:entry.autor||'', creator:'Painel de Estudos de Equivalência', keywords:'estudos de equivalência'});
   var navy=[15,42,68];
   function header(t,sub){
     doc.setFillColor.apply(doc,navy); doc.rect(0,0,Wd,24,'F');
@@ -1231,13 +1155,13 @@ function makePDF(entry,opt){
     y+=25;
     secT('Laboratórios cotados',y);
     doc.autoTable({startY:y+2.5,margin:{left:M,right:M,bottom:16,top:30},theme:'striped',rowPageBreak:'avoid',
-      head:[['Laboratório','Produto','Situação','Última atualização','Observação','Valor da proposta','Validade da proposta','Vencimento']],
-      body:s.labs.map(function(l){return [l.lab,pdfSafe(l.produto||''),ST[l.status].label,br(l.data),pdfSafe(l.obs||''),l.valor!=null?brl(l.valor):'',l.validade?br(l.validade):'',l.validade?(days(todayISO(),l.validade)<0?'Vencida há '+(-days(todayISO(),l.validade))+' d':days(todayISO(),l.validade)+' d'):'s/ validade'];}),
+      head:[['Laboratório','Situação','Última atualização','Dias desde a atualização','Observação','Valor da proposta','Validade da proposta','Vencimento']],
+      body:s.labs.map(function(l){return [l.lab,ST[l.status].label,br(l.data),l.data?String(days(l.data,ref)):'s/ data',pdfSafe(l.obs||''),l.valor!=null?brl(l.valor):'',l.validade?br(l.validade):'',l.validade?(days(todayISO(),l.validade)<0?'Vencida há '+(-days(todayISO(),l.validade))+' d':days(todayISO(),l.validade)+' d'):'s/ validade'];}),
       styles:{fontSize:7.8,cellPadding:1.8,textColor:[15,23,32]},
       headStyles:{fillColor:navy,textColor:[255,255,255],fontSize:7.2},
       alternateRowStyles:{fillColor:[248,249,251]},
-      columnStyles:{0:{fontStyle:'bold',cellWidth:28},1:{cellWidth:30},2:{cellWidth:36},3:{cellWidth:26},5:{cellWidth:28,halign:'right',fontStyle:'bold'},6:{cellWidth:22},7:{cellWidth:24,halign:'right'}},
-      didParseCell:function(dd){ if(dd.section==='body'&&dd.column.index===2) stCell(dd,s.labs[dd.row.index].status); }
+      columnStyles:{0:{fontStyle:'bold',cellWidth:32},1:{cellWidth:40},2:{cellWidth:30},3:{cellWidth:30,halign:'right'},5:{cellWidth:30,halign:'right',fontStyle:'bold'},6:{cellWidth:24},7:{cellWidth:24,halign:'right'}},
+      didParseCell:function(dd){ if(dd.section==='body'&&dd.column.index===1) stCell(dd,s.labs[dd.row.index].status); }
     });
     y=doc.lastAutoTable.finalY+7;
     var rh=5.6, h=s.labs.length*rh+6;
@@ -1316,7 +1240,7 @@ function mostraAvisoRemoto(){
     document.getElementById('__remotoX').onclick=function(){ el.remove(); };
     document.getElementById('__remotoOk').onclick=function(){
       if(dirty && !confirm('Suas alterações não salvas serão descartadas para mostrar a versão nova. Continuar?')) return;
-      var nv=remotoPendente; remotoPendente=null; dirty=false; editMode=false; pendingOrigin=null; apagaDraft();
+      var nv=remotoPendente; remotoPendente=null; dirty=false; editMode=false; pendingOrigin=null; lsDel(KEY+':draft');
       if(nv) aplicaBanco(nv);
       el.remove(); render();
     };
@@ -1334,10 +1258,6 @@ function carregaBanco(){
     return v;
   }).then(function(v){
     aplicaBanco(v); checkDraft(); render();
-    firebase.database().ref('eqEstudos/rascunho').once('value').then(function(sn){
-      var d=sn.val();
-      if(d && d.state && d.base===store.history.length && diff(store.current,d.state).length){ draftCloud=d; draftOffer=true; render(); }
-    }).catch(function(){});
     ref.on('value',function(s){
       var nv=s.val(); if(!nv||!nv.current) return;
       var novaVersao = nv.history && Object.keys(nv.history).length !== store.history.length;
@@ -1360,7 +1280,7 @@ function salvarNoBanco(e){
     var upd={}; upd['current']=clone(state); upd['history/v'+e.v]=e;
     return ref.update(upd);
   }).then(function(){
-    store.history.push(e); store.current=clone(state); dirty=false; pendingOrigin=null; editMode=false; apagaDraft();
+    store.history.push(e); store.current=clone(state); dirty=false; pendingOrigin=null; editMode=false; lsDel(KEY+':draft');
   });
 }
 window.__startApp=carregaBanco;
