@@ -579,7 +579,7 @@ function diff(a,b){
   var pa=a.prospeccao||[], pb=b.prospeccao||[], pam={}, pbm={}, SP={aguardando:'Sem retorno',retornou:'Retornou',nao_atende:'Não atende à demanda'};
   pa.forEach(function(r){pam[r.id]=r;}); pb.forEach(function(r){pbm[r.id]=r;});
   pb.forEach(function(r){ var o=pam[r.id], fn=r.fornecedor||'(sem nome)';
-    if(!o){ch.push('Prospecção · fornecedor incluído: '+fn);return;}
+    if(!o){ if(r.fornecedor) ch.push('Prospecção · fornecedor incluído: '+fn); return;}
     if((o.situacao||'aguardando')!==(r.situacao||'aguardando')) ch.push('Prospecção · '+fn+': '+SP[o.situacao||'aguardando']+' → '+SP[r.situacao||'aguardando']);
     else if(['fornecedor','contato','data','obs'].some(function(c){return String(o[c]||'').trim()!==String(r[c]||'').trim();})) ch.push('Prospecção · '+fn+': dados atualizados'); });
   pa.forEach(function(r){ if(!pbm[r.id]) ch.push('Prospecção · fornecedor removido: '+(r.fornecedor||'(sem nome)')); });
@@ -932,34 +932,49 @@ function prodCotados(d,nome){
   var n=norm(nome||''); if(!n) return 0;
   return (d.medicamentos||[]).filter(function(m){ return (m.linhas||[]).some(function(r){ return norm(r.fornecedor||'')===n && r.preco!=null; }); }).length;
 }
+/* Lista da prospecção = fornecedores das Cotações (automático) + os incluídos à mão.
+   Preço em alguma cotação => "Retornou" sozinho. "Não atende" marcado à mão sempre vale. */
+function prospLista(d){
+  var man=d.prospeccao||[], mapa={}, ord=[];
+  man.forEach(function(r,j){ var n=norm(r.fornecedor||''); var e={nome:r.fornecedor||'',man:r,j:j,cot:false};
+    if(!n){ ord.push(e); return; } if(!mapa[n]){ mapa[n]=e; ord.push(e); } });
+  (d.medicamentos||[]).forEach(function(m){ (m.linhas||[]).forEach(function(r){ var n=norm(r.fornecedor||''); if(!n) return;
+    var e=mapa[n]; if(!e){ e=mapa[n]={nome:r.fornecedor,man:null,j:-1,cot:true}; ord.push(e); } e.cot=true; }); });
+  ord.forEach(function(e){ e.pc=e.nome?prodCotados(d,e.nome):0; var ms=(e.man&&e.man.situacao)||'';
+    e.sit=ms==='nao_atende'?'nao_atende':(e.pc>0?'retornou':(ms||'aguardando')); });
+  ord.sort(function(a,b){ var x=norm(a.nome)||'￿', y=norm(b.nome)||'￿'; return x<y?-1:x>y?1:0; });
+  return ord;
+}
 function renderProspeccao(d){
-  var rows=d.prospeccao||[], ed=canEdit(), f=view.prospFiltro||'';
-  var c={total:rows.length,retornou:0,nao_atende:0,aguardando:0};
-  rows.forEach(function(r){ c[r.situacao||'aguardando']++; });
+  var ent=prospLista(d), ed=canEdit(), f=view.prospFiltro||'';
+  var c={total:0,retornou:0,nao_atende:0,aguardando:0};
+  ent.forEach(function(e){ if(!e.nome) return; c.total++; c[e.sit]++; });
   var card=function(key,cls,val,txt){ return '<button class="pk '+cls+(f===key?' on':'')+'" data-act="prospFiltro" data-f="'+key+'" title="Clique para filtrar a lista"><div class="v">'+val+'</div><div class="l">'+txt+'</div></button>'; };
   var h='<div class="pk-wrap"><h3 class="pk-title">Medicamentos | Prospecção de fornecedores</h3><div class="pk-grid">'+
     card('','info',c.total,'Total de fornecedores contatados')+
     card('retornou','good',c.retornou,'Com retorno de pelo menos um produto')+
     card('nao_atende','crit',c.nao_atende,'Não conseguem atender à demanda')+
     card('aguardando','warn',c.aguardando,'Sem retorno')+
-    '</div><div class="pk-note">'+(f?'Mostrando só: <b>'+(f==='retornou'?'Com retorno':SIT_PROSP[f])+'</b>. <button class="lnk" data-act="prospFiltro" data-f="">Ver todos</button>':'Clique em um card para filtrar a lista abaixo.')+'</div></div>';
-  var lista=rows.map(function(r,j){return {r:r,j:j};}).filter(function(x){ return !f||(x.r.situacao||'aguardando')===f; });
+    '</div><div class="pk-note">'+(f?'Mostrando só: <b>'+(f==='retornou'?'Com retorno':SIT_PROSP[f])+'</b>. <button class="lnk" data-act="prospFiltro" data-f="">Ver todos</button>':'Os fornecedores das Cotações entram sozinhos; quem tem preço conta como "Retornou". Clique em um card para filtrar a lista.')+'</div></div>';
+  var lista=ent.filter(function(e){ return !f||(e.nome&&e.sit===f)||(!e.nome&&f==='aguardando'); });
   h+='<div class="card" style="margin-top:16px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h3 style="margin:0">Fornecedores contatados</h3><div style="flex:1"></div>'+
-    (ed?'<button class="btn2" data-act="importProsp" title="Inclui aqui os fornecedores que já aparecem nas cotações">Trazer das cotações</button><button class="btn2 pri" data-act="addProsp">+ Incluir fornecedor</button>':'')+'</div>';
+    (ed?'<button class="btn2 pri" data-act="addProsp" title="Para quem você contatou mas ainda não tem nas Cotações">+ Incluir fornecedor</button>':'')+'</div>';
   h+='<div class="scroll" style="margin-top:12px"><table class="t" style="min-width:1050px"><thead><tr><th>Fornecedor / distribuidor</th><th>Contato</th><th>Data do contato</th><th>Situação</th><th class="num">Medicamentos com preço</th><th>Observação</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
-  if(!lista.length) h+='<tr><td colspan="'+(ed?7:6)+'" class="mut">'+(rows.length?'Nenhum fornecedor nesta situação.':'Nenhum fornecedor contatado ainda.'+(ed?'':' Clique em "Editar dados" para incluir.'))+'</td></tr>';
-  lista.forEach(function(x){
-    var r=x.r, j=x.j, k='q:'+j+':', sit=r.situacao||'aguardando', pc=prodCotados(d,r.fornecedor);
+  if(!lista.length) h+='<tr><td colspan="'+(ed?7:6)+'" class="mut">'+(ent.length?'Nenhum fornecedor nesta situação.':'Nenhum fornecedor ainda. Eles aparecem aqui sozinhos quando forem cadastrados em Cotações.')+'</td></tr>';
+  lista.forEach(function(e){
+    var m=e.man||{}, sit=e.sit, pc=e.pc, tag=e.cot?' <span class="mut" style="font-size:12px" title="Este fornecedor está cadastrado nas Cotações">· nas cotações</span>':'';
     var badge=sit==='retornou'?'<span class="st proposta"><i>✓</i>Retornou</span>':sit==='nao_atende'?'<span class="st declinou"><i>×</i>Não atende</span>':'<span class="st pendente"><i>!</i>Sem retorno</span>';
-    var dica=(sit==='aguardando'&&pc)?' <span class="mut" style="font-size:12px" title="Este fornecedor já tem preço nas cotações">· já tem preço</span>':'';
-    if(ed) h+='<tr><td><input class="fld" data-b="'+k+'fornecedor" value="'+esc(r.fornecedor||'')+'" placeholder="Ex.: DRS Group" style="min-width:170px"></td>'+
-      '<td><input class="fld" data-b="'+k+'contato" value="'+esc(r.contato||'')+'" placeholder="Nome, telefone ou e-mail" style="min-width:190px"></td>'+
-      '<td><input class="fld" type="date" data-b="'+k+'data" value="'+esc(r.data||'')+'" style="min-width:140px"></td>'+
-      '<td><select class="fld" data-b="'+k+'situacao">'+Object.keys(SIT_PROSP).map(function(s){return '<option value="'+s+'"'+(s===sit?' selected':'')+'>'+SIT_PROSP[s]+'</option>';}).join('')+'</select>'+dica+'</td>'+
-      '<td class="num">'+pc+'</td>'+
-      '<td><input class="fld" data-b="'+k+'obs" value="'+esc(r.obs||'')+'" placeholder="Ex.: estoque zerado" style="min-width:190px"></td>'+
-      '<td><button class="xbtn" data-act="delProsp" data-i="'+j+'" title="Remover fornecedor">×</button></td></tr>';
-    else h+='<tr><td><b>'+esc(r.fornecedor||'(sem nome)')+'</b></td><td>'+(r.contato?esc(r.contato):'<span class="mut">–</span>')+'</td><td>'+(r.data?br(r.data):'<span class="mut">–</span>')+'</td><td>'+badge+dica+'</td><td class="num">'+pc+'</td><td>'+(r.obs?esc(r.obs):'<span class="mut">–</span>')+'</td></tr>';
+    if(ed){
+      var k=e.man?'q:'+e.j+':':'qa:'+encodeURIComponent(e.nome)+':';
+      var ops=(pc>0?['retornou','nao_atende']:['aguardando','retornou','nao_atende']);
+      h+='<tr><td>'+(e.man?'<input class="fld" data-b="'+k+'fornecedor" value="'+esc(e.nome)+'" placeholder="Ex.: DRS Group" style="min-width:170px">'+tag:'<b>'+esc(e.nome)+'</b>'+tag)+'</td>'+
+        '<td><input class="fld" data-b="'+k+'contato" value="'+esc(m.contato||'')+'" placeholder="Nome, telefone ou e-mail" style="min-width:190px"></td>'+
+        '<td><input class="fld" type="date" data-b="'+k+'data" value="'+esc(m.data||'')+'" style="min-width:140px"></td>'+
+        '<td><select class="fld" data-b="'+k+'situacao">'+ops.map(function(s){return '<option value="'+s+'"'+(s===sit?' selected':'')+'>'+SIT_PROSP[s]+'</option>';}).join('')+'</select></td>'+
+        '<td class="num">'+pc+'</td>'+
+        '<td><input class="fld" data-b="'+k+'obs" value="'+esc(m.obs||'')+'" placeholder="Ex.: estoque zerado" style="min-width:190px"></td>'+
+        '<td>'+(e.man?'<button class="xbtn" data-act="delProsp" data-i="'+e.j+'" title="Remover da lista de prospecção">×</button>':'')+'</td></tr>';
+    } else h+='<tr><td><b>'+esc(e.nome||'(sem nome)')+'</b>'+tag+'</td><td>'+(m.contato?esc(m.contato):'<span class="mut">–</span>')+'</td><td>'+(m.data?br(m.data):'<span class="mut">–</span>')+'</td><td>'+badge+'</td><td class="num">'+pc+'</td><td>'+(m.obs?esc(m.obs):'<span class="mut">–</span>')+'</td></tr>';
   });
   return h+'</tbody></table></div></div>';
 }
@@ -1059,6 +1074,10 @@ function aplicaCampo(el){
   var b=el.dataset&&el.dataset.b; if(!b||!canEdit()) return false;
   var p=b.split(':'), v=el.value;
   if(p[0]==='m'){ var mm=(state.medicamentos||[])[+p[1]]; if(!mm) return false; mm.nome=v; return true; }
+  if(p[0]==='qa'){ var nq=decodeURIComponent(p[1]); state.prospeccao=state.prospeccao||[];
+    var rq=state.prospeccao.filter(function(r){return norm(r.fornecedor||'')===norm(nq);})[0];
+    if(!rq){ rq={id:uid(),fornecedor:nq,contato:'',data:'',situacao:'',obs:''}; state.prospeccao.push(rq); }
+    rq[p[2]]=v; return true; }
   if(p[0]==='q'){ var pq=(state.prospeccao||[])[+p[1]]; if(!pq) return false; pq[p[2]]=v; return true; }
   if(p[0]==='r'){ var mr=(state.medicamentos||[])[+p[1]]; var rr=mr&&(mr.linhas||[])[+p[2]]; if(!rr) return false;
     if(p[3]==='preco') rr.preco=v===''?null:Math.round(parseFloat(v)*100)/100; else rr[p[3]]=v; return true; }
@@ -1114,12 +1133,6 @@ document.addEventListener('click',function(ev){
   else if(a==='prospFiltro'){ view.prospFiltro=t.dataset.f||''; keepScroll(render); }
   else if(a==='addProsp'){ state.prospeccao=state.prospeccao||[]; state.prospeccao.push({id:uid(),fornecedor:'',contato:'',data:todayISO(),situacao:'aguardando',obs:''}); view.prospFiltro=''; markDirty(); keepScroll(render); }
   else if(a==='delProsp'){ confirmBox('Excluir este fornecedor da prospecção?','Ele sai da versão atual, mas continua registrado nas versões anteriores do histórico.',function(){ state.prospeccao.splice(i,1); markDirty(); render(); }); }
-  else if(a==='importProsp'){
-    state.prospeccao=state.prospeccao||[]; var ja={}; state.prospeccao.forEach(function(r){ ja[norm(r.fornecedor||'')]=1; }); var novos=0;
-    (state.medicamentos||[]).forEach(function(m){ (m.linhas||[]).forEach(function(r){ var n=norm(r.fornecedor||''); if(!n||ja[n]) return; ja[n]=1; novos++;
-      state.prospeccao.push({id:uid(),fornecedor:r.fornecedor,contato:'',data:'',situacao:prodCotados(state,r.fornecedor)?'retornou':'aguardando',obs:''}); }); });
-    if(novos){ markDirty(); keepScroll(render); toast(plural(novos,'fornecedor incluído','fornecedores incluídos')+' a partir das cotações'); } else toast('Todos os fornecedores das cotações já estão na lista');
-  }
   else if(a==='addMed'){ state.medicamentos=state.medicamentos||[]; state.medicamentos.push({id:uid(),nome:'',linhas:[{id:uid(),fornecedor:'',preco:null,validade:'',lote:'',obs:''}]}); markDirty(); keepScroll(render); }
   else if(a==='delMed'){ confirmBox('Excluir este medicamento?','Ele sai da versão atual com os fornecedores dele, mas continua registrado nas versões anteriores do histórico.',function(){ state.medicamentos.splice(i,1); markDirty(); render(); }); }
   else if(a==='addLinha'){ var ml=state.medicamentos[i]; ml.linhas=ml.linhas||[]; ml.linhas.push({id:uid(),fornecedor:'',preco:null,validade:'',lote:'',obs:''}); markDirty(); keepScroll(render); }
