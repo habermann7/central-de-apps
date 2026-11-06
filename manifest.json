@@ -2,8 +2,8 @@
   {
     "title": "Calculadora de Frete",
     "category": "PCP",
-    "description": "",
-    "file": "calculadora frete v4.html",
+    "description": "Cotação por CEP (Ativa, Connect e Qentrega) e simulador rodoviário Ativa",
+    "file": "calculadora frete comparativa.html",
     "icon": "🧮",
     "color": "#D9A15A",
     "grupos": [
@@ -11,29 +11,7 @@
     ]
   },
   {
-    "title": "Calculadora de Frete V2",
-    "category": "PCP",
-    "description": "Proposta de implantacao de app logistico rodoviario",
-    "file": "simulador frete ativa _1_.html",
-    "icon": "⚖️",
-    "color": "#D9A15A",
-    "grupos": [
-      "PCP"
-    ]
-  },
-  {
-    "title": "Comparativo de Fretes",
-    "category": "PCP",
-    "description": "",
-    "file": "calculadora frete comparativa.html",
-    "icon": "📦",
-    "color": "#D9A15A",
-    "grupos": [
-      "PCP"
-    ]
-  },
-  {
-    "title": "Consulta de Chave de Nota Fiscal",
+    "title": "Consulta de Chave de NF",
     "category": "PCP",
     "description": "Consultar chaves das notas fiscais para pedidos",
     "file": "consulta-nfe.html",
@@ -55,9 +33,9 @@
     ]
   },
   {
-    "title": "Painel SLA",
+    "title": "Painel SLA TV",
     "category": "PCP",
-    "description": "",
+    "description": "SLA das transportadoras para a TV",
     "file": "painel_sla_tv.html",
     "icon": "📺",
     "color": "#D9A15A",
@@ -90,7 +68,7 @@
   {
     "title": "Dashboard Produtividade",
     "category": "Expedição",
-    "description": "",
+    "description": "Separação, conferência e faturamento por setor",
     "file": "dashboard_produtividade.html",
     "icon": "📈",
     "color": "#4E8368",
@@ -110,9 +88,9 @@
     ]
   },
   {
-    "title": "Rastreio VIPP",
+    "title": "Rastro",
     "category": "Expedição",
-    "description": "Rastreio de pedidos VIPP. atualizado com API Correios em tempo REAL",
+    "description": "Rastreio dos pedidos VIPP pela API dos Correios",
     "file": "rastreio-vipp.html",
     "icon": "📍",
     "color": "#4E8368",
@@ -134,7 +112,7 @@
   {
     "title": "SLA Transportadoras",
     "category": "PCP",
-    "description": "",
+    "description": "SLA de entrega por transportadora",
     "file": "sla_transportadoras.html",
     "icon": "⏱️",
     "color": "#3F8E8A",
@@ -155,9 +133,9 @@
   },
   {
     "title": "Torre de Controle TV",
-    "description": "acompanhamento de tratativas do time da logistica.",
+    "description": "Acompanhamento das tratativas do time de logística",
     "file": "painel_chamados.html",
-    "icon": "🧩",
+    "icon": "📡",
     "color": "#3F8E8A",
     "grupos": [
       "PCP"
@@ -165,21 +143,22 @@
     "category": "PCP"
   },
   {
-    "title": "NÃO CONFORMIDADE",
-    "description": "",
+    "title": "Painel NC",
+    "description": "Lançamento e análise de não conformidades (devoluções)",
     "file": "painel_nc.html",
-    "icon": "🧩",
+    "icon": "📋",
     "color": "#4d9fff",
     "grupos": [
-      "SAC"
+      "SAC",
+      "FARMACOVIGILANCIA"
     ],
     "category": "SAC"
   },
   {
-    "title": "Controle gastos FRETE",
-    "description": "",
+    "title": "Controle de Gastos com Frete",
+    "description": "Faturas e gastos com transportadoras",
     "file": "controle_gastos_frete.html",
-    "icon": "🧩",
+    "icon": "💸",
     "color": "#D9A15A",
     "grupos": [
       "PCP"
@@ -187,24 +166,25 @@
     "category": "PCP"
   },
   {
-    "title": "Central de Projetos",
-    "description": "",
+    "title": "Meu QG",
+    "description": "Seus projetos e anotações num lugar só",
     "file": "meu-qg.html",
-    "icon": "🧩",
+    "icon": "🗂️",
     "color": "#4d9fff",
     "grupos": [
-      "PROJETOS"
+      "*"
     ],
     "category": "Projetos"
   },
   {
     "title": "Non Retail BSB",
-    "description": "",
+    "description": "Estudos de equivalência, laboratórios e medicamentos de referência",
     "file": "Non_Retail_BSB.html",
-    "icon": "🧩",
+    "icon": "💊",
     "color": "#4d9fff",
     "grupos": [
       "EQUIVALENCIA"
-    ]
+    ],
+    "category": "Equivalência"
   }
 ]
