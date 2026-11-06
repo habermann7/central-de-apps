@@ -4,7 +4,7 @@
 <script>try{var a=localStorage.getItem('qg-visual-v3')||'noite';document.documentElement.setAttribute('data-ambiente',a)}catch(e){}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Meu QG · Organização em um só lugar</title>
+<title>Rumo · Seus projetos, do mapa à entrega</title>
 <style>
 :root{
   --bg:#e8ebee;--bg2:#f5f6f8;--card:rgba(255,255,255,.82);--card2:#fff;
@@ -838,6 +838,32 @@ main{max-width:1240px}
 @media(max-width:740px){.kanban-column{flex-basis:min(82vw,290px);min-height:300px}.kanban-intro{margin-top:20px}.kanban-board{gap:10px}}
 @media(prefers-reduced-motion:reduce){.kanban-ticket,.kanban-column{transition:none!important}}
 
+
+.gx-bar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:14px 0 10px}
+.gx{overflow:auto;border:1px solid var(--line);border-radius:18px;background:var(--card);box-shadow:var(--shadow);max-height:70vh}
+.gx-in{position:relative}
+.gx-hd{display:flex;position:sticky;top:0;z-index:4;background:var(--card2);border-bottom:1px solid var(--line)}
+.gx-c0{position:sticky;left:0;z-index:5;width:190px;flex:none;padding:10px 14px;font-size:12px;font-weight:650;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;background:var(--card2);border-right:1px solid var(--line)}
+.gx-ms{position:relative;height:38px;flex:none}
+.gx-m{position:absolute;top:0;height:100%;padding:11px 8px;font-size:12px;font-weight:600;color:var(--mut);border-left:1px solid var(--line);white-space:nowrap;overflow:hidden}
+.gx-body{position:relative}
+.gx-grid{position:absolute;top:0;bottom:0;pointer-events:none;z-index:0}
+.gx-l{position:absolute;top:0;bottom:0;border-left:1px solid var(--line)}
+.gx-w{position:absolute;top:0;bottom:0;border-left:1px dashed var(--line)}.gx-w em{position:absolute;top:2px;left:3px;font:10px/1 inherit;color:var(--faint);font-style:normal}
+.gx-hoje{position:absolute;top:0;bottom:0;border-left:2px solid var(--bad);z-index:2}
+.gx-hoje em{position:absolute;top:2px;left:4px;font-size:10px;font-weight:700;color:var(--bad);font-style:normal;background:var(--card2);padding:0 4px;border-radius:5px}
+.gx-r{display:flex;position:relative;z-index:1;border-bottom:1px solid var(--line);min-height:44px;align-items:center}
+.gx-r:hover{background:color-mix(in srgb,var(--line) 50%,transparent)}
+.gx-n{position:sticky;left:0;z-index:3;width:190px;flex:none;display:flex;gap:8px;align-items:center;padding:0 12px;height:44px;border:0;border-right:1px solid var(--line);background:var(--card2);cursor:pointer;text-align:left;font-weight:550;font-size:13.5px}
+.gx-n i{width:9px;height:9px;border-radius:50%;flex:none}.gx-n span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gx-t{position:relative;height:44px;flex:none}
+.gx-b{position:absolute;top:9px;height:26px;border:1.5px solid var(--c);border-radius:9px;background:color-mix(in srgb,var(--c) 22%,transparent);cursor:pointer;padding:0;overflow:hidden;text-align:left;transition:transform .12s var(--ease),filter .15s}
+.gx-b:hover{filter:brightness(1.1)}.gx-b:active{transform:scale(.985)}
+.gx-b .gx-f{position:absolute;inset:0 auto 0 0;background:var(--c);opacity:.7}
+.gx-b .gx-x{position:relative;padding-left:8px;font-size:11.5px;font-weight:700;color:var(--ink);line-height:23px}
+.gx-b.late{border-color:var(--bad);box-shadow:0 0 0 2px var(--badBg)}
+.gx-b.stop{border-style:dashed;opacity:.6}
+@media(max-width:740px){.gx-c0,.gx-n{width:130px}}
 </style>
 </head>
 <body>
@@ -850,7 +876,7 @@ main{max-width:1240px}
 <div class="shell" id="app" hidden>
   <header class="app-header">
     <div class="header-top">
-      <div class="header-identity" aria-label="Meu QG"><span class="brand-symbol" aria-hidden="true"><svg width="25" height="25" viewBox="0 0 24 24" fill="none"><path d="M5 8a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V8Z" stroke="currentColor" stroke-width="1.75"/><path d="M9 9h2.5v2.5H9zM13 9h2.5v2.5H13zM9 13h2.5v2.5H9z" fill="currentColor"/><path d="M13 15h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span><strong>Meu QG</strong></div>
+      <div class="header-identity" aria-label="Rumo"><span class="brand-symbol" aria-hidden="true"><svg width="25" height="25" viewBox="0 0 24 24" fill="none"><path d="M5 8a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V8Z" stroke="currentColor" stroke-width="1.75"/><path d="M9 9h2.5v2.5H9zM13 9h2.5v2.5H13zM9 13h2.5v2.5H9z" fill="currentColor"/><path d="M13 15h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span><strong>Rumo</strong></div>
       <div class="workspace-picker">
         <button type="button" class="workspace-trigger" id="wsTrigger" data-act="ws-toggle" aria-expanded="false" aria-haspopup="true" aria-controls="wsPanel" aria-label="Trocar ambiente">
           <span class="workspace-icon" id="wsCurrentIcon" aria-hidden="true">⌂</span>
@@ -882,7 +908,7 @@ main{max-width:1240px}
       <button class="nav" data-go="membros" id="navMem" hidden>Membros</button>
     </nav>
   </header>
-  <main id="appContent"><div id="main"></div><footer class="page-footer">Meu QG <span aria-hidden="true">·</span> Feito para organizar o que importa</footer></main>
+  <main id="appContent"><div id="main"></div><footer class="page-footer">Rumo <span aria-hidden="true">·</span> Projetos com direção, do mapa à entrega</footer></main>
 </div>
 
 <div id="layer"></div>
@@ -962,8 +988,9 @@ const PRESET={mapeamento:10,andamento:30,producao:50,homologacao:80,suporte:90,c
 const MOV=['andamento','producao','homologacao']; /* "em movimento": entram nos alertas e nas próximas ações */
 const LEGADO={ideia:'mapeamento',fazendo:'andamento',parado:'paralisado'}; /* nomes antigos, convertidos ao ler */
 const VIEWS=['hoje','projetos','notas','atividades','aguardando','caixa','revisao','membros'];
-const S={uid:null,email:'',nome:'',ws:'pessoal',esp:{},dir:{},dirAdm:{},anx:{},d:{projetos:{},notas:{},aguardando:{},inbox:{},config:{}},view:'hoje',proj:null,nota:null,filtro:'todos',busca:'',projBusca:'',notaProj:'',verFeitos:false};
+const S={pvis:'quadro',gz:'mes',uid:null,email:'',nome:'',ws:'pessoal',esp:{},dir:{},dirAdm:{},anx:{},d:{projetos:{},notas:{},aguardando:{},inbox:{},config:{}},view:'hoje',proj:null,nota:null,filtro:'todos',busca:'',projBusca:'',notaProj:'',verFeitos:false};
 let db=null;
+try{S.pvis=localStorage.getItem('rumo-pvis')==='crono'?'crono':'quadro';S.gz=localStorage.getItem('rumo-gz')||'mes';}catch(e){}
 
 /* ---------- utilitários ---------- */
 /* Andamento: vermelho até 20%, amarelo até 70%, verde acima disso */
@@ -1001,11 +1028,11 @@ function guard(p){ return p.catch(e=>{ toast('Não consegui salvar. Confira a co
 const set=(p,v)=>guard(R(p).set(v));
 const upd=(p,v)=>guard(R(p).update(v));
 const del=p=>guard(R(p).remove());
-const ATV_CAMPOS={nome:'Nome',status:'Status',progresso:'Andamento',proximaAcao:'Próxima ação',ondeParei:'Onde parei',prazo:'Prazo'};
+const ATV_CAMPOS={nome:'Nome',status:'Status',progresso:'Andamento',proximaAcao:'Próxima ação',ondeParei:'Onde parei',prazo:'Prazo',inicio:'Início'};
 function fmtAtv(c,v){
   if(c==='status')return STATUS[v]?STATUS[v][0]:(v||'—');
   if(c==='progresso')return (+v||0)+'%';
-  if(c==='prazo'){ if(!v)return 'sem prazo'; const [y,m,d]=String(v).split('-'); return d+'/'+m+'/'+y; }
+  if(c==='prazo'||c==='inicio'){ if(!v)return 'sem prazo'; const [y,m,d]=String(v).split('-'); return d+'/'+m+'/'+y; }
   return v?String(v).slice(0,60):'(vazio)';
 }
 function descreveMudancas(old,ex){
@@ -1282,11 +1309,58 @@ function vProjetos(){
     <div class="seg" role="group" aria-label="Filtro">${[['ativos','Ativos'],['todos','Todos'],['concluidos','Concluídos']].map(([k,l])=>`<button data-act="filtro" data-v="${k}" aria-pressed="${S.filtro===k}">${l}</button>`).join('')}</div></div>
   <form class="card row" data-form="novo-projeto"><input type="text" id="npNome" placeholder="Nome do novo projeto" aria-label="Nome do novo projeto" autocomplete="off" required><button class="btn pri" type="submit"><span class="label-full">+ Criar projeto</span><span class="label-short">+ Criar</span></button></form>
   <div class="project-search"><label class="f" for="projBusca">Buscar projeto</label><input id="projBusca" type="text" data-keep value="${esc(S.projBusca)}" placeholder="Buscar por nome ou próximo passo…" autocomplete="off"><span class="hint">${ps.length} resultado(s)</span></div>
-  <div class="kanban-intro"><div><div class="kanban-intro-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="11" rx="1"/><rect x="17" y="4" width="4" height="14" rx="1"/></svg> Fluxo dos projetos</div><p class="hint">Da primeira à última etapa · arraste um cartão ou use “Mover para…”</p></div><div class="kanban-arrows"><button type="button" data-act="kanban-scroll" data-v="-1" aria-label="Ver etapas anteriores" title="Etapas anteriores">‹</button><button type="button" data-act="kanban-scroll" data-v="1" aria-label="Ver próximas etapas" title="Próximas etapas">›</button></div></div>
-  ${ps.length?`<div class="kanban-board" id="kanbanBoard" role="region" tabindex="0" aria-label="Quadro Kanban. Role para o lado para ver as próximas etapas">${grupos.map(([st,arr],i)=>`<section class="kanban-column" data-kanban-status="${st}" style="--step-color:${stCor(st)}" aria-label="${STATUS[st][0]}, ${arr.length} projetos">
+  <div class="seg vis-seg" role="group" aria-label="Forma de ver os projetos" style="margin-top:18px"><button data-act="pvis" data-v="quadro" aria-pressed="${S.pvis!=='crono'}">Quadro</button><button data-act="pvis" data-v="crono" aria-pressed="${S.pvis==='crono'}">Cronograma</button></div>
+  ${S.pvis==='crono'?cronoHtml(ps):''}
+  <div class="kanban-intro"${S.pvis==='crono'?' hidden':''}><div><div class="kanban-intro-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="11" rx="1"/><rect x="17" y="4" width="4" height="14" rx="1"/></svg> Fluxo dos projetos</div><p class="hint">Da primeira à última etapa · arraste um cartão ou use “Mover para…”</p></div><div class="kanban-arrows"><button type="button" data-act="kanban-scroll" data-v="-1" aria-label="Ver etapas anteriores" title="Etapas anteriores">‹</button><button type="button" data-act="kanban-scroll" data-v="1" aria-label="Ver próximas etapas" title="Próximas etapas">›</button></div></div>
+  ${S.pvis==='crono'?'':ps.length?`<div class="kanban-board" id="kanbanBoard" role="region" tabindex="0" aria-label="Quadro Kanban. Role para o lado para ver as próximas etapas">${grupos.map(([st,arr],i)=>`<section class="kanban-column" data-kanban-status="${st}" style="--step-color:${stCor(st)}" aria-label="${STATUS[st][0]}, ${arr.length} projetos">
       <header class="kanban-column-head"><span class="kanban-stage" aria-hidden="true">${st==='paralisado'?'II':String(i+1).padStart(2,'0')}</span><h3 class="kanban-stage-title">${STATUS[st][0]}</h3><span class="kanban-stage-count" title="Quantidade de projetos">${arr.length}</span></header>
       <div class="kanban-col-list">${arr.length?arr.map(cardKanban).join(''):'<div class="kanban-empty"><strong>Etapa vazia</strong><span>Arraste um projeto para cá</span></div>'}</div>
     </section>`).join('')}</div><div class="kanban-footer"><span aria-hidden="true"></span>Arraste na horizontal para navegar entre as etapas. “Paralisado” fica separado do fluxo.</div>`:`<div class="empty sec">${q?'Nenhum projeto encontrado. Tente outra busca.':'Nenhum projeto neste filtro. Crie um projeto ou escolha outro filtro.'}</div>`}`;
+}
+
+/* ---------- Cronograma (Gantt) ---------- */
+const MESES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const isoDe=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const dDe=str=>{const [y,m,d]=String(str).split('-').map(Number);return y?new Date(y,m-1,d):null;};
+function cronoHtml(ps){
+  const PX={semana:34,mes:12,trimestre:5}[S.gz]||12, LW=190;
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const com=[],sem=[];
+  ps.forEach(p=>{
+    const fim=p.prazo?dDe(p.prazo):null; if(!fim){sem.push(p);return;}
+    let ini=p.inicio?dDe(p.inicio):new Date(p.criadoEm||Date.now()); ini.setHours(0,0,0,0);
+    if(ini>fim)ini=new Date(fim);
+    com.push({p,ini,fim});
+  });
+  const bar=`<div class="gx-bar"><div class="seg" role="group" aria-label="Escala">${[['semana','Semanas'],['mes','Meses'],['trimestre','Trimestres']].map(([k,l])=>`<button data-act="gz" data-v="${k}" aria-pressed="${S.gz===k}">${l}</button>`).join('')}</div><button class="btn sm ghost" data-act="gx-hoje">Ir para hoje</button></div>`;
+  if(!com.length)return bar+`<div class="empty sec">Nenhum projeto com prazo neste filtro. Defina o <b>Início</b> e o <b>Prazo de entrega</b> dentro de cada projeto para ele aparecer no cronograma.</div>`+semPrazoHtml(sem);
+  com.sort((a,b)=>a.ini-b.ini||a.fim-b.fim);
+  let min=new Date(Math.min(hoje,...com.map(c=>c.ini))),max=new Date(Math.max(hoje,...com.map(c=>c.fim)));
+  min=new Date(min.getFullYear(),min.getMonth(),1); max=new Date(max.getFullYear(),max.getMonth()+2,0);
+  const nd=Math.round((max-min)/DIA)+1, W=nd*PX, x=d=>Math.round((d-min)/DIA)*PX;
+  let head='',grid='';
+  for(let d=new Date(min);d<=max;){
+    const ini=new Date(d),nx=new Date(d.getFullYear(),d.getMonth()+1,1),dd=Math.round((Math.min(nx,new Date(max.getTime()+DIA))-ini)/DIA);
+    head+=`<div class="gx-m" style="left:${x(ini)}px;width:${dd*PX}px">${MESES[ini.getMonth()]}${ini.getMonth()===0||ini.getTime()===min.getTime()?' '+ini.getFullYear():''}</div>`;
+    grid+=`<i class="gx-l" style="left:${x(ini)}px"></i>`; d=nx;
+  }
+  if(S.gz==='semana'){ for(let d=new Date(min);d<=max;d.setDate(d.getDate()+1)){ if(d.getDay()===1)grid+=`<i class="gx-w" style="left:${x(d)}px"><em>${d.getDate()}</em></i>`; } }
+  const xh=x(hoje);
+  const rows=com.map(({p,ini,fim})=>{
+    const w=Math.max(PX*2,x(fim)-x(ini)+PX),pct=Math.max(0,Math.min(100,+p.progresso||0)),c=stCor(p.status);
+    const atras=!['concluido','paralisado'].includes(p.status)&&fim<hoje;
+    const tip=`${p.nome||''} · ${STATUS[p.status]?STATUS[p.status][0]:''} · ${pct}% · ${fmtData(ini.getTime())} → ${fmtData(fim.getTime())}${atras?' · ATRASADO':''}`;
+    return `<div class="gx-r"><button class="gx-n" data-act="abrir" data-id="${p.id}" title="${esc(tip)}"><i style="background:${c}"></i><span>${esc(p.nome||'Sem nome')}</span></button>
+      <div class="gx-t" style="width:${W}px"><button class="gx-b${atras?' late':''}${p.status==='paralisado'?' stop':''}" data-act="abrir" data-id="${p.id}" title="${esc(tip)}" style="left:${x(ini)}px;width:${w}px;--c:${c}"><span class="gx-f" style="width:${pct}%"></span><span class="gx-x">${w>90?pct+'%':''}</span></button></div></div>`;
+  }).join('');
+  return bar+`<div class="gx" id="gantt" data-hoje="${xh+LW}"><div class="gx-in" style="width:${W+LW}px">
+    <div class="gx-hd"><div class="gx-c0">Projeto</div><div class="gx-ms" style="width:${W}px">${head}</div></div>
+    <div class="gx-body"><div class="gx-grid" style="left:${LW}px;width:${W}px">${grid}<i class="gx-hoje" style="left:${xh}px"><em>hoje</em></i></div>${rows}</div></div></div>
+    <p class="hint" style="margin-top:8px">A barra vai do <b>Início</b> ao <b>Prazo</b>; a parte escura é o andamento. Sem início definido, usa o dia em que o projeto foi criado. Clique para abrir. Barra vermelha = atrasado.</p>`+semPrazoHtml(sem);
+}
+function semPrazoHtml(sem){
+  if(!sem.length)return '';
+  return `<div class="sec"><h3>Sem prazo definido (${sem.length})</h3><div class="list">${sem.map(p=>projRow(p)).join('')}</div></div>`;
 }
 function cardKanban(p){
   const prox=(p.proximaAcao||'').trim(),pct=Math.max(0,Math.min(100,+p.progresso||0)),par=p.status==='paralisado';
@@ -1402,7 +1476,7 @@ function relatorioProjeto(id){
     (notas.length?notas.map(notaHtml).join(''):'<p class="vazio">Nenhuma anotação ligada a este projeto.</p>')+
   '<h2>Respostas pendentes ('+pend.filter(a=>!a.feito).length+' em aberto)</h2>'+
     (pend.length?pend.map(pendHtml).join(''):'<p class="vazio">Nenhuma pendência.</p>')+
-  '<div class="foot">Gerado pelo Meu QG em '+esc(hoje)+' · '+(Object.keys(p.anexosMeta||{}).length)+' anexo(s) no projeto (não incluídos neste PDF)</div>'+
+  '<div class="foot">Gerado pelo Rumo em '+esc(hoje)+' · '+(Object.keys(p.anexosMeta||{}).length)+' anexo(s) no projeto (não incluídos neste PDF)</div>'+
   '</body></html>';
 }
 function imprimeRelatorio(html){
@@ -1427,6 +1501,7 @@ function vProjeto(id){
     <div class="project-phase"><p class="project-kicker">Etapa atual ${stChip(p.status)}</p><p class="project-help">Clique em uma etapa para mudar a situação do projeto. O percentual será ajustado automaticamente e você poderá alterá-lo abaixo.</p>${pipeHtml(p)}</div>
     <div class="row wrap" style="justify-content:space-between">
       ${p.status==='paralisado'?`<button class="btn" data-act="retomar" data-id="${id}">Retomar projeto</button>`:`<button class="btn ghost" data-act="status" data-id="${id}" data-v="paralisado" aria-pressed="false">Paralisado</button>`}
+      <label class="row" style="gap:8px"><span class="hint">Início</span><input type="date" data-keep data-f="inicio" data-id="${id}" value="${esc(p.inicio||'')}" aria-label="Data de início" style="width:150px"></label>
       <label class="row" style="gap:8px"><span class="hint">Prazo de entrega</span><input type="date" data-keep data-f="prazo" data-id="${id}" value="${esc(p.prazo||'')}" aria-label="Prazo" style="width:170px"></label>
     </div>
     <div class="card"><label class="f" for="pa">Próximo passo: o que precisa ser feito?</label>
@@ -1670,6 +1745,9 @@ document.addEventListener('click',e=>{
     case 'del-atv': delAtivEm(b.dataset.ws,id); toast('Atualização excluída'); break;
     case 'av-fecha': { const p=obj('projetos')[id]; if(p){ try{localStorage.setItem(avKey(id),avNivel(prazoDias(p.prazo))+'|'+p.prazo);}catch{} } render(false); break; }
     case 'filtro': S.filtro=b.dataset.v; render(false); break;
+    case 'pvis': S.pvis=b.dataset.v==='crono'?'crono':'quadro'; try{localStorage.setItem('rumo-pvis',S.pvis)}catch(e){} render(false); break;
+    case 'gz': S.gz=b.dataset.v; try{localStorage.setItem('rumo-gz',S.gz)}catch(e){} render(false); break;
+    case 'gx-hoje': {const g=$('#gantt');if(g)g.scrollLeft=Math.max(0,(+g.dataset.hoje||0)-g.clientWidth/3);break;}
     case 'kanban-scroll': {const board=$('#kanbanBoard');if(board)board.scrollBy({left:(Number(b.dataset.v)||1)*318,behavior:'smooth'});break;}
     case 'retomar': { const pr=obj('projetos')[id]||{}; const v=FLUXO.includes(pr.statusAntes)?pr.statusAntes:'andamento'; const ex={status:v,statusAntes:null}; if(PRESET[v]!=null)ex.progresso=PRESET[v]; tocaProjeto(id,ex); break; }
     case 'status': mudarEtapaProjeto(id,b.dataset.v); break;
