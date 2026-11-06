@@ -363,6 +363,25 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;scroll-behavior:auto!important}}
 @media print{.tabs,.topbar .actions,.portfolio-toolbar,.hero-link,.focus-arrow,.outline-action{display:none!important}.exec-hero{-webkit-print-color-adjust:exact;print-color-adjust:exact}.analysis-disclosure{break-inside:avoid}}
 </style>
+<style>
+.subtabs{display:flex;gap:4px;padding:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;width:max-content;max-width:100%;overflow-x:auto;margin:4px 0 18px}
+.subtabs button{appearance:none;border:0;background:transparent;color:var(--muted);font:600 13.5px/1 Inter,system-ui,sans-serif;padding:9px 14px;border-radius:9px;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+.subtabs button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.pk-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.pk-title{font:700 15px/1.2 Inter,system-ui,sans-serif;letter-spacing:.01em;margin:0 0 14px;text-transform:uppercase}
+.pk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px}
+.pk{appearance:none;text-align:left;border:1px solid transparent;border-radius:12px;padding:16px 18px;cursor:pointer;font:inherit;transition:transform .12s,box-shadow .15s,border-color .15s}
+.pk:hover{transform:translateY(-1px)}
+.pk:active{transform:scale(.99)}
+.pk .v{font:700 28px/1 'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.pk .l{margin-top:12px;font-size:13.5px;color:var(--ink-2)}
+.pk.info{background:var(--info-bg)} .pk.info .v{color:var(--info-ink)}
+.pk.good{background:var(--good-bg)} .pk.good .v{color:var(--good-ink)}
+.pk.crit{background:var(--crit-bg)} .pk.crit .v{color:var(--crit-ink)}
+.pk.warn{background:var(--warn-bg)} .pk.warn .v{color:var(--warn-ink)}
+.pk.info.on{border-color:var(--info-ink)} .pk.good.on{border-color:var(--good-ink)} .pk.crit.on{border-color:var(--crit-ink)} .pk.warn.on{border-color:var(--warn-ink)}
+.pk-note{margin-top:10px;font-size:12.5px;color:var(--muted)}
+</style>
 </head>
 <body>
 <div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0d0f12;color:#f3f5f8;display:flex;align-items:center;justify-content:center;font-family:Inter,system-ui,sans-serif;text-align:center;padding:20px;">
@@ -557,6 +576,13 @@ function diff(a,b){
     (o.linhas||[]).forEach(function(r){ if(!nr[r.id]) ch.push(nm+' · fornecedor removido: '+(r.fornecedor||'(sem nome)')); });
   });
   ma.forEach(function(m){ if(!mbm[m.id]) ch.push('Medicamento removido: '+(m.nome||'(sem nome)')); });
+  var pa=a.prospeccao||[], pb=b.prospeccao||[], pam={}, pbm={}, SP={aguardando:'Sem retorno',retornou:'Retornou',nao_atende:'Não atende à demanda'};
+  pa.forEach(function(r){pam[r.id]=r;}); pb.forEach(function(r){pbm[r.id]=r;});
+  pb.forEach(function(r){ var o=pam[r.id], fn=r.fornecedor||'(sem nome)';
+    if(!o){ch.push('Prospecção · fornecedor incluído: '+fn);return;}
+    if((o.situacao||'aguardando')!==(r.situacao||'aguardando')) ch.push('Prospecção · '+fn+': '+SP[o.situacao||'aguardando']+' → '+SP[r.situacao||'aguardando']);
+    else if(['fornecedor','contato','data','obs'].some(function(c){return String(o[c]||'').trim()!==String(r[c]||'').trim();})) ch.push('Prospecção · '+fn+': dados atualizados'); });
+  pa.forEach(function(r){ if(!pbm[r.id]) ch.push('Prospecção · fornecedor removido: '+(r.fornecedor||'(sem nome)')); });
   return ch;
 }
 
@@ -611,7 +637,7 @@ function importFile(file){
       if(!state) throw new Error('Os dados do painel ainda não carregaram. Recarregue a página e tente de novo.');
       var old={}; state.studies.forEach(function(s){old[norm(s.nome)]=s.id;});
       parsed.studies.forEach(function(s){ if(old[norm(s.nome)]) s.id=old[norm(s.nome)]; });
-      parsed.medicamentos=(state.medicamentos||[]); state=parsed; pendingOrigin='Planilha importada ('+file.name+')';
+      parsed.medicamentos=(state.medicamentos||[]); parsed.prospeccao=(state.prospeccao||[]); state=parsed; pendingOrigin='Planilha importada ('+file.name+')';
       markDirty(); view.version=null; render(); openSave();
     }catch(e){ toast('Não foi possível ler a planilha: '+e.message,'err'); }
   };
@@ -901,7 +927,48 @@ function resumoOrc(rows){
   var venc=0, logo=0; rows.forEach(function(r){ if(!r.validadeOrc) return; var d=days(todayISO(),r.validadeOrc); if(d<0) venc++; else if(d<=15) logo++; });
   return (venc?'<span class="st declinou"><i>!</i>'+plural(venc,'orçamento vencido','orçamentos vencidos')+'</span>':'')+(logo?'<span class="st pendente"><i>!</i>'+plural(logo,'orçamento vencendo','orçamentos vencendo')+'</span>':'');
 }
+var SIT_PROSP={aguardando:'Sem retorno',retornou:'Retornou',nao_atende:'Não atende à demanda'};
+function prodCotados(d,nome){
+  var n=norm(nome||''); if(!n) return 0;
+  return (d.medicamentos||[]).filter(function(m){ return (m.linhas||[]).some(function(r){ return norm(r.fornecedor||'')===n && r.preco!=null; }); }).length;
+}
+function renderProspeccao(d){
+  var rows=d.prospeccao||[], ed=canEdit(), f=view.prospFiltro||'';
+  var c={total:rows.length,retornou:0,nao_atende:0,aguardando:0};
+  rows.forEach(function(r){ c[r.situacao||'aguardando']++; });
+  var card=function(key,cls,val,txt){ return '<button class="pk '+cls+(f===key?' on':'')+'" data-act="prospFiltro" data-f="'+key+'" title="Clique para filtrar a lista"><div class="v">'+val+'</div><div class="l">'+txt+'</div></button>'; };
+  var h='<div class="pk-wrap"><h3 class="pk-title">Medicamentos | Prospecção de fornecedores</h3><div class="pk-grid">'+
+    card('','info',c.total,'Total de fornecedores contatados')+
+    card('retornou','good',c.retornou,'Com retorno de pelo menos um produto')+
+    card('nao_atende','crit',c.nao_atende,'Não conseguem atender à demanda')+
+    card('aguardando','warn',c.aguardando,'Sem retorno')+
+    '</div><div class="pk-note">'+(f?'Mostrando só: <b>'+(f==='retornou'?'Com retorno':SIT_PROSP[f])+'</b>. <button class="lnk" data-act="prospFiltro" data-f="">Ver todos</button>':'Clique em um card para filtrar a lista abaixo.')+'</div></div>';
+  var lista=rows.map(function(r,j){return {r:r,j:j};}).filter(function(x){ return !f||(x.r.situacao||'aguardando')===f; });
+  h+='<div class="card" style="margin-top:16px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h3 style="margin:0">Fornecedores contatados</h3><div style="flex:1"></div>'+
+    (ed?'<button class="btn2" data-act="importProsp" title="Inclui aqui os fornecedores que já aparecem nas cotações">Trazer das cotações</button><button class="btn2 pri" data-act="addProsp">+ Incluir fornecedor</button>':'')+'</div>';
+  h+='<div class="scroll" style="margin-top:12px"><table class="t" style="min-width:1050px"><thead><tr><th>Fornecedor / distribuidor</th><th>Contato</th><th>Data do contato</th><th>Situação</th><th class="num">Medicamentos com preço</th><th>Observação</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
+  if(!lista.length) h+='<tr><td colspan="'+(ed?7:6)+'" class="mut">'+(rows.length?'Nenhum fornecedor nesta situação.':'Nenhum fornecedor contatado ainda.'+(ed?'':' Clique em "Editar dados" para incluir.'))+'</td></tr>';
+  lista.forEach(function(x){
+    var r=x.r, j=x.j, k='q:'+j+':', sit=r.situacao||'aguardando', pc=prodCotados(d,r.fornecedor);
+    var badge=sit==='retornou'?'<span class="st proposta"><i>✓</i>Retornou</span>':sit==='nao_atende'?'<span class="st declinou"><i>×</i>Não atende</span>':'<span class="st pendente"><i>!</i>Sem retorno</span>';
+    var dica=(sit==='aguardando'&&pc)?' <span class="mut" style="font-size:12px" title="Este fornecedor já tem preço nas cotações">· já tem preço</span>':'';
+    if(ed) h+='<tr><td><input class="fld" data-b="'+k+'fornecedor" value="'+esc(r.fornecedor||'')+'" placeholder="Ex.: DRS Group" style="min-width:170px"></td>'+
+      '<td><input class="fld" data-b="'+k+'contato" value="'+esc(r.contato||'')+'" placeholder="Nome, telefone ou e-mail" style="min-width:190px"></td>'+
+      '<td><input class="fld" type="date" data-b="'+k+'data" value="'+esc(r.data||'')+'" style="min-width:140px"></td>'+
+      '<td><select class="fld" data-b="'+k+'situacao">'+Object.keys(SIT_PROSP).map(function(s){return '<option value="'+s+'"'+(s===sit?' selected':'')+'>'+SIT_PROSP[s]+'</option>';}).join('')+'</select>'+dica+'</td>'+
+      '<td class="num">'+pc+'</td>'+
+      '<td><input class="fld" data-b="'+k+'obs" value="'+esc(r.obs||'')+'" placeholder="Ex.: estoque zerado" style="min-width:190px"></td>'+
+      '<td><button class="xbtn" data-act="delProsp" data-i="'+j+'" title="Remover fornecedor">×</button></td></tr>';
+    else h+='<tr><td><b>'+esc(r.fornecedor||'(sem nome)')+'</b></td><td>'+(r.contato?esc(r.contato):'<span class="mut">–</span>')+'</td><td>'+(r.data?br(r.data):'<span class="mut">–</span>')+'</td><td>'+badge+dica+'</td><td class="num">'+pc+'</td><td>'+(r.obs?esc(r.obs):'<span class="mut">–</span>')+'</td></tr>';
+  });
+  return h+'</tbody></table></div></div>';
+}
 function renderMedicamentos(d,ref){
+  var sub=view.medSub||'cotacoes';
+  var nav='<div class="subtabs" role="tablist"><button data-act="medSub" data-f="cotacoes" class="'+(sub==='cotacoes'?'on':'')+'">Cotações</button><button data-act="medSub" data-f="prospeccao" class="'+(sub==='prospeccao'?'on':'')+'">Prospecção de fornecedores</button></div>';
+  return nav+(sub==='prospeccao'?renderProspeccao(d):renderCotacoes(d,ref));
+}
+function renderCotacoes(d,ref){
   var meds=d.medicamentos||[], ed=canEdit();
   var lbl='font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700';
   var h='<div class="'+(ed?'editing':'')+'">';
@@ -992,6 +1059,7 @@ function aplicaCampo(el){
   var b=el.dataset&&el.dataset.b; if(!b||!canEdit()) return false;
   var p=b.split(':'), v=el.value;
   if(p[0]==='m'){ var mm=(state.medicamentos||[])[+p[1]]; if(!mm) return false; mm.nome=v; return true; }
+  if(p[0]==='q'){ var pq=(state.prospeccao||[])[+p[1]]; if(!pq) return false; pq[p[2]]=v; return true; }
   if(p[0]==='r'){ var mr=(state.medicamentos||[])[+p[1]]; var rr=mr&&(mr.linhas||[])[+p[2]]; if(!rr) return false;
     if(p[3]==='preco') rr.preco=v===''?null:Math.round(parseFloat(v)*100)/100; else rr[p[3]]=v; return true; }
   var s=curStudy(); if(!s) return false;
@@ -1042,6 +1110,16 @@ document.addEventListener('click',function(ev){
   else if(a==='delStudy'){var s=curStudy(); confirmBox('Excluir o estudo '+s.nome+'?','O estudo sairá da versão atual, mas continuará registrado nas versões anteriores do histórico.',function(){state.studies=state.studies.filter(function(x){return x!==s;}); view.study=null; markDirty(); render();});}
   else if(a==='addLab'){curStudy().labs.push({lab:'Novo laboratório',data:todayISO(),status:'analise',obs:'',valor:null,validade:null}); markDirty(); keepScroll(render);}
   else if(a==='delLab'){var s2=curStudy(); s2.labs.splice(i,1); markDirty(); keepScroll(render);}
+  else if(a==='medSub'){ view.medSub=t.dataset.f; view.prospFiltro=''; keepScroll(render); }
+  else if(a==='prospFiltro'){ view.prospFiltro=t.dataset.f||''; keepScroll(render); }
+  else if(a==='addProsp'){ state.prospeccao=state.prospeccao||[]; state.prospeccao.push({id:uid(),fornecedor:'',contato:'',data:todayISO(),situacao:'aguardando',obs:''}); view.prospFiltro=''; markDirty(); keepScroll(render); }
+  else if(a==='delProsp'){ confirmBox('Excluir este fornecedor da prospecção?','Ele sai da versão atual, mas continua registrado nas versões anteriores do histórico.',function(){ state.prospeccao.splice(i,1); markDirty(); render(); }); }
+  else if(a==='importProsp'){
+    state.prospeccao=state.prospeccao||[]; var ja={}; state.prospeccao.forEach(function(r){ ja[norm(r.fornecedor||'')]=1; }); var novos=0;
+    (state.medicamentos||[]).forEach(function(m){ (m.linhas||[]).forEach(function(r){ var n=norm(r.fornecedor||''); if(!n||ja[n]) return; ja[n]=1; novos++;
+      state.prospeccao.push({id:uid(),fornecedor:r.fornecedor,contato:'',data:'',situacao:prodCotados(state,r.fornecedor)?'retornou':'aguardando',obs:''}); }); });
+    if(novos){ markDirty(); keepScroll(render); toast(plural(novos,'fornecedor incluído','fornecedores incluídos')+' a partir das cotações'); } else toast('Todos os fornecedores das cotações já estão na lista');
+  }
   else if(a==='addMed'){ state.medicamentos=state.medicamentos||[]; state.medicamentos.push({id:uid(),nome:'',linhas:[{id:uid(),fornecedor:'',preco:null,validade:'',lote:'',obs:''}]}); markDirty(); keepScroll(render); }
   else if(a==='delMed'){ confirmBox('Excluir este medicamento?','Ele sai da versão atual com os fornecedores dele, mas continua registrado nas versões anteriores do histórico.',function(){ state.medicamentos.splice(i,1); markDirty(); render(); }); }
   else if(a==='addLinha'){ var ml=state.medicamentos[i]; ml.linhas=ml.linhas||[]; ml.linhas.push({id:uid(),fornecedor:'',preco:null,validade:'',lote:'',obs:''}); markDirty(); keepScroll(render); }
