@@ -46,7 +46,7 @@ h2{font-size:13px;margin:0 0 10px}h3{font-size:12px;margin:0 0 6px;color:var(--m
   </div>
 </div>
 <div class="w">
-<h1>Dashboard de Produtividade Operacional</h1><div class="sub">Separação &rarr; Confer&ecirc;ncia &rarr; Notas Fiscais &middot; produtividade mensal por setor &middot; dados salvos neste navegador</div>
+<h1>Dashboard de Produtividade Operacional</h1><div class="sub">Separação &rarr; Confer&ecirc;ncia &rarr; Notas Fiscais &middot; produtividade mensal por setor &middot; <span id="nuvemStatus">conectando ao banco da equipe…</span></div>
 
 <div class="tabwrap"><div class="tabs" id="deptTabs"></div></div>
 
@@ -207,7 +207,7 @@ function normalizeDept(d){
   return d;
 }
 function normalizeStore(s){ s.seco=normalizeDept(s.seco); s.gelado=normalizeDept(s.gelado); s.users=s.users||{}; return s; }
-function saveStore(){try{localStorage.setItem(LS_KEY,JSON.stringify(STORE));}catch(e){}}
+function saveStore(){try{localStorage.setItem(LS_KEY,JSON.stringify(STORE));}catch(e){} salvarNuvem();}
 let STORE=loadStore();
 
 let ACTIVE_DEPT="seco";
@@ -782,6 +782,44 @@ render();
 renderFunnel();
 renderPhaseEvolution();
 renderStaffing();
+
+// ============================================================================
+// Nuvem: os dados ficam no Firebase (dashboardProdutividade/store), iguais pra toda a equipe.
+// O navegador guarda só uma cópia de segurança. Se a nuvem estiver vazia, o primeiro
+// a abrir sobe o que tem no próprio navegador (migração automática, uma vez só).
+// ============================================================================
+const NUVEM_PATH='dashboardProdutividade/store';
+let nuvemPronta=false, timerNuvem=null;
+function statusNuvem(txt,erro){const el=document.getElementById('nuvemStatus'); if(el){el.textContent=txt; el.style.color=erro?'#d9534f':'';}}
+function rerenderTudo(){useDept(ACTIVE_DEPT); renderDeptTabs(); renderUploadZone(); fill(); cmpOpts(); $("deptLabelStaff").textContent=ACTIVE_DEPT.toUpperCase(); render(); renderFunnel(); renderPhaseEvolution(); renderStaffing();}
+function salvarNuvem(){
+  if(!nuvemPronta) return;
+  clearTimeout(timerNuvem);
+  statusNuvem('salvando…');
+  timerNuvem=setTimeout(function(){
+    const u=firebase.auth().currentUser;
+    firebase.database().ref(NUVEM_PATH).set({json:JSON.stringify(STORE),em:Date.now(),por:(u&&u.email)||''})
+      .then(function(){statusNuvem('salvo no banco da equipe');})
+      .catch(function(){statusNuvem('não foi possível salvar no banco — tente de novo',true);});
+  },600);
+}
+window.__startApp=function(){
+  firebase.database().ref(NUVEM_PATH).on('value',function(snap){
+    const v=snap.val();
+    if(v&&v.json){
+      if(v.json!==JSON.stringify(STORE)){
+        try{STORE=normalizeStore(JSON.parse(v.json));}catch(e){statusNuvem('dados do banco ilegíveis',true);return;}
+        try{localStorage.setItem(LS_KEY,JSON.stringify(STORE));}catch(e){}
+        rerenderTudo();
+      }
+      nuvemPronta=true;
+      const quando=v.em?new Date(v.em).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):'';
+      statusNuvem('dados da equipe'+(quando?' · atualizado '+quando:'')+(v.por?' por '+v.por:''));
+    }else if(!nuvemPronta){
+      nuvemPronta=true; salvarNuvem(); // nuvem vazia: sobe o que está neste navegador
+    }
+  },function(){statusNuvem('sem permissão pra ler o banco da equipe',true);});
+};
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-auth-compat.min.js"></script>
