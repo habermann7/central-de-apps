@@ -1,121 +1,190 @@
 [
   {
-    "name": "Calculadora de Frete 🧮",
-    "url": "https://estanteapps.vercel.app/apps/calculadora frete comparativa.html",
-    "groups": ["PCP"],
-    "cat": "PCP",
-    "desc": "Cotação por CEP (Ativa, Connect e Qentrega) e simulador rodoviário Ativa"
+    "title": "Calculadora de Frete",
+    "category": "PCP",
+    "description": "Cotação por CEP (Ativa, Connect e Qentrega) e simulador rodoviário Ativa",
+    "file": "calculadora frete comparativa.html",
+    "icon": "🧮",
+    "color": "#D9A15A",
+    "grupos": [
+      "PCP"
+    ]
   },
   {
-    "name": "Consulta de Chave de NF 🧾",
-    "url": "https://estanteapps.vercel.app/apps/consulta-nfe.html",
-    "groups": ["PCP"],
-    "cat": "PCP", 
-    "desc": "Consultar chaves das notas fiscais para pedidos"
+    "title": "Consulta de Chave de NF",
+    "category": "PCP",
+    "description": "Consultar chaves das notas fiscais para pedidos",
+    "file": "consulta-nfe.html",
+    "icon": "🧾",
+    "color": "#D9A15A",
+    "grupos": [
+      "PCP"
+    ]
   },
   {
-    "name": "Painel PCP 📊",
-    "url": "https://estanteapps.vercel.app/apps/painel pcp _2_.html",
-    "groups": ["PCP"],
-    "cat": "PCP",
-    "desc": "Controle de visao de pedidos da semana"
+    "title": "Painel PCP",
+    "category": "PCP",
+    "description": "Controle de visao de pedidos da semana",
+    "file": "painel pcp _2_.html",
+    "icon": "📊",
+    "color": "#D9A15A",
+    "grupos": [
+      "PCP"  
+    ]
   },
   {
-    "name": "Painel SLA TV 📺",
-    "url": "https://estanteapps.vercel.app/apps/painel_sla_tv.html",
-    "groups": ["PCP"],
-    "cat": "PCP",
-    "desc": "SLA das transportadoras para a TV"
+    "title": "Painel SLA TV",
+    "category": "PCP",
+    "description": "SLA das transportadoras para a TV",
+    "file": "painel_sla_tv.html", 
+    "icon": "📺",
+    "color": "#D9A15A",
+    "grupos": [
+      "PCP"
+    ]
   },
   {
-    "name": "Painel de Entregas ATIVA 🚚",
-    "url": "https://estanteapps.vercel.app/apps/painel_ativa_v2.html",
-    "groups": ["PCP"],
-    "cat": "PCP",
-    "desc": "Desempenho de entregas da transportadora ATIVA"
+    "title": "Painel de Entregas ATIVA",
+    "category": "PCP",
+    "description": "Desempenho de entregas da transportadora ATIVA",
+    "file": "painel_ativa_v2.html",
+    "icon": "🚚",
+    "color": "#D9A15A", 
+    "grupos": [
+      "PCP"
+    ]
   },
   {
-    "name": "Painel de Ocorrências ⚠️",
-    "url": "https://estanteapps.vercel.app/apps/stin-logistica-ocorrencias_2.html",
-    "groups": ["PCP"],
-    "cat": "PCP",
-    "desc": "Abertura e tratamento de ocorrências de logística"
+    "title": "Painel de Ocorrências",
+    "category": "PCP",
+    "description": "Abertura e tratamento de ocorrências de logística",
+    "file": "stin-logistica-ocorrencias_2.html",
+    "icon": "⚠️",
+    "color": "#D9A15A",
+    "grupos": [
+      "PCP" 
+    ]
   },
   {
-    "name": "Dashboard Produtividade 📈",
-    "url": "https://estanteapps.vercel.app/apps/dashboard_produtividade.html",
-    "groups": ["EXPEDIÇÃO"],
-    "cat": "Expedição",
-    "desc": "Separação, conferência e faturamento por setor"
+    "title": "Dashboard Produtividade",
+    "category": "Expedição",
+    "description": "Separação, conferência e faturamento por setor",
+    "file": "dashboard_produtividade.html",
+    "icon": "📈",
+    "color": "#4E8368",
+    "grupos": [
+      "EXPEDIÇÃO"
+    ]
   },
   {
-    "name": "Qualidade ✅",
-    "url": "https://estanteapps.vercel.app/apps/qualidade.html", 
-    "groups": ["EXPEDIÇÃO"],
-    "cat": "Expedição",
-    "desc": "Registro e acompanhamento de ocorrências de qualidade"
+    "title": "Qualidade",
+    "category": "Expedição", 
+    "description": "Registro e acompanhamento de ocorrências de qualidade",
+    "file": "qualidade.html",
+    "icon": "✅",
+    "color": "#4E8368",
+    "grupos": [
+      "EXPEDIÇÃO"
+    ]
   },
   {
-    "name": "Rastro 📍",
-    "url": "https://estanteapps.vercel.app/apps/rastreio-vipp.html",
-    "groups": ["EXPEDIÇÃO"],
-    "cat": "Expedição", 
-    "desc": "Rastreio dos pedidos VIPP pela API dos Correios"
+    "title": "Rastro",
+    "category": "Expedição",
+    "description": "Rastreio dos pedidos VIPP pela API dos Correios",
+    "file": "rastreio-vipp.html",
+    "icon": "📍",
+    "color": "#4E8368",
+    "grupos": [
+      "EXPEDIÇÃO"  
+    ]
   },
   {
-    "name": "Pedidos de Compra em Aberto 🛒",
-    "url": "https://estanteapps.vercel.app/apps/pesquisa pedidos fornecedor _3_.html",
-    "groups": ["FINANCEIRO"],
-    "cat": "Financeiro",
-    "desc": "Pedidos de compra em aberto"
+    "title": "Pedidos de Compra em Aberto",
+    "category": "Financeiro",
+    "description": "Pedidos de compra em aberto",
+    "file": "pesquisa pedidos fornecedor _3_.html",
+    "icon": "🛒",
+    "color": "#5B7FA6",
+    "grupos": [
+      "FINANCEIRO"
+    ]
+  },
+  {  
+    "title": "SLA Transportadoras",
+    "category": "PCP",
+    "description": "SLA de entrega por transportadora",
+    "file": "sla_transportadoras.html",
+    "icon": "⏱️",
+    "color": "#3F8E8A",
+    "grupos": [
+      "PCP"
+    ]
   },
   {
-    "name": "SLA Transportadoras ⏱️",
-    "url": "https://estanteapps.vercel.app/apps/sla_transportadoras.html",
-    "groups": ["PCP"],
-    "cat": "PCP",
-    "desc": "SLA de entrega por transportadora"
+    "title": "GoPlant",
+    "category": "Testes",
+    "description": "Desenho de fluxos e plantas", 
+    "file": "GoPlant.html",
+    "icon": "🏭",
+    "color": "#A6485B",
+    "grupos": [
+      "TESTES"
+    ]
   },
   {
-    "name": "GoPlant 🏭",
-    "url": "https://estanteapps.vercel.app/apps/GoPlant.html",
-    "groups": ["TESTES"],
-    "cat": "Testes",
-    "desc": "Desenho de fluxos e plantas"
+    "title": "Torre de Controle TV",
+    "description": "Acompanhamento das tratativas do time de logística",
+    "file": "painel_chamados.html",
+    "icon": "📡",
+    "color": "#3F8E8A",
+    "grupos": [
+      "PCP"
+    ],
+    "category": "PCP"
   },
   {
-    "name": "Torre de Controle TV 📡",
-    "url": "https://estanteapps.vercel.app/apps/painel_chamados.html",
-    "groups": ["PCP"],
-    "cat": "PCP",
-    "desc": "Acompanhamento das tratativas do time de logística"
+    "title": "Painel NC",
+    "description": "Lançamento e análise de não conformidades (devoluções)",
+    "file": "painel_nc.html", 
+    "icon": "📋",
+    "color": "#4d9fff",
+    "grupos": [
+      "SAC",
+      "FARMACOVIGILANCIA"  
+    ],
+    "category": "SAC"
   },
   {
-    "name": "Painel NC 📋",
-    "url": "https://estanteapps.vercel.app/apps/painel_nc.html",
-    "groups": ["SAC","FARMACOVIGILANCIA"],
-    "cat": "SAC",
-    "desc":"Lançamento e análise de não conformidades (devoluções)"
+    "title": "Controle de Gastos com Frete",
+    "description": "Faturas e gastos com transportadoras",
+    "file": "controle_gastos_frete.html",
+    "icon": "💸",
+    "color": "#D9A15A",
+    "grupos": [
+      "PCP"
+    ],
+    "category": "PCP"  
   },
   {
-    "name": "Controle de Gastos com Frete 💸",
-    "url": "https://estanteapps.vercel.app/apps/controle_gastos_frete.html",
-    "groups": ["PCP"],
-    "cat": "PCP",
-    "desc": "Faturas e gastos com transportadoras"
+    "title": "Meu QG",
+    "description": "Seus projetos e anotações num lugar só",
+    "file": "meu-qg.html",
+    "icon": "🗂️",
+    "color": "#4d9fff",
+    "grupos": [
+      "*"
+    ],
+    "category": "Projetos"
   },
   {
-    "name": "Meu QG 🗂️",
-    "url": "https://estanteapps.vercel.app/apps/meu-qg.html",
-    "groups": ["PROJETOS"],
-    "cat": "Projetos",
-    "desc": "Organizador pessoal de projetos e anotações. Cada usuário tem seu espaço privado, compartilhando apenas o acesso ao app."
-  },
-  {
-    "name": "Non Retail BSB 💊",
-    "url": "https://estanteapps.vercel.app/apps/Non_Retail_BSB.html",
-    "groups": ["EQUIVALENCIA"],
-    "cat": "Equivalência",
-    "desc": "Estudos de equivalência, laboratórios e medicamentos de referência"
+    "title": "Non Retail BSB",
+    "description": "Estudos de equivalência, laboratórios e medicamentos de referência",
+    "file": "Non_Retail_BSB.html",
+    "icon": "💊",
+    "color": "#4d9fff", 
+    "grupos": [
+      "EQUIVALENCIA"
+    ],
+    "category": "Equivalência"
   }
 ]
