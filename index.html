@@ -1439,9 +1439,12 @@ function toggleKebabMenu(btn, e){
 document.addEventListener('click', fecharKebabMenus);
 document.addEventListener('keydown', function(e){ if(e.key === 'Escape') fecharKebabMenus(); });
 
+function normGrupo(g){ return String(g).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim(); }
 function tenhoAcesso(app){
   const grupos = app.grupos && app.grupos.length ? app.grupos : ['Geral'];
-  return grupos.some(g => MEUS_GRUPOS.indexOf(g) !== -1);
+  if(grupos.indexOf('*') !== -1) return true; // "*" = qualquer pessoa cadastrada na Estante
+  const meus = MEUS_GRUPOS.map(normGrupo);
+  return grupos.some(g => meus.indexOf(normGrupo(g)) !== -1);
 }
 
 function expandirPrateleira(btn){
@@ -2063,9 +2066,12 @@ async function excluirUsuarioModal(){
 
 /* ================= Editar app (categoria + grupos) ================= */
 let editingAppFile = null;
+let editingAppTodos = false, editingAppCat = ''; // app liberado pra todos ("*"): o Editar mantém isso
 function abrirEditarAppFromButton(btn){
   const grupos = JSON.parse(btn.dataset.grupos || '[]');
   editingAppFile = btn.dataset.file;
+  editingAppTodos = grupos.indexOf('*') !== -1;
+  editingAppCat = btn.dataset.category || '';
   document.getElementById('editAppTitleLabel').textContent = btn.dataset.title || btn.dataset.file;
   document.getElementById('editAppTitulo').value = btn.dataset.title || '';
   document.getElementById('editAppDescricao').value = btn.dataset.description || '';
@@ -2083,7 +2089,9 @@ async function salvarApp(){
   const title = document.getElementById('editAppTitulo').value.trim();
   const description = document.getElementById('editAppDescricao').value.trim();
   const grupos = Array.from(document.querySelectorAll('.grupo-cb-app:checked')).map(el => el.value);
-  const category = grupos.length ? formatarCategoria(grupos[0]) : '';
+  if(editingAppTodos && grupos.indexOf('*') === -1) grupos.unshift('*');
+  const gruposReais = grupos.filter(g => g !== '*');
+  const category = gruposReais.length ? formatarCategoria(gruposReais[0]) : editingAppCat;
   const statusEl = document.getElementById('editAppStatus');
   if(!title){ statusEl.className = 'modal-status err'; statusEl.textContent = 'Preenche o título.'; return; }
   if(grupos.length === 0){ statusEl.className = 'modal-status err'; statusEl.textContent = 'Marca pelo menos um grupo.'; return; }
