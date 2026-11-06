@@ -8,7 +8,7 @@
 //
 // Variáveis já cadastradas no Vercel:
 //   CORREIOS_CHAVE_ACESSO -> a chave "cws-ch1_..." que você gerou
-//   ROBO_SEGREDO           -> uma senha qualquer, só sua, pra proteger essa URL
+//   CRON_SECRET            -> senha do agendamento (a Vercel envia sozinha no cabeçalho)
 
 import admin from 'firebase-admin';
 
@@ -142,30 +142,36 @@ async function consultarUmCodigo(codigo, tentativa = 1) {
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-robo-segredo');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  const segredoEsperado = process.env.ROBO_SEGREDO;
-  const segredoRecebido = req.headers['x-robo-segredo'] || req.query.segredo;
   const autorizacaoHeader = req.headers['authorization'] || '';
-
+  const tokenRecebido = autorizacaoHeader.startsWith('Bearer ') ? autorizacaoHeader.slice(7) : '';
   let autorizado = false;
 
-  // caminho 1: chamada automática do cron, com a senha do robô
-  if (segredoEsperado && segredoRecebido === segredoEsperado) {
+  // caminho 1: chamada automática do agendamento da Vercel.
+  // A Vercel manda sozinha "Authorization: Bearer <CRON_SECRET>" quando a variável
+  // CRON_SECRET existe no projeto. Assim a senha nunca aparece em URL nem no GitHub.
+  if (process.env.CRON_SECRET && tokenRecebido === process.env.CRON_SECRET) {
+    autorizado = true;
+  }
+  // caminho 1b (compatibilidade): senha do robô no cabeçalho x-robo-segredo
+  const segredoRobo = process.env.ROBO_SEGREDO;
+  if (!autorizado && segredoRobo && req.headers['x-robo-segredo'] === segredoRobo) {
     autorizado = true;
   }
 
-  // caminho 2: clique manual de um usuário logado (botão "Atualizar agora")
-  if (!autorizado && autorizacaoHeader.startsWith('Bearer ')) {
-    const idToken = autorizacaoHeader.replace('Bearer ', '');
+  // caminho 2: clique manual no botão "Atualizar agora" — só admin ou grupo EXPEDIÇÃO
+  if (!autorizado && tokenRecebido) {
     try {
-      await admin.auth().verifyIdToken(idToken);
-      autorizado = true;
+      const decoded = await admin.auth().verifyIdToken(tokenRecebido);
+      const snapU = await admin.database().ref('centralApps/usuarios/' + decoded.uid).once('value');
+      const u = snapU.val() || {};
+      if (u.admin === true || (u.gruposMap && u.gruposMap.EXPEDICAO === true)) autorizado = true;
     } catch (err) {
       // token inválido, segue como não autorizado
     }
@@ -275,12 +281,6 @@ export default async function handler(req, res) {
       atualizados,
       semEventoOuErro: semEvento,
       erros,
-      // Isso aqui é só pra conferência: mostra o evento cru que a API dos Correios
-      // devolveu, pra confirmar se "dataEvento" pegou o campo certo. Pode remover
-      // esse campo do retorno depois de conferir uma vez, se quiser deixar mais limpo.
-      amostraUltimoEvento,
-      // Idem: resposta crua da 1ª chamada, sem filtro nenhum.
-      amostraRespostaCrua,
     });
   } catch (err) {
     return res.status(500).json({ error: err.message });
