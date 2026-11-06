@@ -430,23 +430,46 @@ function showToast(msg) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function() { state.toast = ''; render(); }, 5000);
 }
-function attachmentUrl(a) { return (a && a.url) || ''; }
+// Anexos: o plano grátis do Firebase não libera o Storage, então o arquivo fica no
+// próprio banco (controleFrete/anexos/<chave>), igual ao Painel NC. Anexos antigos
+// com "url" continuam funcionando.
+const ANEXOS_PATH = 'controleFrete/anexos/';
+async function attachmentUrl(a) {
+  if (!a) return '';
+  if (a.path && a.path.indexOf('db:') === 0) {
+    const snap = await firebase.database().ref(ANEXOS_PATH + a.path.slice(3)).once('value');
+    const v = snap.val();
+    if (!v || !v.data) return '';
+    const blob = await (await fetch(v.data)).blob();
+    return URL.createObjectURL(blob);
+  }
+  return a.url || '';
+}
 function findAnexo(id) { const it = state.expenses.find(e => e.id === id); return it && it.anexo ? it.anexo : null; }
 
 // Abre o anexo em nova aba; se o navegador bloquear, tenta o link direto de download
 async function downloadAnexo(id) {
   const a = findAnexo(id);
   if (!a) { showToast('Anexo não encontrado.'); return; }
+  let url = '';
+  try { url = await attachmentUrl(a); } catch (e) { url = ''; }
+  if (!url) { showToast('Não foi possível carregar o anexo.'); return; }
   const l = document.createElement('a');
-  l.href = attachmentUrl(a); l.target = '_blank'; l.rel = 'noopener'; l.download = a.name || 'anexo';
+  l.href = url; l.target = '_blank'; l.rel = 'noopener'; l.download = a.name || 'anexo';
   document.body.appendChild(l); l.click(); l.remove();
 }
 async function openAnexo(id) {
   const a = findAnexo(id);
   if (!a) { showToast('Anexo não encontrado.'); return; }
+  // abre a aba já no clique (senão o navegador bloqueia) e carrega o arquivo depois
   let w = null;
-  try { w = window.open(attachmentUrl(a), '_blank'); } catch (e) { w = null; }
-  if (!w) { await downloadAnexo(id); }
+  try { w = window.open('', '_blank'); } catch (e) { w = null; }
+  if (!w) { await downloadAnexo(id); return; }
+  try { w.document.title = a.name || 'Anexo'; w.document.body.innerHTML = '<p style="font-family:sans-serif;color:#555">Carregando anexo…</p>'; } catch (e) {}
+  let url = '';
+  try { url = await attachmentUrl(a); } catch (e) { url = ''; }
+  if (!url) { w.close(); showToast('Não foi possível carregar o anexo.'); return; }
+  w.location.href = url;
 }
 
 function toggleMonthDropdown() { state.monthDropdownOpen = !state.monthDropdownOpen; render(); }
@@ -688,7 +711,10 @@ async function handleDelete(id) {
   if (!confirm('Excluir este lançamento' + (it ? ' (' + it.prestador + ', ' + currency(it.valor) + ')' : '') + '? Não dá pra desfazer.')) return;
   try {
     await state.ref.child(id).remove();
-    if (it && it.anexo && it.anexo.path) firebase.storage().ref(it.anexo.path).delete().catch(() => {});
+    if (it && it.anexo && it.anexo.path) {
+      if (it.anexo.path.indexOf('db:') === 0) firebase.database().ref(ANEXOS_PATH + it.anexo.path.slice(3)).remove().catch(() => {});
+      else firebase.storage().ref(it.anexo.path).delete().catch(() => {});
+    }
   }
   catch(e) { setState({ error: 'Não foi possível excluir. Tente novamente.' }); }
 }
@@ -723,13 +749,17 @@ function updateFormField(field, value) {
 async function handleFileChange(e) {
   const file = e.target.files && e.target.files[0];
   if (!file) return;
-  if (file.size > 10 * 1024 * 1024) { setState({ error: 'Arquivo muito grande (máximo 10 MB).' }); return; }
+  if (file.size > 5 * 1024 * 1024) { setState({ error: 'Arquivo muito grande (máximo 5 MB).' }); return; }
   setState({ attachUploading:true, error:'', autofillNote:'' });
 
   // Sobe o anexo e, em paralelo, tenta ler o PDF para autopreencher o formulário.
-  const path = 'frete/' + Date.now() + '_' + file.name.replace(/[^A-Za-z0-9._-]+/g, '_');
-  const sref = firebase.storage().ref(path);
-  const uploadPromise = sref.put(file).then(() => sref.getDownloadURL()).then(url => ({ path, url })).catch(err => { console.error(err); return null; });
+  const chave = 'a' + Date.now() + Math.random().toString(36).slice(2, 7);
+  const lerArquivo = new Promise((ok, erro) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = erro; r.readAsDataURL(file); });
+  const quem = (firebase.auth().currentUser || {}).email || '';
+  const uploadPromise = lerArquivo
+    .then(data => firebase.database().ref(ANEXOS_PATH + chave).set({ nome: file.name, tipo: file.type || '', tam: file.size, data, por: quem, em: Date.now() }))
+    .then(() => ({ path: 'db:' + chave, url: '' }))
+    .catch(err => { console.error(err); return null; });
   const autofillPromise = (file.type === 'application/pdf') ? tryAutofillFromPdf(file) : Promise.resolve(null);
 
   const [res, autofill] = await Promise.all([uploadPromise, autofillPromise]);
