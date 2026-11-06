@@ -864,6 +864,31 @@ main{max-width:1240px}
 .gx-b.late{border-color:var(--bad);box-shadow:0 0 0 2px var(--badBg)}
 .gx-b.stop{border-style:dashed;opacity:.6}
 @media(max-width:740px){.gx-c0,.gx-n{width:130px}}
+
+.datas-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.datas{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;padding:10px 14px;border:1px solid var(--line);border-radius:16px;background:var(--card)}
+.dt{display:flex;flex-direction:column;gap:4px}.dt span{font-size:11px;font-weight:650;text-transform:uppercase;letter-spacing:.05em;color:var(--faint)}
+.dt input{width:158px}.dt.sm input{width:140px}
+.dt-seta{color:var(--faint);padding-bottom:10px}
+.dt-info{flex-basis:100%;font-size:12.5px;color:var(--mut)}
+.et-form{align-items:flex-end;gap:8px}
+.ec{margin-top:14px;border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden}
+.ec-hd,.ec-r{display:flex;align-items:center}
+.ec-hd{border-bottom:1px solid var(--line);height:28px}
+.ec-n{width:150px;flex:none;padding:0 12px;font-size:13px;font-weight:550;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ec-t{position:relative;flex:1;height:100%;min-height:34px}
+.ec-hd .ec-t{min-height:0}
+.ec-m{position:absolute;top:0;height:100%;border-left:1px solid var(--line);padding:6px 6px;font-size:11px;font-weight:600;color:var(--mut);overflow:hidden;white-space:nowrap}
+.ec-body{position:relative}
+.ec-r{border-bottom:1px solid var(--line);min-height:36px}.ec-r:last-of-type{border-bottom:0}
+.ec-b{position:absolute;top:8px;height:20px;border-radius:7px;background:var(--c);opacity:.85;min-width:6px}
+.ec-b.ok{opacity:.55}
+.ec-hoje{position:absolute;top:0;bottom:0;border-left:2px solid var(--bad);pointer-events:none}
+.et-list{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.et-i{display:grid;grid-template-columns:auto 1fr 150px 150px auto;gap:8px;align-items:center}
+.et-i.feito .et-nome{text-decoration:line-through;color:var(--faint)}
+.et-ck input{width:18px;height:18px;accent-color:var(--ok)}
+@media(max-width:740px){.et-i{grid-template-columns:auto 1fr auto}.et-i input[type=date]{grid-column:span 1}.ec-n{width:100px}.ec-hoje{display:none}}
 </style>
 </head>
 <body>
@@ -1318,6 +1343,48 @@ function vProjetos(){
     </section>`).join('')}</div><div class="kanban-footer"><span aria-hidden="true"></span>Arraste na horizontal para navegar entre as etapas. “Paralisado” fica separado do fluxo.</div>`:`<div class="empty sec">${q?'Nenhum projeto encontrado. Tente outra busca.':'Nenhum projeto neste filtro. Crie um projeto ou escolha outro filtro.'}</div>`}`;
 }
 
+
+/* ---------- datas e cronograma do projeto ---------- */
+function datasInfo(p){
+  const fim=p.prazo?dDe(p.prazo):null; if(!fim)return 'Defina o prazo para aparecer no cronograma geral.';
+  const ini=p.inicio?dDe(p.inicio):new Date(p.criadoEm||Date.now()); ini.setHours(0,0,0,0);
+  const tot=Math.round((fim-ini)/DIA), d=prazoDias(p.prazo);
+  const dur=tot>=0?tot+' dia'+(tot===1?'':'s')+' de duração':'prazo antes do início';
+  const falta=p.status==='concluido'?'':d<0?' · <b style="color:var(--bad)">venceu há '+(-d)+' dia'+(d===-1?'':'s')+'</b>':d===0?' · <b style="color:var(--bad)">vence hoje</b>':' · faltam '+d+' dia'+(d===1?'':'s');
+  return dur+falta+(p.inicio?'':' · <i>sem início: usando a data de criação ('+fmtData(ini.getTime())+')</i>');
+}
+function etapasHtml(p,id){
+  const et=Object.entries(p.etapas||{}).map(([k,e])=>Object.assign({k},e)).sort((a,b)=>(a.ini||'9999').localeCompare(b.ini||'9999')||(a.t||0)-(b.t||0));
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const feitas=et.filter(e=>e.feito).length;
+  const form=`<form class="row wrap et-form" data-form="etapa" data-id="${id}"><input type="text" id="etN" placeholder="Nova etapa (ex.: Desenvolvimento)" autocomplete="off" style="flex:2;min-width:180px"><label class="dt sm"><span>Início</span><input type="date" id="etI"></label><label class="dt sm"><span>Fim</span><input type="date" id="etF"></label><button class="btn" type="submit">+ Etapa</button></form>`;
+  let g='';
+  const dts=[];
+  if(p.inicio)dts.push(dDe(p.inicio)); else if(p.criadoEm)dts.push(new Date(new Date(p.criadoEm).setHours(0,0,0,0)));
+  if(p.prazo)dts.push(dDe(p.prazo));
+  et.forEach(e=>{if(e.ini)dts.push(dDe(e.ini));if(e.fim)dts.push(dDe(e.fim));});
+  dts.push(hoje);
+  const ok=et.some(e=>e.ini&&e.fim);
+  if(ok){
+    let min=new Date(Math.min(...dts)),max=new Date(Math.max(...dts));
+    min=new Date(min.getFullYear(),min.getMonth(),1);max=new Date(max.getFullYear(),max.getMonth()+1,0);
+    const span=(max-min)/DIA+1,pc=d=>((d-min)/DIA)/span*100;
+    let ms='';for(let d=new Date(min);d<=max;d=new Date(d.getFullYear(),d.getMonth()+1,1)){const nx=new Date(d.getFullYear(),d.getMonth()+1,1);ms+=`<div class="ec-m" style="left:${pc(d)}%;width:${(Math.min(nx,new Date(max.getTime()+DIA))-d)/DIA/span*100}%">${MESES[d.getMonth()]}${d.getMonth()===0?' '+d.getFullYear():''}</div>`;}
+    const rows=et.filter(e=>e.ini&&e.fim).map(e=>{
+      const a=dDe(e.ini),b=dDe(e.fim),late=!e.feito&&b<hoje,c=e.feito?'var(--ok)':late?'var(--bad)':stCor(p.status);
+      return `<div class="ec-r"><span class="ec-n" title="${esc(e.nome||'')}">${e.feito?'✓ ':''}${esc(e.nome||'Etapa')}</span><div class="ec-t"><i class="ec-b${e.feito?' ok':''}" style="left:${pc(a)}%;width:${Math.max(1.5,pc(new Date(b.getTime()+DIA))-pc(a))}%;--c:${c}" title="${esc((e.nome||'')+' · '+fmtData(a.getTime())+' → '+fmtData(b.getTime()))}"></i></div></div>`;}).join('');
+    g=`<div class="ec"><div class="ec-hd"><span class="ec-n"></span><div class="ec-t">${ms}</div></div><div class="ec-body">${rows}<i class="ec-hoje" style="left:calc(150px + (100% - 150px) * ${pc(hoje)/100})"></i></div></div>`;
+  }
+  const lista=et.length?`<div class="et-list">${et.map(e=>{
+    const late=!e.feito&&e.fim&&dDe(e.fim)<hoje;
+    return `<div class="et-i${e.feito?' feito':''}"><label class="et-ck"><input type="checkbox" data-keep data-ef="feito" data-id="${id}" data-e="${e.k}" ${e.feito?'checked':''} aria-label="Etapa concluída"></label>
+      <input type="text" class="et-nome" data-keep data-ef="nome" data-id="${id}" data-e="${e.k}" value="${esc(e.nome||'')}" aria-label="Nome da etapa">
+      <input type="date" data-keep data-ef="ini" data-id="${id}" data-e="${e.k}" value="${esc(e.ini||'')}" aria-label="Início da etapa">
+      <input type="date" data-keep data-ef="fim" data-id="${id}" data-e="${e.k}" value="${esc(e.fim||'')}" aria-label="Fim da etapa"${late?' style="border-color:var(--bad)"':''}>
+      <button class="btn ghost sm" data-act="del-etapa" data-id="${id}" data-e="${e.k}" aria-label="Remover etapa" title="Remover etapa">✕</button></div>`;}).join('')}</div>`:'<p class="hint" style="margin-top:10px">Nenhuma etapa ainda. Quebre o projeto em partes com datas para enxergar o cronograma.</p>';
+  return `<div class="sec"><h3>Cronograma do projeto ${et.length?`<span class="chip">${feitas}/${et.length} etapas</span>`:''}</h3><p class="section-hint" style="margin-bottom:10px">Divida o projeto em etapas com início e fim. A linha vermelha é hoje.</p>${form}${g}${lista}</div>`;
+}
+
 /* ---------- Cronograma (Gantt) ---------- */
 const MESES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 const isoDe=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -1499,10 +1566,14 @@ function vProjeto(id){
   <div class="ed">
     <input type="text" class="tt project-title" data-keep data-f="nome" data-id="${id}" value="${esc(p.nome)}" aria-label="Nome do projeto" title="Clique para renomear o projeto">
     <div class="project-phase"><p class="project-kicker">Etapa atual ${stChip(p.status)}</p><p class="project-help">Clique em uma etapa para mudar a situação do projeto. O percentual será ajustado automaticamente e você poderá alterá-lo abaixo.</p>${pipeHtml(p)}</div>
-    <div class="row wrap" style="justify-content:space-between">
+    <div class="datas-bar">
       ${p.status==='paralisado'?`<button class="btn" data-act="retomar" data-id="${id}">Retomar projeto</button>`:`<button class="btn ghost" data-act="status" data-id="${id}" data-v="paralisado" aria-pressed="false">Paralisado</button>`}
-      <label class="row" style="gap:8px"><span class="hint">Início</span><input type="date" data-keep data-f="inicio" data-id="${id}" value="${esc(p.inicio||'')}" aria-label="Data de início" style="width:150px"></label>
-      <label class="row" style="gap:8px"><span class="hint">Prazo de entrega</span><input type="date" data-keep data-f="prazo" data-id="${id}" value="${esc(p.prazo||'')}" aria-label="Prazo" style="width:170px"></label>
+      <div class="datas">
+        <label class="dt"><span>Início</span><input type="date" data-keep data-f="inicio" data-id="${id}" value="${esc(p.inicio||'')}" aria-label="Data de início"></label>
+        <span class="dt-seta" aria-hidden="true">→</span>
+        <label class="dt"><span>Prazo de entrega</span><input type="date" data-keep data-f="prazo" data-id="${id}" value="${esc(p.prazo||'')}" aria-label="Prazo de entrega"></label>
+        <div class="dt-info">${datasInfo(p)}</div>
+      </div>
     </div>
     <div class="card"><label class="f" for="pa">Próximo passo: o que precisa ser feito?</label>
       <input id="pa" type="text" class="big" data-keep data-f="proximaAcao" data-id="${id}" value="${esc(p.proximaAcao||'')}" placeholder="Ex.: Revisar documentação e enviar para aprovação"></div>
@@ -1515,6 +1586,7 @@ function vProjeto(id){
         ${p.status==='paralisado'?'<p class="hint" style="margin-top:10px">Paralisado fica fora da régua de %. Ao escolher outro status, o andamento volta a valer.</p>':''}
         <p class="hint" style="margin-top:12px">Criado em ${fmtData(p.criadoEm||now())}${p.por&&nomeDe(p.por)?' por '+esc(nomeDe(p.por)):''} · atualizado ${ago(p.atualizadoEm||p.criadoEm)}${p.concluidoEm?' · concluído em '+fmtData(p.concluidoEm):''}</p></div>
     </div>
+    ${etapasHtml(p,id)}
     <div class="sec"><h3>Histórico de atualizações</h3><p class="section-hint" style="margin-bottom:10px">Registre as novidades para acompanhar a evolução do projeto.</p>
       <form class="row" data-form="diario" data-id="${id}"><input type="text" id="dIn" placeholder="O que foi feito ou mudou?" autocomplete="off"><button class="btn" type="submit">Registrar</button></form>
       <div class="tl" style="margin-top:14px">${diario.length?diario.map(e=>`<div class="e">${esc(e.txt)}<small>${fmtData(e.t)} · ${ago(e.t)} <button class="btn ghost sm" data-act="del-diario" data-id="${id}" data-k="${e.k}" aria-label="Apagar registro">×</button></small></div>`).join(''):'<span class="hint">Nenhum registro ainda.</span>'}</div></div>
@@ -1756,6 +1828,7 @@ document.addEventListener('click',e=>{
       lista('notas').filter(n=>n.projetoId===id).forEach(n=>upd('notas/'+n.id,{projetoId:''}));
       lista('aguardando').filter(x=>x.projetoId===id).forEach(x=>upd('aguardando/'+x.id,{projetoId:''}));
       del('anexos/'+id); delete S.anx[ckey(id)]; del('projetos/'+id); purgaAtivs(id); S.proj=null; } break;
+    case 'del-etapa': del('projetos/'+id+'/etapas/'+b.dataset.e); tocaProjeto(id); break;
     case 'del-diario': del('projetos/'+id+'/diario/'+b.dataset.k); tocaProjeto(id); break;
     case 'anx-add': { const i=$('#anxIn'); if(i)i.click(); break; }
     case 'anx-ver': verAnexo(id,b.dataset.k); break;
@@ -1874,6 +1947,7 @@ document.addEventListener('submit',e=>{
   else if(k==='captura'){ if(capturar(val('#capC')))f.reset(); }
   else if(k==='captura-modal'){ if(capturar(val('#capM')))fechaModal(); }
   else if(k==='novo-projeto'){ const n=val('#npNome'); if(!n)return; const id=novoProjeto(n); abrirProjeto(id); setTimeout(()=>{const x=$('#pa');if(x)x.focus();},40); }
+  else if(k==='etapa'){ const n=val('#etN'); if(!n)return; let a=val('#etI'),z=val('#etF'); if(a&&z&&a>z){const x=a;a=z;z=x;} const id=f.dataset.id; set('projetos/'+id+'/etapas/'+newId(),{nome:n,ini:a,fim:z,feito:false,t:now()}); tocaProjeto(id); registraAtiv(id,'Etapa: “'+n.slice(0,60)+'”'); f.reset(); }
   else if(k==='diario'){ const t=val('#dIn'); if(!t)return; const id=f.dataset.id; set('projetos/'+id+'/diario/'+newId(),{txt:t,t:now()}); tocaProjeto(id); registraAtiv(id,'Diário: “'+t.slice(0,80)+'”'); f.reset(); }
   else if(k==='link'){ const t=val('#lT'); let u=val('#lU'); if(!u)return; if(!/^https?:\/\//i.test(u))u='https://'+u; set('projetos/'+f.dataset.id+'/links/'+newId(),{t:t||u,u}); f.reset(); }
   else if(k==='novo-espaco'){ const n=val('#neNome'); if(!n)return; const eid=db.ref('qgEspacos').push().key; fechaModal();
@@ -1894,6 +1968,10 @@ document.addEventListener('change',e=>{
   if(t.dataset.actChange==='ws'){ trocaWs(t.value); return; }
   if(t.dataset.actChange==='kanban-status'){ if(STATUS[t.value])mudarEtapaProjeto(t.dataset.id,t.value); return; }
   if(t.id==='fNP'){ S.notaProj=t.value; render(false); return; }
+  if(t.dataset.ef&&t.dataset.id&&t.dataset.e){
+    let v=t.dataset.ef==='feito'?t.checked:t.value; if(t.dataset.ef==='nome'){v=v.trim();if(!v){render(false);return;}}
+    upd('projetos/'+t.dataset.id+'/etapas/'+t.dataset.e,{[t.dataset.ef]:v}); tocaProjeto(t.dataset.id); return;
+  }
   if(t.dataset.f&&t.dataset.id){
     let v=t.value; const f=t.dataset.f;
     if(f==='progresso')v=+v; if(f==='nome'){v=v.trim(); if(!v){render(false);return;}}
