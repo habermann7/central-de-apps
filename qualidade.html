@@ -130,7 +130,7 @@ input:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 
         <div class="sub">Não conformidades · farmácia de manipulação</div>
       </div>
     </div>
-    <div class="user-chip">Eu: <input type="text" id="meu-nome" placeholder="seu nome"></div>
+    <div class="user-chip">Eu: <input type="text" id="meu-nome" placeholder="carregando…" readonly title="Vem do seu login na Estante"></div>
   </div>
 </header>
 
@@ -350,6 +350,7 @@ function conectarFirebase(){
   firebase.auth().onAuthStateChanged(function(user){
     if(!user || jaConectou) return;
     jaConectou = true;
+    preencherNomeDoLogin(user);
     wireRealtimeListeners();
   });
   fbdb.ref('.info/connected').on('value', function(snap){
@@ -489,8 +490,7 @@ function boot(){
   wireTabs();
   document.getElementById('f-data').value = localDateStr();
 
-  var nome = localStorage.getItem('meu-usuario');
-  if(nome) document.getElementById('meu-nome').value = nome;
+  // o nome agora vem do login (ver preencherNomeDoLogin)
 
   safeRun(renderAll, 'tela inicial');
   safeRun(wireLogoInput, 'logo');
@@ -499,9 +499,15 @@ function boot(){
   conectarFirebase();
 }
 
-document.getElementById('meu-nome').addEventListener('change', function(){
-  try{ localStorage.setItem('meu-usuario', this.value.trim()); }catch(e){}
-});
+var NOME_LOGIN = '';
+function preencherNomeDoLogin(user){
+  var campo = document.getElementById('meu-nome');
+  var base = user.displayName || user.email || 'Não identificado';
+  NOME_LOGIN = base; if(campo) campo.value = base;
+  firebase.database().ref('centralApps/usuarios/' + user.uid + '/nome').once('value').then(function(snap){
+    var n = snap.val(); if(n){ NOME_LOGIN = n + ' (' + (user.email || '') + ')'; if(campo) campo.value = n; }
+  }).catch(function(){});
+}
 
 document.addEventListener('DOMContentLoaded', boot);
 if(document.readyState === 'complete' || document.readyState === 'interactive'){ boot(); }
@@ -534,7 +540,7 @@ function fmtDate(d){ if(!d) return '-'; var p = d.split('-'); return p[2]+'/'+p[
 // Data local (não UTC) — evita pular pro dia seguinte à noite (Brasília é UTC-3)
 function localDateStr(d){ d = d || new Date(); var y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0'); return y+'-'+m+'-'+day; }
 function fmtDateTime(iso){ if(!iso) return '-'; var d = new Date(iso); return fmtDate(localDateStr(d)) + ' ' + d.toTimeString().slice(0,5); }
-function meuNomeAtual(){ var v = document.getElementById('meu-nome').value.trim(); return v || 'Não identificado'; }
+function meuNomeAtual(){ var u = firebase.auth().currentUser; return NOME_LOGIN || (u && (u.displayName || u.email)) || 'Não identificado'; }
 
 /* ================= Novo registro ================= */
 function renderAvariaSelect(){ document.getElementById('f-avaria').innerHTML = TYPES.map(function(t){ return '<option value="'+esc(t)+'">'+esc(t)+'</option>'; }).join(''); }
