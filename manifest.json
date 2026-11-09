@@ -166,13 +166,14 @@
     "category": "PCP"
   },
   {
-    "title": "Meu QG",
+    "title": "RUMO",
     "description": "Seus projetos e anotações num lugar só",
     "file": "meu-qg.html",
     "icon": "🗂️",
     "color": "#4d9fff",
     "grupos": [
-      "*"
+      "*",
+      "PROJETOS"
     ],
     "category": "Projetos"
   },
