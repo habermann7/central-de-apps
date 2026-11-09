@@ -888,6 +888,18 @@ main{max-width:1240px}
 .et-i{display:grid;grid-template-columns:auto 1fr 150px 150px auto;gap:8px;align-items:center}
 .et-i.feito .et-nome{text-decoration:line-through;color:var(--faint)}
 .et-ck input{width:18px;height:18px;accent-color:var(--ok)}
+.vr-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.vr-i{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:10px 12px;display:flex;flex-direction:column;gap:8px;border-left:4px solid var(--c,var(--line))}
+.vr-i.entregue{background:transparent}
+.vr-top,.vr-mid{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.vr-top select{width:168px;flex:none}
+.vr-mid .dt{flex:none}
+.vr-tag{display:inline-flex}.vr-tag .vr-nome{width:84px;font-weight:700;font-family:'IBM Plex Mono',monospace}
+.vr-nota{flex:1;min-width:120px;font-size:12.5px;color:var(--mut)}
+.vr-esc{flex:2;min-width:180px}
+.vr-b.plan{opacity:.45;background-image:repeating-linear-gradient(135deg,transparent 0 5px,rgba(255,255,255,.55) 5px 8px)}
+.vr-b.marco{width:14px!important;height:14px;top:11px;border-radius:50%;transform:translateX(-7px);min-width:0}
+@media(max-width:740px){.vr-esc{flex-basis:100%}.vr-top select{flex:1}.vr-nota{flex-basis:100%;order:5}.vr-mid .dt{flex:1}}
 @media(max-width:740px){.et-i{grid-template-columns:auto 1fr auto}.et-i input[type=date]{grid-column:span 1}.ec-n{width:100px}.ec-hoje{display:none}}
 </style>
 </head>
@@ -1385,6 +1397,44 @@ function etapasHtml(p,id){
   return `<div class="sec"><h3>Cronograma do projeto ${et.length?`<span class="chip">${feitas}/${et.length} etapas</span>`:''}</h3><p class="section-hint" style="margin-bottom:10px">Divida o projeto em etapas com início e fim. A linha vermelha é hoje.</p>${form}${g}${lista}</div>`;
 }
 
+/* ---------- Versões do projeto (v1, v2, v3…) ---------- */
+const VSTATUS={planejada:{n:'Planejada',c:'var(--faint)'},andamento:{n:'Em andamento',c:'var(--ok)'},entregue:{n:'Entregue',c:'var(--ok)'}};
+function proxVersao(vs){let m=0;vs.forEach(v=>{const r=/^v(\d+)$/i.exec((v.nome||'').trim());if(r)m=Math.max(m,+r[1]);});return 'v'+(m+1);}
+function versoesHtml(p,id){
+  const vs=Object.entries(p.versoes||{}).map(([k,v])=>Object.assign({k},v)).sort((a,b)=>(a.ini||a.fim||'9999').localeCompare(b.ini||b.fim||'9999')||(a.t||0)-(b.t||0));
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const ent=vs.filter(v=>v.st==='entregue').length;
+  const form=`<form class="row wrap et-form" data-form="versao" data-id="${id}"><label class="dt sm"><span>Versão</span><input type="text" id="vrN" value="${esc(proxVersao(vs))}" maxlength="20" autocomplete="off" style="width:84px"></label><input type="text" id="vrE" placeholder="O que entra nela (ex.: Cadastro e login)" autocomplete="off" style="flex:2;min-width:180px"><label class="dt sm"><span>Início</span><input type="date" id="vrI"></label><label class="dt sm"><span>Entrega</span><input type="date" id="vrF"></label><button class="btn" type="submit">+ Versão</button></form>`;
+  const corDe=v=>v.st==='entregue'?'var(--ok)':(v.fim&&dDe(v.fim)<hoje)?'var(--bad)':v.st==='andamento'?stCor(p.status):'var(--faint)';
+  let g='';
+  const comData=vs.filter(v=>v.ini||v.fim);
+  if(comData.length){
+    const dts=[hoje];comData.forEach(v=>{if(v.ini)dts.push(dDe(v.ini));if(v.fim)dts.push(dDe(v.fim));});
+    let min=new Date(Math.min(...dts)),max=new Date(Math.max(...dts));
+    min=new Date(min.getFullYear(),min.getMonth(),1);max=new Date(max.getFullYear(),max.getMonth()+1,0);
+    const span=(max-min)/DIA+1,pc=d=>((d-min)/DIA)/span*100;
+    let ms='';for(let d=new Date(min);d<=max;d=new Date(d.getFullYear(),d.getMonth()+1,1)){const nx=new Date(d.getFullYear(),d.getMonth()+1,1);ms+=`<div class="ec-m" style="left:${pc(d)}%;width:${(Math.min(nx,new Date(max.getTime()+DIA))-d)/DIA/span*100}%">${MESES[d.getMonth()]}${d.getMonth()===0?' '+d.getFullYear():''}</div>`;}
+    const rows=comData.map(v=>{
+      const a=dDe(v.ini||v.fim),b=dDe(v.fim||v.ini),c=corDe(v);
+      const marco=!(v.ini&&v.fim)||v.ini===v.fim;
+      const tip=(v.nome||'')+' · '+(v.ini?fmtData(dDe(v.ini).getTime()):'—')+' → '+(v.fim?fmtData(dDe(v.fim).getTime()):'—');
+      return `<div class="ec-r"><span class="ec-n" title="${esc(tip)}">${v.st==='entregue'?'✓ ':''}${esc(v.nome||'v?')}</span><div class="ec-t"><i class="ec-b vr-b${v.st==='entregue'?' ok':''}${v.st==='planejada'?' plan':''}${marco?' marco':''}" style="left:${pc(a)}%;width:${marco?0:Math.max(1.5,pc(new Date(b.getTime()+DIA))-pc(a))}%;--c:${c}" title="${esc(tip)}"></i></div></div>`;}).join('');
+    g=`<div class="ec"><div class="ec-hd"><span class="ec-n"></span><div class="ec-t">${ms}</div></div><div class="ec-body">${rows}<i class="ec-hoje" style="left:calc(150px + (100% - 150px) * ${pc(hoje)/100})"></i></div></div>`;
+  }
+  const lista=vs.length?`<div class="vr-list">${vs.map(v=>{
+    const late=v.st!=='entregue'&&v.fim&&dDe(v.fim)<hoje;
+    const d=v.fim?Math.round((dDe(v.fim)-hoje)/DIA):null;
+    const nota=v.st==='entregue'?'Entregue':late?`<b style="color:var(--bad)">atrasada ${-d} dia${d===-1?'':'s'}</b>`:d===null?'sem data de entrega':d===0?'entrega hoje':`entrega em ${d} dia${d===1?'':'s'}`;
+    const at=(f,l,t,val,ex)=>`<input ${t==='date'?'type="date"':'type="text"'} data-keep data-vf="${f}" data-id="${id}" data-v="${v.k}" value="${esc(val||'')}" aria-label="${l}" ${ex||''}>`;
+    return `<div class="vr-i ${v.st||'planejada'}" style="--c:${corDe(v)}"><div class="vr-top"><span class="vr-tag" style="--c:${corDe(v)}">${at('nome','Nome da versão','text',v.nome,'maxlength="20" class="vr-nome"')}</span>
+      <select data-keep data-vf="st" data-id="${id}" data-v="${v.k}" aria-label="Situação da versão">${Object.keys(VSTATUS).map(k=>`<option value="${k}"${(v.st||'planejada')===k?' selected':''}>${VSTATUS[k].n}</option>`).join('')}</select>
+      <span class="vr-nota">${nota}</span>
+      <button class="btn ghost sm" data-act="del-versao" data-id="${id}" data-v="${v.k}" aria-label="Remover versão" title="Remover versão">✕</button></div>
+      <div class="vr-mid">${at('escopo','O que entra nesta versão','text',v.escopo,'placeholder="O que entra nesta versão" class="vr-esc"')}
+      <label class="dt sm"><span>Início</span>${at('ini','Início da versão','date',v.ini)}</label><label class="dt sm"><span>Entrega</span>${at('fim','Entrega da versão','date',v.fim,late?'style="border-color:var(--bad)"':'')}</label></div></div>`;}).join('')}</div>`:'<p class="hint" style="margin-top:10px">Nenhuma versão ainda. Planeje as entregas do projeto em v1, v2, v3… com datas e o que entra em cada uma.</p>';
+  return `<div class="sec"><h3>Versões do projeto ${vs.length?`<span class="chip">${ent}/${vs.length} entregues</span>`:''}</h3><p class="section-hint" style="margin-bottom:10px">Cronograma por versão: o que sai em cada entrega e quando. A linha vermelha é hoje.</p>${form}${g}${lista}</div>`;
+}
+
 /* ---------- Cronograma (Gantt) ---------- */
 const MESES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 const isoDe=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -1567,7 +1617,7 @@ function vProjeto(id){
     <input type="text" class="tt project-title" data-keep data-f="nome" data-id="${id}" value="${esc(p.nome)}" aria-label="Nome do projeto" title="Clique para renomear o projeto">
     <div class="project-phase"><p class="project-kicker">Etapa atual ${stChip(p.status)}</p><p class="project-help">Clique em uma etapa para mudar a situação do projeto. O percentual será ajustado automaticamente e você poderá alterá-lo abaixo.</p>${pipeHtml(p)}</div>
     <div class="datas-bar">
-      ${p.status==='paralisado'?`<button class="btn" data-act="retomar" data-id="${id}">Retomar projeto</button>`:`<button class="btn ghost" data-act="status" data-id="${id}" data-v="paralisado" aria-pressed="false">Paralisado</button>`}
+      ${p.status==='paralisado'?`<button class="btn" data-act="retomar" data-id="${id}">Retomar projeto</button>`:`<button class="btn ghost" data-act="status" data-id="${id}" data-v="paralisado" aria-pressed="false" title="Pausar o projeto sem perder o andamento">⏸ Paralisar projeto</button>`}
       <div class="datas">
         <label class="dt"><span>Início</span><input type="date" data-keep data-f="inicio" data-id="${id}" value="${esc(p.inicio||'')}" aria-label="Data de início"></label>
         <span class="dt-seta" aria-hidden="true">→</span>
@@ -1587,6 +1637,7 @@ function vProjeto(id){
         <p class="hint" style="margin-top:12px">Criado em ${fmtData(p.criadoEm||now())}${p.por&&nomeDe(p.por)?' por '+esc(nomeDe(p.por)):''} · atualizado ${ago(p.atualizadoEm||p.criadoEm)}${p.concluidoEm?' · concluído em '+fmtData(p.concluidoEm):''}</p></div>
     </div>
     ${etapasHtml(p,id)}
+    ${versoesHtml(p,id)}
     <div class="sec"><h3>Histórico de atualizações</h3><p class="section-hint" style="margin-bottom:10px">Registre as novidades para acompanhar a evolução do projeto.</p>
       <form class="row" data-form="diario" data-id="${id}"><input type="text" id="dIn" placeholder="O que foi feito ou mudou?" autocomplete="off"><button class="btn" type="submit">Registrar</button></form>
       <div class="tl" style="margin-top:14px">${diario.length?diario.map(e=>`<div class="e">${esc(e.txt)}<small>${fmtData(e.t)} · ${ago(e.t)} <button class="btn ghost sm" data-act="del-diario" data-id="${id}" data-k="${e.k}" aria-label="Apagar registro">×</button></small></div>`).join(''):'<span class="hint">Nenhum registro ainda.</span>'}</div></div>
@@ -1828,6 +1879,7 @@ document.addEventListener('click',e=>{
       lista('notas').filter(n=>n.projetoId===id).forEach(n=>upd('notas/'+n.id,{projetoId:''}));
       lista('aguardando').filter(x=>x.projetoId===id).forEach(x=>upd('aguardando/'+x.id,{projetoId:''}));
       del('anexos/'+id); delete S.anx[ckey(id)]; del('projetos/'+id); purgaAtivs(id); S.proj=null; } break;
+    case 'del-versao': del('projetos/'+id+'/versoes/'+b.dataset.v); tocaProjeto(id); registraAtiv(id,'Versão removida'); break;
     case 'del-etapa': del('projetos/'+id+'/etapas/'+b.dataset.e); tocaProjeto(id); break;
     case 'del-diario': del('projetos/'+id+'/diario/'+b.dataset.k); tocaProjeto(id); break;
     case 'anx-add': { const i=$('#anxIn'); if(i)i.click(); break; }
@@ -1948,6 +2000,7 @@ document.addEventListener('submit',e=>{
   else if(k==='captura-modal'){ if(capturar(val('#capM')))fechaModal(); }
   else if(k==='novo-projeto'){ const n=val('#npNome'); if(!n)return; const id=novoProjeto(n); abrirProjeto(id); setTimeout(()=>{const x=$('#pa');if(x)x.focus();},40); }
   else if(k==='etapa'){ const n=val('#etN'); if(!n)return; let a=val('#etI'),z=val('#etF'); if(a&&z&&a>z){const x=a;a=z;z=x;} const id=f.dataset.id; set('projetos/'+id+'/etapas/'+newId(),{nome:n,ini:a,fim:z,feito:false,t:now()}); tocaProjeto(id); registraAtiv(id,'Etapa: “'+n.slice(0,60)+'”'); f.reset(); }
+  else if(k==='versao'){ const n=val('#vrN'); if(!n)return; let a=val('#vrI'),z=val('#vrF'); if(a&&z&&a>z){const x=a;a=z;z=x;} const id=f.dataset.id; set('projetos/'+id+'/versoes/'+newId(),{nome:n,escopo:val('#vrE'),ini:a,fim:z,st:'planejada',t:now()}); tocaProjeto(id); registraAtiv(id,'Versão '+n+(val('#vrE')?': “'+val('#vrE').slice(0,60)+'”':'')); f.reset(); }
   else if(k==='diario'){ const t=val('#dIn'); if(!t)return; const id=f.dataset.id; set('projetos/'+id+'/diario/'+newId(),{txt:t,t:now()}); tocaProjeto(id); registraAtiv(id,'Diário: “'+t.slice(0,80)+'”'); f.reset(); }
   else if(k==='link'){ const t=val('#lT'); let u=val('#lU'); if(!u)return; if(!/^https?:\/\//i.test(u))u='https://'+u; set('projetos/'+f.dataset.id+'/links/'+newId(),{t:t||u,u}); f.reset(); }
   else if(k==='novo-espaco'){ const n=val('#neNome'); if(!n)return; const eid=db.ref('qgEspacos').push().key; fechaModal();
@@ -1968,6 +2021,14 @@ document.addEventListener('change',e=>{
   if(t.dataset.actChange==='ws'){ trocaWs(t.value); return; }
   if(t.dataset.actChange==='kanban-status'){ if(STATUS[t.value])mudarEtapaProjeto(t.dataset.id,t.value); return; }
   if(t.id==='fNP'){ S.notaProj=t.value; render(false); return; }
+  if(t.dataset.vf&&t.dataset.id&&t.dataset.v){
+    let v=t.value.trim(); const f=t.dataset.vf;
+    if(f==='nome'&&!v){render(false);return;}
+    if(f==='ini'||f==='fim'){const vv=((obj('projetos')[t.dataset.id]||{}).versoes||{})[t.dataset.v]||{}; const a=f==='ini'?v:vv.ini,z=f==='fim'?v:vv.fim; if(a&&z&&a>z){toast('A entrega não pode ser antes do início');render(false);return;}}
+    upd('projetos/'+t.dataset.id+'/versoes/'+t.dataset.v,{[f]:v}); tocaProjeto(t.dataset.id);
+    if(f==='st')registraAtiv(t.dataset.id,'Versão '+((((obj('projetos')[t.dataset.id]||{}).versoes||{})[t.dataset.v]||{}).nome||'')+': '+VSTATUS[v].n.toLowerCase());
+    return;
+  }
   if(t.dataset.ef&&t.dataset.id&&t.dataset.e){
     let v=t.dataset.ef==='feito'?t.checked:t.value; if(t.dataset.ef==='nome'){v=v.trim();if(!v){render(false);return;}}
     upd('projetos/'+t.dataset.id+'/etapas/'+t.dataset.e,{[t.dataset.ef]:v}); tocaProjeto(t.dataset.id); return;
