@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>SLA Transportadoras STIN</title>
+<title>SLA transportadoras</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -19,9 +21,9 @@
   --ok:#2fbf4a; --warn:#f0a92a; --late:#ec835a; --crit:#e5534b; --open:#7c93a6;
   --ok-soft:rgba(47,191,74,.14); --warn-soft:rgba(240,169,42,.15); --crit-soft:rgba(229,83,75,.16); --open-soft:rgba(124,147,166,.16);
   --shadow:0 1px 0 rgba(255,255,255,.03) inset;
-  --f-display:'Segoe UI',system-ui,-apple-system,Roboto,'Helvetica Neue',Arial,sans-serif;
-  --f-body:'Segoe UI',system-ui,-apple-system,Roboto,'Helvetica Neue',Arial,sans-serif;
-  --f-mono:'Segoe UI',system-ui,-apple-system,Roboto,'Helvetica Neue',Arial,sans-serif;
+  --f-display:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,monospace;
   --r:10px;
 }
 *{box-sizing:border-box}
@@ -71,8 +73,8 @@ select{background:var(--panel);border:1px solid var(--line);border-radius:8px;pa
 .carrier .head{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .carrier .name{font-family:var(--f-display);font-weight:800;font-size:22px;letter-spacing:.02em;display:flex;align-items:center;gap:9px}
 .carrier .name i{width:12px;height:12px;border-radius:3px;display:inline-block}
-.carrier .pct{font-family:var(--f-display);font-weight:800;font-size:68px;line-height:.95;letter-spacing:-.02em}
-.carrier .pct small{font-size:30px;font-weight:700;margin-left:2px}
+.carrier .pct{font-family:var(--f-display);font-weight:800;font-size:52px;line-height:.95;letter-spacing:-.02em}
+.carrier .pct small{font-size:24px;font-weight:700;margin-left:2px}
 .carrier .meta{color:var(--ink-2);font-size:13.5px}
 .carrier .mini{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;border-top:1px solid var(--line);padding-top:10px}
 .carrier .mini div{display:grid;gap:1px}
@@ -102,6 +104,31 @@ select{background:var(--panel);border:1px solid var(--line);border-radius:8px;pa
 .kpi .bar-sla{height:6px;border-radius:3px;background:var(--panel-2);overflow:hidden;margin-top:4px}
 .kpi .bar-sla i{display:block;height:100%}
 
+/* bloco consolidado (visão geral) */
+.overall{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:14px;margin-bottom:14px}
+@media (max-width:980px){.overall{grid-template-columns:1fr}}
+.overall .right{display:grid;gap:14px;align-content:stretch;grid-template-rows:1fr auto;min-width:0}
+.kpi.mega{padding:18px 20px;align-content:center;gap:8px}
+.kpi.mega .top-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.kpi.mega .k{font-size:14px;color:var(--ink-2)}
+.kpi.mega .v{font-size:84px;line-height:.95;letter-spacing:-.02em}
+.kpi.mega .v small{font-size:38px;font-weight:700;margin-left:2px}
+.kpi.mega .s{font-size:13.5px}
+.kpi.mega .bar-sla{height:8px;border-radius:4px}
+.kpis.k5{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width:1100px){.kpis.k5{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:520px){.kpis.k5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.split-box{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;min-width:0}
+.split{display:flex;gap:2px;height:12px;margin-top:8px}
+.split i{display:block;min-width:3px}
+.split i:first-child{border-radius:4px 0 0 4px}
+.split i:last-child{border-radius:0 4px 4px 0}
+.split-leg{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:9px;font-size:13.5px;color:var(--ink-2)}
+.split-leg span{display:inline-flex;align-items:center;gap:7px}
+.split-leg i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.split-leg b{color:var(--ink);font-family:var(--f-display)}
+.matrix tr.tot td{background:var(--panel-2)}
+
 .chart-box{position:relative;height:300px}
 .chart-box.tall{height:340px}
 
@@ -119,6 +146,11 @@ tbody tr:hover td{background:var(--panel-2)}
 .cell{display:inline-grid;gap:0;min-width:58px;padding:5px 6px;border-radius:6px;font-family:var(--f-display);font-weight:700;font-size:16px;line-height:1.1}
 .cell small{font-family:var(--f-body);font-weight:500;font-size:11px;color:var(--ink-3)}
 .cell.ok{background:var(--ok-soft);color:var(--ok)} .cell.warn{background:var(--warn-soft);color:var(--warn)} .cell.crit{background:var(--crit-soft);color:var(--crit)} .cell.none{color:var(--ink-3)}
+
+.matrix.dense th,.matrix.dense td{padding-left:3px;padding-right:3px;letter-spacing:.02em}
+.matrix.dense th:first-child,.matrix.dense td:first-child{padding-left:10px}
+.matrix.dense .cell{min-width:46px;padding:5px 3px;font-size:13.5px}
+.matrix.dense .cell small{font-size:10px}
 
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);margin-top:8px}
 .legend span{display:inline-flex;align-items:center;gap:6px}
@@ -173,7 +205,7 @@ tbody tr:hover td{background:var(--panel-2)}
 <div class="wrap">
   <header class="top">
     <div class="brand">
-      <div class="eyebrow"><a href="./index.html" style="color:inherit;text-decoration:none" id="backLink">&larr; Central de Apps</a> · STIN PHARMA · Transportes</div>
+      <div class="eyebrow"><a href="./index.html" style="color:inherit;text-decoration:none" id="backLink">&larr; Central de Apps</a> · Transportes</div>
       <h1>SLA de entregas por transportadora</h1>
     </div>
     <div class="clock"><b id="clk">--:--</b><span id="clkd"></span></div>
@@ -368,7 +400,7 @@ function derive(car){
     else if(C.delivered(r)){ if(ent<=prev) cls='ok'; else { cls='late_deliv'; dias=ent-prev; } }
     else if(T<=prev) cls='open';
     else { cls='late_open'; dias=T-prev; }
-    return {r,prev,ent:C.delivered(r)?ent:null,base,cls,dias};
+    return {car,r,prev,ent:C.delivered(r)?ent:null,base,cls,dias};
   }).filter(Boolean);
 }
 
@@ -406,15 +438,24 @@ function stats(list){
   s.base=s.ok+s.late_deliv+s.late_open; s.fora=s.late_deliv+s.late_open;
   s.pct=s.base?s.ok/s.base*100:null; return s;
 }
+function sumStats(arr){
+  const s={total:0,ok:0,late_deliv:0,late_open:0,open:0,excl:0,diasSum:0};
+  arr.forEach(x=>Object.keys(s).forEach(k=>{ s[k]+=x[k]; }));
+  s.base=s.ok+s.late_deliv+s.late_open; s.fora=s.late_deliv+s.late_open;
+  s.pct=s.base?s.ok/s.base*100:null; return s;
+}
 const level = p => p==null?'none':(p>=META?'ok':(p>=80?'warn':'crit'));
-function periodList(car){ const rg=range(car); return S.der[car].filter(d=>inRange(d,rg)); }
+function periodList(car){ if(car==='geral') return ORDER.flatMap(periodList); const rg=range(car); return S.der[car].filter(d=>inRange(d,rg)); }
+const allDer = () => ORDER.flatMap(c=>S.der[c]);
+const GERAL = {name:'Geral',idLabel:'Rastreio / AWB / CTRC',baseLabel:'Expedição',placeLabel:'Cidade'};
+const carName = car => car==='geral' ? GERAL.name : CARRIERS[car].name;
 function buckets(list, upTo, rg){
   const m=new Map();
   list.forEach(d=>{ if(upTo!=null && d.prev>upTo) return; const b=bucketOf(d.prev); if(!m.has(b)) m.set(b,[]); m.get(b).push(d); });
-  // mostra todos os dias/semanas do período, mesmo sem previsão (ex.: fim de semana)
-  if(rg && rg[0]>-1e8){ const end=Math.min(rg[1], upTo!=null?upTo:rg[1]); const step=S.gran==='dia'?1:7; for(let d=bucketOf(rg[0]); d<=end; d+=step){ if(step===1 && (wday(d)===0||wday(d)===6)) continue; if(!m.has(d)) m.set(d,[]); } }
-  // na visão por dia, sábados e domingos não aparecem nos gráficos/quadros (continuam contando nos indicadores)
-  return [...m.keys()].filter(b=>S.gran!=='dia'||(wday(b)!==0&&wday(b)!==6)).sort((a,b)=>a-b).map(b=>({b,s:stats(m.get(b))}));
+  // mostra todos os dias úteis/semanas do período, mesmo sem previsão
+  if(rg && rg[0]>-1e8){ const end=Math.min(rg[1], upTo!=null?upTo:rg[1]); const step=S.gran==='dia'?1:7; for(let d=bucketOf(rg[0]); d<=end; d+=step){ if(step===1 && !isBD(d)) continue; if(!m.has(d)) m.set(d,[]); } }
+  // na visão por dia, sábados, domingos e feriados nacionais não aparecem nos gráficos/quadros (continuam contando nos indicadores)
+  return [...m.keys()].filter(b=>S.gran!=='dia'||isBD(b)).sort((a,b)=>a-b).map(b=>({b,s:stats(m.get(b))}));
 }
 function lastImport(car){ const l=S.imports.filter(i=>i.car===car).sort((a,b)=>new Date(b.ts)-new Date(a.ts)); return l[0]; }
 function dataUntil(car){ return S.ref[car]; }
@@ -431,6 +472,15 @@ const barLabels={id:'barLabels',afterDatasetsDraw(chart){
   });
   ctx.restore();
 }};
+/* total em cima de cada barra empilhada */
+const stackTotals={id:'stackTotals',afterDatasetsDraw(chart){
+  const ctx=chart.ctx, n=chart.data.datasets.length, top=chart.getDatasetMeta(n-1), slot=chart.chartArea.width/Math.max(1,top.data.length); ctx.save();
+  top.data.forEach((el,j)=>{ const t=chart.data.datasets.reduce((a,ds)=>a+(ds.data[j]||0),0); if(!t) return;
+    ctx.font='700 '+(slot<32?10:13)+'px "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif'; ctx.fillStyle=tok('--ink'); ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.fillText(fmtInt(t), el.x, el.y-4);
+  });
+  ctx.restore();
+}};
 function tok(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 
 /* ===================== render ===================== */
@@ -441,7 +491,7 @@ function render(){
   document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.tab===S.tab?'true':'false'));
   document.querySelectorAll('#gran button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.g===S.gran?'true':'false'));
   if(S.tab==='geral') renderGeral(); else renderCarrier(S.tab);
-  $('#foot').innerHTML = '% no prazo = entregues no prazo ÷ (entregues no prazo + entregues com atraso + atrasados em aberto). Pedidos em andamento (previsão ainda não venceu) ficam fora da conta. Os períodos e gráficos usam a data de previsão de entrega; semanas de segunda a domingo. Meta: '+META+'%. A situação de cada transportadora é calculada até a data mais recente do relatório importado; previsões depois dessa data contam como em andamento. Correios: dias úteis sem sábados, domingos e feriados nacionais; devolvidos ao remetente, cancelados, estornados, com suspensão de entrega solicitada e baixados pela unidade postadora não entram no SLA. Dados compartilhados com o time (salvos no banco da Central de Apps).';
+  $('#foot').innerHTML = '% no prazo = entregues no prazo ÷ (entregues no prazo + entregues com atraso + atrasados em aberto). Pedidos em andamento (previsão ainda não venceu) ficam fora da conta. Os períodos e gráficos usam a data de previsão de entrega; semanas de segunda a domingo. Meta: '+META+'%. O SLA geral soma os pedidos das três transportadoras, então quem tem mais volume pesa mais. A situação de cada transportadora é calculada até a data mais recente do relatório importado; previsões depois dessa data contam como em andamento. Correios: dias úteis sem sábados, domingos e feriados nacionais; devolvidos ao remetente, cancelados, estornados, com suspensão de entrega solicitada e baixados pela unidade postadora não entram no SLA. Dados compartilhados com o time (salvos no banco da Central de Apps).';
 }
 
 function renderGeral(){
@@ -461,34 +511,91 @@ function renderGeral(){
       '<div class="upd">Base: '+esc(li?li.file:'—')+' · situação em '+fmtDN(du)+(openNow?' · '+fmtInt(openNow)+' atrasados em aberto no total':'')+'</div></button>';
   }).join('');
 
+  // consolidado
+  const listG=periodList('geral'), G=stats(listG), gl=level(G.pct);
+  const gColor=gl==='none'?'ink-3':gl==='warn'?'warn':gl;
+  const gAvg=G.late_open?(G.diasSum/G.late_open).toFixed(1).replace('.',','):'0';
+  const kpG=(id,k,v,sub,cl)=>'<button class="kpi" data-list="'+id+'" id="kpi-g-'+id+'"><span class="k">'+k+'</span><span class="v '+(cl||'')+'">'+v+'</span><span class="s">'+sub+'</span></button>';
+  const shares=ORDER.map(car=>{ const t=stats(periodList(car)).total; return {car,t,p:G.total?t/G.total*100:0}; });
+  const hero='<section class="overall">'+
+    '<button class="kpi mega" data-list="base" id="kpi-g-sla"><span class="top-row"><span class="k">SLA geral</span>'+chipFor(G.pct)+'</span>'+
+      '<span class="v '+(gl==='none'?'':gl)+'">'+pctTxt(G.pct)+'<small>%</small></span>'+
+      '<span class="s">'+fmtInt(G.ok)+' de '+fmtInt(G.base)+' pedidos no prazo · '+esc(periodLabel().toLowerCase())+' · meta '+META+'%</span>'+
+      '<span class="bar-sla"><i style="width:'+(G.pct||0)+'%;background:var(--'+gColor+')"></i></span></button>'+
+    '<div class="right"><div class="kpis k5">'+
+      kpG('all','Pedidos no período',fmtInt(G.total),'pela previsão de entrega')+
+      kpG('ok','Entregues no prazo',fmtInt(G.ok),'até a data prevista','ok')+
+      kpG('late_deliv','Entregues c/ atraso',fmtInt(G.late_deliv),'depois da previsão','late')+
+      kpG('late_open','Atrasados em aberto',fmtInt(G.late_open),'atraso médio '+gAvg+' dias','crit')+
+      kpG('open','Em andamento',fmtInt(G.open),'previsão ainda não venceu','open')+
+    '</div><div class="split-box"><div class="lbl">Divisão dos pedidos por transportadora</div>'+
+      '<div class="split">'+shares.filter(x=>x.t>0).map(x=>'<i style="flex:'+x.t+' 1 0;background:var('+CARRIERS[x.car].color+')" title="'+CARRIERS[x.car].name+': '+fmtInt(x.t)+' pedidos"></i>').join('')+'</div>'+
+      '<div class="split-leg">'+shares.map(x=>'<span><i style="background:var('+CARRIERS[x.car].color+')"></i>'+CARRIERS[x.car].name+' <b>'+pctTxt(x.p)+'%</b> · '+fmtInt(x.t)+' pedidos</span>').join('')+'</div>'+
+    '</div></div></section>';
+
   // matriz
   const T=todayDN(); const all=new Set(); const per={};
   ORDER.forEach(car=>{ per[car]=new Map(buckets(periodList(car),S.ref[car],range(car)).map(x=>[x.b,x.s])); per[car].forEach((v,k)=>all.add(k)); });
-  let bs=[...all].sort((a,b)=>a-b); const maxCols=S.gran==='dia'?14:10; bs=bs.slice(-maxCols);
-  const mat='<div class="tscroll" style="max-height:none"><table class="matrix"><thead><tr><th>Transportadora</th>'+bs.map(b=>'<th title="'+esc(bucketTitle(b))+'">'+bucketLabel(b)+'</th>').join('')+'</tr></thead><tbody>'+
-    ORDER.map(car=>'<tr><td><span class="name" style="display:inline-flex;gap:8px;align-items:center;font-family:var(--f-display);font-weight:700;font-size:16px"><i style="width:10px;height:10px;border-radius:2px;background:var('+CARRIERS[car].color+')"></i>'+CARRIERS[car].name+'</span></td>'+
+  per.geral=new Map(); all.forEach(b=>per.geral.set(b,sumStats(ORDER.map(c=>per[c].get(b)).filter(Boolean))));
+  let bs=[...all].sort((a,b)=>a-b); const maxCols=S.gran==='dia'?14:10;
+  const cortado=S.periodo[0]!=='m' && bs.length>maxCols; if(cortado) bs=bs.slice(-maxCols);
+  const avisoCorte=cortado?' · mostrando '+(S.gran==='dia'?'os últimos '+maxCols+' dias úteis':'as últimas '+maxCols+' semanas'):'';
+  const mat='<div class="tscroll" style="max-height:none"><table class="matrix'+(bs.length>14?' dense':'')+'"><thead><tr><th>Transportadora</th>'+bs.map(b=>'<th title="'+esc(bucketTitle(b))+'">'+bucketLabel(b)+'</th>').join('')+'</tr></thead><tbody>'+
+    ['geral'].concat(ORDER).map(car=>'<tr'+(car==='geral'?' class="tot"':'')+'><td><span class="name" style="display:inline-flex;gap:8px;align-items:center;font-family:var(--f-display);font-weight:700;font-size:16px"><i style="width:10px;height:10px;border-radius:2px;background:var('+(car==='geral'?'--ink':CARRIERS[car].color)+')"></i>'+carName(car)+'</span></td>'+
       bs.map(b=>{ const s=per[car].get(b); if(!s||!s.base) return '<td><span class="cell none">—</span></td>'; return '<td title="'+esc(bucketTitle(b))+': '+s.ok+' de '+s.base+' no prazo"><span class="cell '+level(s.pct)+'">'+pctTxt(s.pct).replace(/,0$/,'')+'%<small>'+fmtInt(s.base)+' ped.</small></span></td>'; }).join('')+'</tr>').join('')+
     '</tbody></table></div>';
 
+  // atrasados em aberto consolidados
+  const openG=allDer().filter(d=>d.cls==='late_open').sort((a,b)=>b.dias-a.dias);
+  const topG=openG.slice(0,8).map(d=>'<tr><td style="white-space:nowrap"><i style="display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;background:var('+CARRIERS[d.car].color+')"></i>'+CARRIERS[d.car].name+'</td><td class="mono">'+esc(d.r.nf||'—')+'</td><td>'+esc(d.r.dest)+'</td><td>'+esc(d.r.cid)+'/'+esc(d.r.uf)+'</td><td class="mono">'+fmtDN(d.prev)+'</td><td style="font-size:12.5px;color:var(--ink-2)">'+esc(d.r.st||'—')+'</td><td class="n"><span class="chip '+(d.dias>7?'crit':'warn')+'">'+d.dias+' d</span></td></tr>').join('');
+  const openG_box='<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><h2>Atrasados em aberto agora</h2><p class="sub">As três transportadoras, toda a base, sem filtro de período · '+fmtInt(openG.length)+' pedidos sem entrega com previsão vencida</p></div>'+(openG.length?'<button class="btn" data-list="openall" id="btnOpenAllG">Ver todos</button>':'')+'</div>'+
+    (topG?'<div class="tscroll" style="max-height:none"><table><thead><tr><th>Transportadora</th><th>NF</th><th>Destinatário</th><th>Cidade/UF</th><th>Previsão</th><th>Status atual</th><th class="n">Atraso</th></tr></thead><tbody>'+topG+'</tbody></table></div>':'<div class="empty">Nenhum pedido atrasado em aberto.</div>')+'</div>';
+
   $('#view').innerHTML =
+    hero+
     '<section class="grid g3">'+cards+'</section>'+
-    '<section class="panel" style="margin-top:14px"><h2>% no prazo por '+(S.gran==='dia'?'dia':'semana')+'</h2><p class="sub">'+esc(periodLabel())+' · as três transportadoras na mesma escala · linha tracejada = meta de '+META+'%</p>'+
-      '<div class="chart-box tall"><canvas id="chGeral" aria-label="Gráfico de % no prazo por transportadora"></canvas></div>'+
-      '<div class="legend">'+ORDER.map(c=>'<span><i class="line" style="background:var('+CARRIERS[c].color+');width:18px"></i>'+CARRIERS[c].name+'</span>').join('')+'<span><i class="line" style="background:var(--ink-3);width:18px"></i>Meta '+META+'%</span></div></section>'+
-    '<section class="panel" style="margin-top:14px"><h2>Quadro '+(S.gran==='dia'?'diário':'semanal')+'</h2><p class="sub">% no prazo e quantidade de pedidos considerados em cada '+(S.gran==='dia'?'dia':'semana')+' · verde ≥ '+META+'%, amarelo 80–'+META+'%, vermelho &lt; 80%</p>'+mat+'</section>';
+    '<section class="grid g-main" style="margin-top:14px">'+
+    '<div class="panel"><h2>% no prazo por '+(S.gran==='dia'?'dia':'semana')+'</h2><p class="sub">'+esc(periodLabel())+avisoCorte+' · geral e por transportadora na mesma escala · linha tracejada = meta de '+META+'%</p>'+
+      '<div class="chart-box tall"><canvas id="chGeral" aria-label="Gráfico de % no prazo geral e por transportadora"></canvas></div>'+
+      '<div class="legend"><span><i class="line" style="background:var(--ink);width:18px"></i>Geral</span>'+ORDER.map(c=>'<span><i class="line" style="background:var('+CARRIERS[c].color+');width:18px"></i>'+CARRIERS[c].name+'</span>').join('')+'<span><i class="line" style="background:var(--ink-3);width:18px"></i>Meta '+META+'%</span></div></div>'+
+    '<div class="panel"><h2>Pedidos por '+(S.gran==='dia'?'dia':'semana')+'</h2><p class="sub">'+esc(periodLabel())+avisoCorte+' · pela previsão de entrega, por transportadora</p>'+
+      '<div class="chart-box tall"><canvas id="chVol" aria-label="Gráfico de pedidos por transportadora"></canvas></div>'+
+      '<div class="legend">'+ORDER.map(c=>'<span><i style="background:var('+CARRIERS[c].color+')"></i>'+CARRIERS[c].name+'</span>').join('')+'</div></div>'+
+    '</section>'+
+    '<section class="panel" style="margin-top:14px"><h2>Quadro '+(S.gran==='dia'?'diário':'semanal')+'</h2><p class="sub">% no prazo e quantidade de pedidos considerados em cada '+(S.gran==='dia'?'dia':'semana')+' · verde ≥ '+META+'%, amarelo 80–'+META+'%, vermelho &lt; 80%'+avisoCorte+'</p>'+mat+'</section>'+
+    '<section class="grid g-main" style="margin-top:14px">'+openG_box+'<div class="panel"><h2>SLA geral por UF de destino</h2><p class="sub">Pior para melhor, no período</p>'+ufTable(listG)+'</div></section>';
 
   document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{ S.tab=b.dataset.go; savePrefs(); render(); window.scrollTo(0,0); }));
+  document.querySelectorAll('[data-list]').forEach(b=>b.addEventListener('click',()=>openList('geral',b.dataset.list)));
 
   // gráfico de linhas
   const labels=bs.map(bucketLabel);
   const ds=ORDER.map(car=>({label:CARRIERS[car].name,data:bs.map(b=>{ const s=per[car].get(b); return s&&s.base?+s.pct.toFixed(1):null; }),
     borderColor:tok(CARRIERS[car].color),backgroundColor:tok(CARRIERS[car].color),borderWidth:2.5,pointRadius:4,pointHoverRadius:6,spanGaps:true,tension:0,
-    pointBorderColor:tok('--panel'),pointBorderWidth:2,_car:car}));
-  ds.push({label:'Meta',data:bs.map(()=>META),borderColor:tok('--ink-3'),borderDash:[5,5],borderWidth:1.5,pointRadius:0,pointHoverRadius:0});
+    pointBorderColor:tok('--panel'),pointBorderWidth:2,_car:car,order:1}));
+  ds.push({label:'Geral',data:bs.map(b=>{ const s=per.geral.get(b); return s&&s.base?+s.pct.toFixed(1):null; }),
+    borderColor:tok('--ink'),backgroundColor:tok('--ink'),borderWidth:3.5,pointRadius:4,pointHoverRadius:6,spanGaps:true,tension:0,
+    pointBorderColor:tok('--panel'),pointBorderWidth:2,_car:'geral',order:0});
+  ds.push({label:'Meta',data:bs.map(()=>META),borderColor:tok('--ink-3'),borderDash:[5,5],borderWidth:1.5,pointRadius:0,pointHoverRadius:0,order:2});
   charts.push(new Chart($('#chGeral'),{type:'line',data:{labels,datasets:ds},options:baseOpts({
     y:{min:Math.max(0,Math.floor(Math.min(...ds.slice(0,3).flatMap(d=>d.data).filter(v=>v!=null),80)/10)*10-10),max:100,ticks:{callback:v=>v+'%'}},
     tooltip:{callbacks:{title:items=>bucketTitle(bs[items[0].dataIndex]),label:c=>{ if(c.dataset.label==='Meta') return null; const s=per[c.dataset._car].get(bs[c.dataIndex]); return c.dataset.label+': '+pctTxt(c.parsed.y)+'% ('+s.ok+' de '+s.base+')'; }},filter:i=>i.dataset.label!=='Meta'}
   })}));
+
+  // pedidos por período (barras empilhadas)
+  const volTotal=b=>{ const s=per.geral.get(b); return s?s.total:0; };
+  const volOpts=baseOpts({layout:{padding:{top:22}},y:{stacked:true,beginAtZero:true,ticks:{display:false},grid:{display:false}},
+    tooltip:{filter:i=>i.raw>0,callbacks:{title:items=>bucketTitle(bs[items[0].dataIndex]),label:c=>c.dataset.label+': '+fmtInt(c.parsed.y),footer:items=>'Total: '+fmtInt(volTotal(bs[items[0].dataIndex]))}}});
+  volOpts.scales.x.stacked=true;
+  charts.push(new Chart($('#chVol'),{type:'bar',data:{labels,datasets:ORDER.map(car=>({label:CARRIERS[car].name,data:bs.map(b=>{ const s=per[car].get(b); return s?s.total:0; }),backgroundColor:tok(CARRIERS[car].color),borderColor:tok('--panel'),borderWidth:{top:2},borderSkipped:false,maxBarThickness:46,categoryPercentage:.8,barPercentage:.9}))},
+    plugins:[stackTotals],options:volOpts}));
+}
+
+function ufTable(list){
+  const ufm=new Map(); list.forEach(d=>{ const u=d.r.uf||'—'; if(!ufm.has(u)) ufm.set(u,[]); ufm.get(u).push(d); });
+  const ufs=[...ufm.entries()].map(([u,l])=>({u,s:stats(l)})).filter(x=>x.s.base>0).sort((a,b)=>(a.s.pct-b.s.pct)||(b.s.base-a.s.base));
+  return '<div class="tscroll" style="max-height:360px"><table><thead><tr><th>UF</th><th class="n">Pedidos</th><th class="n">Fora do prazo</th><th class="n">% no prazo</th></tr></thead><tbody>'+
+    (ufs.map(x=>'<tr><td>'+esc(x.u)+'</td><td class="n">'+fmtInt(x.s.base)+'</td><td class="n">'+fmtInt(x.s.fora)+'</td><td class="n"><span class="chip '+level(x.s.pct)+'">'+pctTxt(x.s.pct)+'%</span></td></tr>').join('')||'<tr><td colspan="4" class="empty">Sem dados.</td></tr>')+'</tbody></table></div>';
 }
 
 function chipFor(p){ const lv=level(p); const t=lv==='ok'?'✓ Na meta':lv==='warn'?'! Abaixo da meta':lv==='crit'?'✕ Crítico':'Sem dados'; return '<span class="chip '+lv+'">'+t+'</span>'; }
@@ -522,10 +629,7 @@ function renderCarrier(car){
   const tbl='<div class="tscroll"><table><thead><tr><th>'+(S.gran==='dia'?'Dia':'Semana')+'</th><th class="n">Pedidos</th><th class="n">No prazo</th><th class="n">Entregue c/ atraso</th><th class="n">Atrasado aberto</th><th class="n">Em andamento</th><th class="n">% no prazo</th></tr></thead><tbody>'+(rows||'<tr><td colspan="7" class="empty">Sem pedidos com previsão nesse período.</td></tr>')+'</tbody></table></div>';
 
   // UF
-  const ufm=new Map(); list.forEach(d=>{ const u=d.r.uf||'—'; if(!ufm.has(u)) ufm.set(u,[]); ufm.get(u).push(d); });
-  const ufs=[...ufm.entries()].map(([u,l])=>({u,s:stats(l)})).filter(x=>x.s.base>0).sort((a,b)=>(a.s.pct-b.s.pct)||(b.s.base-a.s.base));
-  const ufTbl='<div class="tscroll" style="max-height:360px"><table><thead><tr><th>UF</th><th class="n">Pedidos</th><th class="n">Fora do prazo</th><th class="n">% no prazo</th></tr></thead><tbody>'+
-    (ufs.map(x=>'<tr><td>'+esc(x.u)+'</td><td class="n">'+fmtInt(x.s.base)+'</td><td class="n">'+fmtInt(x.s.fora)+'</td><td class="n"><span class="chip '+level(x.s.pct)+'">'+pctTxt(x.s.pct)+'%</span></td></tr>').join('')||'<tr><td colspan="4" class="empty">Sem dados.</td></tr>')+'</tbody></table></div>';
+  const ufTbl=ufTable(list);
 
   // atrasados em aberto (base toda) — com status atual e, nos Correios, o código de rastreio
   const isC = car==='correios';
@@ -595,9 +699,9 @@ function renderCarrier(car){
 /* ===================== lista (modal) ===================== */
 let ML={car:null,list:[],title:''};
 function openList(car,kind){
-  const C=CARRIERS[car]; let list, title;
+  const C=car==='geral'?GERAL:CARRIERS[car]; let list, title;
   const per=periodList(car);
-  if(kind==='openall'){ list=S.der[car].filter(d=>d.cls==='late_open').sort((a,b)=>b.dias-a.dias); title='Atrasados em aberto · toda a base'; }
+  if(kind==='openall'){ list=(car==='geral'?allDer():S.der[car]).filter(d=>d.cls==='late_open').sort((a,b)=>b.dias-a.dias); title='Atrasados em aberto · toda a base'; }
   else if(kind==='divativa'){ list=per.filter(d=>d.cls==='late_deliv' && /no prazo|antes do prazo/i.test((d.r.x||'').split('|')[1]||'')); title='Entregues após a previsão, marcados "No prazo" pela Ativa'; }
   else if(kind==='all'||kind==='base'){ list=per.filter(d=>kind==='all'?d.cls!=='excl':d.cls!=='excl'&&d.cls!=='open'); title=kind==='all'?'Pedidos no período':'Pedidos que entram no % no prazo'; }
   else { list=per.filter(d=>d.cls===kind); title=CLS_LABEL[kind]; }
@@ -606,27 +710,27 @@ function openList(car,kind){
   $('#mTitle').textContent=C.name+' · '+title+(kind==='openall'?'':' · '+periodLabel());
   $('#mSearch').value=''; drawList(); $('#modal').hidden=false; $('#mSearch').focus();
 }
-function filteredList(){ const q=norm($('#mSearch').value); return q?ML.list.filter(d=>norm([d.r.id,d.r.nf,d.r.dest,d.r.cid,d.r.uf,d.r.st].join(' ')).includes(q)):ML.list; }
+function filteredList(){ const q=norm($('#mSearch').value); return q?ML.list.filter(d=>norm([d.r.id,d.r.nf,d.r.dest,d.r.cid,d.r.uf,d.r.st,CARRIERS[d.car].name].join(' ')).includes(q)):ML.list; }
 function drawList(){
-  const C=CARRIERS[ML.car], q=norm($('#mSearch').value);
-  const f=q?ML.list.filter(d=>norm([d.r.id,d.r.nf,d.r.dest,d.r.cid,d.r.uf,d.r.st].join(' ')).includes(q)):ML.list;
+  const G_=ML.car==='geral', C=G_?GERAL:CARRIERS[ML.car];
+  const f=filteredList();
   const lim=f.slice(0,600);
-  const extraH=ML.car==='ativa'?'<th>Tipo</th><th>Classif. Ativa</th><th>Justificativa</th>':ML.car==='azul'?'<th>Modalidade</th><th>Motivo atraso</th>':'<th>Serviço</th>';
-  const extra=d=>{ const p=(d.r.x||'').split('|'); if(ML.car==='ativa') return '<td>'+esc(p[0])+'</td><td>'+esc(p[1])+'</td><td>'+esc(p[2])+'</td>'; if(ML.car==='azul') return '<td>'+esc(p[0])+'</td><td>'+esc(p[1]||'')+'</td>'; return '<td>'+esc(p[0])+'</td>'; };
-  $('#mTable').innerHTML='<thead><tr><th>'+C.idLabel+'</th><th>NF</th><th>Destinatário</th><th>'+C.placeLabel+'/UF</th><th>'+C.baseLabel+'</th><th>Previsão</th><th>Entrega</th><th>Situação</th><th class="n">Dias</th><th>Status no relatório</th>'+extraH+'</tr></thead><tbody>'+
-    (lim.map(d=>'<tr><td class="mono">'+esc(d.r.id)+'</td><td class="mono">'+esc(d.r.nf||'—')+'</td><td>'+esc(d.r.dest)+'</td><td>'+esc(d.r.cid)+'/'+esc(d.r.uf)+'</td><td class="mono">'+fmtDN(d.base)+'</td><td class="mono">'+fmtDN(d.prev)+'</td><td class="mono">'+fmtDN(d.ent)+'</td><td><span class="chip '+CLS_CHIP[d.cls]+'">'+CLS_LABEL[d.cls]+'</span></td><td class="n">'+(d.dias||'—')+'</td><td>'+esc(d.r.st)+'</td>'+extra(d)+'</tr>').join('')||'<tr><td colspan="12" class="empty">Nada encontrado.</td></tr>')+'</tbody>';
+  const extraH=ML.car==='ativa'?'<th>Tipo</th><th>Classif. Ativa</th><th>Justificativa</th>':ML.car==='azul'?'<th>Modalidade</th><th>Motivo atraso</th>':G_?'':'<th>Serviço</th>';
+  const extra=d=>{ const p=(d.r.x||'').split('|'); if(ML.car==='ativa') return '<td>'+esc(p[0])+'</td><td>'+esc(p[1])+'</td><td>'+esc(p[2])+'</td>'; if(ML.car==='azul') return '<td>'+esc(p[0])+'</td><td>'+esc(p[1]||'')+'</td>'; if(G_) return ''; return '<td>'+esc(p[0])+'</td>'; };
+  $('#mTable').innerHTML='<thead><tr>'+(G_?'<th>Transportadora</th>':'')+'<th>'+C.idLabel+'</th><th>NF</th><th>Destinatário</th><th>'+C.placeLabel+'/UF</th><th>'+C.baseLabel+'</th><th>Previsão</th><th>Entrega</th><th>Situação</th><th class="n">Dias</th><th>Status no relatório</th>'+extraH+'</tr></thead><tbody>'+
+    (lim.map(d=>'<tr>'+(G_?'<td>'+CARRIERS[d.car].name+'</td>':'')+'<td class="mono">'+esc(d.r.id)+'</td><td class="mono">'+esc(d.r.nf||'—')+'</td><td>'+esc(d.r.dest)+'</td><td>'+esc(d.r.cid)+'/'+esc(d.r.uf)+'</td><td class="mono">'+fmtDN(d.base)+'</td><td class="mono">'+fmtDN(d.prev)+'</td><td class="mono">'+fmtDN(d.ent)+'</td><td><span class="chip '+CLS_CHIP[d.cls]+'">'+CLS_LABEL[d.cls]+'</span></td><td class="n">'+(d.dias||'—')+'</td><td>'+esc(d.r.st)+'</td>'+extra(d)+'</tr>').join('')||'<tr><td colspan="12" class="empty">Nada encontrado.</td></tr>')+'</tbody>';
   $('#mCount').textContent=fmtInt(f.length)+' pedidos'+(f.length>lim.length?' · mostrando os primeiros '+lim.length+', use a busca para achar os outros':'');
 }
 /* exportar a lista (todas as linhas filtradas, não só as 600 da tela) */
 let dlNs; const dlReady=(async()=>{ try{ dlNs = (window.claude && window.claude.use) ? await window.claude.use('downloads') : null; }catch(e){ dlNs=null; } })();
 async function exportList(){
   if(typeof XLSX==='undefined'){ toast('Não foi possível carregar o gerador de Excel. Verifique a internet.',true); return; }
-  const C=CARRIERS[ML.car], f=filteredList();
+  const G_=ML.car==='geral', C=G_?GERAL:CARRIERS[ML.car], f=filteredList();
   if(!f.length){ toast('Nada para exportar.',true); return; }
   const dt=d=>d==null?null:d+25569; // número de série do Excel (sem fuso horário)
-  const extraH=ML.car==='ativa'?['Tipo','Classificação Ativa','Justificativa']:ML.car==='azul'?['Modalidade','Motivo atraso']:['Serviço'];
+  const extraH=ML.car==='ativa'?['Tipo','Classificação Ativa','Justificativa']:ML.car==='azul'?['Modalidade','Motivo atraso']:G_?['Transportadora']:['Serviço'];
   const aoa=[[C.idLabel,'NF','Destinatário',C.placeLabel,'UF',C.baseLabel,'Previsão','Entrega','Situação','Dias de atraso','Status no relatório'].concat(extraH)];
-  f.forEach(d=>{ const p=(d.r.x||'').split('|'); const ex=ML.car==='ativa'?[p[0],p[1],p[2]]:ML.car==='azul'?[p[0],p[1]||'']:[p[0]];
+  f.forEach(d=>{ const p=(d.r.x||'').split('|'); const ex=ML.car==='ativa'?[p[0],p[1],p[2]]:ML.car==='azul'?[p[0],p[1]||'']:G_?[CARRIERS[d.car].name]:[p[0]];
     aoa.push([d.r.id,d.r.nf,d.r.dest,d.r.cid,d.r.uf,dt(d.base),dt(d.prev),dt(d.ent),CLS_LABEL[d.cls],d.dias||0,d.r.st].concat(ex)); });
   const ws=XLSX.utils.aoa_to_sheet(aoa);
   for(let r=1;r<aoa.length;r++) for(const c of [5,6,7]){ const cell=ws[XLSX.utils.encode_cell({r,c})]; if(cell&&cell.t==='n') cell.z='dd/mm/yyyy'; }
