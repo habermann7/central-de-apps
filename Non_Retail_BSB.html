@@ -1543,54 +1543,70 @@ function makeGeneralPDF(entry){
       doc.addPage();
       y=TOP;
     }
-    var tableSequence=0;
+
+    function ensure(height){
+      if(y+height>H-BOTTOM) nextPage();
+    }
+    function start(label){
+      section=label;
+      ensure(24);
+    }
+    function status(l){return ST[l.status]?ST[l.status].label:value(l.status);}
+    function cell(content,extra){
+      var result={content:text(content)};
+      Object.keys(extra||{}).forEach(function(k){result[k]=extra[k];});
+      return result;
+    }
+    function tone(content,key){
+      return cell(content,{pdfTone:ST[key]?key:null});
+    }
+    function composition(c,total){
+      return cell(KEYS.map(function(k){
+        return ST[k].short+': '+c[k]+' ('+pct(c[k],total)+')';
+      }).join(' · '),{pdfBar:{counts:c,total:total}});
+    }
+    function emptyPair(v){return present(v)?String(v):'–';}
+
+    /* Os dados visuais acompanham a própria célula, inclusive em continuações.
+       Nenhum índice de linha é usado para associar cores aos registros. */
     function table(label,head,body,widths){
-      if(y>H-BOTTOM-18) nextPage();
       var columns={};
       (widths||[]).forEach(function(w,i){columns[i]={cellWidth:w};});
-      var identifier='Tabela '+(++tableSequence);
-      /* O título curto ocupa uma linha com colSpan no cabeçalho repetido.
-         A identificação integral ocupa a primeira linha do corpo, em toda
-         a largura, sem alterar as células dos registros seguintes. */
-      var context, match;
-      if((match=label.match(/^Estudo (\d+)/))){
-        context='Estudo '+match[1];
-        var laboratory=label.match(/ · Laboratório (\d+)/);
-        if(laboratory) context+=' · Laboratório '+laboratory[1];
-        else if(label.indexOf('Comparativo de propostas')>=0) context+=' · Comparativo de propostas';
-        else context+=' · Detalhamento';
-      }else if((match=label.match(/^Medicamento (\d+)/))){
-        context='Medicamento '+match[1];
-        var supplier=label.match(/ · Fornecedor (\d+)/);
-        context+=supplier?' · Fornecedor '+supplier[1]:' · Resumo das cotações';
-      }else if((match=label.match(/^Prospecção (\d+)/))){
-        context='Prospecção · Fornecedor '+match[1];
-      }else if((match=label.match(/^(?:Histórico · )?Versão (\d+)/))){
-        context='Histórico · Versão '+match[1];
-        if(label.indexOf('Alterações registradas')>=0) context+=' · Alterações';
-      }else if(label.indexOf('Laboratório · ')===0){
-        context='Panorama por laboratório · Indicadores';
-      }else if(label.indexOf('Laboratório ')===0&&label.indexOf(' × estudo')>=0){
-        context='Panorama por laboratório · Participação nos estudos';
-      }else{
-        var fixedLabels=[
-          'Resumo executivo','Indicadores do portfólio',
-          'Distribuição das cotações','Composição e funil por estudo',
-          'Prioridades operacionais','Todos os pontos de atenção',
-          'Matriz estudo × laboratório','Linha do tempo dos estudos',
-          'Panorama por laboratório','Medicamentos · Cotações',
-          'Medicamentos · Prospecção de fornecedores'
-        ];
-        context=fixedLabels.indexOf(label)>=0?label:'Detalhamento dos registros';
+      var rows=body.length?body:[[
+        cell('Nenhum registro.',{colSpan:head.length})
+      ]];
+      rows=rows.map(function(row){
+        return row.map(function(v){
+          if(v&&typeof v==='object'&&Object.prototype.hasOwnProperty.call(v,'content')){
+            var c={};
+            Object.keys(v).forEach(function(k){c[k]=v[k];});
+            c.content=text(v.content);
+            return c;
+          }
+          return cell(v);
+        });
+      });
+
+      /* O cabeçalho completo reaparece nas continuações.
+         Reduz somente sua fonte quando necessário; não corta os nomes. */
+      doc.setFont('helvetica','bold');
+      var heading=text(label),headingSize=8.2,headingLines;
+      function measureHeading(){
+        doc.setFontSize(headingSize);
+        headingLines=doc.splitTextToSize(heading,CW-5);
+        return headingLines.length*headingSize*0.352778*1.15+5;
       }
-      var rows=(body.length?body:[head.map(function(v,i){
-        return i===0?'Nenhum registro.':'';
-      })]).map(function(row){return row.map(text);});
-      rows.unshift([{
-        content:text(label),
-        colSpan:head.length,
-        styles:{fontStyle:'bold',overflow:'linebreak'}
-      }]);
+      var headingHeight=measureHeading();
+      var available=H-BOTTOM-TOP;
+      while(headingHeight>available-30&&headingSize>6){
+        headingSize=Math.max(6,headingSize-0.2);
+        headingHeight=measureHeading();
+      }
+      if(headingHeight>available-30){
+        throw new Error('Uma identificação é extensa demais para o cabeçalho repetido. Reduza o nome do estudo, medicamento ou fornecedor antes de exportar.');
+      }
+      ensure(headingHeight+(head.length?10:0)+12);
+
       doc.autoTable({
         startY:y,
         margin:{left:M,right:M,top:TOP,bottom:BOTTOM},
@@ -1600,30 +1616,73 @@ function makeGeneralPDF(entry){
         rowPageBreak:'auto',
         showHead:'everyPage',
         head:[
-          [{content:text(identifier+' · '+context),colSpan:head.length,
-            styles:{overflow:'linebreak'}}],
-          head.map(text)
-        ],
+          [cell(heading,{colSpan:head.length,
+            styles:{fontSize:headingSize,overflow:'linebreak'}})]
+        ].concat(head.length?[head.map(text)]:[]),
         body:rows,
         styles:{
-          font:'helvetica',fontSize:8,cellPadding:2.3,
+          font:'helvetica',fontSize:7.5,cellPadding:1.8,
           overflow:'linebreak',valign:'top',
-          textColor:[15,23,32],lineColor:[227,230,235],lineWidth:0.15
+          textColor:[15,23,32],lineColor:[227,230,235],lineWidth:0.12
         },
-        headStyles:{fillColor:navy,textColor:[255,255,255],fontStyle:'bold',fontSize:8},
+        headStyles:{
+          fillColor:navy,textColor:[255,255,255],
+          fontStyle:'bold',fontSize:7.1
+        },
         alternateRowStyles:{fillColor:[248,249,251]},
-        columnStyles:columns
+        columnStyles:columns,
+        didParseCell:function(dd){
+          if(dd.section!=='body') return;
+          var raw=dd.cell.raw||{};
+          if(raw.pdfTone&&ST[raw.pdfTone]){
+            dd.cell.styles.fillColor=tint(ST[raw.pdfTone].hex,0.15);
+            dd.cell.styles.textColor=INK[raw.pdfTone];
+            dd.cell.styles.fontStyle='bold';
+          }
+          if(raw.pdfBar){
+            dd.cell.styles.cellPadding={top:1.8,right:1.8,bottom:7,left:1.8};
+          }
+        },
+        didDrawCell:function(dd){
+          if(dd.section!=='body') return;
+          var raw=dd.cell.raw||{},bar=raw.pdfBar;
+          if(!bar||!bar.total||dd.cell.height<8) return;
+          var bx=dd.cell.x+1.8,by=dd.cell.y+dd.cell.height-4.7;
+          var bw=dd.cell.width-3.6;
+          doc.setFillColor(232,236,242);
+          doc.rect(bx,by,bw,2.6,'F');
+          var offset=0;
+          KEYS.forEach(function(k){
+            if(!bar.counts[k]) return;
+            var width=bar.counts[k]/bar.total*bw;
+            doc.setFillColor.apply(doc,rgb(ST[k].hex));
+            doc.rect(bx+offset,by,width,2.6,'F');
+            offset+=width;
+          });
+        }
       });
-      y=doc.lastAutoTable.finalY+5;
+      y=doc.lastAutoTable.finalY+4;
     }
-    function fields(label,rows){
-      table(label,['Campo','Informação'],rows,[65,CW-65]);
+    function note(label,content){
+      table(label,['Informação'],[[content]],[CW]);
     }
-    function start(label){
-      section=label;
-      if(y!==TOP) nextPage();
+    function cards(label,items,perRow){
+      perRow=perRow||4;
+      var rows=[];
+      for(var i=0;i<items.length;i+=perRow){
+        var row=items.slice(i,i+perRow).map(function(item){
+          return cell(item[0].toUpperCase()+'\n'+item[1]+
+            (present(item[2])?'\n'+item[2]:''),{
+              pdfTone:item[3]||null,
+              styles:{fontStyle:'bold',fontSize:8,cellPadding:2.4}
+            });
+        });
+        while(row.length<perRow) row.push('');
+        rows.push(row);
+      }
+      table(label,new Array(perRow).fill(''),rows,
+        new Array(perRow).fill(CW/perRow));
     }
-    function status(l){return ST[l.status]?ST[l.status].label:value(l.status);}
 
     var x=insightStats(calc,ref),o=overall(calc,ref);
     var signals=liveSignals(calc,ref),alerts=alertsOf(calc,ref);
@@ -1638,148 +1697,165 @@ function makeGeneralPDF(entry){
         }
       });
     });
-    fields(section,[
-      ['Título',title],
-      ['Objetivo',value(snap.meta.objetivo)],
-      ['Versão salva','v'+entry.v],
-      ['Data de referência',stamp(entry.ts)],
-      ['Responsável',value(entry.autor)],
-      ['Leitura executiva',priority],
-      ['Orientação',!calc.studies.length?'Adicione estudos para começar a acompanhar o portfólio.':
-        x.withoutOffer?'Priorize os estudos ainda sem proposta e os retornos sem atualização.':
-        'Acompanhe a validade e a comparação das propostas recebidas.'],
-      ['Menor proposta registrada',best?money(best.valor)+' · '+value(best.lab)+' · '+value(best.study):
-        'Nenhuma até o momento'],
-      ['Critério temporal','Todos os prazos e dias deste relatório usam '+br(ref)+'.'],
-      ['Critério de leitura','Valores de propostas de estudos diferentes não são somados.']
-    ]);
-    fields('Indicadores do portfólio',[
-      ['Estudos no portfólio',calc.studies.length],
-      ['Cotações registradas',o.total],
-      ['Laboratórios únicos',o.labs.length],
-      ['Em acompanhamento',x.active],
-      ['Em análise',o.c.analise],
-      ['Retorno pendente',o.c.pendente],
-      ['Propostas recebidas',o.c.proposta],
-      ['Estudos com proposta',x.withOffer],
-      ['Estudos sem proposta',x.withoutOffer],
-      ['Não atendidas',o.c.declinou+' · '+pct(o.c.declinou,o.total)],
-      ['Idade média dos estudos',o.avg!=null?o.avg+' dias':'Sem data'],
-      ['Estudo mais antigo',o.oldest?value(o.oldest.s.nome)+' · '+o.oldest.m.dias+' dias':'Sem data'],
-      ['Cotações ativas há 14+ dias sem atualização',x.over14],
-      ['Registros ativos sem data de atualização',x.missing],
-      ['Atualizações anteriores à solicitação',x.invalid],
-      ['Nota sobre atualização','A data de atualização não é, necessariamente, a data de resposta do laboratório.']
-    ]);
-    table('Distribuição das cotações',['Situação','Quantidade','Percentual'],
-      KEYS.map(function(k){return [ST[k].label,o.c[k],pct(o.c[k],o.total)];}),[150,60,CW-210]);
+
+    note('Resumo executivo · '+title,
+      value(snap.meta.objetivo)+'\n'+priority+'. '+
+      (!calc.studies.length?'Adicione estudos para acompanhar o portfólio.':
+        x.withoutOffer?'Priorize os estudos sem proposta e os retornos sem atualização.':
+        'Acompanhe a validade e a comparação das propostas recebidas.')+
+      '\nResponsável: '+value(entry.autor)+
+      '\nMenor proposta registrada: '+(best?
+        money(best.valor)+' · '+value(best.lab)+' · '+value(best.study):
+        'Nenhuma até o momento')+
+      '\nTodos os prazos usam '+br(ref)+
+      '. Valores de propostas de estudos diferentes não são somados.');
+
+    cards('Indicadores do portfólio',[
+      ['Estudos',calc.studies.length,
+        x.withOffer+' com proposta · '+x.withoutOffer+' sem proposta'],
+      ['Cotações',o.total,o.labs.length+' laboratórios únicos'],
+      ['Em acompanhamento',x.active,
+        o.c.analise+' em análise · '+o.c.pendente+' pendentes','analise'],
+      ['Propostas',o.c.proposta,o.vals.length+' valores registrados','proposta'],
+      ['Não atendidas',o.c.declinou,pct(o.c.declinou,o.total),'declinou'],
+      ['Idade média',o.avg!=null?o.avg+' dias':'Sem data',
+        o.oldest?'Mais antigo: '+value(o.oldest.s.nome)+' · '+o.oldest.m.dias+' dias':'Sem data']
+    ],3);
+    cards('Qualidade dos dados',[
+      ['Sem atualização há 14+ dias',x.over14,'Em análise ou pendentes','pendente'],
+      ['Ativos sem data',x.missing,'Sem data de atualização','analise'],
+      ['Datas a conferir',x.invalid,'Atualização anterior à solicitação','declinou']
+    ],3);
+    note('Critério de atualização',
+      'A data de atualização não é, necessariamente, a data de resposta do laboratório.');
+
+    table('Distribuição das cotações',
+      ['Situação','Quantidade','Percentual'],
+      KEYS.map(function(k){
+        return [tone(ST[k].label,k),o.c[k],pct(o.c[k],o.total)];
+      }),[CW-76,38,38]);
     table('Composição e funil por estudo',
-      ['Estudo','Situação geral','Cotados / ativos / propostas','Distribuição dos retornos'],
+      ['Estudo','Situação / dias desde a solicitação','Cotados / ativos / propostas','Distribuição'],
       o.ms.map(function(z){
-        return [value(z.s.nome),z.m.health.label,
+        var health={good:'proposta',info:'analise',warn:'pendente',crit:'declinou'};
+        return [value(z.s.nome),tone(z.m.health.label+'\n'+
+          (z.m.dias!=null?z.m.dias+' dias':'Sem data'),health[z.m.health.k]),
           z.m.total+' / '+z.m.ativos+' / '+z.m.c.proposta,
-          KEYS.map(function(k){return ST[k].label+': '+z.m.c[k]+' ('+pct(z.m.c[k],z.m.total)+')';}).join('\n')];
-      }),[65,48,55,CW-168]);
+          composition(z.m.c,z.m.total)];
+      }),[54,54,44,CW-152]);
 
-    start('Prioridades operacionais');
-    table(section,['Prioridade','Estudo / laboratório','Sinal e orientação'],
-      signals.map(function(a,i){
-        return [(i+1)+'. '+(a.severity==='urgent'?'Prioritário':'Revisar'),
-          value(a.study)+'\n'+value(a.lab),a.title+'\n'+a.detail];
-      }),[35,75,CW-110]);
+    /* Prioridades e alertas ficam juntos. Apenas repetições textuais exatas
+       no mesmo estudo são unificadas; textos e orientações distintos ficam. */
+    start('Prioridades e pontos de atenção');
+    var attention=[],attentionByKey=Object.create(null);
+    function addAttention(study,detail,level,key){
+      var identity=String(study)+'\u0000'+String(detail);
+      if(attentionByKey[identity]){
+        var existing=attentionByKey[identity];
+        if(existing.level.indexOf(level)<0) existing.level+=' / '+level;
+        return;
+      }
+      var row={study:study,detail:detail,level:level,key:key};
+      attentionByKey[identity]=row;
+      attention.push(row);
+    }
+    signals.forEach(function(a,i){
+      addAttention(value(a.study),value(a.lab)+'\n'+a.title+'\n'+a.detail,
+        (i+1)+'. '+(a.severity==='urgent'?'Prioritário':'Revisar'),
+        a.severity==='urgent'?'declinou':'pendente');
+    });
+    alerts.forEach(function(a){
+      addAttention(value(a.study),a.text,
+        a.lvl==='crit'?'Crítico':a.lvl==='warn'?'Atenção':'Conferir',
+        a.lvl==='crit'?'declinou':a.lvl==='warn'?'pendente':'analise');
+    });
+    table(section,['Prioridade / nível','Estudo','Sinal, alerta e orientação'],
+      attention.map(function(a){
+        return [tone(a.level,a.key),a.study,a.detail];
+      }),[34,55,CW-89]);
 
-    start('Todos os pontos de atenção');
-    table(section,['Nível','Estudo','Alerta'],
-      alerts.map(function(a){
-        return [a.lvl==='crit'?'Crítico':a.lvl==='warn'?'Atenção':'Conferir',value(a.study),a.text];
-      }),[25,60,CW-85]);
-
+    /* A matriz resume as participações. Valores, datas e intervalos ficam
+       no detalhamento, evitando reproduzir os mesmos registros três vezes. */
     start('Matriz estudo × laboratório');
-    table(section,['Estudo','Laboratório','Situação / proposta / atualização'],
-      calc.studies.reduce(function(rows,s){
-        o.labs.forEach(function(name){
-          var matches=s.labs.filter(function(l){return l.lab===name;});
-          if(!matches.length) rows.push([value(s.nome),value(name),'Não cotado']);
-          matches.forEach(function(l){
-            rows.push([value(s.nome),value(name),status(l)+'\nProposta: '+money(l.valor)+
-              '\nÚltima atualização: '+date(l.data)]);
-          });
-        });
-        return rows;
-      },[]),[65,60,CW-125]);
-
-    start('Linha do tempo dos estudos');
-    table(section,['Estudo / laboratório','Solicitação','Última atualização','Intervalos na data de referência'],
-      calc.studies.reduce(function(rows,s,i){
-        var original=snap.studies[i];
-        if(!s.labs.length){
-          rows.push([value(s.nome)+'\nSem laboratório',date(original.solicitacao),'Sem data',
-            'Desde a solicitação: '+elapsed(s.solicitacao,ref)]);
-        }
-        s.labs.forEach(function(l,j){
-          rows.push([value(s.nome)+'\n'+value(l.lab),date(original.solicitacao),
-            date(original.labs[j].data),
-            'Desde a solicitação: '+elapsed(s.solicitacao,ref)+
-            '\nDesde a atualização: '+elapsed(l.data,ref)+
-            '\nSolicitação até atualização: '+(s.solicitacao&&l.data?
-              days(s.solicitacao,l.data)+' dias':'Sem data')]);
-        });
-        return rows;
-      },[]),[75,42,42,CW-159]);
+    if(!o.labs.length){
+      note(section,'Nenhum laboratório cadastrado.');
+    }else{
+      for(var labOffset=0;labOffset<o.labs.length;labOffset+=5){
+        var matrixLabs=o.labs.slice(labOffset,labOffset+5);
+        table('Matriz estudo × laboratório · '+matrixLabs.map(value).join(' · '),
+          ['Estudo'].concat(matrixLabs.map(value)),
+          calc.studies.map(function(s){
+            return [value(s.nome)].concat(matrixLabs.map(function(name){
+              var matches=s.labs.filter(function(l){return l.lab===name;});
+              if(!matches.length) return 'Não cotado';
+              var key=matches.every(function(l){
+                return l.status===matches[0].status;
+              })?matches[0].status:null;
+              return tone(matches.map(status).join('\n'),key);
+            }));
+          }),[58].concat(matrixLabs.map(function(){return (CW-58)/matrixLabs.length;})));
+      }
+    }
 
     calc.studies.forEach(function(s,i){
       var original=snap.studies[i],m=metrics(s,ref);
-      var identity='Estudo '+(i+1)+' · '+value(s.nome);
+      var identity='Estudo · '+value(s.nome);
       start(identity);
-      fields(identity,[
-        ['Nome',value(original.nome)],
-        ['Situação geral',m.health.label],
-        ['Apresentações',value(original.apresentacoes)],
-        ['Classe',value(original.classe)],
-        ['Medicamento de referência',value(original.referencia)],
-        ['Companhia',value(original.companhia)],
-        ['Data de solicitação',date(original.solicitacao)],
-        ['Dias em aberto',m.dias!=null?m.dias+' dias':'Sem data'],
-        ['Para que serve',value(original.indicacao)],
-        ['Laboratórios cotados',m.total],
-        ['Em análise / pendentes',m.c.analise+' / '+m.c.pendente],
-        ['Propostas / menor valor',m.c.proposta+' / '+money(m.best)],
-        ['Declinaram',m.c.declinou+' · '+pct(m.c.declinou,m.total)],
-        ['Ativos no processo',m.ativos+' de '+m.total],
-        ['Última movimentação',date(m.last)],
-        ['Dias sem movimentação',m.semMov!=null?m.semMov+' dias':'Sem data']
-      ]);
-      if(!s.labs.length) fields(identity+' · Laboratórios',[['Registros','Nenhum laboratório cadastrado.']]);
-      s.labs.forEach(function(l,j){
-        var raw=original.labs[j];
-        fields(identity+' · Laboratório '+(j+1)+' · '+value(raw.lab),[
-          ['Laboratório',value(raw.lab)],
-          ['Situação',status(l)],
-          ['Última atualização',date(raw.data)],
-          ['Dias desde a atualização',elapsed(l.data,ref)],
-          ['Conferência de data',l.data&&s.solicitacao&&l.data<s.solicitacao?
-            'Atualização anterior à solicitação. Conferir.':'Sem inconsistência identificada por este critério.'],
-          ['Observação',value(raw.obs)],
-          ['Valor da proposta',money(raw.valor)],
-          ['Validade da proposta',date(raw.validade)],
-          ['Vencimento da proposta',proposalDeadline(raw.validade,ref)]
-        ]);
-      });
+      table(identity+' · Ficha técnica',
+        ['Apresentações / classe','Referência / companhia','Solicitação / movimentação'],
+        [[value(original.apresentacoes)+'\n'+value(original.classe),
+          value(original.referencia)+'\n'+value(original.companhia),
+          'Solicitação: '+date(original.solicitacao)+
+          '\nEm aberto: '+(m.dias!=null?m.dias+' dias':'Sem data')+
+          '\nÚltima movimentação: '+date(m.last)+
+          '\nSem movimentação: '+(m.semMov!=null?m.semMov+' dias':'Sem data')],
+         [cell('Para que serve\n'+value(original.indicacao),{colSpan:3})]],
+        [CW/3,CW/3,CW/3]);
+      cards(identity+' · Indicadores',[
+        ['Situação geral',m.health.label,''],
+        ['Cotados / ativos',m.total+' / '+m.ativos,''],
+        ['Análise / pendentes',m.c.analise+' / '+m.c.pendente,'','analise'],
+        ['Propostas',m.c.proposta,'Menor: '+money(m.best),'proposta'],
+        ['Declinaram',m.c.declinou,pct(m.c.declinou,m.total),'declinou']
+      ],5);
+
+      table(identity+' · Laboratórios e linha do tempo',
+        ['Laboratório / situação','Atualização / intervalos','Proposta / validade','Observação'],
+        s.labs.map(function(l,j){
+          var raw=original.labs[j];
+          return [
+            tone(value(raw.lab)+'\n'+status(l),l.status),
+            date(raw.data)+
+              '\nSem atualização: '+elapsed(l.data,ref)+
+              '\nSolicitação até atualização: '+
+              (s.solicitacao&&l.data?days(s.solicitacao,l.data)+' dias':'Sem data')+
+              (l.data&&s.solicitacao&&l.data<s.solicitacao?
+                '\nConferir: atualização anterior à solicitação.':''),
+            money(raw.valor)+'\nValidade: '+date(raw.validade)+
+              '\n'+proposalDeadline(raw.validade,ref),
+            value(raw.obs)
+          ];
+        }),[43,65,57,CW-165]);
+
       var proposals=s.labs.filter(function(l){return l.valor!=null;})
         .sort(function(a,b){return a.valor-b.valor;});
+      var maxProposal=proposals.length?
+        Math.max.apply(null,proposals.map(function(l){return Math.abs(l.valor);})):0;
       table(identity+' · Comparativo de propostas',
         ['Posição','Laboratório','Valor','Comparação'],
         proposals.map(function(l,j){
-          return [j+1,value(l.lab),money(l.valor),l.valor===m.best?'Menor valor registrado':''];
-        }),[22,110,55,CW-187]);
+          return [j+1,value(l.lab),tone(money(l.valor),'proposta'),
+            cell((l.valor===m.best?'Menor valor registrado\n':'')+
+              (maxProposal?Math.round(Math.abs(l.valor)/maxProposal*100)+'% do maior valor':'Todos os valores são zero'),
+              {pdfBar:{counts:{proposta:Math.abs(l.valor),analise:0,pendente:0,declinou:0},
+                total:maxProposal||1}})];
+        }),[18,62,48,CW-128]);
     });
 
     start('Panorama por laboratório');
-    fields(section,[
-      ['Critério da média','Dias entre a solicitação e a última atualização registrada; não representa tempo de resposta.']
-    ]);
-    o.labs.forEach(function(name){
-      var c={proposta:0,analise:0,pendente:0,declinou:0},n=0,last=null,intervals=[];
+    var labRows=o.labs.map(function(name){
+      var c={proposta:0,analise:0,pendente:0,declinou:0};
+      var n=0,last=null,intervals=[];
       calc.studies.forEach(function(s){
         s.labs.forEach(function(l){
           if(l.lab!==name) return;
@@ -1790,52 +1866,44 @@ function makeGeneralPDF(entry){
           }
         });
       });
-      fields('Laboratório · '+value(name),[
-        ['Laboratório',value(name)],
-        ['Estudos / registros cotados',n],
-        ['Propostas',c.proposta],
-        ['Em análise / pendentes',c.analise+' / '+c.pendente],
-        ['Em aberto',c.analise+c.pendente],
-        ['Declinou / taxa de declínio',c.declinou+' / '+pct(c.declinou,n)],
-        ['Média até atualização',intervals.length?
-          Math.round(intervals.reduce(function(a,b){return a+b;},0)/intervals.length)+' dias':'Sem dado'],
-        ['Última atualização',date(last)]
-      ]);
-      table('Laboratório '+value(name)+' × estudo',['Estudo','Situação'],
-        calc.studies.map(function(s){
-          var matches=s.labs.filter(function(l){return l.lab===name;});
-          return [value(s.nome),matches.length?matches.map(status).join('\n'):'Não cotado'];
-        }),[100,CW-100]);
+      return [value(name),n,composition(c,n),
+        c.proposta+' / '+(c.analise+c.pendente)+' / '+c.declinou,
+        pct(c.declinou,n),
+        intervals.length?Math.round(intervals.reduce(function(a,b){
+          return a+b;
+        },0)/intervals.length)+' dias':'Sem dado',
+        date(last)];
     });
-    if(!o.labs.length) fields(section,[['Registros','Nenhum laboratório cadastrado.']]);
+    table(section,
+      ['Laboratório','Registros','Composição','Propostas / abertos / declínios','Taxa de declínio','Média até atualização','Última atualização'],
+      labRows,[36,20,70,42,30,36,CW-234]);
+    note('Panorama por laboratório · Critérios',
+      'A média considera dias entre a solicitação e a última atualização registrada, somente quando a atualização não é anterior à solicitação. Não representa tempo de resposta. As participações por estudo, incluindo “Não cotado”, estão na matriz estudo × laboratório.');
 
     start('Medicamentos · Cotações');
     if(!snap.medicamentos.length){
-      fields(section,[['Registros','Nenhum medicamento de referência cadastrado.']]);
+      note(section,'Nenhum medicamento de referência cadastrado.');
     }
-    snap.medicamentos.forEach(function(md,i){
-      var medication='Medicamento '+(i+1)+' · '+value(md.nome);
-      if(i>0) start(medication);
-      fields(medication,budgetSummary(md.linhas,ref));
+    snap.medicamentos.forEach(function(md){
+      var medication='Medicamento · '+value(md.nome);
+      start(medication);
+      cards(medication+' · Resumo',budgetSummary(md.linhas,ref).map(function(r){
+        return [r[0],r[1],''];
+      }),3);
       if(!md.linhas.length){
-        fields(medication,[['Cotações','Nenhum fornecedor cadastrado para este medicamento.']]);
+        note(medication,'Nenhum fornecedor cadastrado para este medicamento.');
       }
-      md.linhas.forEach(function(r,j){
-        var identity=medication+' · Fornecedor '+(j+1)+' · '+value(r.fornecedor);
-        fields(identity,[
-          ['Medicamento de referência',value(md.nome)],
-          ['Fornecedor / distribuidor',value(r.fornecedor)],
-          ['Preço',money(r.preco)],
-          ['Validade do orçamento',date(r.validadeOrc)],
-          ['Prazo do orçamento',budgetDeadline(r.validadeOrc,ref)],
-          ['Lote 1',value(r.lote)],
-          ['Validade 1',value(r.validade)],
-          ['Lote 2',value(r.lote2)],
-          ['Validade 2',value(r.validade2)],
-          ['Lote 3',value(r.lote3)],
-          ['Validade 3',value(r.validade3)],
-          ['Observação',value(r.obs)]
-        ]);
+      md.linhas.forEach(function(r){
+        var identity=medication+' · Fornecedor · '+value(r.fornecedor);
+        table(identity,
+          ['Preço / orçamento','Lote 1 / validade 1','Lote 2 / validade 2','Lote 3 / validade 3'],
+          [[money(r.preco)+'\nValidade do orçamento: '+date(r.validadeOrc)+
+              '\nPrazo: '+budgetDeadline(r.validadeOrc,ref),
+            emptyPair(r.lote)+'\n'+emptyPair(r.validade),
+            emptyPair(r.lote2)+'\n'+emptyPair(r.validade2),
+            emptyPair(r.lote3)+'\n'+emptyPair(r.validade3)],
+           [cell('Observação\n'+value(r.obs),{colSpan:4})]],
+          [CW*0.4,CW*0.2,CW*0.2,CW*0.2]);
       });
     });
 
@@ -1847,52 +1915,65 @@ function makeGeneralPDF(entry){
       counts.total++;
       if(Object.prototype.hasOwnProperty.call(counts,e.sit)) counts[e.sit]++;
     });
-    fields(section,[
-      ['Total de fornecedores contatados',counts.total],
-      ['Com retorno de pelo menos um produto',counts.retornou],
-      ['Não conseguem atender à demanda',counts.nao_atende],
-      ['Sem retorno',counts.aguardando],
-      ['Observação','Fornecedores das Cotações entram automaticamente. A marcação manual "Não atende" prevalece.']
-    ]);
-    prospects.forEach(function(e,i){
-      var manual=e.man||{};
-      fields('Prospecção '+(i+1)+' · '+value(e.nome),[
-        ['Fornecedor / distribuidor',value(e.nome)],
-        ['Contato',value(manual.contato)],
-        ['Data do contato',date(manual.data)],
-        ['Situação',SIT_PROSP[e.sit]||value(e.sit)],
-        ['Medicamentos com preço',e.pc],
-        ['Presente nas cotações',e.cot?'Sim':'Não'],
-        ['Observação',value(manual.obs)]
-      ]);
-    });
-    if(!prospects.length) fields(section,[['Registros','Nenhum fornecedor cadastrado.']]);
+    cards(section+' · Indicadores',[
+      ['Fornecedores contatados',counts.total,''],
+      ['Com retorno',counts.retornou,'Pelo menos um produto','proposta'],
+      ['Não atendem',counts.nao_atende,'','declinou'],
+      ['Sem retorno',counts.aguardando,'','pendente']
+    ],4);
+    note('Prospecção · Regra de leitura',
+      'Fornecedores das Cotações entram automaticamente. Preço diferente de null ou campo ausente conta como retorno pela regra existente; zero é válido. A marcação manual "Não atende" prevalece.');
+    table(section,
+      ['Fornecedor / origem','Contato / data','Situação','Medicamentos com preço','Observação'],
+      prospects.map(function(e){
+        var manual=e.man||{};
+        return [value(e.nome)+'\n'+(e.cot?'Nas cotações':'Inclusão manual'),
+          value(manual.contato)+'\n'+date(manual.data),
+          tone(SIT_PROSP[e.sit]||value(e.sit),
+            e.sit==='nao_atende'?'declinou':e.sit==='retornou'?'proposta':'pendente'),
+          e.pc,value(manual.obs)];
+      }),[53,53,42,29,CW-177]);
 
     start('Histórico de versões');
     var history=Array.isArray(store.history)?store.history:[],index=history.indexOf(entry);
     if(index<0){
       index=history.findIndex(function(e){return e&&e.v===entry.v&&e.ts===entry.ts;});
     }
-    var hist=index>=0?history.slice(0,index+1):history.filter(function(e){
+    var hist=(index>=0?history.slice(0,index+1):history.filter(function(e){
       return e&&Number.isFinite(Number(e.v))&&Number(e.v)<=Number(entry.v);
-    });
+    })).filter(function(e){return e&&typeof e==='object';});
     if(!hist.some(function(e){return e.v===entry.v&&e.ts===entry.ts;})) hist.push(entry);
-    hist.forEach(function(e,i){
-      if(i>0) start('Histórico · Versão '+e.v);
+
+    /* A evolução usa somente os snapshots salvos, sem recalcular alterações. */
+    table('Histórico · Evolução das cotações',
+      ['Versão / data','Total','Distribuição registrada'],
+      hist.map(function(e){
+        var counts={proposta:0,analise:0,pendente:0,declinou:0},total=0;
+        list(e.snapshot&&e.snapshot.studies).forEach(function(s){
+          list(s.labs).forEach(function(l){
+            var key=ST[l.status]?l.status:normStatus(l.status);
+            counts[key]++;total++;
+          });
+        });
+        return ['v'+value(e.v)+'\n'+stamp(e.ts),total,composition(counts,total)];
+      }),[50,22,CW-72]);
+
+    hist.forEach(function(e){
       var changes=Array.isArray(e.changes)?e.changes:
         present(e.changes)?[e.changes]:[];
-      fields('Histórico · Versão '+e.v,[
-        ['Versão','v'+e.v],
-        ['Data',stamp(e.ts)],
-        ['Responsável',value(e.autor)],
-        ['Origem',value(e.origem)],
-        ['Nota',value(e.nota)],
-        ['Alterações salvas',changes.length]
-      ]);
-      table('Versão '+e.v+' · Alterações registradas',['Item','Alteração salva'],
-        changes.length?changes.map(function(c,j){return [j+1,savedChange(c)];}):
-          [['','Nenhuma alteração registrada em e.changes.']],
-        [18,CW-18]);
+      start('Histórico · Versão '+value(e.v));
+      var rows=[
+        [cell(stamp(e.ts)+' · Responsável: '+value(e.autor)+
+          '\nOrigem: '+value(e.origem)+
+          '\nNota: '+value(e.nota)+
+          '\nAlterações salvas: '+changes.length,{colSpan:2})]
+      ];
+      if(changes.length){
+        changes.forEach(function(c,j){rows.push([j+1,savedChange(c)]);});
+      }else{
+        rows.push(['','Nenhuma alteração registrada em e.changes.']);
+      }
+      table(section,['Item','Registro salvo'],rows,[16,CW-16]);
     });
 
     /* Desenha os elementos fixos somente depois de todas as tabelas.
@@ -1911,10 +1992,6 @@ function makeGeneralPDF(entry){
       doc.setFont('helvetica','normal');
       doc.setFontSize(8);
       doc.text(text('Versão '+entry.v+' · '+stamp(entry.ts)+' · Referência: '+br(ref)),M,17);
-      doc.setTextColor(75,85,99);
-      doc.setFontSize(7);
-      doc.text('Identificação detalhada nas tabelas; cabeçalhos repetidos nas continuações.',M,29);
-
       doc.setDrawColor(227,230,235);
       doc.setLineWidth(0.2);
       doc.line(M,H-BOTTOM+3,W-M,H-BOTTOM+3);
