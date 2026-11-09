@@ -902,6 +902,7 @@ main{max-width:1240px}
 .vr-trk{position:relative;display:block;height:16px;border-radius:8px;background:rgba(127,127,127,.12)}
 .vr-mes{background:none;height:14px}.vr-mes i{position:absolute;top:0;font-style:normal;font-size:10px;font-weight:650;color:var(--faint);border-left:1px solid var(--line);padding-left:4px;box-sizing:border-box;white-space:nowrap;overflow:hidden}
 .vr-b{position:absolute;top:0;bottom:0;border-radius:8px;background:var(--c)}
+.vr-b.aberta{background:linear-gradient(90deg,var(--c) 0,var(--c) 6px,transparent 100%);opacity:.9}
 .vr-b.plan{opacity:.45;background-image:repeating-linear-gradient(135deg,transparent 0 5px,rgba(255,255,255,.55) 5px 8px)}
 .vr-b.marco{width:14px!important;height:14px;top:1px;border-radius:50%;transform:translateX(-7px)}
 .vr-hj{position:absolute;top:-4px;bottom:-4px;width:2px;background:#ef4444;border-radius:1px}
@@ -1410,10 +1411,10 @@ function proxVersao(vs){let m=0;vs.forEach(v=>{const r=/^v(\d+)$/i.exec((v.nome|
 function versoesHtml(p,id){
   const vs=Object.entries(p.versoes||{}).map(([k,v])=>Object.assign({k},v)).sort((a,b)=>(a.ini||'9999').localeCompare(b.ini||'9999')||(a.t||0)-(b.t||0));
   const hoje=new Date();hoje.setHours(0,0,0,0);
-  vs.forEach((v,i)=>{const nx=vs.slice(i+1).find(x=>x.ini);v.enc=!!(v.ini&&nx);v.fim=v.enc?nx.ini:((p.prazo&&(!v.ini||p.prazo>v.ini))?p.prazo:'');v.sx=v.enc?'enc':(v.ini&&dDe(v.ini)>hoje)?'plan':'and';});
+  vs.forEach((v,i)=>{const nx=vs.slice(i+1).find(x=>x.ini);v.enc=!!(v.ini&&nx);v.fim=v.enc?nx.ini:((p.prazo&&(!v.ini||p.prazo>v.ini))?p.prazo:'');v.aberta=!v.enc;v.sx=v.enc?'enc':(v.ini&&dDe(v.ini)>hoje)?'plan':'and';});
   const form=`<form class="row wrap et-form" data-form="versao" data-id="${id}"><label class="dt sm"><span>Versão</span><input type="text" id="vrN" value="${esc(proxVersao(vs))}" maxlength="20" autocomplete="off" style="width:84px"></label><input type="text" id="vrE" placeholder="O que entra nela (ex.: Cadastro e login)" autocomplete="off" style="flex:2;min-width:180px"><label class="dt sm"><span>Início</span><input type="date" id="vrI"></label><button class="btn" type="submit">+ Versão</button></form>`;
   const COR={enc:'var(--bad)',and:stCor(p.status),plan:'var(--faint)'},TXT={enc:'Encerrada',and:'Em andamento',plan:'Planejada'};
-  const dts=[hoje];vs.forEach(v=>{if(v.ini)dts.push(dDe(v.ini));if(v.fim)dts.push(dDe(v.fim));});
+  const dts=[hoje,new Date(hoje.getTime()+45*DIA)];vs.forEach(v=>{if(v.ini)dts.push(dDe(v.ini));if(v.fim)dts.push(dDe(v.fim));});
   let min=new Date(Math.min(...dts)),max=new Date(Math.max(...dts));
   min=new Date(min.getFullYear(),min.getMonth(),1);max=new Date(max.getFullYear(),max.getMonth()+1,0);
   const span=(max-min)/DIA+1,pc=d=>((d-min)/DIA)/span*100;
@@ -1422,9 +1423,10 @@ function versoesHtml(p,id){
   const at=(v,f,l,t,val,ex)=>`<input ${t==='date'?'type="date"':'type="text"'} data-keep data-vf="${f}" data-id="${id}" data-v="${v.k}" value="${esc(val||'')}" aria-label="${l}" ${ex||''}>`;
   const rows=vs.map(v=>{
     const c=COR[v.sx];let bar='';
-    if(v.ini){const a=dDe(v.ini),z=v.fim?dDe(v.fim):a;const w=v.fim?Math.max(1.5,pc(new Date(z.getTime()+DIA))-pc(a)):0;
-      const tip=v.nome+' · '+fmtData(a.getTime())+(v.fim?' → '+fmtData(z.getTime()):'');
-      bar=`<i class="vr-b${v.sx==='plan'?' plan':''}${v.fim?'':' marco'}" style="left:${pc(a)}%;width:${w}%;--c:${c}" title="${esc(tip)}"></i>`;}
+    if(v.ini){const a=dDe(v.ini);let z=v.fim?dDe(v.fim):null;if(!v.enc&&!z&&a<=hoje)z=hoje;
+      const fimX=z?(v.enc?pc(z):pc(new Date(z.getTime()+DIA))):0;const aberta=!v.enc&&!v.fim&&z;const w=aberta?100-pc(a):z?Math.max(1.2,fimX-pc(a)-(v.enc?0.25:0)):0;
+      const tip=v.nome+' · '+fmtData(a.getTime())+(v.enc?' → '+fmtData(z.getTime()):(v.fim?' → prazo '+fmtData(dDe(v.fim).getTime()):''));
+      bar=`<i class="vr-b${v.sx==='plan'?' plan':''}${z?'':' marco'}${aberta?' aberta':''}" style="left:${pc(a)}%;width:${w}%;--c:${c}" title="${esc(tip)}"></i>`;}
     return `<div class="vr-r"><span class="vr-c1">${at(v,'nome','Nome da versão','text',v.nome,'maxlength="20" class="vr-nome"')}</span>
       <span class="vr-c2">${at(v,'escopo','O que entra nesta versão','text',v.escopo,'placeholder="O que entra nesta versão"')}</span>
       <span class="vr-c3">${at(v,'ini','Início da versão','date',v.ini)}</span>
