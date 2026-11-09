@@ -963,8 +963,8 @@ main{max-width:1240px}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-database-compat.min.js"></script>
 <script>
 (function(){
-  /* CADEADO PADRÃO DA ESTANTE. Só esta linha muda (o ✎ Editar troca ela). "*" = qualquer pessoa cadastrada na Estante (os dados continuam protegidos por espaço). */
-  var GRUPOS_PERMITIDOS = ["*","PROJETOS"];
+  /* CADEADO PADRÃO DA ESTANTE. Só esta linha muda (o ✎ Editar troca ela). */
+  var GRUPOS_PERMITIDOS = ["PROJETOS"];
   var firebaseConfig = {
     apiKey: "AIzaSyCpG7o-CF3twF0Jti0bRchrS97SWYQBuyo",
     authDomain: "stinpharma-qualidade.firebaseapp.com",
@@ -1002,8 +1002,7 @@ main{max-width:1240px}
       if(dados.gruposMap && typeof dados.gruposMap === 'object'){ Object.keys(dados.gruposMap).forEach(function(k){ if(dados.gruposMap[k]) lista.push(k); }); }
       var chave = function(x){ return norm(x).replace(/[^A-Z0-9]/g,'_'); };
       var meus = lista.map(chave);
-      var cadastrado = Object.keys(dados).length > 0;
-      var permitido = dados.admin === true || (GRUPOS_PERMITIDOS.indexOf('*') !== -1 && cadastrado) || GRUPOS_PERMITIDOS.some(function(g){ return meus.indexOf(chave(g)) !== -1; });
+      var permitido = dados.admin === true || GRUPOS_PERMITIDOS.some(function(g){ return meus.indexOf(chave(g)) !== -1; });
       if(permitido){ liberar(); return; }
       negar('Você não tem permissão pra acessar este app.<br><span style="font-size:12px;">Seus grupos: ' + esc(lista.join(', ') || 'nenhum') + '<br>Grupos com acesso: ' + esc(GRUPOS_PERMITIDOS.join(', ') || 'só administrador') + '</span>');
     }).catch(function(){ negar('Não foi possível checar sua permissão agora. Tente recarregar.'); });
