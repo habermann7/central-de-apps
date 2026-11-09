@@ -1640,13 +1640,10 @@ function vProjeto(id){
         ${p.status==='paralisado'?'<p class="hint" style="margin-top:10px">Paralisado fica fora da régua de %. Ao escolher outro status, o andamento volta a valer.</p>':''}
         <p class="hint" style="margin-top:12px">Criado em ${fmtData(p.criadoEm||now())}${p.por&&nomeDe(p.por)?' por '+esc(nomeDe(p.por)):''} · atualizado ${ago(p.atualizadoEm||p.criadoEm)}${p.concluidoEm?' · concluído em '+fmtData(p.concluidoEm):''}</p></div>
     </div>
-    ${etapasHtml(p,id)}
     ${versoesHtml(p,id)}
     <div class="sec"><h3>Histórico de atualizações</h3><p class="section-hint" style="margin-bottom:10px">Registre as novidades para acompanhar a evolução do projeto.</p>
       <form class="row" data-form="diario" data-id="${id}"><input type="text" id="dIn" placeholder="O que foi feito ou mudou?" autocomplete="off"><button class="btn" type="submit">Registrar</button></form>
       <div class="tl" style="margin-top:14px">${diario.length?diario.map(e=>`<div class="e">${esc(e.txt)}<small>${fmtData(e.t)} · ${ago(e.t)} <button class="btn ghost sm" data-act="del-diario" data-id="${id}" data-k="${e.k}" aria-label="Apagar registro">×</button></small></div>`).join(''):'<span class="hint">Nenhum registro ainda.</span>'}</div></div>
-    <div class="sec"><h3>Anotações relacionadas <button class="btn sm" data-act="nova-nota" data-id="${id}">+ Nova nota</button></h3>
-      ${notas.length?`<div class="list">${notas.map(n=>`<button class="item" data-act="abrir-nota" data-id="${n.id}"><div class="grow"><div class="t">${esc(n.titulo||'Sem título')}</div><div class="s">${esc((n.texto||'').slice(0,90))}</div></div><span class="hint">${ago(n.atualizadoEm)}</span></button>`).join('')}</div>`:'<span class="hint">Nenhuma nota ligada.</span>'}</div>
     <div class="sec"><h3>Respostas pendentes deste projeto</h3>
       <form class="row wrap" data-form="aguardando" data-proj="${id}"><input type="text" id="agQ" placeholder="De quem?" style="flex:1;min-width:120px"><input type="text" id="agO" placeholder="O que estou esperando?" style="flex:2;min-width:180px"><button class="btn" type="submit">Adicionar</button></form>
       <div class="list" style="margin-top:10px">${ag.map(agRow).join('')}</div></div>
