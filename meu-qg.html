@@ -892,20 +892,21 @@ main{max-width:1240px}
 .et-i{display:grid;grid-template-columns:auto 1fr 150px 150px auto;gap:8px;align-items:center}
 .et-i.feito .et-nome{text-decoration:line-through;color:var(--faint)}
 .et-ck input{width:18px;height:18px;accent-color:var(--ok)}
-.vr-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
-.vr-i{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:10px 12px;display:flex;flex-direction:column;gap:8px;border-left:4px solid var(--c,var(--line))}
-.vr-i.entregue{background:transparent}
-.vr-i.entregue .vr-nota{color:var(--mut)}
-.vr-top,.vr-mid{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.vr-top select{width:168px;flex:none}
-.vr-mid .dt{flex:none}
-.vr-tag{display:inline-flex}.vr-tag .vr-nome{width:84px;font-weight:700;font-family:'IBM Plex Mono',monospace}
-.vr-enc{font-size:12.5px;font-weight:650;color:var(--bad);width:168px}
-.vr-nota{flex:1;min-width:120px;font-size:12.5px;color:var(--mut)}
-.vr-esc{flex:2;min-width:180px}
+.vr-tab{margin-top:12px;border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden}
+.vr-r{display:grid;grid-template-columns:84px minmax(120px,1.3fr) 138px 96px minmax(200px,1.6fr) 32px;gap:10px;align-items:center;padding:7px 12px;border-top:1px solid var(--line)}
+.vr-r:first-child{border-top:0}
+.vr-hd{font-size:11px;font-weight:650;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);padding-top:8px;padding-bottom:8px}
+.vr-r input{width:100%;min-width:0;box-sizing:border-box;padding:7px 9px;font-size:13.5px}
+.vr-nome{font-weight:700;font-family:'IBM Plex Mono',monospace}
+.vr-c4{font-size:12.5px;font-weight:650;color:var(--c)}
+.vr-trk{position:relative;display:block;height:16px;border-radius:8px;background:rgba(127,127,127,.12)}
+.vr-mes{background:none;height:14px}.vr-mes i{position:absolute;top:0;font-style:normal;font-size:10px;font-weight:650;color:var(--faint);border-left:1px solid var(--line);padding-left:4px;box-sizing:border-box;white-space:nowrap;overflow:hidden}
+.vr-b{position:absolute;top:0;bottom:0;border-radius:8px;background:var(--c)}
 .vr-b.plan{opacity:.45;background-image:repeating-linear-gradient(135deg,transparent 0 5px,rgba(255,255,255,.55) 5px 8px)}
-.vr-b.marco{width:14px!important;height:14px;top:11px;border-radius:50%;transform:translateX(-7px);min-width:0}
-@media(max-width:740px){.vr-esc{flex-basis:100%}.vr-top select{flex:1}.vr-nota{flex-basis:100%;order:5}.vr-mid .dt{flex:1}}
+.vr-b.marco{width:14px!important;height:14px;top:1px;border-radius:50%;transform:translateX(-7px)}
+.vr-hj{position:absolute;top:-4px;bottom:-4px;width:2px;background:#ef4444;border-radius:1px}
+.vr-c6{padding:4px 8px}
+@media(max-width:900px){.vr-r{grid-template-columns:84px 1fr 1fr 32px;grid-template-areas:"a b b f" "c c d d" "e e e e";row-gap:8px}.vr-hd{display:none}.vr-c1{grid-area:a}.vr-c2{grid-area:b}.vr-c3{grid-area:c}.vr-c4{grid-area:d}.vr-c5{grid-area:e}.vr-c6{grid-area:f}}
 @media(max-width:740px){.et-i{grid-template-columns:auto 1fr auto}.et-i input[type=date]{grid-column:span 1}.ec-n{width:100px}.ec-hoje{display:none}}
 </style>
 </head>
@@ -1407,41 +1408,32 @@ function etapasHtml(p,id){
 const VSTATUS={planejada:{n:'Planejada',c:'var(--faint)'},andamento:{n:'Em andamento',c:'var(--ok)'},entregue:{n:'Entregue',c:'var(--ok)'}};
 function proxVersao(vs){let m=0;vs.forEach(v=>{const r=/^v(\d+)$/i.exec((v.nome||'').trim());if(r)m=Math.max(m,+r[1]);});return 'v'+(m+1);}
 function versoesHtml(p,id){
-  const vs=Object.entries(p.versoes||{}).map(([k,v])=>Object.assign({k},v)).sort((a,b)=>(a.ini||a.fim||'9999').localeCompare(b.ini||b.fim||'9999')||(a.t||0)-(b.t||0));
-  vs.forEach((v,i)=>{const nx=vs.slice(i+1).find(x=>x.ini);v.enc=!!(v.ini&&nx);v.fim=v.enc?nx.ini:(p.prazo||'');v.sx=v.enc?'entregue':(v.st||'planejada');});
+  const vs=Object.entries(p.versoes||{}).map(([k,v])=>Object.assign({k},v)).sort((a,b)=>(a.ini||'9999').localeCompare(b.ini||'9999')||(a.t||0)-(b.t||0));
   const hoje=new Date();hoje.setHours(0,0,0,0);
-  const ent=vs.filter(v=>v.sx==='entregue').length;
+  vs.forEach((v,i)=>{const nx=vs.slice(i+1).find(x=>x.ini);v.enc=!!(v.ini&&nx);v.fim=v.enc?nx.ini:((p.prazo&&(!v.ini||p.prazo>v.ini))?p.prazo:'');v.sx=v.enc?'enc':(v.ini&&dDe(v.ini)>hoje)?'plan':'and';});
   const form=`<form class="row wrap et-form" data-form="versao" data-id="${id}"><label class="dt sm"><span>Versão</span><input type="text" id="vrN" value="${esc(proxVersao(vs))}" maxlength="20" autocomplete="off" style="width:84px"></label><input type="text" id="vrE" placeholder="O que entra nela (ex.: Cadastro e login)" autocomplete="off" style="flex:2;min-width:180px"><label class="dt sm"><span>Início</span><input type="date" id="vrI"></label><button class="btn" type="submit">+ Versão</button></form>`;
-  const corDe=v=>v.enc?'var(--bad)':v.sx==='entregue'?'var(--ok)':(v.fim&&dDe(v.fim)<hoje)?'var(--bad)':v.sx==='andamento'?stCor(p.status):'var(--faint)';
-  let g='';
-  const comData=vs.filter(v=>v.ini||v.fim);
-  if(comData.length){
-    const dts=[hoje];comData.forEach(v=>{if(v.ini)dts.push(dDe(v.ini));if(v.fim)dts.push(dDe(v.fim));});
-    let min=new Date(Math.min(...dts)),max=new Date(Math.max(...dts));
-    min=new Date(min.getFullYear(),min.getMonth(),1);max=new Date(max.getFullYear(),max.getMonth()+1,0);
-    const span=(max-min)/DIA+1,pc=d=>((d-min)/DIA)/span*100;
-    let ms='';for(let d=new Date(min);d<=max;d=new Date(d.getFullYear(),d.getMonth()+1,1)){const nx=new Date(d.getFullYear(),d.getMonth()+1,1);ms+=`<div class="ec-m" style="left:${pc(d)}%;width:${(Math.min(nx,new Date(max.getTime()+DIA))-d)/DIA/span*100}%">${MESES[d.getMonth()]}${d.getMonth()===0?' '+d.getFullYear():''}</div>`;}
-    const rows=comData.map(v=>{
-      const a=dDe(v.ini||v.fim),b=dDe(v.fim||v.ini),c=corDe(v);
-      const marco=!(v.ini&&v.fim)||v.ini===v.fim;
-      const tip=(v.nome||'')+' · '+(v.ini?fmtData(dDe(v.ini).getTime()):'—')+' → '+(v.fim?fmtData(dDe(v.fim).getTime()):'—');
-      return `<div class="ec-r"><span class="ec-n" title="${esc(tip)}">${v.enc?'':v.sx==='entregue'?'✓ ':''}${esc(v.nome||'v?')}</span><div class="ec-t"><i class="ec-b vr-b${v.sx==='entregue'&&!v.enc?' ok':''}${v.sx==='planejada'?' plan':''}${marco?' marco':''}" style="left:${pc(a)}%;width:${marco?0:Math.max(1.5,pc(new Date(b.getTime()+DIA))-pc(a))}%;--c:${c}" title="${esc(tip)}"></i></div></div>`;}).join('');
-    g=`<div class="ec"><div class="ec-hd"><span class="ec-n"></span><div class="ec-t">${ms}</div></div><div class="ec-body">${rows}<i class="ec-hoje" style="left:calc(150px + (100% - 150px) * ${pc(hoje)/100})"></i></div></div>`;
-  }
-  const lista=vs.length?`<div class="vr-list">${vs.map(v=>{
-    const late=v.sx!=='entregue'&&v.fim&&dDe(v.fim)<hoje;
-    const d=v.fim?Math.round((dDe(v.fim)-hoje)/DIA):null;
-    const nota=v.enc?'Encerrada em '+fmtData(dDe(v.fim).getTime())+' (início da próxima)':v.sx==='entregue'?'Entregue':late?`<b style="color:var(--bad)">atrasada ${-d} dia${d===-1?'':'s'}</b>`:d===null?'sem prazo do projeto':d===0?'prazo do projeto é hoje':`prazo do projeto em ${d} dia${d===1?'':'s'}`;
-    const at=(f,l,t,val,ex)=>`<input ${t==='date'?'type="date"':'type="text"'} data-keep data-vf="${f}" data-id="${id}" data-v="${v.k}" value="${esc(val||'')}" aria-label="${l}" ${ex||''}>`;
-    return `<div class="vr-i ${v.sx}" style="--c:${corDe(v)}"><div class="vr-top"><span class="vr-tag" style="--c:${corDe(v)}">${at('nome','Nome da versão','text',v.nome,'maxlength="20" class="vr-nome"')}</span>
-      ${v.enc?'<span class="vr-enc">Encerrada</span>':`<select data-keep data-vf="st" data-id="${id}" data-v="${v.k}" aria-label="Situação da versão">${Object.keys(VSTATUS).map(k=>`<option value="${k}"${(v.st||'planejada')===k?' selected':''}>${VSTATUS[k].n}</option>`).join('')}</select>`}
-      <span class="vr-nota">${nota}</span>
-      <button class="btn ghost sm" data-act="del-versao" data-id="${id}" data-v="${v.k}" aria-label="Remover versão" title="Remover versão">✕</button></div>
-      <div class="vr-mid">${at('escopo','O que entra nesta versão','text',v.escopo,'placeholder="O que entra nesta versão" class="vr-esc"')}
-      <label class="dt sm"><span>Início</span>${at('ini','Início da versão','date',v.ini)}</label></div></div>`;}).join('')}</div>`:'<p class="hint" style="margin-top:10px">Nenhuma versão ainda. Planeje as entregas do projeto em v1, v2, v3… com datas e o que entra em cada uma.</p>';
-  return `<div class="sec"><h3>Versões do projeto ${vs.length?`<span class="chip">${ent}/${vs.length} entregues</span>`:''}</h3><p class="section-hint" style="margin-bottom:10px">Cronograma por versão: cada versão termina quando a próxima começa. A linha vermelha é hoje.</p>${form}${g}${lista}</div>`;
+  const COR={enc:'var(--bad)',and:stCor(p.status),plan:'var(--faint)'},TXT={enc:'Encerrada',and:'Em andamento',plan:'Planejada'};
+  const dts=[hoje];vs.forEach(v=>{if(v.ini)dts.push(dDe(v.ini));if(v.fim)dts.push(dDe(v.fim));});
+  let min=new Date(Math.min(...dts)),max=new Date(Math.max(...dts));
+  min=new Date(min.getFullYear(),min.getMonth(),1);max=new Date(max.getFullYear(),max.getMonth()+1,0);
+  const span=(max-min)/DIA+1,pc=d=>((d-min)/DIA)/span*100;
+  let ms='';for(let d=new Date(min);d<=max;d=new Date(d.getFullYear(),d.getMonth()+1,1)){const nx=new Date(d.getFullYear(),d.getMonth()+1,1);ms+=`<i style="left:${pc(d)}%;width:${(Math.min(nx,new Date(max.getTime()+DIA))-d)/DIA/span*100}%">${MESES[d.getMonth()]}${d.getMonth()===0?' '+String(d.getFullYear()).slice(2):''}</i>`;}
+  const hojePc=pc(hoje);
+  const at=(v,f,l,t,val,ex)=>`<input ${t==='date'?'type="date"':'type="text"'} data-keep data-vf="${f}" data-id="${id}" data-v="${v.k}" value="${esc(val||'')}" aria-label="${l}" ${ex||''}>`;
+  const rows=vs.map(v=>{
+    const c=COR[v.sx];let bar='';
+    if(v.ini){const a=dDe(v.ini),z=v.fim?dDe(v.fim):a;const w=v.fim?Math.max(1.5,pc(new Date(z.getTime()+DIA))-pc(a)):0;
+      const tip=v.nome+' · '+fmtData(a.getTime())+(v.fim?' → '+fmtData(z.getTime()):'');
+      bar=`<i class="vr-b${v.sx==='plan'?' plan':''}${v.fim?'':' marco'}" style="left:${pc(a)}%;width:${w}%;--c:${c}" title="${esc(tip)}"></i>`;}
+    return `<div class="vr-r"><span class="vr-c1">${at(v,'nome','Nome da versão','text',v.nome,'maxlength="20" class="vr-nome"')}</span>
+      <span class="vr-c2">${at(v,'escopo','O que entra nesta versão','text',v.escopo,'placeholder="O que entra nesta versão"')}</span>
+      <span class="vr-c3">${at(v,'ini','Início da versão','date',v.ini)}</span>
+      <span class="vr-c4" style="--c:${c}">${TXT[v.sx]}</span>
+      <span class="vr-c5"><span class="vr-trk">${bar}<i class="vr-hj" style="left:${hojePc}%"></i></span></span>
+      <button class="btn ghost sm vr-c6" data-act="del-versao" data-id="${id}" data-v="${v.k}" aria-label="Remover versão" title="Remover versão">✕</button></div>`;}).join('');
+  const lista=vs.length?`<div class="vr-tab"><div class="vr-r vr-hd"><span class="vr-c1">Versão</span><span class="vr-c2">O que entra</span><span class="vr-c3">Início</span><span class="vr-c4">Situação</span><span class="vr-c5"><span class="vr-trk vr-mes">${ms}</span></span><span class="vr-c6"></span></div>${rows}</div>`:'<p class="hint" style="margin-top:10px">Nenhuma versão ainda. Planeje as entregas do projeto em v1, v2, v3… com a data de início e o que entra em cada uma.</p>';
+  return `<div class="sec"><h3>Versões do projeto ${vs.length?`<span class="chip">${vs.length} versõe${vs.length===1?'':'s'}</span>`:''}</h3><p class="section-hint" style="margin-bottom:10px">Cada versão termina quando a próxima começa. A linha vermelha é hoje.</p>${form}${lista}</div>`;
 }
-
 /* ---------- Cronograma (Gantt) ---------- */
 const MESES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 const isoDe=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
