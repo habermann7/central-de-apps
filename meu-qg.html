@@ -895,11 +895,12 @@ main{max-width:1240px}
 .vr-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .vr-i{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:10px 12px;display:flex;flex-direction:column;gap:8px;border-left:4px solid var(--c,var(--line))}
 .vr-i.entregue{background:transparent}
+.vr-i.entregue .vr-nota{color:var(--mut)}
 .vr-top,.vr-mid{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .vr-top select{width:168px;flex:none}
 .vr-mid .dt{flex:none}
 .vr-tag{display:inline-flex}.vr-tag .vr-nome{width:84px;font-weight:700;font-family:'IBM Plex Mono',monospace}
-.vr-enc{font-size:12.5px;font-weight:650;color:var(--ok);width:168px}
+.vr-enc{font-size:12.5px;font-weight:650;color:var(--bad);width:168px}
 .vr-nota{flex:1;min-width:120px;font-size:12.5px;color:var(--mut)}
 .vr-esc{flex:2;min-width:180px}
 .vr-b.plan{opacity:.45;background-image:repeating-linear-gradient(135deg,transparent 0 5px,rgba(255,255,255,.55) 5px 8px)}
@@ -1411,7 +1412,7 @@ function versoesHtml(p,id){
   const hoje=new Date();hoje.setHours(0,0,0,0);
   const ent=vs.filter(v=>v.sx==='entregue').length;
   const form=`<form class="row wrap et-form" data-form="versao" data-id="${id}"><label class="dt sm"><span>Versão</span><input type="text" id="vrN" value="${esc(proxVersao(vs))}" maxlength="20" autocomplete="off" style="width:84px"></label><input type="text" id="vrE" placeholder="O que entra nela (ex.: Cadastro e login)" autocomplete="off" style="flex:2;min-width:180px"><label class="dt sm"><span>Início</span><input type="date" id="vrI"></label><button class="btn" type="submit">+ Versão</button></form>`;
-  const corDe=v=>v.sx==='entregue'?'var(--ok)':(v.fim&&dDe(v.fim)<hoje)?'var(--bad)':v.sx==='andamento'?stCor(p.status):'var(--faint)';
+  const corDe=v=>v.enc?'var(--bad)':v.sx==='entregue'?'var(--ok)':(v.fim&&dDe(v.fim)<hoje)?'var(--bad)':v.sx==='andamento'?stCor(p.status):'var(--faint)';
   let g='';
   const comData=vs.filter(v=>v.ini||v.fim);
   if(comData.length){
@@ -1424,7 +1425,7 @@ function versoesHtml(p,id){
       const a=dDe(v.ini||v.fim),b=dDe(v.fim||v.ini),c=corDe(v);
       const marco=!(v.ini&&v.fim)||v.ini===v.fim;
       const tip=(v.nome||'')+' · '+(v.ini?fmtData(dDe(v.ini).getTime()):'—')+' → '+(v.fim?fmtData(dDe(v.fim).getTime()):'—');
-      return `<div class="ec-r"><span class="ec-n" title="${esc(tip)}">${v.sx==='entregue'?'✓ ':''}${esc(v.nome||'v?')}</span><div class="ec-t"><i class="ec-b vr-b${v.sx==='entregue'?' ok':''}${v.sx==='planejada'?' plan':''}${marco?' marco':''}" style="left:${pc(a)}%;width:${marco?0:Math.max(1.5,pc(new Date(b.getTime()+DIA))-pc(a))}%;--c:${c}" title="${esc(tip)}"></i></div></div>`;}).join('');
+      return `<div class="ec-r"><span class="ec-n" title="${esc(tip)}">${v.enc?'':v.sx==='entregue'?'✓ ':''}${esc(v.nome||'v?')}</span><div class="ec-t"><i class="ec-b vr-b${v.sx==='entregue'&&!v.enc?' ok':''}${v.sx==='planejada'?' plan':''}${marco?' marco':''}" style="left:${pc(a)}%;width:${marco?0:Math.max(1.5,pc(new Date(b.getTime()+DIA))-pc(a))}%;--c:${c}" title="${esc(tip)}"></i></div></div>`;}).join('');
     g=`<div class="ec"><div class="ec-hd"><span class="ec-n"></span><div class="ec-t">${ms}</div></div><div class="ec-body">${rows}<i class="ec-hoje" style="left:calc(150px + (100% - 150px) * ${pc(hoje)/100})"></i></div></div>`;
   }
   const lista=vs.length?`<div class="vr-list">${vs.map(v=>{
@@ -1433,7 +1434,7 @@ function versoesHtml(p,id){
     const nota=v.enc?'Encerrada em '+fmtData(dDe(v.fim).getTime())+' (início da próxima)':v.sx==='entregue'?'Entregue':late?`<b style="color:var(--bad)">atrasada ${-d} dia${d===-1?'':'s'}</b>`:d===null?'sem prazo do projeto':d===0?'prazo do projeto é hoje':`prazo do projeto em ${d} dia${d===1?'':'s'}`;
     const at=(f,l,t,val,ex)=>`<input ${t==='date'?'type="date"':'type="text"'} data-keep data-vf="${f}" data-id="${id}" data-v="${v.k}" value="${esc(val||'')}" aria-label="${l}" ${ex||''}>`;
     return `<div class="vr-i ${v.sx}" style="--c:${corDe(v)}"><div class="vr-top"><span class="vr-tag" style="--c:${corDe(v)}">${at('nome','Nome da versão','text',v.nome,'maxlength="20" class="vr-nome"')}</span>
-      ${v.enc?'<span class="vr-enc">✓ Encerrada</span>':`<select data-keep data-vf="st" data-id="${id}" data-v="${v.k}" aria-label="Situação da versão">${Object.keys(VSTATUS).map(k=>`<option value="${k}"${(v.st||'planejada')===k?' selected':''}>${VSTATUS[k].n}</option>`).join('')}</select>`}
+      ${v.enc?'<span class="vr-enc">Encerrada</span>':`<select data-keep data-vf="st" data-id="${id}" data-v="${v.k}" aria-label="Situação da versão">${Object.keys(VSTATUS).map(k=>`<option value="${k}"${(v.st||'planejada')===k?' selected':''}>${VSTATUS[k].n}</option>`).join('')}</select>`}
       <span class="vr-nota">${nota}</span>
       <button class="btn ghost sm" data-act="del-versao" data-id="${id}" data-v="${v.k}" aria-label="Remover versão" title="Remover versão">✕</button></div>
       <div class="vr-mid">${at('escopo','O que entra nesta versão','text',v.escopo,'placeholder="O que entra nesta versão" class="vr-esc"')}
