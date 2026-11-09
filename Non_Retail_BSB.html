@@ -942,7 +942,7 @@ function prospLista(d){
     var e=mapa[n]; if(!e){ e=mapa[n]={nome:r.fornecedor,man:null,j:-1,cot:true}; ord.push(e); } e.cot=true; }); });
   ord.forEach(function(e){ e.pc=e.nome?prodCotados(d,e.nome):0; var ms=(e.man&&e.man.situacao)||'';
     e.sit=ms==='nao_atende'?'nao_atende':(e.pc>0?'retornou':(ms||'aguardando')); });
-  ord.sort(function(a,b){ var x=norm(a.nome)||'￿', y=norm(b.nome)||'￿'; return x<y?-1:x>y?1:0; });
+  ord.sort(function(a,b){ var x=norm(a.nome)||' ', y=norm(b.nome)||' '; return x<y?-1:x>y?1:0; });
   return ord;
 }
 function renderProspeccao(d){
@@ -1221,6 +1221,7 @@ var INK={proposta:[10,110,10],analise:[28,92,171],pendente:[122,80,0],declinou:[
 function pdfSafe(s){return String(s==null?'':s).replace(/[→]/g,'>').replace(/[—–]/g,'-').replace(/[✓✕◔]/g,'');}
 function makePDF(entry,opt){
   opt=opt||{};
+  if(!opt.studyId) return makeGeneralPDF(entry);
   return new Promise(function(resolve){
   if(!window.jspdf||!window.jspdf.jsPDF){toast('A biblioteca de PDF não carregou. Verifique a conexão com a internet e recarregue.','err');resolve();return;}
   var J=window.jspdf.jsPDF, owner=(Math.random().toString(36)+Date.now().toString(36)).slice(2)+Math.random().toString(36).slice(2);
@@ -1371,6 +1372,566 @@ function makePDF(entry,opt){
   doc.save(name);
   toast('PDF somente leitura gerado: '+name,'ok');
   setTimeout(resolve,300);
+  });
+}
+
+/* Exportação geral isolada: não modifica o PDF individual nem os dados salvos. */
+function makeGeneralPDF(entry){
+  return Promise.resolve().then(function(){
+    if(!window.jspdf||!window.jspdf.jsPDF){
+      throw new Error('A biblioteca de PDF não carregou. Verifique a conexão e recarregue.');
+    }
+    if(!entry||!entry.snapshot){
+      throw new Error('Esta versão não possui um snapshot para exportar.');
+    }
+
+    function list(v){return Array.isArray(v)?v.filter(function(x){return x&&typeof x==='object';}):[];}
+    function present(v){
+      return v!==null&&v!==undefined&&
+        (typeof v!=='string'||v.trim()!=='');
+    }
+    function number(v){
+      if(!present(v)||(typeof v!=='number'&&typeof v!=='string')) return false;
+      return Number.isFinite(Number(typeof v==='string'?v.trim():v));
+    }
+    function money(v){return number(v)?brl(Number(v)):'Não informado';}
+    function savedChange(v){
+      if(v!==null&&typeof v==='object') return JSON.stringify(v,null,2);
+      return v==null?'':String(v);
+    }
+
+    /* Helvetica preserva português e caracteres WinAnsi. Outros símbolos recebem
+       uma descrição ou seu código Unicode, sem descarte silencioso de conteúdo. */
+    function text(v){
+      var replacements={
+        '\u00a0':' ','\u202f':' ','\u2007':' ',
+        '\u2010':'-','\u2011':'-','\u2012':'-','\u2013':'-','\u2014':'-',
+        '\u2018':"'",'\u2019':"'",'\u201a':"'",'\u201c':'"','\u201d':'"','\u201e':'"',
+        '\u2026':'...','\u2022':' * ','\u2192':' -> ','\u2190':' <- ',
+        '\u2194':' <-> ','\u00d7':' x ','\u2212':'-','\u2264':'<=','\u2265':'>=',
+        '\u2260':'!=','\u2713':'[sim]','\u2714':'[sim]',
+        '\u2715':'[x]','\u2716':'[x]','\u2717':'[x]',
+        '\u2122':'(TM)','\u00ae':'(R)','\u00a9':'(C)'
+      };
+      return Array.from(String(v==null?'':v).normalize('NFC')
+        .replace(/\r\n?/g,'\n').replace(/\t/g,'    ')).map(function(c){
+        if(Object.prototype.hasOwnProperty.call(replacements,c)) return replacements[c];
+        var cp=c.codePointAt(0);
+        if(c==='\n'||(cp>=32&&cp<=126)||(cp>=160&&cp<=255)||c==='€') return c;
+        return '[U+'+cp.toString(16).toUpperCase().padStart(4,'0')+']';
+      }).join('');
+    }
+    function value(v){return present(v)?String(v):'Não informado';}
+    function iso(v){
+      var m=String(v==null?'':v).match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T)/);
+      if(!m) return null;
+      var d=new Date(Date.UTC(+m[1],+m[2]-1,+m[3]));
+      return d.getUTCFullYear()===+m[1]&&d.getUTCMonth()===+m[2]-1&&
+        d.getUTCDate()===+m[3]?m[1]+'-'+m[2]+'-'+m[3]:null;
+    }
+    function date(v){
+      var d=iso(v);
+      return d?br(d):present(v)?String(v)+' (data não reconhecida)':'Sem data';
+    }
+    function stamp(v){
+      var d=iso(v), t=String(v==null?'':v).match(/T(\d{2}:\d{2})/);
+      return d?br(d)+(t?' às '+t[1]:''):value(v);
+    }
+    function elapsed(v,reference){
+      var d=iso(v);
+      return d?days(d,reference)+' dias':'Sem data';
+    }
+    function budgetDeadline(v,reference){
+      var d=iso(v);
+      if(!d) return present(v)?'Data não reconhecida':'Sem data';
+      var n=days(reference,d);
+      if(n<0) return 'Vencido há '+plural(-n,'dia','dias');
+      if(n===0) return 'Vence hoje';
+      if(n<=15) return 'Vence em '+plural(n,'dia','dias');
+      return 'Válido · '+plural(n,'dia','dias');
+    }
+    function proposalDeadline(v,reference){
+      var d=iso(v);
+      if(!d) return present(v)?'Data não reconhecida':'Sem validade';
+      var n=days(reference,d);
+      if(n<0) return 'Vencida há '+plural(-n,'dia','dias');
+      return n<=30?'Vence em '+plural(n,'dia','dias'):plural(n,'dia','dias');
+    }
+    function budgetSummary(rows,reference){
+      var expired=0,soon=0;
+      rows.forEach(function(r){
+        var d=iso(r.validadeOrc);
+        if(!d) return;
+        var n=days(reference,d);
+        if(n<0) expired++;
+        else if(n<=15) soon++;
+      });
+      return [
+        ['Fornecedores cadastrados',rows.length],
+        ['Orçamentos vencidos',expired],
+        ['Orçamentos vencendo em até 15 dias',soon]
+      ];
+    }
+
+    var ref=iso(entry.ts);
+    if(!ref) throw new Error('A versão salva não possui uma data de referência válida.');
+
+    /* Cópia exclusiva do snapshot; valores originais permanecem disponíveis
+       para impressão, inclusive quando uma data não é reconhecida. */
+    var snap=clone(entry.snapshot), rawStudies=list(snap.studies);
+    snap.meta=snap.meta&&typeof snap.meta==='object'?snap.meta:{};
+    snap.studies=rawStudies.map(function(s){
+      s.labs=list(s.labs);
+      return s;
+    });
+    snap.medicamentos=list(snap.medicamentos);
+    snap.medicamentos.forEach(function(m){m.linhas=list(m.linhas);});
+    snap.prospeccao=list(snap.prospeccao);
+
+    /* Somente a cópia de cálculo recebe datas válidas e valores numéricos.
+       As regras existentes de indicadores e prospecção são reaproveitadas. */
+    var calc=clone(snap);
+    calc.studies.forEach(function(s){
+      s.solicitacao=iso(s.solicitacao);
+      s.labs.forEach(function(l){
+        l.data=iso(l.data);
+        l.validade=iso(l.validade);
+        l.status=ST[l.status]?l.status:normStatus(l.status);
+        l.valor=number(l.valor)?Number(l.valor):null;
+      });
+    });
+    /* Preserva os preços do snapshot para prospLista e prodCotados.
+       O critério existente de retorno automático é r.preco!=null.
+       A validação numérica fica restrita à apresentação feita por money. */
+
+    var owner=(Math.random().toString(36)+Date.now().toString(36)).slice(2)+
+      Math.random().toString(36).slice(2);
+    var doc=new window.jspdf.jsPDF({
+      orientation:'landscape',unit:'mm',format:'a4',compress:true,
+      encryption:{userPassword:'',ownerPassword:owner,userPermissions:['print']}
+    });
+    if(typeof doc.autoTable!=='function'){
+      throw new Error('A biblioteca de tabelas do PDF não carregou. Recarregue a página.');
+    }
+
+    var W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight();
+    var M=12,TOP=32,CW=W-2*M,y=TOP;
+    var navy=[15,42,68],section='Resumo executivo';
+    var title=niceTitle(snap.meta.titulo);
+
+    /* Mantém o conteúdo original do rodapé, inclusive brTs.
+       Sua altura é reservada antes de qualquer tabela ser paginada. */
+    var footer=text(title+' · Documento somente leitura · Versão '+entry.v+' de '+brTs(entry.ts));
+    var footerFontSize=7,footerLineHeight=3.2;
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(footerFontSize);
+    var footerLines=doc.splitTextToSize(footer,CW);
+    var BOTTOM=Math.max(25,16+footerLines.length*footerLineHeight);
+    if(H-BOTTOM-TOP<25){
+      throw new Error('A identificação do documento é extensa demais para manter o rodapé integral e legível em cada página A4.');
+    }
+
+    doc.setProperties({
+      title:text(title+' - Versão '+entry.v),
+      subject:'Relatório somente leitura',
+      author:text(entry.autor||''),
+      creator:'Painel de Estudos de Equivalência',
+      keywords:'estudos de equivalência'
+    });
+
+    function nextPage(){
+      doc.addPage();
+      y=TOP;
+    }
+    var tableSequence=0;
+    function table(label,head,body,widths){
+      if(y>H-BOTTOM-18) nextPage();
+      var columns={};
+      (widths||[]).forEach(function(w,i){columns[i]={cellWidth:w};});
+      var identifier='Tabela '+(++tableSequence);
+      /* O título curto ocupa uma linha com colSpan no cabeçalho repetido.
+         A identificação integral ocupa a primeira linha do corpo, em toda
+         a largura, sem alterar as células dos registros seguintes. */
+      var context, match;
+      if((match=label.match(/^Estudo (\d+)/))){
+        context='Estudo '+match[1];
+        var laboratory=label.match(/ · Laboratório (\d+)/);
+        if(laboratory) context+=' · Laboratório '+laboratory[1];
+        else if(label.indexOf('Comparativo de propostas')>=0) context+=' · Comparativo de propostas';
+        else context+=' · Detalhamento';
+      }else if((match=label.match(/^Medicamento (\d+)/))){
+        context='Medicamento '+match[1];
+        var supplier=label.match(/ · Fornecedor (\d+)/);
+        context+=supplier?' · Fornecedor '+supplier[1]:' · Resumo das cotações';
+      }else if((match=label.match(/^Prospecção (\d+)/))){
+        context='Prospecção · Fornecedor '+match[1];
+      }else if((match=label.match(/^(?:Histórico · )?Versão (\d+)/))){
+        context='Histórico · Versão '+match[1];
+        if(label.indexOf('Alterações registradas')>=0) context+=' · Alterações';
+      }else if(label.indexOf('Laboratório · ')===0){
+        context='Panorama por laboratório · Indicadores';
+      }else if(label.indexOf('Laboratório ')===0&&label.indexOf(' × estudo')>=0){
+        context='Panorama por laboratório · Participação nos estudos';
+      }else{
+        var fixedLabels=[
+          'Resumo executivo','Indicadores do portfólio',
+          'Distribuição das cotações','Composição e funil por estudo',
+          'Prioridades operacionais','Todos os pontos de atenção',
+          'Matriz estudo × laboratório','Linha do tempo dos estudos',
+          'Panorama por laboratório','Medicamentos · Cotações',
+          'Medicamentos · Prospecção de fornecedores'
+        ];
+        context=fixedLabels.indexOf(label)>=0?label:'Detalhamento dos registros';
+      }
+      var rows=(body.length?body:[head.map(function(v,i){
+        return i===0?'Nenhum registro.':'';
+      })]).map(function(row){return row.map(text);});
+      rows.unshift([{
+        content:text(label),
+        colSpan:head.length,
+        styles:{fontStyle:'bold',overflow:'linebreak'}
+      }]);
+      doc.autoTable({
+        startY:y,
+        margin:{left:M,right:M,top:TOP,bottom:BOTTOM},
+        tableWidth:CW,
+        theme:'striped',
+        pageBreak:'auto',
+        rowPageBreak:'auto',
+        showHead:'everyPage',
+        head:[
+          [{content:text(identifier+' · '+context),colSpan:head.length,
+            styles:{overflow:'linebreak'}}],
+          head.map(text)
+        ],
+        body:rows,
+        styles:{
+          font:'helvetica',fontSize:8,cellPadding:2.3,
+          overflow:'linebreak',valign:'top',
+          textColor:[15,23,32],lineColor:[227,230,235],lineWidth:0.15
+        },
+        headStyles:{fillColor:navy,textColor:[255,255,255],fontStyle:'bold',fontSize:8},
+        alternateRowStyles:{fillColor:[248,249,251]},
+        columnStyles:columns
+      });
+      y=doc.lastAutoTable.finalY+5;
+    }
+    function fields(label,rows){
+      table(label,['Campo','Informação'],rows,[65,CW-65]);
+    }
+    function start(label){
+      section=label;
+      if(y!==TOP) nextPage();
+    }
+    function status(l){return ST[l.status]?ST[l.status].label:value(l.status);}
+
+    var x=insightStats(calc,ref),o=overall(calc,ref);
+    var signals=liveSignals(calc,ref),alerts=alertsOf(calc,ref);
+    var priority=!calc.studies.length?'Nenhum estudo cadastrado':
+      x.withoutOffer?plural(x.withoutOffer,'estudo sem proposta','estudos sem proposta'):
+      'Todos os estudos têm proposta';
+    var best=null;
+    calc.studies.forEach(function(s){
+      s.labs.forEach(function(l){
+        if(l.valor!=null&&(!best||l.valor<best.valor)){
+          best={valor:l.valor,lab:l.lab,study:s.nome};
+        }
+      });
+    });
+    fields(section,[
+      ['Título',title],
+      ['Objetivo',value(snap.meta.objetivo)],
+      ['Versão salva','v'+entry.v],
+      ['Data de referência',stamp(entry.ts)],
+      ['Responsável',value(entry.autor)],
+      ['Leitura executiva',priority],
+      ['Orientação',!calc.studies.length?'Adicione estudos para começar a acompanhar o portfólio.':
+        x.withoutOffer?'Priorize os estudos ainda sem proposta e os retornos sem atualização.':
+        'Acompanhe a validade e a comparação das propostas recebidas.'],
+      ['Menor proposta registrada',best?money(best.valor)+' · '+value(best.lab)+' · '+value(best.study):
+        'Nenhuma até o momento'],
+      ['Critério temporal','Todos os prazos e dias deste relatório usam '+br(ref)+'.'],
+      ['Critério de leitura','Valores de propostas de estudos diferentes não são somados.']
+    ]);
+    fields('Indicadores do portfólio',[
+      ['Estudos no portfólio',calc.studies.length],
+      ['Cotações registradas',o.total],
+      ['Laboratórios únicos',o.labs.length],
+      ['Em acompanhamento',x.active],
+      ['Em análise',o.c.analise],
+      ['Retorno pendente',o.c.pendente],
+      ['Propostas recebidas',o.c.proposta],
+      ['Estudos com proposta',x.withOffer],
+      ['Estudos sem proposta',x.withoutOffer],
+      ['Não atendidas',o.c.declinou+' · '+pct(o.c.declinou,o.total)],
+      ['Idade média dos estudos',o.avg!=null?o.avg+' dias':'Sem data'],
+      ['Estudo mais antigo',o.oldest?value(o.oldest.s.nome)+' · '+o.oldest.m.dias+' dias':'Sem data'],
+      ['Cotações ativas há 14+ dias sem atualização',x.over14],
+      ['Registros ativos sem data de atualização',x.missing],
+      ['Atualizações anteriores à solicitação',x.invalid],
+      ['Nota sobre atualização','A data de atualização não é, necessariamente, a data de resposta do laboratório.']
+    ]);
+    table('Distribuição das cotações',['Situação','Quantidade','Percentual'],
+      KEYS.map(function(k){return [ST[k].label,o.c[k],pct(o.c[k],o.total)];}),[150,60,CW-210]);
+    table('Composição e funil por estudo',
+      ['Estudo','Situação geral','Cotados / ativos / propostas','Distribuição dos retornos'],
+      o.ms.map(function(z){
+        return [value(z.s.nome),z.m.health.label,
+          z.m.total+' / '+z.m.ativos+' / '+z.m.c.proposta,
+          KEYS.map(function(k){return ST[k].label+': '+z.m.c[k]+' ('+pct(z.m.c[k],z.m.total)+')';}).join('\n')];
+      }),[65,48,55,CW-168]);
+
+    start('Prioridades operacionais');
+    table(section,['Prioridade','Estudo / laboratório','Sinal e orientação'],
+      signals.map(function(a,i){
+        return [(i+1)+'. '+(a.severity==='urgent'?'Prioritário':'Revisar'),
+          value(a.study)+'\n'+value(a.lab),a.title+'\n'+a.detail];
+      }),[35,75,CW-110]);
+
+    start('Todos os pontos de atenção');
+    table(section,['Nível','Estudo','Alerta'],
+      alerts.map(function(a){
+        return [a.lvl==='crit'?'Crítico':a.lvl==='warn'?'Atenção':'Conferir',value(a.study),a.text];
+      }),[25,60,CW-85]);
+
+    start('Matriz estudo × laboratório');
+    table(section,['Estudo','Laboratório','Situação / proposta / atualização'],
+      calc.studies.reduce(function(rows,s){
+        o.labs.forEach(function(name){
+          var matches=s.labs.filter(function(l){return l.lab===name;});
+          if(!matches.length) rows.push([value(s.nome),value(name),'Não cotado']);
+          matches.forEach(function(l){
+            rows.push([value(s.nome),value(name),status(l)+'\nProposta: '+money(l.valor)+
+              '\nÚltima atualização: '+date(l.data)]);
+          });
+        });
+        return rows;
+      },[]),[65,60,CW-125]);
+
+    start('Linha do tempo dos estudos');
+    table(section,['Estudo / laboratório','Solicitação','Última atualização','Intervalos na data de referência'],
+      calc.studies.reduce(function(rows,s,i){
+        var original=snap.studies[i];
+        if(!s.labs.length){
+          rows.push([value(s.nome)+'\nSem laboratório',date(original.solicitacao),'Sem data',
+            'Desde a solicitação: '+elapsed(s.solicitacao,ref)]);
+        }
+        s.labs.forEach(function(l,j){
+          rows.push([value(s.nome)+'\n'+value(l.lab),date(original.solicitacao),
+            date(original.labs[j].data),
+            'Desde a solicitação: '+elapsed(s.solicitacao,ref)+
+            '\nDesde a atualização: '+elapsed(l.data,ref)+
+            '\nSolicitação até atualização: '+(s.solicitacao&&l.data?
+              days(s.solicitacao,l.data)+' dias':'Sem data')]);
+        });
+        return rows;
+      },[]),[75,42,42,CW-159]);
+
+    calc.studies.forEach(function(s,i){
+      var original=snap.studies[i],m=metrics(s,ref);
+      var identity='Estudo '+(i+1)+' · '+value(s.nome);
+      start(identity);
+      fields(identity,[
+        ['Nome',value(original.nome)],
+        ['Situação geral',m.health.label],
+        ['Apresentações',value(original.apresentacoes)],
+        ['Classe',value(original.classe)],
+        ['Medicamento de referência',value(original.referencia)],
+        ['Companhia',value(original.companhia)],
+        ['Data de solicitação',date(original.solicitacao)],
+        ['Dias em aberto',m.dias!=null?m.dias+' dias':'Sem data'],
+        ['Para que serve',value(original.indicacao)],
+        ['Laboratórios cotados',m.total],
+        ['Em análise / pendentes',m.c.analise+' / '+m.c.pendente],
+        ['Propostas / menor valor',m.c.proposta+' / '+money(m.best)],
+        ['Declinaram',m.c.declinou+' · '+pct(m.c.declinou,m.total)],
+        ['Ativos no processo',m.ativos+' de '+m.total],
+        ['Última movimentação',date(m.last)],
+        ['Dias sem movimentação',m.semMov!=null?m.semMov+' dias':'Sem data']
+      ]);
+      if(!s.labs.length) fields(identity+' · Laboratórios',[['Registros','Nenhum laboratório cadastrado.']]);
+      s.labs.forEach(function(l,j){
+        var raw=original.labs[j];
+        fields(identity+' · Laboratório '+(j+1)+' · '+value(raw.lab),[
+          ['Laboratório',value(raw.lab)],
+          ['Situação',status(l)],
+          ['Última atualização',date(raw.data)],
+          ['Dias desde a atualização',elapsed(l.data,ref)],
+          ['Conferência de data',l.data&&s.solicitacao&&l.data<s.solicitacao?
+            'Atualização anterior à solicitação. Conferir.':'Sem inconsistência identificada por este critério.'],
+          ['Observação',value(raw.obs)],
+          ['Valor da proposta',money(raw.valor)],
+          ['Validade da proposta',date(raw.validade)],
+          ['Vencimento da proposta',proposalDeadline(raw.validade,ref)]
+        ]);
+      });
+      var proposals=s.labs.filter(function(l){return l.valor!=null;})
+        .sort(function(a,b){return a.valor-b.valor;});
+      table(identity+' · Comparativo de propostas',
+        ['Posição','Laboratório','Valor','Comparação'],
+        proposals.map(function(l,j){
+          return [j+1,value(l.lab),money(l.valor),l.valor===m.best?'Menor valor registrado':''];
+        }),[22,110,55,CW-187]);
+    });
+
+    start('Panorama por laboratório');
+    fields(section,[
+      ['Critério da média','Dias entre a solicitação e a última atualização registrada; não representa tempo de resposta.']
+    ]);
+    o.labs.forEach(function(name){
+      var c={proposta:0,analise:0,pendente:0,declinou:0},n=0,last=null,intervals=[];
+      calc.studies.forEach(function(s){
+        s.labs.forEach(function(l){
+          if(l.lab!==name) return;
+          n++;c[l.status]++;
+          if(l.data&&(!last||l.data>last)) last=l.data;
+          if(l.data&&s.solicitacao&&l.data>=s.solicitacao){
+            intervals.push(days(s.solicitacao,l.data));
+          }
+        });
+      });
+      fields('Laboratório · '+value(name),[
+        ['Laboratório',value(name)],
+        ['Estudos / registros cotados',n],
+        ['Propostas',c.proposta],
+        ['Em análise / pendentes',c.analise+' / '+c.pendente],
+        ['Em aberto',c.analise+c.pendente],
+        ['Declinou / taxa de declínio',c.declinou+' / '+pct(c.declinou,n)],
+        ['Média até atualização',intervals.length?
+          Math.round(intervals.reduce(function(a,b){return a+b;},0)/intervals.length)+' dias':'Sem dado'],
+        ['Última atualização',date(last)]
+      ]);
+      table('Laboratório '+value(name)+' × estudo',['Estudo','Situação'],
+        calc.studies.map(function(s){
+          var matches=s.labs.filter(function(l){return l.lab===name;});
+          return [value(s.nome),matches.length?matches.map(status).join('\n'):'Não cotado'];
+        }),[100,CW-100]);
+    });
+    if(!o.labs.length) fields(section,[['Registros','Nenhum laboratório cadastrado.']]);
+
+    start('Medicamentos · Cotações');
+    if(!snap.medicamentos.length){
+      fields(section,[['Registros','Nenhum medicamento de referência cadastrado.']]);
+    }
+    snap.medicamentos.forEach(function(md,i){
+      var medication='Medicamento '+(i+1)+' · '+value(md.nome);
+      if(i>0) start(medication);
+      fields(medication,budgetSummary(md.linhas,ref));
+      if(!md.linhas.length){
+        fields(medication,[['Cotações','Nenhum fornecedor cadastrado para este medicamento.']]);
+      }
+      md.linhas.forEach(function(r,j){
+        var identity=medication+' · Fornecedor '+(j+1)+' · '+value(r.fornecedor);
+        fields(identity,[
+          ['Medicamento de referência',value(md.nome)],
+          ['Fornecedor / distribuidor',value(r.fornecedor)],
+          ['Preço',money(r.preco)],
+          ['Validade do orçamento',date(r.validadeOrc)],
+          ['Prazo do orçamento',budgetDeadline(r.validadeOrc,ref)],
+          ['Lote 1',value(r.lote)],
+          ['Validade 1',value(r.validade)],
+          ['Lote 2',value(r.lote2)],
+          ['Validade 2',value(r.validade2)],
+          ['Lote 3',value(r.lote3)],
+          ['Validade 3',value(r.validade3)],
+          ['Observação',value(r.obs)]
+        ]);
+      });
+    });
+
+    start('Medicamentos · Prospecção de fornecedores');
+    var prospects=prospLista(calc);
+    var counts={total:0,retornou:0,nao_atende:0,aguardando:0};
+    prospects.forEach(function(e){
+      if(!e.nome) return;
+      counts.total++;
+      if(Object.prototype.hasOwnProperty.call(counts,e.sit)) counts[e.sit]++;
+    });
+    fields(section,[
+      ['Total de fornecedores contatados',counts.total],
+      ['Com retorno de pelo menos um produto',counts.retornou],
+      ['Não conseguem atender à demanda',counts.nao_atende],
+      ['Sem retorno',counts.aguardando],
+      ['Observação','Fornecedores das Cotações entram automaticamente. A marcação manual "Não atende" prevalece.']
+    ]);
+    prospects.forEach(function(e,i){
+      var manual=e.man||{};
+      fields('Prospecção '+(i+1)+' · '+value(e.nome),[
+        ['Fornecedor / distribuidor',value(e.nome)],
+        ['Contato',value(manual.contato)],
+        ['Data do contato',date(manual.data)],
+        ['Situação',SIT_PROSP[e.sit]||value(e.sit)],
+        ['Medicamentos com preço',e.pc],
+        ['Presente nas cotações',e.cot?'Sim':'Não'],
+        ['Observação',value(manual.obs)]
+      ]);
+    });
+    if(!prospects.length) fields(section,[['Registros','Nenhum fornecedor cadastrado.']]);
+
+    start('Histórico de versões');
+    var history=Array.isArray(store.history)?store.history:[],index=history.indexOf(entry);
+    if(index<0){
+      index=history.findIndex(function(e){return e&&e.v===entry.v&&e.ts===entry.ts;});
+    }
+    var hist=index>=0?history.slice(0,index+1):history.filter(function(e){
+      return e&&Number.isFinite(Number(e.v))&&Number(e.v)<=Number(entry.v);
+    });
+    if(!hist.some(function(e){return e.v===entry.v&&e.ts===entry.ts;})) hist.push(entry);
+    hist.forEach(function(e,i){
+      if(i>0) start('Histórico · Versão '+e.v);
+      var changes=Array.isArray(e.changes)?e.changes:
+        present(e.changes)?[e.changes]:[];
+      fields('Histórico · Versão '+e.v,[
+        ['Versão','v'+e.v],
+        ['Data',stamp(e.ts)],
+        ['Responsável',value(e.autor)],
+        ['Origem',value(e.origem)],
+        ['Nota',value(e.nota)],
+        ['Alterações salvas',changes.length]
+      ]);
+      table('Versão '+e.v+' · Alterações registradas',['Item','Alteração salva'],
+        changes.length?changes.map(function(c,j){return [j+1,savedChange(c)];}):
+          [['','Nenhuma alteração registrada em e.changes.']],
+        [18,CW-18]);
+    });
+
+    /* Desenha os elementos fixos somente depois de todas as tabelas.
+       O rodapé integral ocupa a margem previamente reservada. */
+    var total=doc.getNumberOfPages();
+    for(var p=1;p<=total;p++){
+      doc.setPage(p);
+      doc.setFillColor.apply(doc,navy);
+      doc.rect(0,0,W,24,'F');
+      doc.setFillColor(42,120,214);
+      doc.rect(0,24,W,1.2,'F');
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(12);
+      doc.setTextColor(255,255,255);
+      doc.text('Non Retail BSB · Relatório geral',M,10);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8);
+      doc.text(text('Versão '+entry.v+' · '+stamp(entry.ts)+' · Referência: '+br(ref)),M,17);
+      doc.setTextColor(75,85,99);
+      doc.setFontSize(7);
+      doc.text('Identificação detalhada nas tabelas; cabeçalhos repetidos nas continuações.',M,29);
+
+      doc.setDrawColor(227,230,235);
+      doc.setLineWidth(0.2);
+      doc.line(M,H-BOTTOM+3,W-M,H-BOTTOM+3);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(footerFontSize);
+      doc.setTextColor(132,139,150);
+      footerLines.forEach(function(line,i){
+        doc.text(line,M,H-BOTTOM+7+i*footerLineHeight);
+      });
+      doc.text('Página '+p+' de '+total,W/2,H-5,{align:'center'});
+    }
+
+    var name=fileBase()+'_v'+entry.v+'_'+ref+'.pdf';
+    doc.save(name);
+    toast('PDF somente leitura gerado: '+name,'ok');
+  }).catch(function(err){
+    toast('Não foi possível gerar o PDF geral: '+(err&&err.message?err.message:String(err)),'err');
   });
 }
 
