@@ -1374,7 +1374,7 @@ function datasInfo(p){
   return dur+falta+(p.inicio?'':' · <i>sem início: usando a data de criação ('+fmtData(ini.getTime())+')</i>');
 }
 function etapasHtml(p,id){
-  const et=Object.entries(p.etapas||{}).map(([k,e])=>Object.assign({k},e)).sort((a,b)=>(a.ini||'9999').localeCompare(b.ini||'9999')||(a.t||0)-(b.t||0));
+  const et=Object.entries(p.etapas||{}).map(([k,e])=>Object.assign({k},e)).sort((a,b)=>{const n=x=>{const r=/^v(\d+)/i.exec((x.nome||'').trim());return r?+r[1]:1e9;};return n(a)-n(b)||(a.t||0)-(b.t||0)||(a.ini||'9999').localeCompare(b.ini||'9999');});
   const hoje=new Date();hoje.setHours(0,0,0,0);
   const feitas=et.filter(e=>e.feito).length;
   const form=`<form class="row wrap et-form" data-form="etapa" data-id="${id}"><input type="text" id="etN" placeholder="Nova etapa (ex.: Desenvolvimento)" autocomplete="off" style="flex:2;min-width:180px"><label class="dt sm"><span>Início</span><input type="date" id="etI"></label><label class="dt sm"><span>Fim</span><input type="date" id="etF"></label><button class="btn" type="submit">+ Etapa</button></form>`;
@@ -1411,7 +1411,7 @@ function proxVersao(vs){let m=0;vs.forEach(v=>{const r=/^v(\d+)$/i.exec((v.nome|
 function versoesHtml(p,id){
   const vs=Object.entries(p.versoes||{}).map(([k,v])=>Object.assign({k},v)).sort((a,b)=>(a.ini||'9999').localeCompare(b.ini||'9999')||(a.t||0)-(b.t||0));
   const hoje=new Date();hoje.setHours(0,0,0,0);
-  vs.forEach((v,i)=>{const nx=vs.slice(i+1).find(x=>x.ini);v.enc=!!(v.ini&&nx);v.fim=v.enc?nx.ini:((p.prazo&&(!v.ini||p.prazo>v.ini))?p.prazo:'');v.aberta=!v.enc;v.sx=v.enc?'enc':(v.ini&&dDe(v.ini)>hoje)?'plan':'and';});
+  vs.forEach((v,i)=>{const nx=vs.slice(i+1).find(x=>x.ini);v.enc=!!nx;v.fim=v.enc?nx.ini:((p.prazo&&(!v.ini||p.prazo>v.ini))?p.prazo:'');v.aberta=!v.enc;v.sx=v.enc?'enc':(v.ini&&dDe(v.ini)>hoje)?'plan':'and';});
   const form=`<form class="row wrap et-form" data-form="versao" data-id="${id}"><label class="dt sm"><span>Versão</span><input type="text" id="vrN" value="${esc(proxVersao(vs))}" maxlength="20" autocomplete="off" style="width:84px"></label><input type="text" id="vrE" placeholder="O que entra nela (ex.: Cadastro e login)" autocomplete="off" style="flex:2;min-width:180px"><label class="dt sm"><span>Início</span><input type="date" id="vrI"></label><button class="btn" type="submit">+ Versão</button></form>`;
   const COR={enc:'var(--bad)',and:stCor(p.status),plan:'var(--faint)'},TXT={enc:'Encerrada',and:'Em andamento',plan:'Planejada'};
   const dts=[hoje,new Date(hoje.getTime()+45*DIA)];vs.forEach(v=>{if(v.ini)dts.push(dDe(v.ini));if(v.fim)dts.push(dDe(v.fim));});
@@ -1423,7 +1423,7 @@ function versoesHtml(p,id){
   const at=(v,f,l,t,val,ex)=>`<input ${t==='date'?'type="date"':'type="text"'} data-keep data-vf="${f}" data-id="${id}" data-v="${v.k}" value="${esc(val||'')}" aria-label="${l}" ${ex||''}>`;
   const rows=vs.map(v=>{
     const c=COR[v.sx];let bar='';
-    if(v.ini){const a=dDe(v.ini);let z=v.fim?dDe(v.fim):null;if(!v.enc&&!z&&a<=hoje)z=hoje;
+    if(v.ini){const a=dDe(v.ini);let z=v.fim?dDe(v.fim):null;if(z&&z<a)z=a;if(!v.enc&&!z&&a<=hoje)z=hoje;
       const fimX=z?(v.enc?pc(z):pc(new Date(z.getTime()+DIA))):0;const aberta=!v.enc&&!v.fim&&z;const w=aberta?100-pc(a):z?Math.max(1.2,fimX-pc(a)-(v.enc?0.25:0)):0;
       const tip=v.nome+' · '+fmtData(a.getTime())+(v.enc?' → '+fmtData(z.getTime()):(v.fim?' → prazo '+fmtData(dDe(v.fim).getTime()):''));
       bar=`<i class="vr-b${v.sx==='plan'?' plan':''}${z?'':' marco'}${aberta?' aberta':''}" style="left:${pc(a)}%;width:${w}%;--c:${c}" title="${esc(tip)}"></i>`;}
