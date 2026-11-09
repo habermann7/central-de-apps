@@ -29,14 +29,14 @@
     "icon": "📊",
     "color": "#D9A15A",
     "grupos": [
-      "PCP"  
+      "PCP"
     ]
   },
   {
     "title": "Painel SLA TV",
     "category": "PCP",
     "description": "SLA das transportadoras para a TV",
-    "file": "painel_sla_tv.html", 
+    "file": "painel_sla_tv.html",
     "icon": "📺",
     "color": "#D9A15A",
     "grupos": [
@@ -49,7 +49,7 @@
     "description": "Desempenho de entregas da transportadora ATIVA",
     "file": "painel_ativa_v2.html",
     "icon": "🚚",
-    "color": "#D9A15A", 
+    "color": "#D9A15A",
     "grupos": [
       "PCP"
     ]
@@ -62,7 +62,7 @@
     "icon": "⚠️",
     "color": "#D9A15A",
     "grupos": [
-      "PCP" 
+      "PCP"
     ]
   },
   {
@@ -78,7 +78,7 @@
   },
   {
     "title": "Qualidade",
-    "category": "Expedição", 
+    "category": "Expedição",
     "description": "Registro e acompanhamento de ocorrências de qualidade",
     "file": "qualidade.html",
     "icon": "✅",
@@ -95,7 +95,7 @@
     "icon": "📍",
     "color": "#4E8368",
     "grupos": [
-      "EXPEDIÇÃO"  
+      "EXPEDIÇÃO"
     ]
   },
   {
@@ -109,7 +109,7 @@
       "FINANCEIRO"
     ]
   },
-  {  
+  {
     "title": "SLA Transportadoras",
     "category": "PCP",
     "description": "SLA de entrega por transportadora",
@@ -123,7 +123,7 @@
   {
     "title": "GoPlant",
     "category": "Testes",
-    "description": "Desenho de fluxos e plantas", 
+    "description": "Desenho de fluxos e plantas",
     "file": "GoPlant.html",
     "icon": "🏭",
     "color": "#A6485B",
@@ -145,12 +145,12 @@
   {
     "title": "Painel NC",
     "description": "Lançamento e análise de não conformidades (devoluções)",
-    "file": "painel_nc.html", 
+    "file": "painel_nc.html",
     "icon": "📋",
     "color": "#4d9fff",
     "grupos": [
       "SAC",
-      "FARMACOVIGILANCIA"  
+      "FARMACOVIGILANCIA"
     ],
     "category": "SAC"
   },
@@ -163,7 +163,7 @@
     "grupos": [
       "PCP"
     ],
-    "category": "PCP"  
+    "category": "PCP"
   },
   {
     "title": "Meu QG",
@@ -181,10 +181,20 @@
     "description": "Estudos de equivalência, laboratórios e medicamentos de referência",
     "file": "Non_Retail_BSB.html",
     "icon": "💊",
-    "color": "#4d9fff", 
+    "color": "#4d9fff",
     "grupos": [
       "EQUIVALENCIA"
     ],
     "category": "Equivalência"
+  },
+  {
+    "title": "BOOK CIENTIFICO",
+    "description": "teste",
+    "file": "Book_Cientifico.html",
+    "icon": "🧩",
+    "color": "#4d9fff",
+    "grupos": [
+      "EQUIVALENCIA"
+    ]
   }
 ]
