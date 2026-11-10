@@ -8,7 +8,7 @@
 //
 // Variáveis já cadastradas no Vercel:
 //   CORREIOS_CHAVE_ACESSO -> a chave "cws-ch1_..." que você gerou
-//   CRON_SECRET            -> senha do agendamento (a Vercel envia sozinha no cabeçalho)
+//   ROBO_SEGREDO           -> uma senha qualquer, só sua, pra proteger essa URL
 
 import admin from 'firebase-admin';
 
@@ -59,6 +59,11 @@ const REPESCAGEM_MS = 3 * 24 * 60 * 60 * 1000;
 // pra não estourar o tempo máximo que a Vercel dá pra função rodar.
 const CONCORRENCIA = 10; // quantas consultas simultâneas por rodada
 const LIMITE_POR_EXECUCAO = 250; // máximo de pedidos consultados por clique/execução
+// Orçamento de tempo: a Vercel mata a função em 60 s e o app desiste em 58 s.
+// Passou de 38 s, a função PARA de abrir novas rodadas, grava o que já fez e devolve
+// "restantes" — o app (ou o próximo clique) continua dali. Assim nunca estoura.
+const ORCAMENTO_MS = 38000;
+const TIMEOUT_CONSULTA_MS = 10000; // cada consulta aos Correios desiste em 10 s (e tenta de novo)
 
 // A API dos Correios pode devolver a data do evento em nomes de campo
 // diferentes dependendo da versão. Tentamos os mais comuns, nessa ordem.
@@ -95,6 +100,7 @@ async function consultarUmCodigo(codigo, tentativa = 1) {
         Authorization: 'Bearer ' + process.env.CORREIOS_CHAVE_ACESSO,
         'Accept-Language': 'pt-BR',
       },
+      signal: AbortSignal.timeout(TIMEOUT_CONSULTA_MS),
     });
   } catch (e) {
     // erro de rede: tenta mais 1 vez; se persistir, é temporário (não conta como falha do código)
@@ -141,37 +147,32 @@ async function consultarUmCodigo(codigo, tentativa = 1) {
 }
 
 export default async function handler(req, res) {
+  const inicioExecucao = Date.now();
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-robo-segredo');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
+  const segredoEsperado = process.env.ROBO_SEGREDO;
+  const segredoRecebido = req.headers['x-robo-segredo'] || req.query.segredo;
   const autorizacaoHeader = req.headers['authorization'] || '';
-  const tokenRecebido = autorizacaoHeader.startsWith('Bearer ') ? autorizacaoHeader.slice(7) : '';
+
   let autorizado = false;
 
-  // caminho 1: chamada automática do agendamento da Vercel.
-  // A Vercel manda sozinha "Authorization: Bearer <CRON_SECRET>" quando a variável
-  // CRON_SECRET existe no projeto. Assim a senha nunca aparece em URL nem no GitHub.
-  if (process.env.CRON_SECRET && tokenRecebido === process.env.CRON_SECRET) {
-    autorizado = true;
-  }
-  // caminho 1b (compatibilidade): senha do robô no cabeçalho x-robo-segredo
-  const segredoRobo = process.env.ROBO_SEGREDO;
-  if (!autorizado && segredoRobo && req.headers['x-robo-segredo'] === segredoRobo) {
+  // caminho 1: chamada automática do cron, com a senha do robô
+  if (segredoEsperado && segredoRecebido === segredoEsperado) {
     autorizado = true;
   }
 
-  // caminho 2: clique manual no botão "Atualizar agora" — só admin ou grupo EXPEDIÇÃO
-  if (!autorizado && tokenRecebido) {
+  // caminho 2: clique manual de um usuário logado (botão "Atualizar agora")
+  if (!autorizado && autorizacaoHeader.startsWith('Bearer ')) {
+    const idToken = autorizacaoHeader.replace('Bearer ', '');
     try {
-      const decoded = await admin.auth().verifyIdToken(tokenRecebido);
-      const snapU = await admin.database().ref('centralApps/usuarios/' + decoded.uid).once('value');
-      const u = snapU.val() || {};
-      if (u.admin === true || (u.gruposMap && u.gruposMap.EXPEDICAO === true)) autorizado = true;
+      await admin.auth().verifyIdToken(idToken);
+      autorizado = true;
     } catch (err) {
       // token inválido, segue como não autorizado
     }
@@ -224,7 +225,6 @@ export default async function handler(req, res) {
     // se tiver mais pendente do que dá pra processar numa execução só, pega só
     // o começo — o resto fica pra o próximo clique ou a próxima rodada do robô
     const paraProcessar = pendentes.slice(0, LIMITE_POR_EXECUCAO);
-    const restantes = pendentes.length - paraProcessar.length;
 
     const rodadas = partesDe(paraProcessar, CONCORRENCIA);
     let atualizados = 0;
@@ -233,7 +233,10 @@ export default async function handler(req, res) {
     let amostraUltimoEvento = null; // só pra conferência manual
     let amostraRespostaCrua = null; // idem — resposta crua da 1ª consulta
 
+    let processados = 0;
+    let parouPorTempo = false;
     for (const rodada of rodadas) {
+      if (Date.now() - inicioExecucao > ORCAMENTO_MS) { parouPorTempo = true; break; }
       const resultados = await Promise.all(
         rodada.map((chave) => consultarUmCodigo(codigoPorChave[chave]).catch((e) => ({ codigo: codigoPorChave[chave], ok: false, temporario: true, erro: e.message })).then((r) => ({ chave, ...r })))
       );
@@ -268,19 +271,29 @@ export default async function handler(req, res) {
 
       // grava aos poucos, a cada rodada — se o tempo acabar no meio, o que já
       // foi consultado não se perde
+      processados += rodada.length;
       if (Object.keys(updates).length > 0) {
         await admin.database().ref().update(updates);
       }
     }
+    const restantes = pendentes.length - processados;
 
     return res.status(200).json({
       mensagem: 'Atualização concluída',
       totalPendentes: pendentes.length,
-      processadosNessaExecucao: paraProcessar.length,
+      processadosNessaExecucao: processados,
+      parouPorTempo,
+      duracaoMs: Date.now() - inicioExecucao,
       restantes, // se > 0, clica em "Atualizar agora" de novo pra continuar
       atualizados,
       semEventoOuErro: semEvento,
       erros,
+      // Isso aqui é só pra conferência: mostra o evento cru que a API dos Correios
+      // devolveu, pra confirmar se "dataEvento" pegou o campo certo. Pode remover
+      // esse campo do retorno depois de conferir uma vez, se quiser deixar mais limpo.
+      amostraUltimoEvento,
+      // Idem: resposta crua da 1ª chamada, sem filtro nenhum.
+      amostraRespostaCrua,
     });
   } catch (err) {
     return res.status(500).json({ error: err.message });
