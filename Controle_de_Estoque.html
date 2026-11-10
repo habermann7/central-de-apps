@@ -135,6 +135,11 @@ details summary{cursor:pointer;color:var(--ink2);margin-top:8px}
 .who a.btn{text-decoration:none}
 .lib-ck{width:20px;height:20px;accent-color:var(--accent)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.btn.lg{width:auto;background:var(--accent);color:var(--accent-ink);border:1px solid var(--accent);border-radius:8px;padding:0 24px;display:inline-flex;gap:8px;min-height:54px;font-size:17px}
+.btn.lg.ghost{background:transparent;color:var(--ink);border-color:var(--line)}.btn.lg.block{width:100%}
+.card.scancard{position:sticky;top:0;z-index:6;box-shadow:0 6px 18px rgba(16,24,40,.12);border-color:var(--accent)}
+details.card>summary{cursor:pointer;font-size:16px;padding:2px 0}details.card[open]>summary{margin-bottom:12px}
+.scanbox small{display:block;margin-top:6px}
 </style>
 </head>
 <body>
@@ -226,7 +231,7 @@ function daysUntil(s) {
 const ROLES = { admin: 'Administrador', gestor: 'Gestor', recebimento: 'Recebimento', armazenagem: 'Armazenagem', separacao: 'Separação', inventario: 'Inventário', qualidade: 'Qualidade (liberação de lotes)' };
 const PERMS = {
   admin: ['*'],
-  gestor: ['dash', 'reports', 'approve', 'orders', 'view', 'history', 'lots'],
+  gestor: ['dash', 'reports', 'approve', 'orders', 'view', 'history', 'lots', 'cad', 'cfg', 'receive', 'store', 'exit', 'pick', 'count'],
   recebimento: ['receive', 'view'],
   armazenagem: ['store', 'exit', 'view'],
   separacao: ['pick', 'view'],
@@ -336,6 +341,7 @@ async function saveUser(actor, d, isNew) {
   if (!String(d.name || '').trim()) fail('Informe o nome do usuário.', 'VALID');
   const cur = S.users[id];
   if (isNew && cur) fail('Já existe um usuário com este login.', 'DUP');
+  if (actor && actor.role !== 'admin' && (d.role === 'admin' || (cur && cur.role === 'admin'))) fail('Só um administrador pode criar ou alterar administradores.', 'PERM');
   if (!isNew && !cur) fail('Usuário não encontrado.', 'VALID');
   const u = Object.assign({}, cur || {}, { id, name: String(d.name).trim(), role: first ? 'admin' : d.role, active: d.active !== false, pending: false, createdAt: (cur && cur.createdAt) || isoNow() });
   if (d.password) {
@@ -1351,6 +1357,7 @@ function dialog(o) {
 }
 function askAuth(reason) {
   if (globalThis.__autoAuth) return Promise.resolve(globalThis.__autoAuth);
+  if (user && can(user, 'approve')) return dialog({ title: 'Autorização de responsável', body: '<p class="muted">' + esc(reason) + '</p><p>A autorização ficará registrada em nome de <b>' + esc(user.name) + '</b>.</p>', ok: 'Autorizar', onOk: () => user });
   const pre = user && can(user, 'approve') ? user.id : '';
   return dialog({
     title: 'Autorização de responsável',
@@ -1387,7 +1394,7 @@ document.addEventListener('paste', e => { if (e.target.dataset && e.target.datas
 function scanField(flow, name, label, ph) {
   const id = 'sc_' + flow + '_' + name, cam = ('BarcodeDetector' in window) ? '<button type="button" class="btn ghost sm" data-act="photo" data-target="' + id + '" title="Ler código por foto">Foto</button>' : '';
   return '<div class="scanbox"><label class="fld" for="' + id + '"><span>' + esc(label) + '</span></label><div class="scanrow"><input id="' + id + '" class="scan" data-scan="' + name + '" data-flow="' + flow + '" data-autofocus autocomplete="off" autocapitalize="characters" placeholder="' + esc(ph || 'Bipe ou digite o código e pressione Enter') + '">' +
-    '<button type="button" class="btn" data-act="scanbtn" data-target="' + id + '">OK</button>' + cam + '</div></div>';
+    '<button type="button" class="btn" data-act="scanbtn" data-target="' + id + '">OK</button>' + cam + '</div><small class="muted">Com leitor: é só bipar. Digitando: aperte Enter ou toque em OK.</small></div>';
 }
 async function photoScan(file, target) {
   try {
@@ -1833,12 +1840,11 @@ Act.rcopen = t => {
 function rcWork() {
   const rc = ui.rc, d = rc.demandId && S.demands[rc.demandId], r = rc.receiptId && S.receipts[rc.receiptId], items = r ? r.items : [];
   let h = card((d ? 'Demanda ' : 'Documento ') + esc(rc.doc), '<p class="muted">' + (d ? esc(d.fileName) + ' · ' : '') + items.length + ' conferência(s) registrada(s)</p>', '<button class="btn" data-act="rcclose">Finalizar recebimento</button><button class="btn ghost" data-act="rccancel">Sair sem finalizar</button>');
-  if (d) h += card('Previsto x recebido', cmpTable(d.id));
   const p = rc.product && S.products[rc.product];
   h += steps([{ n: 1, t: 'Bipar o produto', done: !!p, cur: !p, val: p ? p.name : '' }, { n: 2, t: 'Lote, fabricação, validade e quantidade', cur: !!p }, { n: 3, t: 'Confirmar', cur: false }]);
   if (!p) {
     h += card('1. Bipe o código de barras do medicamento', scanField('rc', 'prod', 'Código de barras (EAN/GTIN)') +
-      (rc.unknown ? '<div class="note bad"><b>Código ' + esc(rc.unknown) + ' não cadastrado.</b> Só entra com autorização de responsável.<div class="row"><button class="btn" data-act="rcunknown">Autorizar cadastro provisório</button></div></div>' : ''));
+      (rc.unknown ? '<div class="note bad"><b>Código ' + esc(rc.unknown) + ' não cadastrado.</b> Só entra com autorização de responsável.<div class="row"><button class="btn" data-act="rcunknown">Autorizar cadastro provisório</button></div></div>' : ''), '', 'scancard');
   } else {
     const line = d && lineFor(d, p), cm = d && demandCompare(d.id).find(x => x.productId === p.id), lot = [...lotsOfProduct(p.id)].sort((a, b) => b.receivedAt.localeCompare(a.receivedAt))[0];
     let info = '<p class="muted">' + esc(p.id) + ' · EAN ' + esc(p.ean) + ' · ' + esc(p.unit) + (lot ? ' · último lote ' + esc(lot.lotNo) + ' (val. ' + fmtD(lot.expiry) + ')' : '') + '</p>';
@@ -1849,6 +1855,7 @@ function rcWork() {
       field('Status de liberação', '<select id="ri_rel">' + opts([['liberado', 'Liberado para uso'], ['quarentena', 'Quarentena (aguarda liberação)']], cfg().defaultRelease) + '</select>') + field('Justificativa (obrigatória se houver divergência)', '<input id="ri_just">', '', 'full') +
       '<div class="full row"><button class="btn lg">Confirmar conferência</button><button type="button" class="btn ghost" data-act="rcnoprod">Trocar produto</button></div></form>');
   }
+  if (d) { const T = dmTotals(d.id); h += '<details class="card"><summary><b>Previsto x recebido</b> · ' + d.lines.length + ' produto(s) · ' + (T.pct == null ? '0' : String(T.pct).replace('.', ',')) + '% conferido (' + nf(T.received) + ' de ' + nf(d.lines.reduce((s, l) => s + l.expected, 0)) + ' un)</summary>' + cmpTable(d.id) + '</details>'; }
   if (items.length) h += card('Conferências deste recebimento', tbl(['Produto', 'Lote', 'Fabricação', 'Validade', 'Qtd', 'Liberação', 'Divergência', 'Operador'], items.map(i => [esc(prodName(i.productId)), esc(i.lotNo), i.mfg ? fmtD(i.mfg) : '—', fmtD(i.expiry), nf(i.qty), badge(i.release, i.release === 'liberado' ? 'ok' : 'warn'), esc((i.divergences || []).join('; ') || (i.justification || '—')), esc(i.user)]), { num: [4] }));
   return h;
 }
@@ -1902,8 +1909,8 @@ Act.rcclose = async () => {
     if (bad.length) {
       o.treatments = globalThis.__autoTreat ? Object.fromEntries(bad.map(r => [r.key, globalThis.__autoTreat])) : await dialog({
         title: 'Divergências de quantidade', ok: 'Continuar',
-        body: '<p class="muted">O recebimento só encerra com cada divergência justificada e autorizada por um responsável.</p>' + bad.map((r, i) => field(r.name + ': ' + r.label + ' (previsto ' + nf(r.expected) + ', recebido ' + nf(r.received) + ')', '<input name="j' + i + '" required>')).join(''),
-        onOk: f => { const m = {}; bad.forEach((r, i) => { const v = f['j' + i].value.trim(); if (!v) throw new WmsError('Justifique todas as divergências.'); m[r.key] = v; }); return m; }
+        body: '<p class="muted">O recebimento só encerra com cada divergência justificada e autorizada por um responsável.</p>' + field('Mesma justificativa para todas (opcional)', '<input name="jall" autocomplete="off">', 'Preenche as que ficarem em branco abaixo.') + bad.map((r, i) => field(r.name + ': ' + r.label + ' (previsto ' + nf(r.expected) + ', recebido ' + nf(r.received) + ')', '<input name="j' + i + '" required>')).join(''),
+        onOk: f => { const m = {}; bad.forEach((r, i) => { const v = (f['j' + i].value.trim() || f.jall.value.trim()); if (!v) throw new WmsError('Justifique todas as divergências.'); m[r.key] = v; }); return m; }
       });
       if (!o.treatments) return;
       o.authUser = await askAuth('Encerrar o recebimento com ' + bad.length + ' divergência(s) de quantidade.'); if (!o.authUser) return;
@@ -2344,7 +2351,8 @@ function cadUsr() {
   const f = ui.cad.usr;
   let h = f ? card('Editar usuário', '<form data-form="usrsave" class="grid3">' + field('Login (vem do e-mail da Estante)', '<input id="uf_id" value="' + esc(f.id || '') + '" readonly>') + field('Nome', '<input id="uf_name" value="' + esc(f.name || '') + '" required>') +
     field('Perfil', '<select id="uf_role">' + opts(Object.entries(ROLES), f.role || 'recebimento') + '</select>') +
-    field('Situação', '<select id="uf_act">' + opts([['1', 'Ativo'], ['0', 'Inativo']], (f.active === false && !f.pending) ? '0' : '1') + '</select>') + '<div class="full row"><button class="btn lg">Salvar usuário</button><button type="button" class="btn ghost" data-act="ufcancel">Cancelar</button></div></form>')
+    field('Situação', '<select id="uf_act">' + opts([['1', 'Ativo'], ['0', 'Inativo']], (f.active === false && !f.pending) ? '0' : '1') + '</select>') +
+    field('PIN de autorização (opcional)', '<input id="uf_pin" type="password" autocomplete="new-password">', 'Vazio mantém o atual. Mínimo de 6 caracteres. Serve para este usuário autorizar operações de outros.') + '<div class="full row"><button class="btn lg">Salvar usuário</button><button type="button" class="btn ghost" data-act="ufcancel">Cancelar</button></div></form>')
     : card('', '<p class="muted">Cada pessoa aparece aqui no primeiro acesso pela Estante e fica <b>pendente</b> até você ativar e escolher o perfil.</p>');
   const list = Object.values(S.users).sort((a, b) => (b.pending ? 1 : 0) - (a.pending ? 1 : 0) || a.name.localeCompare(b.name));
   return h + card('Usuários (' + list.length + ')', tbl(['Login', 'Nome', 'E-mail', 'Perfil', 'Situação', 'PIN', ''], list.map(u => [esc(u.id), esc(u.name), esc(u.email || '—'), esc(ROLES[u.role]), u.pending && !u.active ? badge('Pendente', 'warn') : u.active ? badge('Ativo', 'ok') : badge('Inativo', 'muted'), u.hash ? badge('Definido', 'ok') : '<span class="muted">—</span>', '<button class="btn sm ghost" data-act="ufedit" data-id="' + esc(u.id) + '">' + (u.pending && !u.active ? 'Ativar' : 'Editar') + '</button>'])));
@@ -2353,7 +2361,7 @@ Act.ufedit = t => { ui.cad.usr = Object.assign({ _edit: true }, clone(S.users[t.
 Act.ufcancel = () => { ui.cad.usr = null; render({ reset: true }); };
 Forms.usrsave = async () => {
   const f = ui.cad.usr;
-  await saveUser(user, { id: $('#uf_id').value, name: $('#uf_name').value, role: $('#uf_role').value, active: $('#uf_act').value === '1' }, false);
+  await saveUser(user, { id: $('#uf_id').value, name: $('#uf_name').value, role: $('#uf_role').value, password: $('#uf_pin').value, active: $('#uf_act').value === '1' }, false);
   ui.cad.usr = null; render({ reset: true }); toast('Usuário salvo.', 'ok');
 };
 
@@ -2407,6 +2415,7 @@ View.config = () => {
     '<label class="chk full"><input id="cf_lot" type="checkbox"' + (c.requireLotConfirm ? ' checked' : '') + '> Exigir confirmação do lote na separação</label><div class="full"><button class="btn">Salvar regras</button></div></form>');
   h += card('Armazenamento dos dados', '<p>' + (Env.mode === 'db' ? badge('Banco compartilhado', 'ok') + ' Os dados ficam no banco da Estante (caminho controleEstoque), visíveis a todos do grupo com acesso, e os saldos são protegidos contra baixa simultânea.' : badge('Modo local', 'warn') + ' Os dados ficam só neste navegador, com cópia de segurança diária automática (últimas 7). Para vários operadores, use o link compartilhado do aplicativo com acesso ao banco.') + '</p>' +
     '<div class="row"><button class="btn" data-act="bkexport">Exportar backup (JSON)</button>' + (Env.mode === 'local' ? '<label class="btn ghost filebtn">Restaurar backup<input id="bk_file" type="file" accept=".json,application/json" hidden></label>' : '') + '</div>');
+  if (can(user, 'approve')) h += card('Meu PIN de autorização', '<p class="muted">Administradores e gestores autorizam com um clique. O PIN só é preciso quando um responsável autoriza a operação de outra pessoa na tela dela.</p><div class="row"><button class="btn" data-act="mypin">' + (user.hash ? 'Trocar meu PIN' : 'Definir meu PIN') + '</button></div>');
   const di = ui.integ;
   h += card('Integridade dos saldos', '<p class="muted">Compara o saldo de cada endereço com o que o histórico de movimentações calcula.</p><div class="row"><button class="btn" data-act="integ">Verificar agora</button>' + (di && di.length ? '<button class="btn ghost" data-act="integfix">Corrigir pelo histórico</button>' : '') + '</div>' +
     (di ? (di.length ? tbl(['Linha de saldo', 'Histórico', 'Saldo atual'], di.map(d => [esc(d.id), nf(d.ledger), nf(d.saldo)]), { num: [1, 2] }) : '<p class="note ok">Tudo confere: nenhum saldo diverge do histórico.</p>') : ''));
