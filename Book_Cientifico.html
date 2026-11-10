@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Book científico</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230F5257' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'%3E%3Cpath d='M9 3H4v18h5M7 3v18M4 7h3M4 17h3M9 12h3m5-6 5 3v6l-5 3-5-3V9z'/%3E%3C/svg%3E">
 <style>
 /* ===== ESTANTE · PADRÃO VISUAL (v1 · nov/2026) ===== */
 :root{
@@ -17,12 +18,15 @@
   --est-font:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif; --est-mono:'IBM Plex Mono',ui-monospace,monospace;
   --est-ease:cubic-bezier(.2,.8,.2,1);
   --paper:#FFFFFF; --rule:#D9DDE7; --soft:#F1F3F8;
+  --book-brand:#0F5257; --book-brand-ink:#0A3B3F; --book-brand-bg:#E7F1F1; --book-amber:#C98A1B;
+  --book-serif:'Source Serif 4',Georgia,serif;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --est-bg:#0E1420; --est-card:#151D2C; --est-line:#243047; --est-ink:#E8ECF3; --est-mut:#9AA6BA; --est-faint:#6B778C;
     --est-accent:#6EA2E6; --est-accent-bg:#1A2A44; --est-ok-bg:#12291F; --est-warn-bg:#2E2412; --est-bad-bg:#311816; --est-navy:#3a548a;
     --paper:#121A29; --rule:#2A3650; --soft:#1A2335;
+    --book-brand:#4FA3A8; --book-brand-ink:#8CCBCE; --book-brand-bg:#12302F; --book-amber:#E0A84A;
   }
 }
 *{box-sizing:border-box}
@@ -31,21 +35,23 @@ body{margin:0;background:var(--paper);color:var(--est-ink);font:14.5px/1.5 var(-
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 a{color:var(--est-accent)}
-:focus-visible{outline:2px solid var(--est-accent);outline-offset:2px}
+:focus-visible{outline:2px solid var(--book-brand);outline-offset:2px}
 .mono{font-family:var(--est-mono);font-variant-numeric:tabular-nums}
 .wrap{max-width:1180px;margin:0 auto;padding:0 28px 72px}
 
 /* barra superior */
-.topbar{border-bottom:1px solid var(--rule)}
+.topbar{border-top:2px solid var(--book-brand);border-bottom:1px solid var(--rule)}
 .topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:14px;padding-bottom:14px;flex-wrap:wrap}
-.eyebrow{font:500 11px/1 var(--est-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--est-mut)}
+.eyebrow{font:500 11px/1 var(--est-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--est-mut);display:flex;align-items:center;gap:10px;min-width:0;max-width:100%}
+.book-mark{display:block;width:24px;height:24px;flex:none;color:var(--book-brand)}
+.eyebrow .book-trail{min-width:0;line-height:1.5;overflow-wrap:anywhere}
 .eyebrow a{color:inherit;text-decoration:none}.eyebrow a:hover{color:var(--est-ink)}
 .acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 
 /* botões */
 .btn{appearance:none;border:1px solid var(--rule);background:var(--paper);color:var(--est-ink);font:500 13px/1 var(--est-font);padding:9px 13px;border-radius:var(--est-r-sm);transition:background .12s,border-color .12s,transform .08s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none}
 .btn:hover{background:var(--soft);border-color:var(--est-faint)}.btn:active{transform:scale(.98)}
-.btn.pri{background:var(--est-navy);border-color:var(--est-navy);color:#fff}.btn.pri:hover{filter:brightness(1.15);background:var(--est-navy)}
+.btn.pri{background:var(--book-brand-ink);border-color:var(--book-brand-ink);color:var(--book-brand-bg)}.btn.pri:hover{filter:brightness(1.15);background:var(--book-brand-ink)}
 .btn.sm{padding:6px 10px;font-size:12.5px}
 .btn.txt{border-color:transparent;background:transparent;color:var(--est-mut);padding:6px 8px}.btn.txt:hover{background:var(--soft);color:var(--est-ink)}
 .btn.bad{color:var(--est-bad)}.btn.bad.on{background:var(--est-bad);color:#fff;border-color:var(--est-bad)}
@@ -55,14 +61,15 @@ a{color:var(--est-accent)}
 input,select,textarea{width:100%;background:transparent;border:1px solid transparent;border-bottom-color:var(--rule);border-radius:0;padding:7px 2px;font-size:14.5px;transition:border-color .12s,background .12s}
 input:hover,select:hover,textarea:hover{border-bottom-color:var(--est-faint)}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--est-accent);background:var(--est-accent-bg);border-radius:var(--est-r-sm);padding-left:8px;padding-right:8px}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--book-brand);outline-offset:2px}
 textarea{resize:vertical;min-height:78px;line-height:1.55}
 select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%23989' stroke-width='1.6'%3E%3Cpath d='m1 1 4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 4px center;padding-right:20px}
 ::placeholder{color:var(--est-faint)}
 .lb{display:block;font:500 10.5px/1 var(--est-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--est-faint);margin:0 0 4px}
 
 /* título da página */
-.title{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;padding:34px 0 22px;border-bottom:1px solid var(--est-ink)}
-.title h1{margin:0;font:700 34px/1.1 var(--est-font);letter-spacing:-.03em}
+.title{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;padding:34px 0 22px;border-bottom:1px solid var(--book-brand)}
+.title h1{margin:0;font:700 34px/1.1 var(--book-serif);letter-spacing:-.03em}
 .title p{margin:8px 0 0;color:var(--est-mut);max-width:58ch;font-size:14px}
 .facts{display:flex;gap:0}
 .fact{padding:0 22px;border-left:1px solid var(--rule)}.fact:first-child{border-left:0;padding-left:0}.fact:last-child{padding-right:0}
@@ -99,11 +106,12 @@ table.idx{width:100%;border-collapse:collapse}
 .shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px;padding-top:6px}
 @media(max-width:560px){.shelf{grid-template-columns:repeat(2,1fr);gap:12px}.cover{min-height:190px}}
 .cover{position:relative;text-align:left;background:var(--est-card);border:1px solid var(--rule);border-radius:3px 6px 6px 3px;padding:18px 16px 14px 26px;display:flex;flex-direction:column;gap:8px;aspect-ratio:3/4;min-height:240px;overflow:hidden;transition:border-color .15s,transform .15s var(--est-ease)}
-.cover::before{content:"";position:absolute;left:0;top:0;bottom:0;width:12px;background:var(--est-navy)}
+.cover::before{content:"";position:absolute;left:0;top:0;bottom:0;width:12px;background:var(--spine,var(--book-brand))}
 .cover::after{content:"";position:absolute;left:12px;top:0;bottom:0;width:1px;background:rgba(255,255,255,.25)}
 .cover:hover{border-color:var(--est-faint);transform:translateY(-2px)}
-.cover .no{font:500 11px/1 var(--est-mono);letter-spacing:.12em;color:var(--est-faint)}
-.cover h3{margin:6px 0 0;font:700 19px/1.2 var(--est-font);letter-spacing:-.015em;overflow-wrap:anywhere}
+.cover .no{font:600 11px/1 var(--est-mono);letter-spacing:.12em;color:var(--book-brand-ink);display:flex;align-items:center;gap:7px}
+.cover .no::before{content:"";width:14px;height:2px;background:var(--book-amber);flex:none}
+.cover h3{margin:6px 0 0;font:700 19px/1.2 var(--book-serif);letter-spacing:-.015em;overflow-wrap:anywhere}
 .cover .meta{font-size:12.5px;color:var(--est-mut)}
 .cover .foot{margin-top:auto;display:grid;gap:8px;font-size:12px;color:var(--est-mut)}
 .cover.add{border:1px dashed var(--est-faint);background:transparent;align-items:center;justify-content:center;text-align:center;color:var(--est-mut)}
@@ -112,9 +120,9 @@ table.idx{width:100%;border-collapse:collapse}
 
 /* ficha */
 .ficha-top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;padding:28px 0 20px;border-bottom:1px solid var(--est-ink)}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;padding:28px 0 20px;border-bottom:1px solid var(--book-brand)}
 .head .no{font:500 11px/1 var(--est-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--est-faint)}
-.head input.big{font:700 32px/1.15 var(--est-font);letter-spacing:-.025em;padding:2px 0;margin:6px 0 0;width:min(640px,100%);border-bottom-color:transparent}
+.head input.big{font:700 32px/1.15 var(--book-serif);letter-spacing:-.025em;padding:2px 0;margin:6px 0 0;width:min(640px,100%);border-bottom-color:transparent}
 .head input.big:hover{border-bottom-color:var(--rule)}.head input.big:focus{padding-left:8px;padding-right:8px}
 .cols{display:grid;grid-template-columns:minmax(280px,.78fr) minmax(0,1.6fr);gap:0;margin-top:0}
 .cols>section{padding:24px 0}
@@ -130,11 +138,11 @@ table.idx{width:100%;border-collapse:collapse}
 .and{font:500 10px var(--est-mono);color:var(--est-faint);letter-spacing:.08em}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .row>input{flex:1;min-width:130px}
-.query{font:400 12.5px/1.55 var(--est-mono);background:var(--soft);border-left:3px solid var(--est-navy);padding:9px 12px;color:var(--est-ink);overflow-wrap:anywhere;margin:0 0 10px}
+.query{font:400 12.5px/1.55 var(--est-mono);background:var(--soft);border-left:3px solid var(--book-brand);padding:9px 12px;color:var(--est-ink);overflow-wrap:anywhere;margin:0 0 10px}
 .found{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
 .found input{width:64px;text-align:center;font:500 20px var(--est-mono);padding:4px 2px}
 .meter{height:4px;background:var(--soft);border-radius:2px;overflow:hidden;margin-top:8px}
-.meter i{display:block;height:100%;background:var(--est-navy);transition:width .4s var(--est-ease)}
+.meter i{display:block;height:100%;background:var(--book-brand);transition:width .4s var(--est-ease)}
 .hint{font-size:12.5px;color:var(--est-mut)}
 
 /* evidência */
@@ -144,7 +152,7 @@ table.idx{width:100%;border-collapse:collapse}
 .leg div{display:flex;align-items:center;gap:7px;min-width:0}.leg i{width:9px;height:9px;border-radius:2px;flex:none}
 .leg span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--est-mut)}.leg b{font:500 12px var(--est-mono)}
 .years{display:flex;align-items:flex-end;gap:3px;height:56px;border-bottom:1px solid var(--rule)}
-.years div{flex:1;display:flex;align-items:flex-end;justify-content:center;height:100%;min-width:0}.years i{width:min(100%,16px);background:var(--est-navy);min-height:2px;opacity:.85}
+.years div{flex:1;display:flex;align-items:flex-end;justify-content:center;height:100%;min-width:0}.years i{width:min(100%,16px);background:var(--book-brand);min-height:2px;opacity:.85}
 .yl{display:flex;gap:3px;font:400 9.5px var(--est-mono);color:var(--est-faint);margin-top:3px}.yl span{flex:1;text-align:center}
 
 /* artigos */
@@ -157,6 +165,8 @@ table.idx{width:100%;border-collapse:collapse}
 .art .n{font:500 11.5px var(--est-mono);color:var(--est-faint);padding-top:9px}
 .art textarea{font-weight:600;min-height:0;height:auto;resize:none;overflow:hidden;line-height:1.4;padding-top:6px}
 .art .sub{grid-column:2/-1;display:flex;gap:8px 14px;align-items:center;flex-wrap:wrap;margin-top:2px;font-size:12.5px}
+.art .sub3{grid-column:2/-1;margin-top:2px}
+.art .sub3 textarea{width:100%;min-height:0;resize:none;overflow:hidden;font-size:12.5px;line-height:1.4}
 .art .sub2{grid-column:2/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,220px);gap:8px 14px;margin-top:2px}
 .art .sub2 input{font-size:12.5px}
 .addform .g2{display:grid;grid-template-columns:1fr 240px;gap:14px;margin-bottom:10px}
@@ -168,6 +178,7 @@ table.idx{width:100%;border-collapse:collapse}
 .doc{display:inline-flex;align-items:center;gap:7px;color:var(--est-ink);background:var(--soft);border:1px solid var(--rule);border-radius:4px;padding:4px 9px;max-width:100%}
 .doc svg{flex:none;color:var(--est-mut)}.doc span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:230px}
 .empty{color:var(--est-mut);padding:40px 0;text-align:center}
+.empty h3{font-family:var(--book-serif);font-weight:700}
 .skel{height:56px;margin:10px 0;border-radius:var(--est-r-sm);background:linear-gradient(90deg,var(--soft),var(--rule),var(--soft));background-size:200% 100%;animation:shim 1.2s linear infinite}
 @keyframes shim{to{background-position:-200% 0}}
 .err{background:var(--est-bad-bg);color:var(--est-bad);border-radius:var(--est-r-sm);padding:14px 16px;margin-top:24px}
@@ -192,17 +203,18 @@ table.idx{width:100%;border-collapse:collapse}
   #printRoot{display:block!important;font-size:11pt}
   .pg{page-break-after:always;break-after:page}.pg:last-child{page-break-after:auto}
   .p-cover{min-height:250mm;display:flex;flex-direction:column;justify-content:space-between;padding:6mm 2mm}
-  .p-cover h1{font:800 40pt/1.05 var(--est-font);letter-spacing:-.03em;margin:10mm 0 4mm;color:#16233F}
-  .p-bar{height:5mm;background:linear-gradient(90deg,#16233F,#2258A0);border-radius:2mm}
+  .p-cover .book-mark{width:22mm;height:22mm;margin-top:8mm;color:#0F5257}
+  .p-cover h1{font:700 40pt/1.05 var(--book-serif);letter-spacing:-.03em;margin:10mm 0 4mm;color:#0F5257}
+  .p-bar{height:0;border-top:1.2mm solid #0F5257;border-bottom:.4mm solid #C98A1B;print-color-adjust:exact;-webkit-print-color-adjust:exact}
   .p-toc li{display:flex;gap:8px;padding:2.2mm 0;border-bottom:.3pt solid #ccc;font-size:11pt}
-  .p-toc li b{flex:1}.p-h{border-bottom:1.2pt solid #16233F;padding-bottom:3mm;margin-bottom:5mm}
+  .p-toc li b{flex:1}.p-h{border-bottom:1.2pt solid #0F5257;padding-bottom:3mm;margin-bottom:5mm}
   .p-h .no{font:600 8pt var(--est-mono);letter-spacing:.14em;color:#667085;text-transform:uppercase}
-  .p-h h2{font:800 22pt/1.1 var(--est-font);margin:1mm 0 0;color:#16233F}
+  .p-h h2{font:700 22pt/1.1 var(--book-serif);margin:1mm 0 0;color:#0F5257}
   table.p-t{width:100%;border-collapse:collapse;margin:2mm 0 6mm;font-size:9.5pt}
-  .p-t th{font:600 7.5pt var(--est-mono);letter-spacing:.08em;text-transform:uppercase;text-align:left;color:#667085;border-bottom:.8pt solid #16233F;padding:1.5mm 2mm}
+  .p-t th{font:600 7.5pt var(--est-mono);letter-spacing:.08em;text-transform:uppercase;text-align:left;color:#667085;border-bottom:.8pt solid #0F5257;padding:1.5mm 2mm}
   .p-t td{padding:2mm;border-bottom:.3pt solid #ccc;vertical-align:top}
   .p-t td.k{width:38mm;font:600 8pt var(--est-mono);color:#667085;text-transform:uppercase;letter-spacing:.06em}
-  .p-sec{font:700 9pt var(--est-mono);letter-spacing:.12em;text-transform:uppercase;color:#16233F;margin:5mm 0 1mm}
+  .p-sec{font:700 9pt var(--est-mono);letter-spacing:.12em;text-transform:uppercase;color:#0F5257;margin:5mm 0 1mm}
   .p-t tr{break-inside:avoid}
   .p-dot{display:inline-block;width:2.4mm;height:2.4mm;border-radius:50%;margin-right:1.5mm}
 }
@@ -219,7 +231,7 @@ table.idx{width:100%;border-collapse:collapse}
   </div>
 </div>
 <style id="__gateStyle">body > *:not(#__gateOverlay){ display:none !important; }</style>
-<div id="app"><div class="topbar"><div class="wrap"><div class="eyebrow">Central de Apps / Book científico</div></div></div><div class="wrap"><div class="title"><div><h1>Book científico</h1></div></div><div class="skel"></div><div class="skel"></div><div class="skel"></div></div></div>
+<div id="app"><div class="topbar"><div class="wrap"><div class="eyebrow"><svg class="book-mark" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3H4v18h5M7 3v18M4 7h3M4 17h3M9 12h3m5-6 5 3v6l-5 3-5-3V9z"/></svg><span class="book-trail"><a href="./index.html" id="backLink">&larr; Central de Apps</a> / Book científico · STIN Pharma</span></div><div class="acts"></div></div></div><div class="wrap"><div class="title"><div><h1>Book científico</h1></div></div><div class="skel"></div><div class="skel"></div><div class="skel"></div></div></div>
 <div id="printRoot"></div>
 <datalist id="bases"><option>PubMed</option><option>Scopus</option><option>Web of Science</option><option>Embase</option><option>Cochrane Library</option><option>LILACS</option><option>SciELO</option><option>Google Acadêmico</option><option>ScienceDirect</option></datalist>
 <datalist id="vias"><option>Oral</option><option>Injetável (intravenosa)</option><option>Injetável (intramuscular)</option><option>Injetável (subcutânea)</option><option>Tópica</option><option>Oftálmica</option><option>Nasal</option><option>Inalatória</option><option>Sublingual</option><option>Retal</option><option>Vaginal</option><option>Transdérmica</option></datalist>
@@ -227,7 +239,7 @@ table.idx{width:100%;border-collapse:collapse}
 (function(){
 'use strict';
 /* ===== dados (Firebase Realtime Database, caminho próprio: bookCientifico) =====
-   bookCientifico/ativos/{id}  → nome, apresentacao, descricao, via, filtro[], encontrados, artigos{aid:{titulo,ano,tipo,revista,base,link,anexo{nome,tam,tipo}}}
+   bookCientifico/ativos/{id}  → nome, apresentacao, descricao, via, filtro[], encontrados, artigos{aid:{titulo,ano,tipo,revista,base,obs,link,anexo{nome,tam,tipo}}}
    bookCientifico/anexos/{aid} → { dados: "data:...base64" }  (separado para a lista abrir leve; limite 5 MB por arquivo) */
 const ROOT='bookCientifico';
 /* Tipos de estudo, do mais forte ao mais fraco (pirâmide de evidência, estilo Oxford CEBM / formulary dossiers) */
@@ -267,16 +279,16 @@ function evBar(a){
 
 /* ---------- telas ---------- */
 function topbar(extra){
-  return '<div class="topbar"><div class="wrap"><div class="eyebrow"><a href="./index.html" id="backLink">&larr; Central de Apps</a> &nbsp;/&nbsp; Book científico</div><div class="acts">'+(extra||'')+'</div></div></div>';
+  return '<div class="topbar"><div class="wrap"><div class="eyebrow"><svg class="book-mark" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3H4v18h5M7 3v18M4 7h3M4 17h3M9 12h3m5-6 5 3v6l-5 3-5-3V9z"/></svg><span class="book-trail"><a href="./index.html" id="backLink">&larr; Central de Apps</a> / Book científico · STIN Pharma</span></div><div class="acts">'+(extra||'')+'</div></div></div>';
 }
 function vHome(){
   const L=lista(), q=S.q.trim().toLowerCase();
   const tot=L.reduce((s,a)=>s+a.arts.length,0), anx=L.reduce((s,a)=>s+a.anexos,0), alta=L.reduce((s,a)=>s+ALTA.reduce((x,t)=>x+(a.cont[t]||0),0),0);
-  const F=L.filter(a=>!q||[a.nome,a.apresentacao,a.via,a.descricao,a.observacao].concat(a.arts.map(x=>[x.titulo,x.revista,x.base].join(' '))).join(' ').toLowerCase().includes(q));
+  const F=L.filter(a=>!q||[a.nome,a.apresentacao,a.via,a.descricao,a.observacao].concat(a.arts.map(x=>[x.titulo,x.revista,x.base,x.obs].join(' '))).join(' ').toLowerCase().includes(q));
   let body;
   if(!L.length) body='<div class="empty"><h3 style="margin:0 0 6px;color:var(--est-ink);font-size:17px">O book ainda está vazio</h3><p style="margin:0 auto 16px;max-width:50ch">Cadastre o primeiro ativo. Em cada um você registra o portfólio, a estratégia de busca e os artigos, cada um com o seu anexo.</p><button class="btn pri" data-act="novo">+ Cadastrar primeiro ativo</button></div>';
   else if(!F.length) body='<div class="empty">Nada encontrado para “'+esc(S.q)+'”.</div>';
-  else if(S.modo==='capas') body='<div class="shelf">'+F.map(a=>'<button class="cover" data-act="abrir" data-id="'+a.id+'"><span class="no">'+nn(a)+'</span><h3>'+esc(a.nome||'Sem nome')+'</h3><div class="meta">'+esc([a.apresentacao,a.via].filter(Boolean).join(' · '))+'</div><div class="foot">'+evBar(a)+'<span><b class="mono">'+a.arts.length+'</b> artigo'+(a.arts.length===1?'':'s')+(a.arts.length?' · anexos <b class="mono '+(a.anexos===a.arts.length?'ok-txt':'warn-txt')+'">'+a.anexos+'/'+a.arts.length+'</b>':'')+'</span></div></button>').join('')+'<button class="cover add" data-act="novo"><span>+ Novo ativo</span></button></div>';
+  else if(S.modo==='capas') body='<div class="shelf">'+F.map(a=>'<button class="cover" style="--spine:'+(a.arts.length?COR[TIPOS.reduce((best,t)=>(a.cont[t[0]]||0)>(a.cont[best[0]]||0)?t:best,TIPOS[0])[0]]:'var(--book-brand)')+'" data-act="abrir" data-id="'+a.id+'"><span class="no">VOL. '+nn(a)+'</span><h3>'+esc(a.nome||'Sem nome')+'</h3><div class="meta">'+esc([a.apresentacao,a.via].filter(Boolean).join(' · '))+'</div><div class="foot">'+evBar(a)+'<span><b class="mono">'+a.arts.length+'</b> artigo'+(a.arts.length===1?'':'s')+(a.arts.length?' · anexos <b class="mono '+(a.anexos===a.arts.length?'ok-txt':'warn-txt')+'">'+a.anexos+'/'+a.arts.length+'</b>':'')+'</span></div></button>').join('')+'<button class="cover add" data-act="novo"><span>+ Novo ativo</span></button></div>';
   else body='<table class="idx"><thead><tr><th>Nº</th><th>Ativo</th><th class="h-via">Via</th><th style="text-align:right">Artigos</th><th style="text-align:right">Anexos</th><th class="h-ev">Evidência</th><th></th></tr></thead><tbody>'+F.map(a=>'<tr data-act="abrir" data-id="'+a.id+'" tabindex="0"><td class="no">'+nn(a)+'</td><td class="nm"><b>'+esc(a.nome||'Sem nome')+'</b><span>'+esc(a.apresentacao||'Apresentação não preenchida')+'</span></td><td class="c-via" style="color:var(--est-mut)">'+esc(a.via||'—')+'</td><td class="num">'+a.arts.length+'</td><td class="num '+(a.arts.length?(a.anexos===a.arts.length?'ok-txt':'warn-txt'):'')+'">'+(a.arts.length?a.anexos+'/'+a.arts.length:'—')+'</td><td class="ev">'+evBar(a)+'</td><td class="go">›</td></tr>').join('')+'</tbody></table>';
   return topbar('<button class="btn" data-act="pdf"'+(L.length?'':' disabled')+'>Exportar book (PDF)</button><button class="btn pri" data-act="novo">+ Novo ativo</button>')+
    '<div class="wrap"><div class="title"><div><h1>Book científico</h1><p>Portfólio de ativos e a evidência que sustenta cada um: estratégia de busca, artigos e anexos.</p></div><div class="facts"><div class="fact"><b>'+L.length+'</b><span>ativos</span></div><div class="fact"><b>'+tot+'</b><span>artigos</span></div><div class="fact"><b>'+(tot?Math.round(anx/tot*100):0)+'%</b><span>com anexo</span></div><div class="fact"><b>'+alta+'</b><span>alta evidência</span></div></div></div>'+
@@ -300,7 +312,8 @@ function artRow(a,x,i){
    '<select class="tp" data-a="'+x.k+'" data-f="tipo" aria-label="Tipo de estudo" style="border-left:3px solid '+c+';padding-left:8px"><option value="">Tipo de estudo…</option>'+TIPOS.map(t=>'<option value="'+t[0]+'"'+(x.tipo===t[0]?' selected':'')+'>'+t[1]+'</option>').join('')+'</select>'+
    '<button class="btn sm txt bad x'+(del?' on':'')+'" data-act="art-del" data-a="'+x.k+'" title="Remover artigo" aria-label="Remover artigo">'+(del?'Remover?':'✕')+'</button>'+
    '<div class="sub2"><input data-a="'+x.k+'" data-f="revista" placeholder="Revista" value="'+esc(x.revista||'')+'" aria-label="Revista"><input data-a="'+x.k+'" data-f="base" list="bases" placeholder="Base de dados" value="'+esc(x.base||'')+'" aria-label="Base de dados"></div>'+
-   '<div class="sub"><span class="lnk"><input data-a="'+x.k+'" data-f="link" placeholder="Link para acesso (https://…)" value="'+esc(x.link||'')+'" aria-label="Link para acesso">'+(x.link?'<a class="btn sm" href="'+esc(/^https?:/i.test(x.link)?x.link:'https://'+x.link)+'" target="_blank" rel="noopener">Abrir ↗</a>':'')+'</span>'+doc+'</div></div>';
+   '<div class="sub"><span class="lnk"><input data-a="'+x.k+'" data-f="link" placeholder="Link para acesso (https://…)" value="'+esc(x.link||'')+'" aria-label="Link para acesso">'+(x.link?'<a class="btn sm" href="'+esc(/^https?:/i.test(x.link)?x.link:'https://'+x.link)+'" target="_blank" rel="noopener">Abrir ↗</a>':'')+'</span>'+doc+'</div>'+
+   '<div class="sub3"><textarea data-a="'+x.k+'" data-f="obs" rows="1" placeholder="Observação sobre este artigo…" aria-label="Observação do artigo">'+esc(x.obs||'')+'</textarea></div></div>';
 }
 function vAtivo(){
   const a=lista().find(x=>x.id===S.id);
@@ -322,7 +335,7 @@ function vAtivo(){
    '<div class="field" style="margin-bottom:0"><label class="lb">Artigos encontrados na busca</label><div class="found"><input data-f="encontrados" inputmode="numeric" value="'+(a.encontrados||'')+'" placeholder="0" aria-label="Total encontrado"><span class="hint">no total · <b class="mono">'+a.arts.length+'</b> registrado'+(a.arts.length===1?'':'s')+' no book</span></div>'+(a.encontrados>0?'<div class="meter" title="'+prog+'%"><i style="width:'+prog+'%"></i></div>':'')+'</div>'+
    '<div class="field" style="margin:16px 0 0"><label class="lb">Observação</label><textarea data-f="observacao" placeholder="Anotações livres sobre este ativo…">'+esc(a.observacao||'')+'</textarea></div></section>'+
   '<section><div class="sec-h"><h2>Artigos científicos<small>'+a.arts.length+'</small></h2><span class="acts"><span class="seg"><button data-act="ord" data-o="ev" class="'+(S.ord==='ev'?'on':'')+'">Evidência</button><button data-act="ord" data-o="ano" class="'+(S.ord==='ano'?'on':'')+'">Ano</button></span><button class="btn sm pri" data-act="add-toggle">'+(add&&a.arts.length?'Fechar':'+ Artigo')+'</button></span></div>'+evBlock(a)+
-   (add?'<div class="addform"><div class="g"><div><label class="lb">Título</label><input id="nt" placeholder="Título do artigo"></div><div><label class="lb">Ano</label><input id="na" class="mono" inputmode="numeric" maxlength="4" placeholder="2024"></div><div><label class="lb">Tipo de estudo</label><select id="nty"><option value="">Selecione…</option>'+TIPOS.map(t=>'<option value="'+t[0]+'">'+t[1]+'</option>').join('')+' </select></div></div><div class="g2"><div><label class="lb">Revista</label><input id="nrv" placeholder="Nome da revista"></div><div><label class="lb">Base de dados</label><input id="nbs" list="bases" placeholder="Onde foi encontrado"></div></div><div class="row"><input id="nl" placeholder="Link para acesso (https://…)" style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:8px 10px"><button class="btn pri" data-act="art-add">Adicionar artigo</button></div></div>':'')+
+   (add?'<div class="addform"><div class="g"><div><label class="lb">Título</label><input id="nt" placeholder="Título do artigo"></div><div><label class="lb">Ano</label><input id="na" class="mono" inputmode="numeric" maxlength="4" placeholder="2024"></div><div><label class="lb">Tipo de estudo</label><select id="nty"><option value="">Selecione…</option>'+TIPOS.map(t=>'<option value="'+t[0]+'">'+t[1]+'</option>').join('')+' </select></div></div><div class="g2"><div><label class="lb">Revista</label><input id="nrv" placeholder="Nome da revista"></div><div><label class="lb">Base de dados</label><input id="nbs" list="bases" placeholder="Onde foi encontrado"></div></div><div style="margin-bottom:10px"><label class="lb">Observação</label><input id="nob" placeholder="Anotação sobre o artigo (opcional)"></div><div class="row"><input id="nl" placeholder="Link para acesso (https://…)" style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:8px 10px"><button class="btn pri" data-act="art-add">Adicionar artigo</button></div></div>':'')+
    '<div class="alist">'+(arts.length?arts.map((x,i)=>artRow(a,x,i)).join(''):'<div class="empty">Nenhum artigo registrado ainda.</div>')+'</div></section></div></div>';
 }
 function render(){
@@ -387,11 +400,11 @@ document.addEventListener('click',async e=>{
 });
 function addTermo(){const i=$('#termo');const t=(i.value||'').trim();if(!t)return;const l=vals(cur().filtro);if(l.some(x=>x.toLowerCase()===t.toLowerCase())){toast('Esse termo já está na busca');return;}l.push(t);i.value='';setA('filtro',l);}
 function addArtigo(){
-  const t=$('#nt').value.trim(),y=$('#na').value.trim(),ty=$('#nty').value,l=$('#nl').value.trim(),rv=$('#nrv').value.trim(),bs=$('#nbs').value.trim();
+  const t=$('#nt').value.trim(),y=$('#na').value.trim(),ty=$('#nty').value,l=$('#nl').value.trim(),rv=$('#nrv').value.trim(),bs=$('#nbs').value.trim(),ob=$('#nob').value.trim();
   if(!t){toast('Informe o título do artigo',true);$('#nt').focus();return;}
   if(y&&!/^(19|20)\d{2}$/.test(y)){toast('Ano inválido (use 4 dígitos, ex.: 2021)',true);$('#na').focus();return;}
   const k=ref('ativos/'+S.id+'/artigos').push().key;
-  ref('ativos/'+S.id+'/artigos/'+k).set({titulo:t,ano:y,tipo:ty,revista:rv,base:bs,link:l,t:Date.now(),por:me()}).then(()=>{S.addOpen=true;document.activeElement&&document.activeElement.blur();render();const n=$('#nt');n&&n.focus();return ref('ativos/'+S.id+'/atualizadoEm').set(TS());}).catch(e=>toast('Não salvou: '+(e.message||e),true));
+  ref('ativos/'+S.id+'/artigos/'+k).set({titulo:t,ano:y,tipo:ty,revista:rv,base:bs,obs:ob,link:l,t:Date.now(),por:me()}).then(()=>{S.addOpen=true;document.activeElement&&document.activeElement.blur();render();const n=$('#nt');n&&n.focus();return ref('ativos/'+S.id+'/atualizadoEm').set(TS());}).catch(e=>toast('Não salvou: '+(e.message||e),true));
 }
 document.addEventListener('change',e=>{
   const t=e.target; if(!t.dataset||!t.dataset.f||!$('#app').contains(t)) return;
@@ -403,7 +416,7 @@ document.addEventListener('change',e=>{
 });
 document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&e.target.id==='termo'){e.preventDefault();addTermo();}
-  if(e.key==='Enter'&&(e.target.id==='nt'||e.target.id==='nl'||e.target.id==='na'||e.target.id==='nrv'||e.target.id==='nbs')){e.preventDefault();addArtigo();}
+  if(e.key==='Enter'&&(e.target.id==='nt'||e.target.id==='nl'||e.target.id==='na'||e.target.id==='nob'||e.target.id==='nrv'||e.target.id==='nbs')){e.preventDefault();addArtigo();}
   if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('big')) e.target.blur();
 });
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches&&e.target.matches('tr[data-act=abrir]'))e.target.click();});
@@ -416,12 +429,12 @@ function imprimir(id){
   const hoje=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
   const tot=L.reduce((s,a)=>s+a.arts.length,0);
   let h='';
-  if(!id) h+='<section class="pg p-cover"><div><div class="p-bar"></div><div class="p-sec" style="margin-top:8mm">Central de Apps</div><h1>Book científico</h1><div style="color:#667085;font-size:12pt;max-width:120mm">Portfólio de ativos e evidência científica</div></div><div><div class="p-sec">Sumário</div><ul class="p-toc" style="list-style:none;padding:0;margin:0">'+L.map(a=>'<li><span class="mono">'+nn(a)+'</span><b>'+esc(a.nome||'')+'</b><span>'+a.arts.length+' artigo'+(a.arts.length===1?'':'s')+'</span></li>').join('')+'</ul><div style="margin-top:8mm;color:#667085;font-size:9.5pt">'+L.length+' ativo'+(L.length===1?'':'s')+' · '+tot+' artigos · emitido em '+hoje+'</div></div></section>';
+  if(!id) h+='<section class="pg p-cover"><div><div class="p-bar"></div><svg class="book-mark" width="84" height="84" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3H4v18h5M7 3v18M4 7h3M4 17h3M9 12h3m5-6 5 3v6l-5 3-5-3V9z"/></svg><div class="p-sec" style="margin-top:8mm">Central de Apps</div><h1>Book científico</h1><div style="color:#667085;font-size:12pt;max-width:120mm">STIN Pharma · Portfólio de ativos e evidência científica</div></div><div><div class="p-sec">Sumário</div><ul class="p-toc" style="list-style:none;padding:0;margin:0">'+L.map(a=>'<li><span class="mono">'+nn(a)+'</span><b>'+esc(a.nome||'')+'</b><span>'+a.arts.length+' artigo'+(a.arts.length===1?'':'s')+'</span></li>').join('')+'</ul><div style="margin-top:8mm;color:#667085;font-size:9.5pt">'+L.length+' ativo'+(L.length===1?'':'s')+' · '+tot+' artigos · emitido em '+hoje+'</div></div></section>';
   h+=L.map(a=>{
     const arts=a.arts.slice().sort((p,q)=>{const r=t=>{const i=TIPOS.findIndex(x=>x[0]===t);return i<0?99:i};return r(p.tipo)-r(q.tipo)||(+q.ano||0)-(+p.ano||0);});
     const k=(n,v)=>'<tr><td class="k">'+n+'</td><td>'+(v||'<span style="color:#98A2B3">—</span>')+'</td></tr>';
     return '<section class="pg"><div class="p-h"><div class="no">Ativo '+nn(a)+'</div><h2>'+esc(a.nome||'')+'</h2></div><div class="p-sec">Portfólio</div><table class="p-t">'+k('Apresentação',esc(a.apresentacao))+k('Descrição',esc(a.descricao).replace(/\n/g,'<br>'))+k('Via de administração',esc(a.via))+k('Observação',esc(a.observacao).replace(/\n/g,'<br>'))+k('Filtro de busca',esc(queryStr(a)))+k('Artigos encontrados',a.encontrados?a.encontrados+' no total · '+a.arts.length+' registrados':a.arts.length+' registrados')+'</table>'+
-     '<div class="p-sec">Artigos científicos ('+a.arts.length+')</div>'+(arts.length?'<table class="p-t"><thead><tr><th>#</th><th>Título</th><th>Revista</th><th>Base</th><th>Ano</th><th>Tipo de estudo</th><th>Anexo</th></tr></thead><tbody>'+arts.map((x,i)=>'<tr><td class="mono">'+String(i+1).padStart(2,'0')+'</td><td><b>'+esc(x.titulo||'')+'</b>'+(x.link?'<div style="font:8pt var(--est-mono);color:#2258A0;overflow-wrap:anywhere">'+esc(x.link)+'</div>':'')+'</td><td>'+esc(x.revista||'—')+'</td><td>'+esc(x.base||'—')+'</td><td class="mono">'+esc(x.ano||'')+'</td><td><span class="p-dot" style="background:'+COR[TN[x.tipo]?x.tipo:'out']+'"></span>'+esc(TN[x.tipo]||'—')+'</td><td>'+(x.anexo?'Sim':'—')+'</td></tr>').join('')+'</tbody></table>':'<p style="color:#98A2B3">Nenhum artigo registrado.</p>')+'</section>';}).join('');
+     '<div class="p-sec">Artigos científicos ('+a.arts.length+')</div>'+(arts.length?'<table class="p-t"><thead><tr><th>#</th><th>Título</th><th>Revista</th><th>Base</th><th>Ano</th><th>Tipo de estudo</th><th>Anexo</th></tr></thead><tbody>'+arts.map((x,i)=>'<tr><td class="mono">'+String(i+1).padStart(2,'0')+'</td><td><b>'+esc(x.titulo||'')+'</b>'+(x.link?'<div style="font:8pt var(--est-mono);color:#2258A0;overflow-wrap:anywhere">'+esc(x.link)+'</div>':'')+(x.obs?'<div style="font-size:8.5pt;color:#475467;margin-top:2px">Obs.: '+esc(x.obs).replace(/\n/g,'<br>')+'</div>':'')+'</td><td>'+esc(x.revista||'—')+'</td><td>'+esc(x.base||'—')+'</td><td class="mono">'+esc(x.ano||'')+'</td><td><span class="p-dot" style="background:'+COR[TN[x.tipo]?x.tipo:'out']+'"></span>'+esc(TN[x.tipo]||'—')+'</td><td>'+(x.anexo?'Sim':'—')+'</td></tr>').join('')+'</tbody></table>':'<p style="color:#98A2B3">Nenhum artigo registrado.</p>')+'</section>';}).join('');
   $('#printRoot').innerHTML=h; setTimeout(()=>window.print(),80);
 }
 
