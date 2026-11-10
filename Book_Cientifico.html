@@ -157,6 +157,10 @@ table.idx{width:100%;border-collapse:collapse}
 .art .n{font:500 11.5px var(--est-mono);color:var(--est-faint);padding-top:9px}
 .art textarea{font-weight:600;min-height:0;height:auto;resize:none;overflow:hidden;line-height:1.4;padding-top:6px}
 .art .sub{grid-column:2/-1;display:flex;gap:8px 14px;align-items:center;flex-wrap:wrap;margin-top:2px;font-size:12.5px}
+.art .sub2{grid-column:2/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,220px);gap:8px 14px;margin-top:2px}
+.art .sub2 input{font-size:12.5px}
+.addform .g2{display:grid;grid-template-columns:1fr 240px;gap:14px;margin-bottom:10px}
+@media(max-width:700px){.art .sub2,.addform .g2{grid-template-columns:1fr}}
 .art .lnk{display:flex;gap:6px;flex:1;min-width:200px;align-items:center}
 .art .lnk input{font:400 12.5px var(--est-mono);color:var(--est-accent)}
 .art select.tp{font-size:13px}
@@ -217,12 +221,13 @@ table.idx{width:100%;border-collapse:collapse}
 <style id="__gateStyle">body > *:not(#__gateOverlay){ display:none !important; }</style>
 <div id="app"><div class="topbar"><div class="wrap"><div class="eyebrow">Central de Apps / Book científico</div></div></div><div class="wrap"><div class="title"><div><h1>Book científico</h1></div></div><div class="skel"></div><div class="skel"></div><div class="skel"></div></div></div>
 <div id="printRoot"></div>
+<datalist id="bases"><option>PubMed</option><option>Scopus</option><option>Web of Science</option><option>Embase</option><option>Cochrane Library</option><option>LILACS</option><option>SciELO</option><option>Google Acadêmico</option><option>ScienceDirect</option></datalist>
 <datalist id="vias"><option>Oral</option><option>Injetável (intravenosa)</option><option>Injetável (intramuscular)</option><option>Injetável (subcutânea)</option><option>Tópica</option><option>Oftálmica</option><option>Nasal</option><option>Inalatória</option><option>Sublingual</option><option>Retal</option><option>Vaginal</option><option>Transdérmica</option></datalist>
 <script>
 (function(){
 'use strict';
 /* ===== dados (Firebase Realtime Database, caminho próprio: bookCientifico) =====
-   bookCientifico/ativos/{id}  → nome, apresentacao, descricao, via, filtro[], encontrados, artigos{aid:{titulo,ano,tipo,link,anexo{nome,tam,tipo}}}
+   bookCientifico/ativos/{id}  → nome, apresentacao, descricao, via, filtro[], encontrados, artigos{aid:{titulo,ano,tipo,revista,base,link,anexo{nome,tam,tipo}}}
    bookCientifico/anexos/{aid} → { dados: "data:...base64" }  (separado para a lista abrir leve; limite 5 MB por arquivo) */
 const ROOT='bookCientifico';
 /* Tipos de estudo, do mais forte ao mais fraco (pirâmide de evidência, estilo Oxford CEBM / formulary dossiers) */
@@ -267,7 +272,7 @@ function topbar(extra){
 function vHome(){
   const L=lista(), q=S.q.trim().toLowerCase();
   const tot=L.reduce((s,a)=>s+a.arts.length,0), anx=L.reduce((s,a)=>s+a.anexos,0), alta=L.reduce((s,a)=>s+ALTA.reduce((x,t)=>x+(a.cont[t]||0),0),0);
-  const F=L.filter(a=>!q||[a.nome,a.apresentacao,a.via,a.descricao].concat(a.arts.map(x=>x.titulo)).join(' ').toLowerCase().includes(q));
+  const F=L.filter(a=>!q||[a.nome,a.apresentacao,a.via,a.descricao,a.observacao].concat(a.arts.map(x=>[x.titulo,x.revista,x.base].join(' '))).join(' ').toLowerCase().includes(q));
   let body;
   if(!L.length) body='<div class="empty"><h3 style="margin:0 0 6px;color:var(--est-ink);font-size:17px">O book ainda está vazio</h3><p style="margin:0 auto 16px;max-width:50ch">Cadastre o primeiro ativo. Em cada um você registra o portfólio, a estratégia de busca e os artigos, cada um com o seu anexo.</p><button class="btn pri" data-act="novo">+ Cadastrar primeiro ativo</button></div>';
   else if(!F.length) body='<div class="empty">Nada encontrado para “'+esc(S.q)+'”.</div>';
@@ -294,6 +299,7 @@ function artRow(a,x,i){
    '<input class="ano mono" data-a="'+x.k+'" data-f="ano" inputmode="numeric" maxlength="4" placeholder="Ano" value="'+esc(x.ano||'')+'" aria-label="Ano" style="text-align:center">'+
    '<select class="tp" data-a="'+x.k+'" data-f="tipo" aria-label="Tipo de estudo" style="border-left:3px solid '+c+';padding-left:8px"><option value="">Tipo de estudo…</option>'+TIPOS.map(t=>'<option value="'+t[0]+'"'+(x.tipo===t[0]?' selected':'')+'>'+t[1]+'</option>').join('')+'</select>'+
    '<button class="btn sm txt bad x'+(del?' on':'')+'" data-act="art-del" data-a="'+x.k+'" title="Remover artigo" aria-label="Remover artigo">'+(del?'Remover?':'✕')+'</button>'+
+   '<div class="sub2"><input data-a="'+x.k+'" data-f="revista" placeholder="Revista" value="'+esc(x.revista||'')+'" aria-label="Revista"><input data-a="'+x.k+'" data-f="base" list="bases" placeholder="Base de dados" value="'+esc(x.base||'')+'" aria-label="Base de dados"></div>'+
    '<div class="sub"><span class="lnk"><input data-a="'+x.k+'" data-f="link" placeholder="Link para acesso (https://…)" value="'+esc(x.link||'')+'" aria-label="Link para acesso">'+(x.link?'<a class="btn sm" href="'+esc(/^https?:/i.test(x.link)?x.link:'https://'+x.link)+'" target="_blank" rel="noopener">Abrir ↗</a>':'')+'</span>'+doc+'</div></div>';
 }
 function vAtivo(){
@@ -313,9 +319,10 @@ function vAtivo(){
    '<div class="field"><label class="lb">Filtro de busca</label><div class="chips">'+(a.filtroL.length?a.filtroL.map((t,i)=>(i?'<span class="and">AND</span>':'')+'<span class="chip">'+esc(t)+'<button data-act="termo-del" data-i="'+i+'" aria-label="Remover termo">×</button></span>').join(''):'<span class="hint">Nenhum termo ainda. Cada termo se liga ao anterior por AND.</span>')+'</div>'+
    '<div class="row" style="margin-bottom:12px"><input id="termo" placeholder="Novo termo e Enter" autocomplete="off"><button class="btn sm" data-act="termo-add">+ Termo</button></div>'+
    (qs?'<div class="query">'+esc(qs)+'</div><div class="row"><button class="btn sm" data-act="copiar">Copiar busca</button><a class="btn sm" href="'+pm+'" target="_blank" rel="noopener">PubMed ↗</a><a class="btn sm" href="'+gs+'" target="_blank" rel="noopener">Google Acadêmico ↗</a></div>':'')+'</div>'+
-   '<div class="field" style="margin-bottom:0"><label class="lb">Artigos encontrados na busca</label><div class="found"><input data-f="encontrados" inputmode="numeric" value="'+(a.encontrados||'')+'" placeholder="0" aria-label="Total encontrado"><span class="hint">no total · <b class="mono">'+a.arts.length+'</b> registrado'+(a.arts.length===1?'':'s')+' no book</span></div>'+(a.encontrados>0?'<div class="meter" title="'+prog+'%"><i style="width:'+prog+'%"></i></div>':'')+'</div></section>'+
+   '<div class="field" style="margin-bottom:0"><label class="lb">Artigos encontrados na busca</label><div class="found"><input data-f="encontrados" inputmode="numeric" value="'+(a.encontrados||'')+'" placeholder="0" aria-label="Total encontrado"><span class="hint">no total · <b class="mono">'+a.arts.length+'</b> registrado'+(a.arts.length===1?'':'s')+' no book</span></div>'+(a.encontrados>0?'<div class="meter" title="'+prog+'%"><i style="width:'+prog+'%"></i></div>':'')+'</div>'+
+   '<div class="field" style="margin:16px 0 0"><label class="lb">Observação</label><textarea data-f="observacao" placeholder="Anotações livres sobre este ativo…">'+esc(a.observacao||'')+'</textarea></div></section>'+
   '<section><div class="sec-h"><h2>Artigos científicos<small>'+a.arts.length+'</small></h2><span class="acts"><span class="seg"><button data-act="ord" data-o="ev" class="'+(S.ord==='ev'?'on':'')+'">Evidência</button><button data-act="ord" data-o="ano" class="'+(S.ord==='ano'?'on':'')+'">Ano</button></span><button class="btn sm pri" data-act="add-toggle">'+(add&&a.arts.length?'Fechar':'+ Artigo')+'</button></span></div>'+evBlock(a)+
-   (add?'<div class="addform"><div class="g"><div><label class="lb">Título</label><input id="nt" placeholder="Título do artigo"></div><div><label class="lb">Ano</label><input id="na" class="mono" inputmode="numeric" maxlength="4" placeholder="2024"></div><div><label class="lb">Tipo de estudo</label><select id="nty"><option value="">Selecione…</option>'+TIPOS.map(t=>'<option value="'+t[0]+'">'+t[1]+'</option>').join('')+'</select></div></div><div class="row"><input id="nl" placeholder="Link para acesso (https://…)" style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:8px 10px"><button class="btn pri" data-act="art-add">Adicionar artigo</button></div></div>':'')+
+   (add?'<div class="addform"><div class="g"><div><label class="lb">Título</label><input id="nt" placeholder="Título do artigo"></div><div><label class="lb">Ano</label><input id="na" class="mono" inputmode="numeric" maxlength="4" placeholder="2024"></div><div><label class="lb">Tipo de estudo</label><select id="nty"><option value="">Selecione…</option>'+TIPOS.map(t=>'<option value="'+t[0]+'">'+t[1]+'</option>').join('')+' </select></div></div><div class="g2"><div><label class="lb">Revista</label><input id="nrv" placeholder="Nome da revista"></div><div><label class="lb">Base de dados</label><input id="nbs" list="bases" placeholder="Onde foi encontrado"></div></div><div class="row"><input id="nl" placeholder="Link para acesso (https://…)" style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:8px 10px"><button class="btn pri" data-act="art-add">Adicionar artigo</button></div></div>':'')+
    '<div class="alist">'+(arts.length?arts.map((x,i)=>artRow(a,x,i)).join(''):'<div class="empty">Nenhum artigo registrado ainda.</div>')+'</div></section></div></div>';
 }
 function render(){
@@ -380,11 +387,11 @@ document.addEventListener('click',async e=>{
 });
 function addTermo(){const i=$('#termo');const t=(i.value||'').trim();if(!t)return;const l=vals(cur().filtro);if(l.some(x=>x.toLowerCase()===t.toLowerCase())){toast('Esse termo já está na busca');return;}l.push(t);i.value='';setA('filtro',l);}
 function addArtigo(){
-  const t=$('#nt').value.trim(),y=$('#na').value.trim(),ty=$('#nty').value,l=$('#nl').value.trim();
+  const t=$('#nt').value.trim(),y=$('#na').value.trim(),ty=$('#nty').value,l=$('#nl').value.trim(),rv=$('#nrv').value.trim(),bs=$('#nbs').value.trim();
   if(!t){toast('Informe o título do artigo',true);$('#nt').focus();return;}
   if(y&&!/^(19|20)\d{2}$/.test(y)){toast('Ano inválido (use 4 dígitos, ex.: 2021)',true);$('#na').focus();return;}
   const k=ref('ativos/'+S.id+'/artigos').push().key;
-  ref('ativos/'+S.id+'/artigos/'+k).set({titulo:t,ano:y,tipo:ty,link:l,t:Date.now(),por:me()}).then(()=>{S.addOpen=true;document.activeElement&&document.activeElement.blur();render();const n=$('#nt');n&&n.focus();return ref('ativos/'+S.id+'/atualizadoEm').set(TS());}).catch(e=>toast('Não salvou: '+(e.message||e),true));
+  ref('ativos/'+S.id+'/artigos/'+k).set({titulo:t,ano:y,tipo:ty,revista:rv,base:bs,link:l,t:Date.now(),por:me()}).then(()=>{S.addOpen=true;document.activeElement&&document.activeElement.blur();render();const n=$('#nt');n&&n.focus();return ref('ativos/'+S.id+'/atualizadoEm').set(TS());}).catch(e=>toast('Não salvou: '+(e.message||e),true));
 }
 document.addEventListener('change',e=>{
   const t=e.target; if(!t.dataset||!t.dataset.f||!$('#app').contains(t)) return;
@@ -396,7 +403,7 @@ document.addEventListener('change',e=>{
 });
 document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&e.target.id==='termo'){e.preventDefault();addTermo();}
-  if(e.key==='Enter'&&(e.target.id==='nt'||e.target.id==='nl'||e.target.id==='na')){e.preventDefault();addArtigo();}
+  if(e.key==='Enter'&&(e.target.id==='nt'||e.target.id==='nl'||e.target.id==='na'||e.target.id==='nrv'||e.target.id==='nbs')){e.preventDefault();addArtigo();}
   if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('big')) e.target.blur();
 });
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches&&e.target.matches('tr[data-act=abrir]'))e.target.click();});
@@ -413,8 +420,8 @@ function imprimir(id){
   h+=L.map(a=>{
     const arts=a.arts.slice().sort((p,q)=>{const r=t=>{const i=TIPOS.findIndex(x=>x[0]===t);return i<0?99:i};return r(p.tipo)-r(q.tipo)||(+q.ano||0)-(+p.ano||0);});
     const k=(n,v)=>'<tr><td class="k">'+n+'</td><td>'+(v||'<span style="color:#98A2B3">—</span>')+'</td></tr>';
-    return '<section class="pg"><div class="p-h"><div class="no">Ativo '+nn(a)+'</div><h2>'+esc(a.nome||'')+'</h2></div><div class="p-sec">Portfólio</div><table class="p-t">'+k('Apresentação',esc(a.apresentacao))+k('Descrição',esc(a.descricao).replace(/\n/g,'<br>'))+k('Via de administração',esc(a.via))+k('Filtro de busca',esc(queryStr(a)))+k('Artigos encontrados',a.encontrados?a.encontrados+' no total · '+a.arts.length+' registrados':a.arts.length+' registrados')+'</table>'+
-     '<div class="p-sec">Artigos científicos ('+a.arts.length+')</div>'+(arts.length?'<table class="p-t"><thead><tr><th>#</th><th>Título</th><th>Ano</th><th>Tipo de estudo</th><th>Anexo</th></tr></thead><tbody>'+arts.map((x,i)=>'<tr><td class="mono">'+String(i+1).padStart(2,'0')+'</td><td><b>'+esc(x.titulo||'')+'</b>'+(x.link?'<div style="font:8pt var(--est-mono);color:#2258A0;overflow-wrap:anywhere">'+esc(x.link)+'</div>':'')+'</td><td class="mono">'+esc(x.ano||'')+'</td><td><span class="p-dot" style="background:'+COR[TN[x.tipo]?x.tipo:'out']+'"></span>'+esc(TN[x.tipo]||'—')+'</td><td>'+(x.anexo?'Sim':'—')+'</td></tr>').join('')+'</tbody></table>':'<p style="color:#98A2B3">Nenhum artigo registrado.</p>')+'</section>';}).join('');
+    return '<section class="pg"><div class="p-h"><div class="no">Ativo '+nn(a)+'</div><h2>'+esc(a.nome||'')+'</h2></div><div class="p-sec">Portfólio</div><table class="p-t">'+k('Apresentação',esc(a.apresentacao))+k('Descrição',esc(a.descricao).replace(/\n/g,'<br>'))+k('Via de administração',esc(a.via))+k('Observação',esc(a.observacao).replace(/\n/g,'<br>'))+k('Filtro de busca',esc(queryStr(a)))+k('Artigos encontrados',a.encontrados?a.encontrados+' no total · '+a.arts.length+' registrados':a.arts.length+' registrados')+'</table>'+
+     '<div class="p-sec">Artigos científicos ('+a.arts.length+')</div>'+(arts.length?'<table class="p-t"><thead><tr><th>#</th><th>Título</th><th>Revista</th><th>Base</th><th>Ano</th><th>Tipo de estudo</th><th>Anexo</th></tr></thead><tbody>'+arts.map((x,i)=>'<tr><td class="mono">'+String(i+1).padStart(2,'0')+'</td><td><b>'+esc(x.titulo||'')+'</b>'+(x.link?'<div style="font:8pt var(--est-mono);color:#2258A0;overflow-wrap:anywhere">'+esc(x.link)+'</div>':'')+'</td><td>'+esc(x.revista||'—')+'</td><td>'+esc(x.base||'—')+'</td><td class="mono">'+esc(x.ano||'')+'</td><td><span class="p-dot" style="background:'+COR[TN[x.tipo]?x.tipo:'out']+'"></span>'+esc(TN[x.tipo]||'—')+'</td><td>'+(x.anexo?'Sim':'—')+'</td></tr>').join('')+'</tbody></table>':'<p style="color:#98A2B3">Nenhum artigo registrado.</p>')+'</section>';}).join('');
   $('#printRoot').innerHTML=h; setTimeout(()=>window.print(),80);
 }
 
