@@ -14,10 +14,10 @@
 <style>
 /* Conceito: barra lateral escura de módulos + área de trabalho clara; telas de bipagem em passos grandes, código do endereço em destaque tipo sinalização de armazém */
 :root{
-  --bg:var(--est-bg);--surface:#fff;--surface2:#F5F6FA;--ink:var(--est-ink);--ink2:#333;--muted:#595959;--line:#cfcfcf;--grid:#e6e6e6;--axis:#b3b3b3;
-  --accent:var(--est-navy);--accent-ink:#fff;--accent-soft:var(--est-accent-bg);--nav:var(--est-navy);--nav-ink:#d5dbe8;
+  --bg:#f2f2f2;--surface:#fff;--surface2:#f5f5f5;--ink:#000;--ink2:#333;--muted:#595959;--line:#cfcfcf;--grid:#e6e6e6;--axis:#b3b3b3;
+  --accent:#000;--accent-ink:#fff;--accent-soft:#e3e3e3;--nav:#000;--nav-ink:#d9d9d9;
   --ok:#17672f;--ok-soft:#dcf2e3;--warn:#85500a;--warn-soft:#fdeed0;--bad:#b3261e;--bad-soft:#fde5e2;--info:#333;--info-soft:#ededed;--mut-soft:#ececec;
-  --crit:#d03b3b;--s1:var(--est-navy);--s2:#8a94a8;--s3:#c3cad8;--toast-bad:#b3261e;--toast-ok:#17672f;
+  --crit:#d03b3b;--s1:#000;--s2:#8c8c8c;--s3:#c4c4c4;--toast-bad:#b3261e;--toast-ok:#17672f;
   --shadow:0 1px 2px rgba(0,0,0,.06);
   --f-disp:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;--f-body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;--est-bg:#F5F6FA;--est-card:#FFFFFF;--est-line:#E4E7EF;--est-ink:#1B2333;--est-mut:#667085;--est-faint:#98A2B3;--est-navy:#16233F;--est-accent:#2258A0;--est-accent-bg:#E9F0F9;--est-ok:#1F7A54;--est-ok-bg:#E6F4EC;--est-warn:#B7791F;--est-warn-bg:#FBF1DF;--est-bad:#B23A2F;--est-bad-bg:#FBEAE8;--est-r-sm:7px;--est-r:12px;--est-ease:cubic-bezier(.2,.8,.2,1);--f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
 }
@@ -140,6 +140,13 @@ details summary{cursor:pointer;color:var(--ink2);margin-top:8px}
 .card.scancard{position:sticky;top:0;z-index:6;box-shadow:0 6px 18px rgba(16,24,40,.12);border-color:var(--accent)}
 details.card>summary{cursor:pointer;font-size:16px;padding:2px 0}details.card[open]>summary{margin-bottom:12px}
 .scanbox small{display:block;margin-top:6px}
+.tabs.sub{border-bottom:0;gap:6px;margin:0 0 12px}.tabs.sub .tab{min-height:34px;padding:0 14px;border:1px solid var(--line);border-radius:999px;font-size:13px;background:var(--surface);border-bottom-width:1px}.tabs.sub .tab.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.seg{display:inline-flex;border:2px solid var(--ink);border-radius:12px;overflow:hidden;margin-bottom:14px}.seg-b{border:0;background:var(--surface);color:var(--ink);padding:0 18px;min-height:44px;font:600 14.5px var(--f-body);cursor:pointer}.seg-b.on{background:var(--ink);color:var(--surface)}
+details.more>summary{cursor:pointer;font-weight:600}details.more[open]>summary{margin-bottom:10px}
+.tile .tl{font:600 15px var(--f-body)}.tile.zero{opacity:.55}.tile.zero strong{color:var(--muted)}
+.qsearch{display:flex;gap:8px;margin:0 0 16px}.qsearch input{flex:1;min-width:0}
+.embed-a{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:10px}
+.ticket{padding:18px;margin-top:12px}
 </style>
 </head>
 <body>
@@ -1480,7 +1487,7 @@ function tbl(cols, rows, o) {
 }
 function tabsHTML(group, items, def) {
   const cur = ui.tabs[group] || def || items[0][0];
-  return '<div class="tabs" role="tablist">' + items.map(([id, t]) => '<button role="tab" aria-selected="' + (id === cur) + '" class="tab' + (id === cur ? ' on' : '') + '" data-act="tab" data-g="' + group + '" data-t="' + id + '">' + esc(t) + '</button>').join('') + '</div>';
+  return '<div class="tabs' + (ui.embed ? ' sub' : '') + '" role="tablist">' + items.map(([id, t]) => '<button role="tab" aria-selected="' + (id === cur) + '" class="tab' + (id === cur ? ' on' : '') + '" data-act="tab" data-g="' + group + '" data-t="' + id + '">' + esc(t) + '</button>').join('') + '</div>';
 }
 const curTab = (g, def) => ui.tabs[g] || def;
 Act.tab = t => { ui.tabs[t.dataset.g] = t.dataset.t; render({ reset: true }); };
@@ -1599,16 +1606,12 @@ async function exportPdf(rep, name, sub) {
 /* ===== UI: acesso, estrutura, painel, recebimento, armazenagem ===== */
 const View = {};
 const NAV = [
-  { id: 'inicio', label: 'Início', perm: 'view|dash' }, { id: 'painel', label: 'Painel (dashboard)', perm: 'dash' }, { id: 'recebimento', label: 'Recebimento', perm: 'receive' }, { id: 'liberacao', label: 'Liberação de lotes', perm: 'lots' }, { id: 'cobertura', label: 'Cobertura da demanda', perm: 'view' },
-  { id: 'armazenagem', label: 'Armazenagem', perm: 'store' }, { id: 'separacao', label: 'Separação', perm: 'pick|orders' },
-  { id: 'saidas', label: 'Saídas', perm: 'exit' }, { id: 'inventario', label: 'Inventário', perm: 'count|approve' },
-  { id: 'estoque', label: 'Estoque', perm: 'view' }, { id: 'historico', label: 'Histórico', perm: 'history' },
-  { id: 'cadastros', label: 'Cadastros', perm: 'cad' }, { id: 'relatorios', label: 'Relatórios', perm: 'reports' },
-  { id: 'config', label: 'Configurações', perm: 'cfg' }
+  { id: 'inicio', label: 'Início', perm: 'view|dash' }, { id: 'recebimento', label: 'Receber', perm: 'receive' }, { id: 'mover', label: 'Mover', perm: 'store|exit' },
+  { id: 'separacao', label: 'Separar', perm: 'pick|orders' }, { id: 'estoque', label: 'Estoque', perm: 'view|dash|lots' }, { id: 'mais', label: 'Mais', perm: 'count|approve|history|cad|reports|cfg' }
 ];
 const navOk = n => n.perm.split('|').some(p => can(user, p));
 const brandSVG = '<svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="7" fill="var(--accent)"/><g fill="var(--accent-ink)"><rect x="6" y="8" width="2.5" height="16"/><rect x="10.5" y="8" width="1.5" height="16"/><rect x="14" y="8" width="3.5" height="16"/><rect x="19.5" y="8" width="1.5" height="16"/><rect x="23" y="8" width="3" height="16"/></g></svg>';
-const pageHead = (t, sub, act) => '<header class="ph"><div><h1>' + esc(t) + '</h1>' + (sub ? '<p>' + esc(sub) + '</p>' : '') + '</div>' + (act ? '<div class="ph-a">' + act + '</div>' : '') + '</header>';
+const pageHead = (t, sub, act) => ui.embed ? (act ? '<div class="embed-a">' + act + '</div>' : '') : '<header class="ph"><div><h1>' + esc(t) + '</h1>' + (sub ? '<p>' + esc(sub) + '</p>' : '') + '</div>' + (act ? '<div class="ph-a">' + act + '</div>' : '') + '</header>';
 const steps = list => '<ol class="steps">' + list.map(s => '<li class="' + (s.done ? 'done' : s.cur ? 'cur' : '') + '"><b>' + (s.done ? '✓' : s.n) + '</b><span>' + esc(s.t) + (s.val ? '<em>' + esc(s.val) + '</em>' : '') + '</span></li>').join('') + '</ol>';
 
 /* ---- login e sessão ---- */
@@ -1656,7 +1659,9 @@ Act.mypin = () => dialog({
 Act.logout = () => { location.href = './index.html'; };
 function routeFromHash() {
   if (!user) return;
-  const nav = NAV.filter(navOk), h = (location.hash || '').slice(1);
+  let h = (location.hash || '').slice(1);
+  if (VIEW_ALIAS[h]) { h = resolveView(h); try { history.replaceState(null, '', '#' + h); } catch (e) { /* segue */ } }
+  const nav = NAV.filter(navOk);
   ui.view = nav.find(n => n.id === h) ? h : (nav.find(n => n.id === ui.view) ? ui.view : nav[0].id);
 }
 window.addEventListener('hashchange', () => { routeFromHash(); render({ reset: true }); window.scrollTo(0, 0); });
@@ -1680,7 +1685,7 @@ const TILES = [
   ['saidas', null, 'Saída', 'Baixas autorizadas', 'exit'], ['inventario', null, 'Inventário', 'Contagem semanal', 'count|approve'],
   ['liberacao', null, 'Liberação de lotes', 'Quarentena e bloqueios', 'lots'], ['cobertura', null, 'Cobertura', 'Demanda x estoque liberado', 'view'], ['cadastros', null, 'Cadastro', 'Produtos, endereços, usuários', 'cad'], ['relatorios', null, 'Relatórios', 'Excel e PDF', 'reports'], ['painel', null, 'Dashboard', 'Indicadores em tempo real', 'dash']
 ];
-View.inicio = () => {
+View.inicioOld = () => {
   const ok = t => t[4].split('|').some(p => can(user, p));
   const dock = Object.values(S.stock).filter(r => r.addr === DOCA && r.qty > 0 && dockReady(r)).length, openD = Object.values(S.demands).filter(d => d.status === 'aberta').length;
   const open = Object.values(S.occurrences).filter(o => o.status === 'aberta').length;
@@ -1689,7 +1694,7 @@ View.inicio = () => {
     '<div class="tiles">' + TILES.filter(ok).map((t, i) => '<a class="tile" href="#' + t[0] + '" data-act="go" data-view="' + t[0] + '"' + (t[1] ? ' data-tab="' + t[1] + '"' : '') + '><span class="tn">' + (i + 1) + '</span><strong>' + t[2] + '</strong><small>' + esc(t[3]) + '</small>' + (!t[1] || t[1] === 'doca' ? ((hints[t[0]] ? '<em>' + esc(hints[t[0]]) + '</em>' : '')) : '') + '</a>').join('') + '</div>' +
     (open && can(user, 'history') ? '<p class="note warn">' + open + ' ocorrência(s) aberta(s). <a href="#historico" data-act="go" data-view="historico" data-tab="occ">Ver ocorrências</a></p>' : '');
 };
-Act.go = t => { const v = t.dataset.view; if (t.dataset.tab) { const g = { armazenagem: 'arm', historico: 'hist' }[v]; if (g) ui.tabs[g] = t.dataset.tab; } location.hash = '#' + v; ui.view = v; render({ reset: true }); window.scrollTo(0, 0); };
+Act.go = t => { let v = t.dataset.view; if (t.dataset.tab && v === 'historico') ui.tabs.hist = t.dataset.tab; v = resolveView(v); location.hash = '#' + v; ui.view = v; render({ reset: true }); window.scrollTo(0, 0); };
 
 /* ---- painel ---- */
 const dm = d => d.slice(8) + '/' + d.slice(5, 7);
@@ -1748,19 +1753,19 @@ function cmpTable(id) {
 const dmTotals = id => { const c = demandCompare(id), e = c.reduce((s, r) => s + r.expected, 0), g = c.reduce((s, r) => s + Math.min(r.received, r.expected || r.received), 0); return { expected: e, received: c.reduce((s, r) => s + r.received, 0), pct: e ? Math.round(sumPart(c) / e * 1000) / 10 : null }; };
 const sumPart = c => c.reduce((s, r) => s + Math.min(r.received, r.expected), 0);
 View.recebimento = () => {
-  let h = pageHead('Recebimento', 'Importe o relatório de demanda, confira fisicamente por bipagem e compare o previsto com o recebido.');
+  let h = pageHead('Receber', 'Importe a planilha, bipe cada produto e confira o que chegou.');
   if (ui.rc) return h + rcWork();
-  h += tabsHTML('rcv', [['conf', 'Conferência'], ['imp', 'Importar demanda (Excel)'], ['dem', 'Demandas e comparação']], 'conf');
+  h += tabsHTML('rcv', [['conf', 'Conferir'], ['imp', 'Importar planilha'], ['dem', 'Demandas']], 'conf');
   const t = curTab('rcv', 'conf');
   return h + (t === 'imp' ? rcImport() : t === 'dem' ? rcDemands() : rcStart());
 };
 function rcStart() {
   const open = Object.values(S.demands).filter(d => d.status === 'aberta').sort((a, b) => b.importedAt.localeCompare(a.importedAt));
   let h = card('Demandas aguardando conferência (' + open.length + ')', tbl(['Demanda', 'Arquivo', 'Referência', 'Produtos', 'Previstas', 'Recebido', ''], open.map(d => { const T = dmTotals(d.id); return [esc(d.id), esc(d.fileName), esc(d.reference ? d.reference.split(' a ').map(fmtD).join(' a ') : '—'), d.lines.length, nf(d.lines.reduce((s, l) => s + l.expected, 0)), pctBar(T.pct, 'ok'), '<button class="btn sm" data-act="rcopen" data-id="' + esc(d.id) + '">' + (T.received ? 'Continuar' : 'Iniciar conferência') + '</button>']; }), { num: [3, 4], empty: 'Nenhuma demanda aberta. Importe o relatório na aba "Importar demanda (Excel)".' }));
-  h += card('Recebimento avulso (sem demanda)', '<p class="muted">Use só quando não houver relatório de demanda. Sem demanda não há comparação de previsto x recebido.</p><form data-form="rcstart" class="grid2">' + field('Nota fiscal ou documento', '<input id="rc_doc" required>') + field('Fornecedor', '<input id="rc_sup">') + '<div class="full"><button class="btn ghost">Iniciar recebimento avulso</button></div></form>');
+  h += moreCard('Recebimento avulso (sem demanda)', '<p class="muted">Use só quando não houver relatório de demanda. Sem demanda não há comparação de previsto x recebido.</p><form data-form="rcstart" class="grid2">' + field('Nota fiscal ou documento', '<input id="rc_doc" required>') + field('Fornecedor', '<input id="rc_sup">') + '<div class="full"><button class="btn ghost">Iniciar recebimento avulso</button></div></form>');
   const dock = Object.values(S.stock).filter(r => r.addr === DOCA && r.qty > 0 && dockReady(r)), recent = Object.values(S.receipts).sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 8);
-  h += card('Aguardando armazenagem na doca', dock.length ? '<p>' + dock.length + ' tarefa(s) de armazenagem, ' + nf(sumQty(dock)) + ' unidades. <a href="#armazenagem">Ir para Armazenagem</a></p>' : '<p class="muted">Nenhuma tarefa pendente.</p>');
-  h += card('Últimos recebimentos', tbl(['Data', 'Documento', 'Itens', 'Unidades', 'Status', 'Operador'], recent.map(r => [fmtTs(r.ts), esc(r.doc), r.items.length, nf(r.items.reduce((s, i) => s + i.qty, 0)), badge(r.status, r.status === 'concluído' ? 'ok' : 'info'), esc(r.user)]), { num: [2, 3], empty: 'Nenhum recebimento registrado.' }));
+  h += card('Aguardando armazenagem na doca', dock.length ? '<p>' + dock.length + ' tarefa(s) de armazenagem, ' + nf(sumQty(dock)) + ' unidades. <a href="#armazenagem">Ir para Mover</a></p>' : '<p class="muted">Nenhuma tarefa pendente.</p>');
+  h += moreCard('Últimos recebimentos', tbl(['Data', 'Documento', 'Itens', 'Unidades', 'Status', 'Operador'], recent.map(r => [fmtTs(r.ts), esc(r.doc), r.items.length, nf(r.items.reduce((s, i) => s + i.qty, 0)), badge(r.status, r.status === 'concluído' ? 'ok' : 'info'), esc(r.user)]), { num: [2, 3], empty: 'Nenhum recebimento registrado.' }));
   return h;
 }
 function rcImport() {
@@ -1841,18 +1846,16 @@ function rcWork() {
   const rc = ui.rc, d = rc.demandId && S.demands[rc.demandId], r = rc.receiptId && S.receipts[rc.receiptId], items = r ? r.items : [];
   let h = card((d ? 'Demanda ' : 'Documento ') + esc(rc.doc), '<p class="muted">' + (d ? esc(d.fileName) + ' · ' : '') + items.length + ' conferência(s) registrada(s)</p>', '<button class="btn" data-act="rcclose">Finalizar recebimento</button><button class="btn ghost" data-act="rccancel">Sair sem finalizar</button>');
   const p = rc.product && S.products[rc.product];
-  h += steps([{ n: 1, t: 'Bipar o produto', done: !!p, cur: !p, val: p ? p.name : '' }, { n: 2, t: 'Lote, fabricação, validade e quantidade', cur: !!p }, { n: 3, t: 'Confirmar', cur: false }]);
   if (!p) {
-    h += card('1. Bipe o código de barras do medicamento', scanField('rc', 'prod', 'Código de barras (EAN/GTIN)') +
+    h += card('Bipe o medicamento', scanField('rc', 'prod', 'Código de barras (EAN/GTIN)') +
       (rc.unknown ? '<div class="note bad"><b>Código ' + esc(rc.unknown) + ' não cadastrado.</b> Só entra com autorização de responsável.<div class="row"><button class="btn" data-act="rcunknown">Autorizar cadastro provisório</button></div></div>' : ''), '', 'scancard');
   } else {
     const line = d && lineFor(d, p), cm = d && demandCompare(d.id).find(x => x.productId === p.id), lot = [...lotsOfProduct(p.id)].sort((a, b) => b.receivedAt.localeCompare(a.receivedAt))[0];
     let info = '<p class="muted">' + esc(p.id) + ' · EAN ' + esc(p.ean) + ' · ' + esc(p.unit) + (lot ? ' · último lote ' + esc(lot.lotNo) + ' (val. ' + fmtD(lot.expiry) + ')' : '') + '</p>';
     if (d) info += line ? '<p><b>Previsto ' + nf(line.expected) + '</b> · recebido ' + nf(cm ? cm.received : 0) + ' · falta ' + nf(Math.max(0, line.expected - (cm ? cm.received : 0))) + '</p>' + (line.lots.length ? '<div class="row">' + line.lots.map((l, i) => '<button type="button" class="chip" data-act="rcfill" data-i="' + i + '">Lote ' + esc(l.lotNo) + (l.expiry ? ' · val. ' + fmtD(l.expiry) : '') + ' · prev. ' + nf(l.qty) + '</button>').join('') + '</div>' : '<p class="muted">A demanda não traz lote para este produto: registre o lote e a validade da caixa.</p>') : '<p class="note warn">Este produto não está na demanda. Qualquer entrada exigirá justificativa e autorização de responsável.</p>';
-    h += card('2. ' + esc(p.name), info + '<form data-form="rcitem" class="grid2">' + field('Quantidade recebida', '<input id="ri_qty" type="number" min="1" step="1" inputmode="numeric" required data-autofocus>') +
-      (d ? '' : field('Quantidade esperada (nota)', '<input id="ri_exp" type="number" min="0" step="1" inputmode="numeric">', 'Se informada e diferente, exige justificativa')) +
-      field('Número do lote', '<input id="ri_lot" autocapitalize="characters" required>') + field('Data de fabricação', '<input id="ri_mfg" type="date">') + field('Data de validade', '<input id="ri_val" type="date" required>') +
-      field('Status de liberação', '<select id="ri_rel">' + opts([['liberado', 'Liberado para uso'], ['quarentena', 'Quarentena (aguarda liberação)']], cfg().defaultRelease) + '</select>') + field('Justificativa (obrigatória se houver divergência)', '<input id="ri_just">', '', 'full') +
+    h += card(esc(p.name), info + '<form data-form="rcitem" class="grid2">' + field('Quantidade recebida', '<input id="ri_qty" type="number" min="1" step="1" inputmode="numeric" required data-autofocus>') +
+      field('Número do lote', '<input id="ri_lot" autocapitalize="characters" required>') + field('Data de validade', '<input id="ri_val" type="date" required>') +
+      '<details class="full more"><summary>Mais campos (fabricação, liberação, justificativa)</summary><div class="grid2">' + (d ? '' : field('Quantidade esperada (nota)', '<input id="ri_exp" type="number" min="0" step="1" inputmode="numeric">', 'Se informada e diferente, exige justificativa')) + field('Data de fabricação', '<input id="ri_mfg" type="date">') + field('Status de liberação', '<select id="ri_rel">' + opts([['liberado', 'Liberado para uso'], ['quarentena', 'Quarentena (aguarda liberação)']], cfg().defaultRelease) + '</select>') + field('Justificativa (só se houver divergência)', '<input id="ri_just">', '', 'full') + '</div></details>' +
       '<div class="full row"><button class="btn lg">Confirmar conferência</button><button type="button" class="btn ghost" data-act="rcnoprod">Trocar produto</button></div></form>');
   }
   if (d) { const T = dmTotals(d.id); h += '<details class="card"><summary><b>Previsto x recebido</b> · ' + d.lines.length + ' produto(s) · ' + (T.pct == null ? '0' : String(T.pct).replace('.', ',')) + '% conferido (' + nf(T.received) + ' de ' + nf(d.lines.reduce((s, l) => s + l.expected, 0)) + ' un)</summary>' + cmpTable(d.id) + '</details>'; }
@@ -1890,13 +1893,14 @@ Act.rcunknown = async () => {
 };
 Forms.rcitem = async () => {
   const rc = ui.rc, ex = $('#ri_exp'), it = { productId: rc.product, qty: $('#ri_qty').value, expected: ex ? ex.value : '', lotNo: $('#ri_lot').value, expiry: $('#ri_val').value, mfg: $('#ri_mfg').value, release: $('#ri_rel').value, justification: $('#ri_just').value };
-  let res;
-  try { res = await receiveItem(user, rc, it); }
-  catch (e) {
-    if (!(e instanceof WmsError) || !['DUP', 'DIVERG', 'VENCIDO'].includes(e.code)) throw e;
-    if (e.code !== 'DUP' && !it.justification.trim()) fail('Informe a justificativa no campo "Justificativa" e confirme novamente. ' + e.message);
-    const a = await askAuth(e.message); if (!a) return;
-    res = await receiveItem(user, rc, Object.assign({}, it, { authUser: a }));
+  let res, tries = 0;
+  for (;;) {
+    try { res = await receiveItem(user, rc, it); break; }
+    catch (e) {
+      if (!(e instanceof WmsError) || !['DUP', 'DIVERG', 'VENCIDO', 'DIVERGE', 'JUST'].includes(e.code) || ++tries > 4) throw e;
+      if (e.code !== 'DUP' && !String(it.justification || '').trim()) { const j = await askText('Justificativa', e.message + ' Escreva o motivo para continuar.', 'Continuar'); if (!j) return; it.justification = j; continue; }
+      const a = await askAuth(e.message); if (!a) return; it.authUser = a;
+    }
   }
   rc.receiptId = res.receipt.id; rc.product = null; render({ reset: true });
   toast('Conferido: ' + nf(res.move.qty) + ' un do lote ' + res.lot.lotNo + ' (' + (res.lot.status === 'liberado' ? 'liberado' : 'quarentena') + ').' + (res.divergences.length ? ' Ocorrência registrada.' : ''), res.divergences.length ? 'info' : 'ok');
@@ -1917,7 +1921,7 @@ Act.rcclose = async () => {
     }
   }
   if (!(await confirmBox('Finalizar recebimento', 'Confirma a finalização? Os itens conferidos seguem para armazenagem e a demanda é encerrada.', 'Finalizar'))) return;
-  await closeReceipt(user, rc.receiptId, o); ui.rc = null; render({ reset: true }); toast('Recebimento finalizado. Tarefas de armazenagem criadas.', 'ok');
+  await closeReceipt(user, rc.receiptId, o); ui.rc = null; render({ reset: true }); toast('Recebimento finalizado. Agora é só guardar em Mover.', 'ok');
 };
 Act.rccancel = () => { ui.rc = null; render({ reset: true }); };
 
@@ -1985,18 +1989,18 @@ function armTransf() {
   const tr = ui.tr || (ui.tr = { from: null, prod: null, lotId: null, to: null });
   const fromRows = tr.from ? rowsAt(tr.from) : [], p = tr.prod && S.products[tr.prod];
   const lotRows = p ? fromRows.filter(r => r.productId === p.id) : [];
-  let h = card('Como funciona', '<p class="muted">Origem, produto, lote e destino são bipados. A transferência exige motivo e autorização de responsável.</p>', '<button class="btn ghost" data-act="trreset">Recomeçar</button>');
+  let h = card('Como funciona', '<p class="muted">Origem, produto, lote e destino são bipados (ou escolha a origem tocando nela). Saindo da doca é armazenagem normal; entre endereços exige motivo e autorização de responsável.</p>', '<button class="btn ghost" data-act="trreset">Recomeçar</button>');
   h += steps([{ n: 1, t: 'Endereço de origem', done: !!tr.from, cur: !tr.from, val: tr.from || '' }, { n: 2, t: 'Produto', done: !!p, cur: !!tr.from && !p, val: p ? p.name : '' }, { n: 3, t: 'Lote', done: !!tr.lotId, cur: !!p && !tr.lotId, val: tr.lotId ? S.lots[tr.lotId].lotNo : '' }, { n: 4, t: 'Endereço de destino', done: !!tr.to, cur: !!tr.lotId && !tr.to, val: tr.to || '' }, { n: 5, t: 'Confirmar', cur: !!tr.to }]);
-  if (!tr.from) return h + card('1. Bipe o endereço de origem', scanField('tr', 'from', 'Endereço de origem'));
+  if (!tr.from) return h + card('1. Bipe o endereço de origem', scanField('tr', 'from', 'Endereço de origem') + originChips('tr'));
   if (!p) return h + card('2. Bipe o produto em ' + esc(tr.from), scanField('tr', 'prod', 'Código de barras do produto') + '<p class="muted">Neste endereço: ' + (fromRows.map(r => esc(prodName(r.productId))).filter((x, i, a) => a.indexOf(x) === i).join(', ') || 'sem saldo') + '</p>');
   if (!tr.lotId) return h + card('3. Escolha o lote a transferir', '<form data-form="trlot">' + field('Lote', '<select id="tr_lot">' + lotRows.map(r => '<option value="' + esc(r.lotId) + '">' + esc(S.lots[r.lotId].lotNo) + ' · val. ' + fmtD(S.lots[r.lotId].expiry) + ' · ' + nf(r.qty - r.reserved) + ' un livres</option>').join('') + '</select>') + '<button class="btn">Continuar</button></form>');
   if (!tr.to) return h + card('4. Bipe o endereço de destino', scanField('tr', 'to', 'Endereço de destino'));
   const row = getRow(tr.lotId, tr.from);
-  return h + card('5. Quantidade e motivo', '<form data-form="trconfirm" class="grid2">' + field('Quantidade', '<input id="tr_qty" type="number" min="1" max="' + freeQty(row) + '" step="1" required data-autofocus>', 'Livres na origem: ' + nf(freeQty(row))) + field('Motivo da transferência', '<input id="tr_reason" required>') + '<div class="full"><button class="btn lg">Confirmar e autorizar</button></div></form>');
+  return h + card('5. Quantidade e motivo', '<form data-form="trconfirm" class="grid2">' + field('Quantidade', '<input id="tr_qty" type="number" min="1" max="' + freeQty(row) + '" step="1" required data-autofocus>', 'Livres na origem: ' + nf(freeQty(row))) + field(tr.from === DOCA ? 'Observação (opcional)' : 'Motivo da transferência', '<input id="tr_reason"' + (tr.from === DOCA ? '' : ' required') + '>') + '<div class="full"><button class="btn lg">' + (tr.from === DOCA ? 'Armazenar' : 'Confirmar e autorizar') + '</button></div></form>');
 }
 Scan.tr = async (v, name) => {
   const tr = ui.tr;
-  if (name === 'from') { const a = getAddr(v); if (!a || a.id === DOCA) fail('Endereço de origem inválido.'); if (!rowsAt(a.id).length) fail('Não há saldo em ' + a.id + '.'); tr.from = a.id; }
+  if (name === 'from') { const a = getAddr(v); if (!a) fail('Endereço de origem inválido.'); if (!rowsAt(a.id).length) fail('Não há saldo em ' + a.id + '.'); tr.from = a.id; }
   else if (name === 'prod') { const p = resolveProduct(v); if (!p || !rowsAt(tr.from).some(r => r.productId === p.id)) fail('Este produto não está no endereço ' + tr.from + '.'); tr.prod = p.id; }
   else if (name === 'to') { const msg = destCheck(tr.lotId, v); if (msg) fail(msg); if (norm(v) === tr.from) fail('Origem e destino são iguais.'); tr.to = norm(v); }
   render({ reset: true });
@@ -2005,8 +2009,8 @@ Forms.trlot = () => { ui.tr.lotId = $('#tr_lot').value; render({ reset: true });
 Act.trreset = () => { ui.tr = null; render({ reset: true }); };
 Forms.trconfirm = async () => {
   const tr = ui.tr, qty = $('#tr_qty').value, reason = $('#tr_reason').value.trim();
-  const auth = await askAuth('Transferência de ' + qty + ' un de ' + tr.from + ' para ' + tr.to + '.'); if (!auth) return;
-  const mv = await storeStock(user, { lotId: tr.lotId, fromAddr: tr.from, toAddr: tr.to, qty, kind: 'TRANSFERENCIA', reason, authUser: auth });
+  const fromDoca = tr.from === DOCA, auth = fromDoca ? null : await askAuth('Transferência de ' + qty + ' un de ' + tr.from + ' para ' + tr.to + '.'); if (!fromDoca && !auth) return;
+  const mv = await storeStock(user, { lotId: tr.lotId, fromAddr: tr.from, toAddr: tr.to, qty, kind: fromDoca ? 'ARMAZENAGEM' : 'TRANSFERENCIA', reason, authUser: auth, scans: [{ step: 'origem', value: tr.from, ok: true }] });
   ui.tr = null; render({ reset: true }); toast('Transferido: ' + nf(mv.qty) + ' un de ' + mv.fromAddr + ' para ' + mv.toAddr + '.', 'ok');
 };
 /* ===== UI: separação, saídas, inventário, estoque, histórico, cadastros, relatórios, config ===== */
@@ -2019,11 +2023,18 @@ const liveSel = (g, k, id, v, list) => '<select id="' + id + '" data-live="' + g
 const ordBadge = s => badge(s, { 'Aberto': 'info', 'Em separação': 'warn', 'Separado': 'ok', 'Encaminhado': 'ok', 'Cancelado': 'muted', 'Sem estoque': 'bad' }[s] || 'muted');
 const mvBadge = t => badge(t, { RECEBIMENTO: 'info', ARMAZENAGEM: 'ok', TRANSFERENCIA: 'ok', SEPARACAO: 'warn', SAIDA: 'bad', AJUSTE: 'muted', ESTORNO: 'bad' }[t] || 'muted');
 const addrName = a => a === DOCA ? 'Doca' : a || '—';
+function originChips(flow) {
+  const by = {}; Object.values(S.stock).forEach(r => { if (r.qty > 0) { by[r.addr] = by[r.addr] || { qty: 0, prods: new Set() }; by[r.addr].qty += r.qty; by[r.addr].prods.add(r.productId); } });
+  const list = Object.keys(by).sort((a, b) => (a === DOCA ? -1 : b === DOCA ? 1 : a.localeCompare(b)));
+  if (!list.length) return '<p class="muted">Nenhum endereço com saldo no momento.</p>';
+  return '<p class="muted" style="margin:10px 0 6px">Ou toque no local de origem (a doca não tem código de barras):</p><div class="chips">' + list.slice(0, 40).map(a => '<button type="button" class="chip" data-act="pickorig" data-flow="' + flow + '" data-addr="' + esc(a) + '">' + (a === DOCA ? '<b>Doca de recebimento</b>' : esc(a)) + ' · ' + nf(by[a].qty) + ' un</button>').join('') + '</div>';
+}
+Act.pickorig = t => { const f = t.dataset.flow, a = t.dataset.addr; if (f === 'tr') ui.tr.from = a; else ui.ex.from = a; render({ reset: true }); };
 
 /* ---- separação ---- */
 View.separacao = () => {
   const tabs = []; if (can(user, 'pick') || can(user, 'orders')) tabs.push(['sep', 'Separar']); if (can(user, 'orders')) tabs.push(['ped', 'Pedidos']);
-  let h = pageHead('Separação de pedidos', 'A separação segue o FEFO: o lote que vence primeiro sai primeiro. Cada passo é validado por bipagem.');
+  let h = pageHead('Separar', 'O lote que vence primeiro sai primeiro (FEFO). Bipe e confirme.');
   if (tabs.length > 1) h += tabsHTML('sep', tabs, tabs[0][0]);
   return h + (curTab('sep', tabs[0][0]) === 'ped' && can(user, 'orders') ? pedidosTab() : separarTab());
 };
@@ -2132,7 +2143,7 @@ View.saidas = () => {
   let h = pageHead('Saídas de estoque', 'Saídas por pedido acontecem na Separação. Aqui ficam transferência para outra unidade, devolução ao fornecedor, avaria, descarte e outras baixas autorizadas.');
   h += card('Tipo de saída', field('Tipo', liveSel('ex', 'type', 'ex_type', ex.type, Object.entries(EXIT_TYPES))), '<button class="btn ghost" data-act="exreset">Recomeçar</button>');
   h += steps([{ n: 1, t: 'Endereço de origem', done: !!ex.from, cur: !ex.from, val: ex.from || '' }, { n: 2, t: 'Produto', done: !!p, cur: !!ex.from && !p, val: p ? p.name : '' }, { n: 3, t: 'Lote', done: !!ex.lotId, cur: !!p && !ex.lotId, val: ex.lotId ? S.lots[ex.lotId].lotNo : '' }, { n: 4, t: 'Quantidade, motivo e autorização', cur: !!ex.lotId }]);
-  if (!ex.from) h += card('1. Bipe o endereço de origem', scanField('ex', 'from', 'Endereço de origem'));
+  if (!ex.from) h += card('1. Bipe o endereço de origem', scanField('ex', 'from', 'Endereço de origem') + originChips('ex'));
   else if (!p) h += card('2. Bipe o produto em ' + esc(ex.from), scanField('ex', 'prod', 'Código de barras do produto'));
   else if (!ex.lotId) h += card('3. Escolha o lote', '<form data-form="exlot">' + field('Lote', '<select id="ex_lot">' + lotRows.map(r => '<option value="' + esc(r.lotId) + '">' + esc(S.lots[r.lotId].lotNo) + ' · val. ' + fmtD(S.lots[r.lotId].expiry) + ' · ' + lotState(S.lots[r.lotId]) + ' · ' + nf(freeQty(r)) + ' un livres</option>').join('') + '</select>') + '<button class="btn">Continuar</button></form>');
   else { const row = getRow(ex.lotId, ex.from); h += card('4. Quantidade e justificativa', '<form data-form="exconfirm" class="grid2">' + field('Quantidade', '<input id="ex_qty" type="number" min="1" max="' + freeQty(row) + '" step="1" required data-autofocus>', 'Livres: ' + nf(freeQty(row))) + field('Justificativa', '<input id="ex_reason" required>') + '<div class="full"><button class="btn lg">Confirmar e autorizar</button></div></form>'); }
@@ -2213,7 +2224,7 @@ Act.ivapprove = async t => {
 Act.ivreject = async t => { const a = await askAuth('Solicitar nova contagem deste endereço.'); if (!a) return; await rejectCount(user, t.dataset.id, a); render(); toast('Recontagem solicitada.', 'info'); };
 
 /* ---- estoque ---- */
-View.estoque = () => {
+View.estoqueSaldo = () => {
   const q = norm(ui.est.q || '');
   let h = pageHead('Consulta de estoque', 'Saldo por produto, lote, endereço e validade.') + tabsHTML('est', [['prod', 'Por produto'], ['lot', 'Por lote'], ['addr', 'Por endereço'], ['val', 'Por validade']], 'prod');
   h += card('', field('Buscar', liveIn('est', 'q', 'es_q', ui.est.q, 'Produto, código, EAN, lote ou endereço')));
@@ -2537,29 +2548,33 @@ function coverageRows(demandId) {
   Object.values(S.demands).filter(d => d.status === 'aberta' && (!demandId || d.id === demandId)).forEach(d => d.lines.forEach(l => {
     const p = l.productId ? S.products[l.productId] : resolveProduct(l.code), pid = p ? p.id : null, key = pid || 'COD:' + norm(l.code);
     if (!by.has(key)) by.set(key, { key, pid, code: l.code, name: l.desc || (p && p.name) || l.code, need: 0, ords: 0, bills: new Set() });
-    const x = by.get(key); x.need += l.expected; x.ords += (l.ords || []).length; (l.bills || []).forEach(b => x.bills.add(b));
+    const x = by.get(key); x.need += l.expected; x.ords += (l.ords || []).length; (l.bills || []).forEach(b => x.bills.add(b)); x.since = !x.since || d.importedAt < x.since ? d.importedAt : x.since;
   }));
+  const mv = Object.values(S.moves);
   return [...by.values()].map(x => {
-    const a = x.pid ? availOf(x.pid) : { lib: 0, quar: 0, bloq: 0, venc: 0, doca: 0 }, falta = Math.max(0, x.need - a.lib);
+    const a = x.pid ? availOf(x.pid) : { lib: 0, quar: 0, bloq: 0, venc: 0, doca: 0 };
+    const rec = x.pid ? mv.filter(m => m.productId === x.pid && m.type === 'RECEBIMENTO' && m.ts >= x.since).reduce((s, m) => s + m.qty, 0) : 0;
+    const saiu = x.pid ? mv.filter(m => m.productId === x.pid && (m.type === 'SAIDA' || m.type === 'SEPARACAO') && m.ts >= x.since).reduce((s, m) => s + m.qty, 0) : 0;
+    x.rest = Math.max(0, x.need - saiu); const falta = Math.max(0, x.rest - a.lib);
     let st = 'ok', label = 'Atendida';
     if (!x.pid) { st = 'bad'; label = 'Sem cadastro'; }
-    else if (falta > 0 && a.lib + a.quar >= x.need) { st = 'warn'; label = 'Depende de liberação'; }
+    else if (falta > 0 && a.lib + a.quar >= x.rest) { st = 'warn'; label = 'Depende de liberação'; } else if (x.rest === 0) { label = 'Já expedida'; }
     else if (falta > 0) { st = 'bad'; label = a.lib + a.quar > 0 ? 'Estoque insuficiente' : 'Sem estoque'; }
-    return Object.assign(x, a, { falta, st, label, bills: [...x.bills].sort() });
+    return Object.assign(x, a, { rec, saiu, falta, st, label, bills: [...x.bills].sort() });
   }).sort((p, q) => (q.falta - p.falta) || p.name.localeCompare(q.name));
 }
 function coverageData() {
   const f = ui.f, all = coverageRows(f.cobDem || ''), rows = f.cobSt ? all.filter(r => r.st === f.cobSt) : all;
-  return { all, rows, rep: { title: 'Cobertura da demanda', sub: 'Demanda aberta x estoque liberado em ' + fmtD(todayStr()), cols: ['Código', 'Produto', 'Faturamento', 'Pedidos', 'Necessário', 'Liberado', 'Em quarentena', 'Bloqueado', 'Vencido', 'Falta', 'Situação'], rows: rows.map(r => [r.code, r.name, r.bills.map(fmtD).join(', '), r.ords, r.need, r.lib, r.quar, r.bloq, r.venc, r.falta, r.label]) } };
+  return { all, rows, rep: { title: 'Cobertura da demanda', sub: 'Demanda aberta x estoque liberado em ' + fmtD(todayStr()), cols: ['Código', 'Produto', 'Faturamento', 'Pedidos', 'Necessário', 'Recebido', 'Já saiu', 'Liberado', 'Em quarentena', 'Bloqueado', 'Vencido', 'Falta', 'Situação'], rows: rows.map(r => [r.code, r.name, r.bills.map(fmtD).join(', '), r.ords, r.need, r.rec, r.saiu, r.lib, r.quar, r.bloq, r.venc, r.falta, r.label]) } };
 }
 View.cobertura = () => {
   const f = ui.f, { all, rows } = coverageData(), open = Object.values(S.demands).filter(d => d.status === 'aberta').sort((a, b) => b.importedAt.localeCompare(a.importedAt));
   const n = st => all.filter(r => r.st === st).length, need = all.reduce((s, r) => s + r.need, 0), falta = all.reduce((s, r) => s + r.falta, 0);
-  let h = pageHead('Cobertura da demanda', 'O que a demanda aberta precisa x o que existe liberado no estoque agora. Mostra o que depende de liberação de lote e o que está em falta.', can(user, 'reports') ? '<button class="btn ghost" data-act="cobx">Excel</button><button class="btn ghost" data-act="cobp">PDF</button>' : '');
+  let h = pageHead('Cobertura da demanda', 'O que a demanda aberta precisa x o que já entrou (recebimento), já saiu (separação e saídas) e o que está liberado no estoque agora. Mostra o que depende de liberação de lote e o que está em falta.', can(user, 'reports') ? '<button class="btn ghost" data-act="cobx">Excel</button><button class="btn ghost" data-act="cobp">PDF</button>' : '');
   h += card('Filtros', '<form class="filters" data-form="cobf">' + field('Demanda', '<select id="cb_dem"><option value="">Todas as abertas</option>' + open.map(d => '<option value="' + esc(d.id) + '"' + (d.id === f.cobDem ? ' selected' : '') + '>' + esc(d.id + ' · ' + d.fileName) + '</option>').join('') + '</select>') +
     field('Situação', '<select id="cb_st">' + opts([['', 'Todas'], ['ok', 'Atendidas'], ['warn', 'Dependem de liberação'], ['bad', 'Em falta / sem cadastro']], f.cobSt || '') + '</select>') + '<div class="fa"><button class="btn">Aplicar</button></div></form>');
   h += '<div class="kgrid">' + kpiT('Produtos na demanda', nf(all.length), nf(need) + ' un necessárias') + kpiT('Atendidos', nf(n('ok')), 'com estoque liberado') + kpiT('Dependem de liberação', nf(n('warn')), 'cobertos se a quarentena for liberada', n('warn') ? 'warn' : '') + kpiT('Em falta', nf(n('bad')), nf(falta) + ' un a menos do que o necessário', n('bad') ? 'bad' : '') + '</div>';
-  h += card('Produtos (' + rows.length + ')', tbl(['Produto', 'Faturamento', 'Pedidos', 'Necessário', 'Liberado', 'Quarentena', 'Bloq./vencido', 'Falta', 'Situação'], rows.map(r => [esc(r.code) + '<br><span class="muted">' + esc(r.name) + '</span>', esc(r.bills.map(fmtD).join(', ') || '—'), nf(r.ords), nf(r.need), nf(r.lib), nf(r.quar), nf(r.bloq + r.venc), r.falta ? '<b class="neg">' + nf(r.falta) + '</b>' : '0', badge(r.label, r.st)]), { num: [2, 3, 4, 5, 6, 7], empty: open.length ? 'Nenhum produto neste filtro.' : 'Não há demanda aberta. Importe o Excel em Recebimento.' }));
+  h += card('Produtos (' + rows.length + ')', tbl(['Produto', 'Faturamento', 'Pedidos', 'Necessário', 'Recebido', 'Já saiu', 'Liberado', 'Quarentena', 'Falta', 'Situação'], rows.map(r => [esc(r.code) + '<br><span class="muted">' + esc(r.name) + '</span>', esc(r.bills.map(fmtD).join(', ') || '—'), nf(r.ords), nf(r.need), nf(r.rec), nf(r.saiu), nf(r.lib), nf(r.quar), r.falta ? '<b class="neg">' + nf(r.falta) + '</b>' : '0', badge(r.label, r.st)]), { num: [2, 3, 4, 5, 6, 7, 8], empty: open.length ? 'Nenhum produto neste filtro.' : 'Não há demanda aberta. Importe o Excel em Recebimento.' }));
   return h;
 };
 Forms.cobf = () => { ui.f.cobDem = $('#cb_dem').value; ui.f.cobSt = $('#cb_st').value; render(); };
@@ -2593,6 +2608,152 @@ function makeFbDb() {
 
 /* ---- inicialização (só depois do cadeado da Estante liberar) ---- */
 let booted = false;
+/* ===== v2: app enxuto. Seis áreas, fluxos de uma tela. O motor (saldo, lote, FEFO, autorização, histórico) é o mesmo. ===== */
+const VIEW_ALIAS = {
+  armazenagem: ['mover', null], saidas: ['mover', 'baixa'],
+  liberacao: ['estoque', 'lib'], cobertura: ['estoque', 'cob'], painel: ['estoque', 'painel'],
+  inventario: ['mais', 'inv'], historico: ['mais', 'hist'], cadastros: ['mais', 'cad'], relatorios: ['mais', 'rel'], config: ['mais', 'cfg']
+};
+function resolveView(h) {
+  const a = VIEW_ALIAS[h]; if (!a) return h;
+  if (a[0] === 'estoque') ui.tabs.estq = a[1]; else if (a[0] === 'mais') ui.tabs.mais = a[1]; else if (a[1]) { ui.mv = Object.assign(ui.mv || {}, { mode: a[1], rowId: null, to: null, cands: null }); }
+  return a[0];
+}
+const embedView = fn => { ui.embed = true; try { return fn(); } finally { ui.embed = false; } };
+const moreCard = (title, body) => '<details class="card more"><summary><b>' + esc(title) + '</b></summary>' + body + '</details>';
+function composite(group, title, sub, list) {
+  list = list.filter(x => x[2].split('|').some(p => can(user, p)));
+  if (!list.length) return pageHead(title) + empty('Sem acesso a esta área.');
+  let cur = ui.tabs[group]; if (!list.find(x => x[0] === cur)) cur = ui.tabs[group] = list[0][0];
+  return pageHead(title, sub) + (list.length > 1 ? tabsHTML(group, list.map(x => [x[0], x[1]]), cur) : '') + embedView(list.find(x => x[0] === cur)[3]);
+}
+View.estoque = () => composite('estq', 'Estoque', 'Saldo, liberação de lotes, cobertura da demanda e painel.', [
+  ['saldo', 'Saldo', 'view', View.estoqueSaldo], ['lib', 'Liberar lotes', 'lots', View.liberacao], ['cob', 'Cobertura da demanda', 'view', View.cobertura], ['painel', 'Painel', 'dash', View.painel]]);
+View.mais = () => composite('mais', 'Mais', 'Inventário, histórico, cadastros, relatórios e configurações.', [
+  ['inv', 'Inventário', 'count|approve', View.inventario], ['hist', 'Histórico', 'history', View.historico], ['cad', 'Cadastros', 'cad', View.cadastros], ['rel', 'Relatórios', 'reports', View.relatorios], ['cfg', 'Configurações', 'cfg', View.config]]);
+
+/* ---- Início: a fila do dia ---- */
+View.inicio = () => {
+  const dock = Object.values(S.stock).filter(r => r.addr === DOCA && r.qty > 0).length;
+  const openD = Object.values(S.demands).filter(d => d.status === 'aberta').length;
+  const openO = Object.values(S.orders).filter(o => o.status === 'Aberto' || o.status === 'Em separação').length;
+  const qtyBy = {}; Object.values(S.stock).forEach(r => { qtyBy[r.lotId] = (qtyBy[r.lotId] || 0) + r.qty; });
+  const quar = Object.values(S.lots).filter(l => l.status === 'quarentena' && daysUntil(l.expiry) >= 0 && (qtyBy[l.id] || 0) > 0).length;
+  let falta = 0; try { falta = coverageRows('').filter(r => r.st === 'bad').length; } catch (e) { falta = 0; }
+  const occ = Object.values(S.occurrences).filter(o => o.status === 'aberta').length;
+  const items = [
+    ['recebimento', null, 'Receber', 'demanda(s) para conferir', openD, 'receive'],
+    ['mover', null, 'Guardar da doca', 'item(ns) esperando na doca', dock, 'store'],
+    ['separacao', null, 'Separar', 'pedido(s) em aberto', openO, 'pick|orders'],
+    ['liberacao', null, 'Liberar lotes', 'lote(s) em quarentena', quar, 'lots'],
+    ['cobertura', null, 'Faltas na demanda', 'produto(s) sem cobertura', falta, 'view'],
+    ['historico', 'occ', 'Ocorrências', 'em aberto', occ, 'history']
+  ].filter(t => t[5].split('|').some(p => can(user, p))).sort((a, b) => (b[4] > 0) - (a[4] > 0));
+  const pend = items.filter(t => t[4] > 0).length;
+  let h = pageHead('Olá, ' + user.name.split(' ')[0], pend ? 'O que precisa de você agora.' : 'Tudo em dia por aqui.');
+  if (can(user, 'view')) h += '<form class="qsearch" data-form="inisearch"><input id="ini_q" placeholder="Onde está? Digite produto, lote ou endereço" autocomplete="off"><button class="btn">Buscar</button></form>';
+  h += '<div class="tiles">' + items.map(t => '<a class="tile' + (t[4] ? '' : ' zero') + '" href="#' + t[0] + '" data-act="go" data-view="' + t[0] + '"' + (t[1] ? ' data-tab="' + t[1] + '"' : '') + '><span class="tl">' + esc(t[2]) + '</span><strong>' + nf(t[4]) + '</strong><small>' + (t[4] ? esc(t[3]) : 'em dia') + '</small></a>').join('') + '</div>';
+  return h;
+};
+Forms.inisearch = () => { ui.est.q = $('#ini_q').value.trim(); ui.tabs.estq = 'saldo'; ui.view = 'estoque'; location.hash = '#estoque'; render({ reset: true }); };
+
+/* ---- Mover: guardar, transferir e dar baixa numa tela só ---- */
+const mvState = () => ui.mv || (ui.mv = { mode: 'mover' });
+const mvOrder = (x, y) => (x.addr === DOCA ? 0 : 1) - (y.addr === DOCA ? 0 : 1) || fefoCmp(x, y);
+function mvFind(v) {
+  const p = resolveProduct(v);
+  if (p) return { kind: 'prod', p, rows: Object.values(S.stock).filter(r => r.productId === p.id && freeQty(r) > 0).sort(mvOrder) };
+  const a = getAddr(v);
+  if (a) return { kind: 'addr', a, rows: rowsAt(a.id).filter(r => freeQty(r) > 0).sort(mvOrder) };
+  return null;
+}
+const mvTable = rows => tbl(['Produto', 'Lote', 'Validade', 'Onde', 'Livre', ''], rows.slice(0, 60).map(r => { const l = S.lots[r.lotId]; return [esc(prodName(r.productId)), esc(l.lotNo) + ' ' + lotBadge(l), fmtD(l.expiry), r.addr === DOCA ? '<b>Doca</b>' : esc(r.addr), nf(freeQty(r)), '<button class="btn sm" data-act="mvpick" data-id="' + esc(r.id) + '">Usar</button>']; }), { num: [4], empty: 'Nada por aqui.' });
+function mvSelect(r) { const mv = mvState(); mv.rowId = r.id; mv.to = null; mv.cands = null; render({ reset: true }); beep('ok'); }
+function mvChips() {
+  const by = {}; Object.values(S.stock).forEach(r => { if (freeQty(r) > 0) by[r.addr] = (by[r.addr] || 0) + r.qty; });
+  const list = Object.keys(by).sort((a, b) => (a === DOCA ? -1 : b === DOCA ? 1 : a.localeCompare(b)));
+  return list.length ? '<div class="chips">' + list.slice(0, 60).map(a => '<button type="button" class="chip" data-act="mvfrom" data-addr="' + esc(a) + '">' + (a === DOCA ? '<b>Doca</b>' : esc(a)) + ' · ' + nf(by[a]) + ' un</button>').join('') + '</div>' : '<p class="muted">Nenhum endereço com saldo.</p>';
+}
+View.mover = () => {
+  const mv = mvState(), cS = can(user, 'store'), cX = can(user, 'exit');
+  if (mv.mode === 'baixa' && !cX) mv.mode = 'mover'; if (mv.mode !== 'baixa' && !cS && cX) mv.mode = 'baixa';
+  const baixa = mv.mode === 'baixa';
+  let h = pageHead('Mover', baixa ? 'Dar baixa: avaria, descarte, devolução ou transferência para outra unidade.' : 'Guardar da doca ou mudar de endereço. Bipe o produto e siga.');
+  if (cS && cX) h += '<div class="seg" role="tablist">' + [['mover', 'Guardar / mover'], ['baixa', 'Dar baixa']].map(([id, t]) => '<button class="seg-b' + (mv.mode === id ? ' on' : '') + '" role="tab" aria-selected="' + (mv.mode === id) + '" data-act="mvmode" data-m="' + id + '">' + t + '</button>').join('') + '</div>';
+  const row = mv.rowId && S.stock[mv.rowId];
+  if (row && freeQty(row) > 0) return h + mvTicket(row, baixa);
+  mv.rowId = null;
+  h += card('', scanField('mv', 'x', baixa ? 'Bipe o produto que sai (ou o endereço)' : 'Bipe o produto (ou o endereço de onde ele sai)'), '', 'scancard');
+  if (mv.cands) h += card(mv.cands.title, mvTable(mv.cands.ids.map(i => S.stock[i]).filter(r => r && freeQty(r) > 0)));
+  const dock = Object.values(S.stock).filter(r => r.addr === DOCA && freeQty(r) > 0).sort(mvOrder);
+  h += card('Na doca (' + dock.length + ')', dock.length ? mvTable(dock) : '<p class="muted">Nada esperando na doca.</p>');
+  h += moreCard('Escolher pelo local de origem', '<p class="muted">Toque no local de onde o produto sai.</p>' + mvChips());
+  return h;
+};
+function mvTicket(row, baixa) {
+  const mv = mvState(), lot = S.lots[row.lotId], p = S.products[row.productId], fromDoca = row.addr === DOCA, free = freeQty(row);
+  const info = '<p><b>' + esc(p.name) + '</b></p><p class="muted">Lote ' + esc(lot.lotNo) + ' · val. ' + fmtD(lot.expiry) + ' · em ' + (fromDoca ? 'Doca' : esc(row.addr)) + ' · ' + nf(free) + ' un livres</p><div class="row">' + lotBadge(lot) + ' ' + expBadge(lot.expiry) + '</div>';
+  let f = field('Quantidade', '<input id="mv_qty" type="number" min="1" max="' + free + '" step="1" value="' + free + '" inputmode="numeric" required>', 'Padrão: tudo.');
+  if (baixa) {
+    f += field('Tipo de baixa', '<select id="mv_type">' + opts(Object.entries(EXIT_TYPES), 'AVARIA_DESCARTE') + '</select>') + field('Motivo', '<input id="mv_reason" required data-autofocus>', '', 'full') +
+      '<div class="full"><button class="btn lg">Dar baixa e autorizar</button></div>';
+  } else {
+    f += mv.to ? field('Destino', '<div class="row"><b>' + esc(mv.to) + '</b><button type="button" class="btn ghost sm" data-act="mvto">Trocar</button></div>')
+      : '<div class="full">' + scanField('mv', 'to', 'Bipe o endereço de destino', 'Endereço (ex.: R01-E02-P03-N01)') + (p.allowed.length ? '<p class="muted">Permitidos para este produto: ' + esc(p.allowed.join(', ')) + '</p>' : '') + '</div>';
+    if (!fromDoca) f += field('Motivo da transferência', '<input id="mv_reason" required' + (mv.to ? ' data-autofocus' : '') + '>', '', 'full');
+    f += '<div class="full"><button class="btn lg">' + (fromDoca ? 'Guardar' : 'Mover e autorizar') + '</button>' + (fromDoca && !mv.to ? '<span class="muted"> Bipou o endereço, guardou.</span>' : '') + '</div>';
+  }
+  return card('', info, '<button class="btn ghost" data-act="mvreset">Trocar produto</button>') + '<form class="card ticket" data-form="mvgo"><div class="grid2">' + f + '</div></form>';
+}
+Scan.mv = async (v, name) => {
+  const mv = mvState();
+  if (name === 'to') return mvScanTo(v);
+  const f = mvFind(v);
+  if (!f) fail('Código não encontrado: ' + v + '. Bipe um produto cadastrado ou um endereço.');
+  if (!f.rows.length) fail(f.kind === 'prod' ? 'Não há ' + f.p.name + ' com saldo livre.' : 'Não há saldo livre em ' + addrName(f.a.id) + '.');
+  if (f.rows.length === 1) return mvSelect(f.rows[0]);
+  mv.cands = { title: f.kind === 'prod' ? f.p.name + ': escolha de onde sai' : 'Em ' + addrName(f.a.id) + ': escolha o produto', ids: f.rows.map(r => r.id) };
+  render({ reset: true });
+};
+async function mvScanTo(v) {
+  const mv = mvState(), row = S.stock[mv.rowId]; if (!row) return;
+  const a = getAddr(v); if (!a) fail('Endereço não existe: ' + norm(v));
+  if (a.id === row.addr) fail('Origem e destino são iguais.');
+  const bad = destCheck(row.lotId, v); if (bad) fail(bad);
+  mv.to = a.id;
+  if (row.addr === DOCA) return mvGo();
+  render();
+}
+async function mvGo() {
+  const mv = mvState(), row = mv.rowId && S.stock[mv.rowId]; if (!row) fail('Escolha o produto primeiro.');
+  const qty = Number($('#mv_qty').value); if (!Number.isInteger(qty) || qty < 1) fail('Informe a quantidade.');
+  if (qty > freeQty(row)) fail('Só há ' + nf(freeQty(row)) + ' un livres aqui.');
+  const rs = $('#mv_reason'), reason = rs ? rs.value.trim() : '', fromDoca = row.addr === DOCA;
+  if (mv.mode === 'baixa') {
+    const type = $('#mv_type').value; if (!reason) fail('Informe o motivo da baixa.');
+    const auth = await askAuth(EXIT_TYPES[type] + ': ' + qty + ' un. Baixa manual exige autorização.'); if (!auth) return;
+    const m = await exitStock(user, { type, lotId: row.lotId, fromAddr: row.addr, qty, reason, authUser: auth, scans: [{ step: 'origem', value: row.addr, ok: true }] });
+    return mvDone('Baixa registrada: ' + nf(m.qty) + ' un do lote ' + m.lotNo + '.');
+  }
+  if (!mv.to) fail('Bipe o endereço de destino.');
+  const bad = destCheck(row.lotId, mv.to); if (bad) fail(bad);
+  let auth = null;
+  if (!fromDoca) { if (!reason) fail('Informe o motivo da transferência.'); auth = await askAuth('Transferência de ' + qty + ' un de ' + row.addr + ' para ' + mv.to + '.'); if (!auth) return; }
+  const m = await storeStock(user, { lotId: row.lotId, fromAddr: row.addr, toAddr: mv.to, qty, kind: fromDoca ? 'ARMAZENAGEM' : 'TRANSFERENCIA', reason, authUser: auth, scans: [{ step: 'origem', value: row.addr, ok: true }, { step: 'destino', value: mv.to, ok: true }] });
+  mvDone((fromDoca ? 'Guardado: ' : 'Movido: ') + nf(m.qty) + ' un em ' + m.toAddr + '.');
+}
+function mvDone(msg) { const mode = mvState().mode; ui.mv = { mode }; render({ reset: true }); toast(msg, 'ok'); }
+Forms.mvgo = () => mvGo();
+Act.mvmode = t => { ui.mv = { mode: t.dataset.m }; render({ reset: true }); };
+Act.mvpick = t => { const r = S.stock[t.dataset.id]; if (r) mvSelect(r); };
+Act.mvreset = () => { ui.mv = { mode: mvState().mode }; render({ reset: true }); };
+Act.mvto = () => { mvState().to = null; render({ reset: true }); };
+Act.mvfrom = t => {
+  const a = t.dataset.addr, rows = rowsAt(a).filter(r => freeQty(r) > 0).sort(mvOrder); if (!rows.length) fail('Não há saldo livre em ' + addrName(a) + '.');
+  if (rows.length === 1) return mvSelect(rows[0]);
+  mvState().cands = { title: 'Em ' + addrName(a) + ': escolha o produto', ids: rows.map(r => r.id) }; render({ reset: true });
+};
+
 async function boot() {
   if (booted) return; booted = true;
   $('#app').innerHTML = '<main class="login"><div class="lg"><h1>Carregando…</h1></div></main>';
