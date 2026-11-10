@@ -1461,14 +1461,14 @@ var rastroUpdates=(function(){
 var pedidosRef=null, pedidosCallback=null, authVersion=0, atualizacaoController=null;
 async function buscarAtualizacao(idToken){
   var controller=new AbortController();atualizacaoController=controller;
-  var timeout=setTimeout(function(){controller.abort();},45000);
+  var timeout=setTimeout(function(){controller.abort();},58000);
   try{
     var response=await fetch('https://central-de-apps.vercel.app/api/atualizar-rastreio',{headers:{Authorization:'Bearer '+idToken},signal:controller.signal});
     var data;
     try{data=await response.json();}catch(e){if(controller.signal.aborted)throw e;throw new Error('O serviço retornou uma resposta inválida (HTTP '+response.status+').');}
     if(!data||typeof data!=='object')throw new Error('O serviço retornou uma resposta vazia.');
     return {resposta:response,dados:data};
-  }catch(e){if(controller.signal.aborted)throw new Error('A atualização foi interrompida ou excedeu 45 segundos. Tente novamente.');throw e;}
+  }catch(e){if(controller.signal.aborted)throw new Error('A consulta aos Correios demorou demais (mais de 58 segundos). Clique em Atualizar agora de novo: ele continua de onde parou.');throw e;}
   finally{clearTimeout(timeout);if(atualizacaoController===controller)atualizacaoController=null;}
 }
 function pararEscutaPedidos(){if(pedidosRef&&pedidosCallback)pedidosRef.off('value',pedidosCallback);pedidosRef=null;pedidosCallback=null;}
