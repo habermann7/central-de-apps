@@ -1307,7 +1307,7 @@ function subscribeAll(db) {
         const m = {}; snap.docs.forEach(d => { m[d.id] = d.data(); }); S[c] = m;
         if (c === 'users' && !snap.metadata.fromCache) Env.usersConfirmed = true;
         if (first) { first = false; done(); } else softRender();
-      }, err => { if (first) { first = false; done(); } console.warn('db', c, err && err.code); });
+      }, err => { if (first) { first = false; done(); } Env.denied = (err && err.code) || 'erro'; console.warn('db', c, err && err.code); });
     });
   });
 }
@@ -2599,6 +2599,7 @@ async function boot() {
   try {
     const db = makeFbDb(); Env.mode = 'db'; Env.db = db; Env.usersConfirmed = false; setStore(dbStore(db));
     await subscribeAll(db); Env.usersConfirmed = true;
+    if (Env.denied) throw new Error('O banco recusou a leitura (' + Env.denied + '). Isso acontece quando as regras do Firebase ainda não foram publicadas ou quando o seu usuário não está no grupo do app dentro da Estante. Avise o administrador da Estante.');
     await estanteLogin();
     if (user) { ui.view = (location.hash || '').slice(1) || ''; try { await logAudit(user, 'LOGIN', ''); } catch (e) { /* ignora */ } routeFromHash(); }
   } catch (e) {
