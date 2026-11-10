@@ -188,13 +188,25 @@
     "category": "Equivalência"
   },
   {
-    "title": "BOOK CIENTIFICO",
-    "description": "teste",
+    "title": "Book científico",
+    "description": "Portfólio de ativos, estratégia de busca e artigos com anexos",
     "file": "Book_Cientifico.html",
-    "icon": "🧩",
+    "icon": "📚",
     "color": "#4d9fff",
     "grupos": [
       "EQUIVALENCIA"
-    ]
+    ],
+    "category": "Equivalência"
+  },
+  {
+    "title": "Controle de Estoque",
+    "description": "Recebimento, liberação de lotes, FEFO, inventário e cobertura da demanda",
+    "file": "Controle_de_Estoque.html",
+    "icon": "📦",
+    "color": "#4E8368",
+    "grupos": [
+      "EXPEDIÇÃO"
+    ],
+    "category": "Expedição"
   }
 ]
