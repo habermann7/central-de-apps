@@ -6,7 +6,7 @@
 <title>Book científico</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230F5257' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'%3E%3Cpath d='M9 3H4v18h5M7 3v18M4 7h3M4 17h3M9 12h3m5-6 5 3v6l-5 3-5-3V9z'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230F5257' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'%3E%3Cstyle%3E%40media%20(prefers-color-scheme%3Adark)%7Bsvg%7Bstroke%3A%234FA3A8%7D%7D%3C/style%3E%3Cpath d='M9 3H4v18h5M7 3v18M4 7h3M4 17h3M9 12h3m5-6 5 3v6l-5 3-5-3V9z'/%3E%3C/svg%3E">
 <style>
 /* ===== ESTANTE · PADRÃO VISUAL (v1 · nov/2026) ===== */
 :root{
@@ -60,8 +60,7 @@ a{color:var(--est-accent)}
 /* campos: parecem documento, não formulário */
 input,select,textarea{width:100%;background:transparent;border:1px solid transparent;border-bottom-color:var(--rule);border-radius:0;padding:7px 2px;font-size:14.5px;transition:border-color .12s,background .12s}
 input:hover,select:hover,textarea:hover{border-bottom-color:var(--est-faint)}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--est-accent);background:var(--est-accent-bg);border-radius:var(--est-r-sm);padding-left:8px;padding-right:8px}
-input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--book-brand);outline-offset:2px}
+input:focus,select:focus,textarea:focus{border-color:var(--est-accent);background:var(--est-accent-bg);border-radius:var(--est-r-sm);padding-left:8px;padding-right:8px}
 textarea{resize:vertical;min-height:78px;line-height:1.55}
 select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%23989' stroke-width='1.6'%3E%3Cpath d='m1 1 4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 4px center;padding-right:20px}
 ::placeholder{color:var(--est-faint)}
@@ -112,7 +111,7 @@ table.idx{width:100%;border-collapse:collapse}
 .cover .no{font:600 11px/1 var(--est-mono);letter-spacing:.12em;color:var(--book-brand-ink);display:flex;align-items:center;gap:7px}
 .cover .no::before{content:"";width:14px;height:2px;background:var(--book-amber);flex:none}
 .cover h3{margin:6px 0 0;font:700 19px/1.2 var(--book-serif);letter-spacing:-.015em;overflow-wrap:anywhere}
-.cover .meta{font-size:12.5px;color:var(--est-mut)}
+.cover .meta{font-size:12.5px;color:var(--est-mut);min-width:0;max-width:100%;overflow-wrap:anywhere;white-space:normal}
 .cover .foot{margin-top:auto;display:grid;gap:8px;font-size:12px;color:var(--est-mut)}
 .cover.add{border:1px dashed var(--est-faint);background:transparent;align-items:center;justify-content:center;text-align:center;color:var(--est-mut)}
 .cover.add::before,.cover.add::after{display:none}
@@ -136,6 +135,17 @@ table.idx{width:100%;border-collapse:collapse}
 .chip{display:inline-flex;align-items:center;gap:6px;background:var(--soft);border:1px solid var(--rule);border-radius:4px;padding:3px 4px 3px 9px;font:500 12.5px var(--est-mono)}
 .chip button{border:0;background:none;width:18px;height:18px;line-height:1;font-size:14px;color:var(--est-faint);padding:0;border-radius:3px}.chip button:hover{background:var(--rule);color:var(--est-ink)}
 .and{font:500 10px var(--est-mono);color:var(--est-faint);letter-spacing:.08em}
+.filtro-bloco{min-width:0}
+.filtro-bloco .chips{margin-bottom:6px}
+.filtro-bloco .chip{max-width:100%;overflow-wrap:anywhere}
+.filtro-bloco .chip button{flex:none}
+.filtro-and{display:flex;align-items:center;gap:10px;margin:12px 0}
+.filtro-and::before,.filtro-and::after{content:"";height:1px;background:var(--rule);flex:1}
+.filtro-novo{margin:12px 0}
+.vias-campo{min-width:0}
+.vias-campo .chip{max-width:100%;overflow-wrap:anywhere}
+.vias-campo .chip button{flex:none}
+@media(max-width:560px){.filtro-bloco .row>input,.vias-campo .row>input{flex-basis:100%;min-width:0;width:100%}}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .row>input{flex:1;min-width:130px}
 .query{font:400 12.5px/1.55 var(--est-mono);background:var(--soft);border-left:3px solid var(--book-brand);padding:9px 12px;color:var(--est-ink);overflow-wrap:anywhere;margin:0 0 10px}
@@ -239,7 +249,11 @@ table.idx{width:100%;border-collapse:collapse}
 (function(){
 'use strict';
 /* ===== dados (Firebase Realtime Database, caminho próprio: bookCientifico) =====
-   bookCientifico/ativos/{id}  → nome, apresentacao, descricao, via, filtro[], encontrados, artigos{aid:{titulo,ano,tipo,revista,base,obs,link,anexo{nome,tam,tipo}}}
+   bookCientifico/ativos/{id}  → nome, apresentacao, descricao, via, filtro[] (legado, preservado),
+   via: string que pode conter várias vias separadas por vírgula.
+   filtroBlocos:[{termos:["a","b"]}], filtroBlocosDefinido:true, encontrados,
+   artigos{aid:{titulo,ano,tipo,revista,base,obs,link,anexo{nome,tam,tipo}}}
+   filtroBlocos ausente com filtroBlocosDefinido:true significa busca vazia.
    bookCientifico/anexos/{aid} → { dados: "data:...base64" }  (separado para a lista abrir leve; limite 5 MB por arquivo) */
 const ROOT='bookCientifico';
 /* Tipos de estudo, do mais forte ao mais fraco (pirâmide de evidência, estilo Oxford CEBM / formulary dossiers) */
@@ -251,7 +265,7 @@ const TIPOS=[
 const TN=Object.fromEntries(TIPOS);
 const COR=Object.fromEntries(TIPOS.map((t,i)=>[t[0],'hsl(218 '+(62-i*3)+'% '+(24+i*4.6)+'%)']));
 const ALTA=['meta','rs','ecr'];
-const S={ativos:{},view:'home',id:null,q:'',ord:'ev',modo:'indice',addOpen:false,loaded:false,err:null,pend:false,del:null,anexoCache:{}};
+const S={ativos:{},view:'home',id:null,q:'',ord:'ev',modo:'indice',addOpen:false,loaded:false,err:null,pend:false,del:null,anexoCache:{},blocoNovo:false,blocosSalvando:false};
 const $=(s,r)=>(r||document).querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const db=()=>firebase.database();
@@ -263,14 +277,40 @@ const fmtMB=b=>b>1048576?(b/1048576).toFixed(1).replace('.',',')+' MB':Math.max(
 function toast(m,bad){const o=$('.toast');o&&o.remove();const t=document.createElement('div');t.className='toast'+(bad?' bad':'');t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),bad?5200:2600);}
 
 /* ---------- modelo ---------- */
+function limpaBlocos(blocos){
+  return vals(blocos).filter(b=>b!=null).map(b=>{
+    const vistos=new Set();
+    return vals(b).filter(t=>typeof t==='string').map(t=>t.trim()).filter(t=>{
+      if(!t)return false;
+      const chave=t.toLowerCase();
+      if(vistos.has(chave))return false;
+      vistos.add(chave);return true;
+    });
+  }).filter(b=>b.length);
+}
+function lerBlocos(a){
+  if(a.filtroBlocosDefinido===true||Object.prototype.hasOwnProperty.call(a,'filtroBlocos')){
+    return limpaBlocos(vals(a.filtroBlocos).filter(b=>b!=null).map(b=>b.termos));
+  }
+  return limpaBlocos(vals(a.filtro).filter(t=>t!=null).map(t=>[t]));
+}
 function lista(){
-  return Object.entries(S.ativos).map(([id,a],i)=>Object.assign({id},a)).sort((a,b)=>(a.criadoEm||0)-(b.criadoEm||0)).map((a,i)=>{
+  return Object.entries(S.ativos).map(([id,a],i)=>Object.assign({id},a)).sort((a,b)=>{
+    const na=String(a.nome==null?'':a.nome).trim(),nb=String(b.nome==null?'':b.nome).trim();
+    if(!na&&nb)return 1;
+    if(na&&!nb)return -1;
+    return na.localeCompare(nb,'pt-BR',{sensitivity:'base',numeric:true})||(a.criadoEm||0)-(b.criadoEm||0);
+  }).map((a,i)=>{
     a.n=i+1; a.arts=Object.entries(a.artigos||{}).map(([k,v])=>Object.assign({k},v));
-    a.filtroL=vals(a.filtro); a.anexos=a.arts.filter(x=>x.anexo).length;
+    a.blocos=lerBlocos(a); a.filtroL=a.blocos.flat(); a.anexos=a.arts.filter(x=>x.anexo).length;
     a.cont={}; a.arts.forEach(x=>{const t=TN[x.tipo]?x.tipo:'out';a.cont[t]=(a.cont[t]||0)+1;});
     return a;});
 }
-const queryStr=a=>a.filtroL.join(' AND ');
+const queryStr=a=>a.blocos.map(b=>b.length>1?'('+b.join(' OR ')+')':b[0]).join(' AND ');
+const scholarStr=a=>a.blocos.map(b=>{
+  const termos=b.map(t=>'"'+t+'"');
+  return termos.length>1?'('+termos.join(' OR ')+')':termos[0];
+}).join(' ');
 const nn=a=>String(a.n).padStart(2,'0');
 function evBar(a){
   if(!a.arts.length) return '<div class="evbar vazio" title="Nenhum artigo ainda"></div>';
@@ -315,12 +355,36 @@ function artRow(a,x,i){
    '<div class="sub"><span class="lnk"><input data-a="'+x.k+'" data-f="link" placeholder="Link para acesso (https://…)" value="'+esc(x.link||'')+'" aria-label="Link para acesso">'+(x.link?'<a class="btn sm" href="'+esc(/^https?:/i.test(x.link)?x.link:'https://'+x.link)+'" target="_blank" rel="noopener">Abrir ↗</a>':'')+'</span>'+doc+'</div>'+
    '<div class="sub3"><textarea data-a="'+x.k+'" data-f="obs" rows="1" placeholder="Observação sobre este artigo…" aria-label="Observação do artigo">'+esc(x.obs||'')+'</textarea></div></div>';
 }
+function filtroTela(a){
+  const blocos=a.blocos.map(b=>b.slice());
+  if(!blocos.length||S.blocoNovo)blocos.push([]);
+  return (!a.filtroL.length?'<p class="hint">Nenhum termo ainda. Termos no mesmo bloco se ligam por OR; blocos diferentes, por AND.</p>':'')+
+    blocos.map((bloco,b)=>(b?'<div class="filtro-and"><span class="and">AND</span></div>':'')+
+      '<div class="filtro-bloco"><div class="chips">'+bloco.map((t,i)=>
+        (i?'<span class="and">OR</span>':'')+'<span class="chip">'+esc(t)+
+        '<button data-act="termo-del" data-b="'+b+'" data-i="'+i+'" aria-label="'+esc('Remover termo '+t)+'">×</button></span>'
+      ).join('')+'</div><div class="row"><input class="termo" data-b="'+b+'" placeholder="+ termo (OR)" aria-label="Adicionar termo OR ao bloco '+(b+1)+'" autocomplete="off">'+
+      '<button class="btn sm" data-act="termo-add" data-b="'+b+'">+ Termo (OR)</button></div></div>'
+    ).join('')+'<div class="filtro-novo"><button class="btn sm" data-act="bloco-add">+ Novo bloco (AND)</button></div>';
+}
+function lerVias(a){
+  return String(a.via==null?'':a.via).split(/[,;]/).map(v=>v.trim()).filter(Boolean);
+}
+function viasTela(a){
+  const vias=lerVias(a);
+  return '<div class="chips">'+vias.map((v,i)=>
+    '<span class="chip">'+esc(v)+'<button type="button" data-act="via-del" data-i="'+i+'" aria-label="'+esc('Remover via '+v)+'">×</button></span>'
+  ).join('')+'</div>'+
+    (!vias.length?'<p class="hint">Nenhuma via ainda. Adicione uma ou mais.</p>':'')+
+    '<div class="row"><input id="via-nova" list="vias" placeholder="Escolha ou digite a via" aria-label="Escolha ou digite a via" autocomplete="off">'+
+    '<button type="button" class="btn sm" data-act="via-add">+ Via</button></div>';
+}
 function vAtivo(){
   const a=lista().find(x=>x.id===S.id);
   if(!a) return topbar()+'<div class="wrap"><div class="empty">Ativo não encontrado. <button class="btn" data-act="home">Voltar ao book</button></div></div>';
   const prog=a.encontrados>0?Math.min(100,Math.round(a.arts.length/a.encontrados*100)):0;
   const arts=a.arts.slice().sort(S.ord==='ev'?(p,q)=>{const r=t=>{const i=TIPOS.findIndex(x=>x[0]===t);return i<0?99:i};return r(p.tipo)-r(q.tipo)||(+q.ano||0)-(+p.ano||0);}:(p,q)=>(+q.ano||0)-(+p.ano||0)||(q.t||0)-(p.t||0));
-  const qs=queryStr(a), pm='https://pubmed.ncbi.nlm.nih.gov/?term='+encodeURIComponent(qs), gs='https://scholar.google.com/scholar?q='+encodeURIComponent(a.filtroL.map(t=>'"'+t+'"').join(' '));
+  const qs=queryStr(a), pm='https://pubmed.ncbi.nlm.nih.gov/?term='+encodeURIComponent(qs), gs='https://scholar.google.com/scholar?q='+encodeURIComponent(scholarStr(a));
   const del=S.del==='ativo';
   const add=S.addOpen||!a.arts.length;
   return topbar('<button class="btn" data-act="pdf-ativo">Imprimir ficha</button><button class="btn bad'+(del?' on':'')+'" data-act="ativo-del">'+(del?'Confirmar exclusão':'Excluir ativo')+'</button>')+
@@ -328,9 +392,8 @@ function vAtivo(){
   '<div class="cols"><section><div class="sec-h"><h2>Portfólio</h2></div>'+
    '<div class="field"><label class="lb">Apresentação</label><input data-f="apresentacao" value="'+esc(a.apresentacao||'')+'" placeholder="ex.: Comprimido revestido 500 mg"></div>'+
    '<div class="field"><label class="lb">Descrição</label><textarea data-f="descricao" placeholder="Classe, mecanismo, indicação, observações relevantes…">'+esc(a.descricao||'')+'</textarea></div>'+
-   '<div class="field"><label class="lb">Via de administração</label><input data-f="via" list="vias" value="'+esc(a.via||'')+'" placeholder="Escolha ou digite"></div>'+
-   '<div class="field"><label class="lb">Filtro de busca</label><div class="chips">'+(a.filtroL.length?a.filtroL.map((t,i)=>(i?'<span class="and">AND</span>':'')+'<span class="chip">'+esc(t)+'<button data-act="termo-del" data-i="'+i+'" aria-label="Remover termo">×</button></span>').join(''):'<span class="hint">Nenhum termo ainda. Cada termo se liga ao anterior por AND.</span>')+'</div>'+
-   '<div class="row" style="margin-bottom:12px"><input id="termo" placeholder="Novo termo e Enter" autocomplete="off"><button class="btn sm" data-act="termo-add">+ Termo</button></div>'+
+   '<div class="field vias-campo"><label class="lb" for="via-nova">Via de administração</label>'+viasTela(a)+'</div>'+
+   '<div class="field"><label class="lb">Filtro de busca</label>'+filtroTela(a)+
    (qs?'<div class="query">'+esc(qs)+'</div><div class="row"><button class="btn sm" data-act="copiar">Copiar busca</button><a class="btn sm" href="'+pm+'" target="_blank" rel="noopener">PubMed ↗</a><a class="btn sm" href="'+gs+'" target="_blank" rel="noopener">Google Acadêmico ↗</a></div>':'')+'</div>'+
    '<div class="field" style="margin-bottom:0"><label class="lb">Artigos encontrados na busca</label><div class="found"><input data-f="encontrados" inputmode="numeric" value="'+(a.encontrados||'')+'" placeholder="0" aria-label="Total encontrado"><span class="hint">no total · <b class="mono">'+a.arts.length+'</b> registrado'+(a.arts.length===1?'':'s')+' no book</span></div>'+(a.encontrados>0?'<div class="meter" title="'+prog+'%"><i style="width:'+prog+'%"></i></div>':'')+'</div>'+
    '<div class="field" style="margin:16px 0 0"><label class="lb">Observação</label><textarea data-f="observacao" placeholder="Anotações livres sobre este ativo…">'+esc(a.observacao||'')+'</textarea></div></section>'+
@@ -356,6 +419,64 @@ function render(){
 /* ---------- ações ---------- */
 const cur=()=>S.ativos[S.id]||{};
 function setA(f,v){return ref('ativos/'+S.id+'/'+f).set(v).then(()=>ref('ativos/'+S.id+'/atualizadoEm').set(TS())).catch(e=>toast('Não salvou: '+(e.message||e),true));}
+function setBlocos(blocos){
+  const limpos=limpaBlocos(blocos);
+  return ref('ativos/'+S.id).update({
+    filtroBlocos:limpos.length?limpos.map(termos=>({termos})):null,
+    filtroBlocosDefinido:true,
+    atualizadoEm:TS()
+  }).then(()=>true).catch(e=>{toast('Não salvou: '+(e.message||e),true);return false;});
+}
+function focoBloco(b){
+  const atual=document.activeElement;
+  if(atual&&/INPUT|TEXTAREA|SELECT/.test(atual.tagName)&&$('#app').contains(atual)){
+    if(!atual.matches('input.termo[data-b="'+b+'"]'))return;
+    atual.blur();
+  }
+  render();
+  const campo=$('input.termo[data-b="'+b+'"]');
+  campo&&campo.focus();
+}
+let viasSalvando=false;
+function focoVia(){
+  const atual=document.activeElement,campo=$('#via-nova');
+  const digitado=campo?campo.value:'';
+  if(atual&&/INPUT|TEXTAREA|SELECT/.test(atual.tagName)&&$('#app').contains(atual)){
+    if(atual!==campo)return;
+    atual.blur();
+  }
+  render();
+  const novo=$('#via-nova');
+  if(novo){novo.value=digitado;novo.focus();}
+}
+async function alterarVias(indice){
+  if(viasSalvando||S.view!=='ativo'||!S.ativos[S.id])return;
+  const campo=$('#via-nova'),digitado=campo?campo.value:'',vias=lerVias(cur()),id=S.id;
+  const adicionar=indice===undefined;
+  if(adicionar){
+    const novas=digitado.split(/[,;]/).map(v=>v.trim()).filter(Boolean);
+    if(!novas.length){campo&&campo.focus();return;}
+    const vistos=new Set(vias.map(v=>v.toLowerCase()));
+    let incluidas=0;
+    novas.forEach(v=>{
+      const chave=v.toLowerCase();
+      if(!vistos.has(chave)){vistos.add(chave);vias.push(v);incluidas++;}
+    });
+    if(!incluidas){toast('Essa via já está adicionada');campo&&campo.focus();return;}
+  }else{
+    if(!Number.isInteger(indice)||indice<0||indice>=vias.length)return;
+    vias.splice(indice,1);
+  }
+  const valor=vias.join(', ');
+  viasSalvando=true;
+  try{
+    await setA('via',valor);
+    if(S.id!==id||S.view!=='ativo'||!S.ativos[id]||String(cur().via==null?'':cur().via)!==valor)return;
+    const atual=$('#via-nova');
+    if(adicionar&&atual&&atual.value===digitado)atual.value='';
+    focoVia();
+  }finally{viasSalvando=false;}
+}
 function setArt(k,f,v){return ref('ativos/'+S.id+'/artigos/'+k+'/'+f).set(v).catch(e=>toast('Não salvou: '+(e.message||e),true));}
 async function abrirAnexo(k){
   const w=window.open('','_blank');
@@ -375,30 +496,68 @@ function pickFile(k){
 function confirma(key,fn){ if(S.del===key){S.del=null;fn();} else {S.del=key;render();clearTimeout(confirma.t);confirma.t=setTimeout(()=>{if(S.del===key){S.del=null;render();}},4000);} }
 async function novoAtivo(){
   const id=ref('ativos').push().key;
-  try{await ref('ativos/'+id).set({nome:'Novo ativo',criadoEm:TS(),criadoPor:me(),atualizadoEm:TS()});S.view='ativo';S.id=id;render();setTimeout(()=>{const i=$('input.big');i&&(i.focus(),i.select());},60);}catch(e){toast('Não consegui criar: '+(e.message||e),true);}
+  try{await ref('ativos/'+id).set({nome:'Novo ativo',criadoEm:TS(),criadoPor:me(),atualizadoEm:TS()});S.view='ativo';S.id=id;S.blocoNovo=false;render();setTimeout(()=>{const i=$('input.big');i&&(i.focus(),i.select());},60);}catch(e){toast('Não consegui criar: '+(e.message||e),true);}
 }
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-act]'); if(!b||!$('#app').contains(b)) return;
   const act=b.dataset.act;
   if(act==='novo') return novoAtivo();
-  if(act==='abrir'){S.view='ativo';S.id=b.dataset.id;S.del=null;render();window.scrollTo(0,0);return;}
-  if(act==='home'){S.view='home';S.id=null;S.del=null;render();window.scrollTo(0,0);return;}
+  if(act==='abrir'){S.view='ativo';S.id=b.dataset.id;S.del=null;S.blocoNovo=false;render();window.scrollTo(0,0);return;}
+  if(act==='home'){S.view='home';S.id=null;S.del=null;S.blocoNovo=false;render();window.scrollTo(0,0);return;}
   if(act==='ord'){S.ord=b.dataset.o;render();return;}
   if(act==='modo'){S.modo=b.dataset.m;try{localStorage.setItem('book_modo',S.modo);}catch(_){}render();return;}
   if(act==='add-toggle'){S.addOpen=!S.addOpen;render();return;}
   if(act==='pdf') return imprimir(null);
   if(act==='pdf-ativo') return imprimir(S.id);
-  if(act==='termo-add') return addTermo();
-  if(act==='termo-del'){const l=vals(cur().filtro);l.splice(+b.dataset.i,1);return setA('filtro',l);}
+  if(act==='via-add') return alterarVias();
+  if(act==='via-del') return alterarVias(Number(b.dataset.i));
+  if(act==='termo-add') return addTermo(+b.dataset.b);
+  if(act==='bloco-add'){
+    const blocos=lerBlocos(cur());
+    if(blocos.length)S.blocoNovo=true;
+    focoBloco(blocos.length);return;
+  }
+  if(act==='termo-del'){
+    if(S.blocosSalvando)return;
+    const blocos=lerBlocos(cur()),bi=+b.dataset.b,ti=+b.dataset.i;
+    if(!Number.isInteger(bi)||!Number.isInteger(ti)||!blocos[bi]||ti<0||ti>=blocos[bi].length)return;
+    blocos[bi].splice(ti,1);
+    S.blocosSalvando=true;
+    try{await setBlocos(blocos);}finally{S.blocosSalvando=false;}
+    return;
+  }
   if(act==='copiar'){const t=queryStr(lista().find(x=>x.id===S.id));try{await navigator.clipboard.writeText(t);toast('Busca copiada');}catch(_){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Busca copiada');}catch(__){toast('Copie manualmente: '+t,true);}ta.remove();}return;}
   if(act==='art-add') return addArtigo();
   if(act==='art-del') return confirma('a'+b.dataset.a,async()=>{const k=b.dataset.a;try{await ref('ativos/'+S.id+'/artigos/'+k).remove();await ref('anexos/'+k).remove();toast('Artigo removido');}catch(er){toast('Erro: '+(er.message||er),true);}});
-  if(act==='ativo-del') return confirma('ativo',async()=>{const a=lista().find(x=>x.id===S.id);try{for(const x of a.arts) if(x.anexo) await ref('anexos/'+x.k).remove();await ref('ativos/'+S.id).remove();S.view='home';S.id=null;toast('Ativo excluído');}catch(er){toast('Erro: '+(er.message||er),true);}});
+  if(act==='ativo-del') return confirma('ativo',async()=>{const a=lista().find(x=>x.id===S.id);try{for(const x of a.arts) if(x.anexo) await ref('anexos/'+x.k).remove();await ref('ativos/'+S.id).remove();S.view='home';S.id=null;S.blocoNovo=false;toast('Ativo excluído');}catch(er){toast('Erro: '+(er.message||er),true);}});
   if(act==='anx-add') return pickFile(b.dataset.a);
   if(act==='anx-abrir') return abrirAnexo(b.dataset.a);
   if(act==='anx-del') return confirma('x'+b.dataset.a,async()=>{const k=b.dataset.a;try{await ref('ativos/'+S.id+'/artigos/'+k+'/anexo').remove();await ref('anexos/'+k).remove();delete S.anexoCache[k];toast('Anexo removido');}catch(er){toast('Erro: '+(er.message||er),true);}});
 });
-function addTermo(){const i=$('#termo');const t=(i.value||'').trim();if(!t)return;const l=vals(cur().filtro);if(l.some(x=>x.toLowerCase()===t.toLowerCase())){toast('Esse termo já está na busca');return;}l.push(t);i.value='';setA('filtro',l);}
+async function addTermo(b){
+  if(S.blocosSalvando||!Number.isInteger(b)||b<0)return;
+  const i=$('input.termo[data-b="'+b+'"]');
+  if(!i)return;
+  const digitado=i.value,t=digitado.trim();
+  if(!t)return;
+  const blocos=lerBlocos(cur()),id=S.id;
+  if(b>blocos.length)return;
+  const bloco=blocos[b]||[];
+  if(bloco.some(x=>x.toLowerCase()===t.toLowerCase())){
+    toast('Esse termo já está no bloco');i.focus();return;
+  }
+  blocos[b]=bloco.concat(t);
+  const novo=b===blocos.length-1&&bloco.length===0;
+  S.blocosSalvando=true;
+  try{
+    const salvo=await setBlocos(blocos);
+    if(!salvo||S.id!==id||S.view!=='ativo')return;
+    if(novo)S.blocoNovo=false;
+    const campo=$('input.termo[data-b="'+b+'"]');
+    if(campo&&campo.value===digitado)campo.value='';
+    focoBloco(b);
+  }finally{S.blocosSalvando=false;}
+}
 function addArtigo(){
   const t=$('#nt').value.trim(),y=$('#na').value.trim(),ty=$('#nty').value,l=$('#nl').value.trim(),rv=$('#nrv').value.trim(),bs=$('#nbs').value.trim(),ob=$('#nob').value.trim();
   if(!t){toast('Informe o título do artigo',true);$('#nt').focus();return;}
@@ -415,7 +574,8 @@ document.addEventListener('change',e=>{
   setA(f,v);
 });
 document.addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&e.target.id==='termo'){e.preventDefault();addTermo();}
+  if(e.key==='Enter'&&e.target.id==='via-nova'){e.preventDefault();if(!e.isComposing)alterarVias();return;}
+  if(e.key==='Enter'&&e.target.matches&&e.target.matches('input.termo[data-b]')){e.preventDefault();addTermo(+e.target.dataset.b);}
   if(e.key==='Enter'&&(e.target.id==='nt'||e.target.id==='nl'||e.target.id==='na'||e.target.id==='nob'||e.target.id==='nrv'||e.target.id==='nbs')){e.preventDefault();addArtigo();}
   if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('big')) e.target.blur();
 });
@@ -441,7 +601,7 @@ function imprimir(id){
 /* ---------- início ---------- */
 function init(){
   S.err=null;try{S.modo=localStorage.getItem('book_modo')==='capas'?'capas':'indice';}catch(_){}
-  ref('ativos').on('value',snap=>{S.ativos=snap.val()||{};S.loaded=true;if(S.view==='ativo'&&!S.ativos[S.id]){S.view='home';S.id=null;}render();},err=>{S.err='Sem permissão ou sem conexão ('+(err&&err.message||err)+').';render();});
+  ref('ativos').on('value',snap=>{S.ativos=snap.val()||{};S.loaded=true;if(S.view==='ativo'&&!S.ativos[S.id]){S.view='home';S.id=null;S.blocoNovo=false;}render();},err=>{S.err='Sem permissão ou sem conexão ('+(err&&err.message||err)+').';render();});
 }
 window.__startApp=init; if(window.__gateOk) init();
 })();
