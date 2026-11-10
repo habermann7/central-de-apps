@@ -442,6 +442,9 @@
   .priority-badge.media{background:#D1ECF1;color:#0C5460;}
   .priority-badge.baixa{background:#D4EDDA;color:#155724;}
   .priority-badge.desconsiderar{background:#000000;color:#FFFFFF;border:1px solid #000000;}
+  .priority-badge.falta_material{background:#FFE5CC;color:#9A4A00;border:1px solid #F2B880;}
+  .priority-badge.faturar{background:#D6F0E4;color:#0B5D3B;border:1px solid #8FD0AE;}
+  .priority-badge.cancelar{background:#EDEDED;color:#6B6B6B;border:1px solid #BDBDBD;text-decoration:line-through;}
   .priority-badge.none{background:var(--neutral-soft);color:var(--ink-faint);font-weight:500;}
 
   /* ---------- Obs icon ---------- */
@@ -666,6 +669,9 @@
       <option value="media">Média</option>
       <option value="baixa">Baixa</option>
       <option value="desconsiderar">Desconsiderar</option>
+      <option value="falta_material">Falta de material</option>
+      <option value="faturar">Faturar</option>
+      <option value="cancelar">Remover / Cancelar</option>
     </select>
 
     <label>Nova data de despacho (dd/mm/aaaa)</label>
@@ -1676,10 +1682,12 @@
   }
 
   // Helper: render priority badge HTML
+  var PRIO_LABEL = {falta_material:'Falta de material', faturar:'Faturar', cancelar:'Remover / Cancelar'};
+  function prioLabel(p){ return !p ? '' : (PRIO_LABEL[p] || p.charAt(0).toUpperCase()+p.slice(1)); }
   function priorityBadgeHtml(priority, pedido){
     if(!pedido) return '';
     var cls = priority ? priority : 'none';
-    var label = priority ? priority.charAt(0).toUpperCase()+priority.slice(1) : '—';
+    var label = priority ? prioLabel(priority) : '—';
     return '<span class="priority-badge '+cls+'" data-pedido="'+escapeHtml(pedido)+'" title="Clique para editar">'+label+'</span>';
   }
 
@@ -1910,7 +1918,7 @@
     var header = ['Pedido','Prioridade','Observação','Produtos','Descrição','Grupo','Status','Modal','Data prevista','Itens'];
     lines.push(header.map(escCsv).join(';'));
     rows.forEach(function(r){
-      var row = [r.pedido, r.priority||'', r.obs||'', r.produtos.join(', '), r.descs.join('; '), r.group, r.status, r.modal, r.dateKey, r.itemCount||1];
+      var row = [r.pedido, prioLabel(r.priority), r.obs||'', r.produtos.join(', '), r.descs.join('; '), r.group, r.status, r.modal, r.dateKey, r.itemCount||1];
       lines.push(row.map(escCsv).join(';'));
     });
     var csv = '\uFEFF' + lines.join('\n');
@@ -2047,7 +2055,7 @@
       })
       .catch(function(err){
         console.error('Erro ao salvar override:', err);
-        alert('Não foi possível salvar este pedido. Verifique se o Firebase está com as regras atualizadas (prioridade "desconsiderar") e tente de novo.');
+        alert('Não foi possível salvar este pedido. Verifique se o Firebase está com as regras atualizadas (novas marcações: falta de material, faturar, cancelar) e tente de novo.');
       });
   });
 
@@ -2184,7 +2192,7 @@
     var data = rows.map(function(r){
       return {
         'Pedido': r.pedido,
-        'Prioridade': r.priority || '',
+        'Prioridade': prioLabel(r.priority),
         'Observação': r.obs || '',
         'Qtd. Itens': r.itemCount,
         'Produtos': r.produtos.join(', '),
@@ -2226,7 +2234,7 @@
       rows.forEach(function(r){
         html += '<tr>'+
           '<td>'+escapeHtml(r.pedido)+'</td>'+
-          '<td>'+escapeHtml(r.priority||'')+'</td>'+
+          '<td>'+escapeHtml(prioLabel(r.priority))+'</td>'+
           '<td>'+escapeHtml(r.obs||'')+'</td>'+
           '<td>'+escapeHtml(r.produtos.join(', '))+'</td>'+
           '<td>'+escapeHtml(r.descs.join('; '))+'</td>'+
