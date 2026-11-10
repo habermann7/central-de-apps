@@ -2688,7 +2688,7 @@ View.mover = () => {
   const dock = Object.values(S.stock).filter(r => r.addr === DOCA && freeQty(r) > 0).sort(mvOrder);
   h += card('Na doca (' + dock.length + ')', dock.length ? mvTable(dock) : '<p class="muted">Nada esperando na doca.</p>');
   h += moreCard('Escolher pelo local de origem', '<p class="muted">Toque no local de onde o produto sai.</p>' + mvChips());
-  return h;
+  return h + mvAddrCheat(null);
 };
 function mvTicket(row, baixa) {
   const mv = mvState(), lot = S.lots[row.lotId], p = S.products[row.productId], fromDoca = row.addr === DOCA, free = freeQty(row);
@@ -2703,7 +2703,7 @@ function mvTicket(row, baixa) {
     if (!fromDoca) f += field('Motivo da transferência', '<input id="mv_reason" required' + (mv.to ? ' data-autofocus' : '') + '>', '', 'full');
     f += '<div class="full"><button class="btn lg">' + (fromDoca ? 'Guardar' : 'Mover e autorizar') + '</button>' + (fromDoca && !mv.to ? '<span class="muted"> Bipou o endereço, guardou.</span>' : '') + '</div>';
   }
-  return card('', info, '<button class="btn ghost" data-act="mvreset">Trocar produto</button>') + '<form class="card ticket" data-form="mvgo"><div class="grid2">' + f + '</div></form>';
+  return card('', info, '<button class="btn ghost" data-act="mvreset">Trocar produto</button>') + '<form class="card ticket" data-form="mvgo"><div class="grid2">' + f + '</div></form>' + (!baixa && !mv.to ? mvAddrCheat(p) : '');
 }
 Scan.mv = async (v, name) => {
   const mv = mvState();
@@ -2752,6 +2752,23 @@ Act.mvfrom = t => {
   const a = t.dataset.addr, rows = rowsAt(a).filter(r => freeQty(r) > 0).sort(mvOrder); if (!rows.length) fail('Não há saldo livre em ' + addrName(a) + '.');
   if (rows.length === 1) return mvSelect(rows[0]);
   mvState().cands = { title: 'Em ' + addrName(a) + ': escolha o produto', ids: rows.map(r => r.id) }; render({ reset: true });
+};
+
+/* colinha: endereços cadastrados, tocando usa como origem ou destino */
+function mvAddrCheat(p) {
+  const mv = mvState(), q = norm(mv.af || '');
+  let list = Object.values(S.addresses).sort((a, b) => a.id.localeCompare(b.id));
+  if (p && p.allowed && p.allowed.length) list = list.filter(a => p.allowed.includes(a.id));
+  const tot = list.length; if (q) list = list.filter(a => a.id.includes(q));
+  const chips = list.slice(0, 120).map(a => '<button type="button" class="chip" data-act="mvaddr" data-addr="' + esc(a.id) + '" title="' + (a.blocked ? 'Bloqueado' : 'Ocupação ' + nf(occupancy(a.id)) + (a.capacity ? ' de ' + nf(a.capacity) : '')) + '">' + esc(a.id) + (a.blocked ? ' 🚫' : '') + ' · ' + nf(occupancy(a.id)) + '</button>').join('');
+  return '<details class="card more"' + (mv.af ? ' open' : '') + '><summary><b>Colinha de endereços (' + tot + ')</b></summary><p class="muted">Toque no código para usar. O número é o que já está guardado lá.' + (p && p.allowed && p.allowed.length ? ' Só os permitidos para este produto.' : '') + '</p>' +
+    liveIn('mv', 'af', 'mv_af', mv.af, 'Filtrar (ex.: R01-E02)') + (chips ? '<div class="chips">' + chips + '</div>' : '<p class="muted">Nenhum endereço encontrado.</p>') + (list.length > 120 ? '<p class="muted">Mostrando 120. Use o filtro.</p>' : '') + '</details>';
+}
+Act.mvaddr = t => {
+  const mv = mvState(), row = mv.rowId && S.stock[mv.rowId];
+  if (row && mv.mode !== 'baixa' && !mv.to) return mvScanTo(t.dataset.addr);
+  if (!row) return Act.mvfrom(t);
+  toast('Esse produto já tem destino escolhido. Toque em Trocar para mudar.', 'info');
 };
 
 async function boot() {
