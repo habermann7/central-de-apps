@@ -178,7 +178,7 @@ input::placeholder{color:#69727e;opacity:1}
 .cards .card-wrap{width:290px;max-width:100%;align-self:stretch;perspective:1200px;min-width:0}
 .cards .card-wrap:hover,.cards .card-wrap:focus-within{z-index:3}
 .cards .card-wrap:has(.kebab-menu.open){z-index:6}
-.app-card{position:relative;width:100%;height:100%;min-height:300px;border-radius:46px;color:#fff;background:linear-gradient(145deg,#292c32 0%,#1d2026 52%,#13161b 100%);box-shadow:0 18px 32px -18px #20263170,inset 0 1px 0 #ffffff28;transform-style:preserve-3d;transition:transform var(--motion) var(--ease),box-shadow var(--motion) ease;transform:rotate3d(1,1,0,0deg)}
+.app-card{position:relative;width:100%;height:100%;min-height:300px;border-radius:46px;color:#fff;background:linear-gradient(145deg,#292c32 0%,#1d2026 52%,#13161b 100%);box-shadow:0 18px 32px -18px #20263170,inset 0 1px 0 #ffffff28;transform-style:preserve-3d;transition:box-shadow var(--motion) ease;transform:translateY(var(--card-lift,0px)) rotateX(var(--card-rx,0deg)) rotateY(var(--card-ry,0deg))}
 .app-card .card-glass{position:absolute;inset:8px;border-radius:38px;border-bottom:1px solid #ffffff12;border-left:1px solid #ffffff24;background:linear-gradient(145deg,#ffffff18 0%,#ffffff0a 55%,#ffffff04 100%);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);transform:translateZ(3px);pointer-events:none}
 .open-card{position:absolute;inset:0;border-radius:46px;transform:translateZ(4px);z-index:1;display:block}
 .open-card:focus-visible{outline:3px solid #a4b5ce;outline-offset:5px}
@@ -201,15 +201,11 @@ input::placeholder{color:#69727e;opacity:1}
 .mono-more:hover{text-decoration:underline;text-underline-offset:4px}
 .mono-more svg.i{width:16px;height:16px;stroke-width:2}
 .rings{position:absolute;top:0;right:0;width:0;height:0;transform-style:preserve-3d;pointer-events:none}
-.rings i{position:absolute;top:8px;right:8px;width:170px;height:170px;border:1px solid #ffffff14;border-radius:50%;background:linear-gradient(145deg,#ffffff0a,#ffffff03);box-shadow:-5px 7px 16px #080d1514,inset 0 1px 0 #ffffff0d;transform:translateZ(3px)}
-.rings i:nth-child(2){width:140px;height:140px;top:10px;right:10px;transform:translateZ(5px)}
-.rings i:nth-child(3){width:110px;height:110px;top:17px;right:17px;transform:translateZ(7px)}
-.rings i:nth-child(4){width:80px;height:80px;top:23px;right:23px;transform:translateZ(9px)}
-.mono-logo{position:absolute;top:28px;right:28px;display:grid;place-items:center;width:50px;height:50px;border-radius:50%;font-size:22px;line-height:1;background:linear-gradient(145deg,#fafbfd,#dce1e8);box-shadow:-5px 7px 16px #080d1528,inset 0 1px 0 #fff;transform:translateZ(12px);transition:transform var(--motion) var(--ease);pointer-events:none;overflow:hidden;color:#29313b}
-@media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
-  body:not(.no-motion) #grid:not(.list) .cards .card-wrap:hover:not(:focus-within):not(:has(.kebab-menu.open)) .app-card{transform:rotateX(3deg) rotateY(-4deg);box-shadow:8px 22px 32px -20px #11192380,inset 0 1px 0 #ffffff28}
-  body:not(.no-motion) #grid:not(.list) .card-wrap:hover:not(:focus-within) .mono-logo{transform:translateZ(20px)}
-}
+.rings i{position:absolute;top:8px;right:8px;width:170px;height:170px;border:1px solid #ffffff14;border-radius:50%;background:linear-gradient(145deg,#ffffff0a,#ffffff03);box-shadow:-5px 7px 16px #080d1514,inset 0 1px 0 #ffffff0d;transform:translateZ(calc(3px + var(--card-depth,0px)))}
+.rings i:nth-child(2){width:140px;height:140px;top:10px;right:10px;transform:translateZ(calc(5px + var(--card-depth,0px)))}
+.rings i:nth-child(3){width:110px;height:110px;top:17px;right:17px;transform:translateZ(calc(7px + var(--card-depth,0px)))}
+.rings i:nth-child(4){width:80px;height:80px;top:23px;right:23px;transform:translateZ(calc(9px + var(--card-depth,0px)))}
+.mono-logo{position:absolute;top:28px;right:28px;display:grid;place-items:center;width:50px;height:50px;border-radius:50%;font-size:22px;line-height:1;background:linear-gradient(145deg,#fafbfd,#dce1e8);box-shadow:-5px 7px 16px #080d1528,inset 0 1px 0 #fff;transform:translateZ(calc(12px + var(--card-depth,0px)));pointer-events:none;overflow:hidden;color:#29313b}
 @media (hover:none),(pointer:coarse){
   .app-card,.app-card *{transform:none!important;transform-style:flat!important}
   .cards .card-wrap{perspective:none}
@@ -632,10 +628,24 @@ REVISÃO ESTÁTICA DESTA ENTREGA:
 Não houve execução de testes, validação visual ou acesso às regras/endpoints.
 */
 
+/*
+REVISÃO ESTÁTICA DO MOVIMENTO POR MOUSE:
+- Referência geométrica na .card-wrap; somente o article e sua profundidade mudam.
+- Eventos delegados registrados uma vez no #grid, fora das rotinas de sessão.
+- Um requestAnimationFrame pendente; eventos guardam somente a última posição.
+- Interpolação limitada a ±6 graus, elevação de 0 a 4 px e profundidade extra de 6 px.
+- Transições finitas de 380 ms com curva monotônica, sem quique ou ciclo ocioso.
+- Rolagem da página devolve o card ao neutro em 380 ms, sem saltos a cada evento.
+- Neutralização e cancelamento em filtros, seções, visualizações, catálogo, logout,
+  foco interno, abertura de menus/modais e alteração das condições de movimento.
+- Preservados HTML, regras de acesso, Firebase, endpoints e recursos existentes.
+Esta conferência foi apenas por leitura do código, sem testes ou validação visual.
+*/
+
 const $=id=>document.getElementById(id);
 const ICONES={
   brand:'M4 19V7m6 12V4m6 15V9m5 12H2',
-  grid:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',
+  grid:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7h-7z M14 14h7v7h-7z',
   star:'m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z',
   clock:'M12 8v5l3 2 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
   users:'M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1 M13 8a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0 M21 20v-1a4 4 0 0 0-3-3.9 M16 4.1a3.5 3.5 0 0 1 0 6.8',
@@ -660,6 +670,13 @@ let categoriaAtiva=null,favoritosAtivo=false;
 let pendingDeleteFile=null,editingUid=null,editingAppFile=null,editingAppCat='';
 let loginPendente=false,focoModal=null;
 const animacoesInterface=new Map();
+
+/* Estado independente do catálogo e da sessão; nenhum ouvinte por card. */
+const estadosCards=new Map();
+const mouseComHover=window.matchMedia('(hover: hover) and (pointer: fine)');
+const reduzirCards=window.matchMedia('(prefers-reduced-motion: reduce)');
+const propriedadesCards=['--card-rx','--card-ry','--card-lift','--card-depth'];
+let quadroCards=null,ponteiroCards=null,cardSobMouse=null;
 
 function registro(v){return v!==null&&typeof v==='object'&&!Array.isArray(v);}
 function texto(v,padrao=''){return typeof v==='string'?v:padrao;}
@@ -775,6 +792,108 @@ function renderGruposCheckboxes(container,classe,selecionados){
 }
 function escolhidos(classe){return listaGrupos(Array.from(document.querySelectorAll('.'+classe+':checked'),n=>n.value));}
 
+/* Movimento por mouse: uma fila de quadro, com transições finitas e sem quique. */
+function movimentoCardsPermitido(){
+  return pronta()&&mouseComHover.matches&&!reduzirCards.matches&&
+    !document.body.classList.contains('no-motion')&&!document.hidden&&
+    !$('grid').classList.contains('list')&&
+    $('appShell').style.display!=='none'&&$('galleryWrap').style.display!=='none'&&
+    !$('grid').closest('[inert]')&&
+    !document.querySelector('.modal-bg.show,.kebab-menu.open,#railPop.open');
+}
+function cardMovimentoValido(wrap){
+  return !!wrap&&wrap.isConnected&&$('grid').contains(wrap)&&
+    !wrap.closest('[inert]')&&wrap.style.display!=='none'&&
+    !wrap.contains(document.activeElement)&&wrap.getClientRects().length>0;
+}
+function removerVariaveisCard(wrap){
+  propriedadesCards.forEach(p=>wrap.style.removeProperty(p));
+}
+function limparMovimentoCards(){
+  if(quadroCards!==null)cancelAnimationFrame(quadroCards);
+  quadroCards=null;ponteiroCards=null;cardSobMouse=null;
+  estadosCards.forEach((estado,wrap)=>removerVariaveisCard(wrap));
+  estadosCards.clear();
+}
+function agendarQuadroCards(){
+  if(quadroCards===null)quadroCards=requestAnimationFrame(atualizarQuadroCards);
+}
+function interpolarCard(estado,agora){
+  const progresso=Math.min(1,Math.max(0,(agora-estado.inicio)/380));
+  const suave=1-Math.pow(1-progresso,3);
+  estado.valor=estado.origem.map((v,i)=>v+(estado.destino[i]-v)*suave);
+  if(progresso===1)estado.valor=estado.destino.slice();
+  return progresso<1;
+}
+function destinoCard(wrap,destino,agora){
+  let estado=estadosCards.get(wrap);
+  if(!estado){
+    estado={valor:[0,0,0,0],origem:[0,0,0,0],destino:[0,0,0,0],inicio:agora};
+    estadosCards.set(wrap,estado);
+  }
+  interpolarCard(estado,agora);
+  if(estado.destino.every((v,i)=>v===destino[i]))return;
+  estado.origem=estado.valor.slice();estado.destino=destino;estado.inicio=agora;
+}
+function atualizarQuadroCards(agora){
+  quadroCards=null;
+  if(!movimentoCardsPermitido()){limparMovimentoCards();return;}
+  const ponto=ponteiroCards;ponteiroCards=null;
+  if(ponto){
+    let wrap=ponto.wrap;
+    if(!cardMovimentoValido(wrap))wrap=null;
+    let destino=null;
+    if(wrap){
+      /* A área externa não recebe a inclinação do article. */
+      const r=wrap.getBoundingClientRect();
+      if(!r.width||!r.height||ponto.x<r.left||ponto.x>r.right||ponto.y<r.top||ponto.y>r.bottom)wrap=null;
+      else{
+        const x=Math.max(-1,Math.min(1,((ponto.x-r.left)/r.width-.5)*2));
+        const y=Math.max(-1,Math.min(1,((ponto.y-r.top)/r.height-.5)*2));
+        destino=[-y*6,x*6,-4,6];
+      }
+    }
+    if(cardSobMouse&&cardSobMouse!==wrap)destinoCard(cardSobMouse,[0,0,0,0],agora);
+    cardSobMouse=wrap;
+    if(wrap)destinoCard(wrap,destino,agora);
+  }
+  let continuar=false;
+  estadosCards.forEach((estado,wrap)=>{
+    if(!cardMovimentoValido(wrap)){
+      removerVariaveisCard(wrap);estadosCards.delete(wrap);
+      if(cardSobMouse===wrap)cardSobMouse=null;
+      return;
+    }
+    const pendente=interpolarCard(estado,agora);
+    if(!pendente&&estado.destino.every(v=>v===0)){
+      removerVariaveisCard(wrap);estadosCards.delete(wrap);return;
+    }
+    const v=estado.valor;
+    wrap.style.setProperty('--card-rx',v[0].toFixed(4)+'deg');
+    wrap.style.setProperty('--card-ry',v[1].toFixed(4)+'deg');
+    wrap.style.setProperty('--card-lift',v[2].toFixed(4)+'px');
+    wrap.style.setProperty('--card-depth',v[3].toFixed(4)+'px');
+    if(pendente)continuar=true;
+  });
+  if(continuar||ponteiroCards)agendarQuadroCards();
+}
+function acompanharMouseCards(e){
+  if(e.pointerType!=='mouse'||!movimentoCardsPermitido()){
+    limparMovimentoCards();return;
+  }
+  const wrap=e.target instanceof Element?e.target.closest('.card-wrap'):null;
+  ponteiroCards={wrap:wrap&&$('grid').contains(wrap)?wrap:null,x:e.clientX,y:e.clientY};
+  agendarQuadroCards();
+}
+function sairDoCard(e){
+  if(e.pointerType!=='mouse')return;
+  const origem=e.target instanceof Element?e.target.closest('.card-wrap'):null;
+  const destino=e.relatedTarget instanceof Element?e.relatedTarget.closest('.card-wrap'):null;
+  if(origem&&origem!==destino){
+    ponteiroCards={wrap:null,x:0,y:0};agendarQuadroCards();
+  }
+}
+
 /* Movimento finito, sem fila de animações nem espera para liberar controles. */
 function animarEntrada(n){
   const anterior=animacoesInterface.get(n);
@@ -802,6 +921,7 @@ function mostrarView(nome){
   if(!pronta())return;
   if(!['galeria','admin','grupos'].includes(nome))return;
   if((nome==='admin'||nome==='grupos')&&!adminValido())return;
+  limparMovimentoCards();
   const ids={galeria:'galleryWrap',admin:'adminWrap',grupos:'gruposWrap'};
   const destino=$(ids[nome]),mudou=destino.style.display==='none';
   const ativo=document.activeElement;
@@ -837,6 +957,7 @@ function toggleRailPop(e){
   if(e)e.stopPropagation();
   const pop=$('railPop');
   if(pop.classList.contains('open')){fecharRailPop();return;}
+  limparMovimentoCards();
   fecharKebabMenus();interativo(pop,true);pop.classList.add('open');
   $('whoAvatar').setAttribute('aria-expanded','true');
   if(e&&e.detail===0)focar(pop.querySelector('button'));
@@ -853,6 +974,7 @@ function toggleKebabMenu(btn,e){
   const menu=btn.closest('.card-wrap').querySelector('.kebab-menu');
   const aberto=menu.classList.contains('open');fecharKebabMenus();fecharRailPop();
   if(!aberto){
+    limparMovimentoCards();
     interativo(menu,true);menu.classList.add('open');btn.classList.add('open');btn.setAttribute('aria-expanded','true');
     if(e.detail===0)focar(menu.querySelector('button'));
   }
@@ -864,6 +986,7 @@ function fundoModal(bloquear){
 function abrirModal(id){
   const outro=document.querySelector('.modal-bg.show');
   if(outro&&outro.id!==id)return;
+  limparMovimentoCards();
   fecharRailPop();fecharKebabMenus();focoModal=document.activeElement;
   const bg=$(id);interativo(bg,true);bg.classList.add('show');
   fundoModal(true);
@@ -932,6 +1055,7 @@ async function chamarApiAdmin(rota,corpo,s=exigirSessao(true)){
   return fetchSessao(API_BASE+rota,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({},corpo,{idToken}))},s,true);
 }
 function limparCatalogo(){
+  limparMovimentoCards();
   fecharKebabMenus();
   if($('grid').contains(document.activeElement)&&pronta())focar($('appSearch'));
   appsAtuais.clear();categoriaAtiva=null;favoritosAtivo=false;
@@ -947,6 +1071,7 @@ function desregistrarListeners(){
   gruposRef=gruposCallback=perfilRef=perfilCallback=null;
 }
 function limparSessao(){
+  limparMovimentoCards();
   const devolverLogin=$('appShell').contains(document.activeElement)||!!document.querySelector('.modal-bg.show');
   geracao++;catalogoPedido++;rankingPedido++;usuariosPedido++;gruposPedido++;
   sessao=null;SOU_ADMIN=false;ADMIN_VER_TUDO=false;MEUS_GRUPOS=[];GRUPOS_DISPONIVEIS=[];
@@ -1143,6 +1268,7 @@ function renderChips(categorias,prateleiras){
   categorias.forEach(cat=>adicionar(cat,cat.toLowerCase(),prateleiras.get(cat).length));atualizarChipsAtivos();
 }
 function filtrarApps(){
+  limparMovimentoCards();
   if(!pronta())return;
   fecharKebabMenus();
   const q=$('appSearch').value.trim().toLowerCase();let visiveis=0;
@@ -1503,6 +1629,7 @@ let MODO_VIEW=lerPref('estante:view','grid')==='list'?'list':'grid';
 let MOVIMENTO=lerPref('estante:motion','1')!=='0';
 const movimentoReduzido=window.matchMedia('(prefers-reduced-motion: reduce)');
 function aplicarView(){
+  limparMovimentoCards();
   $('grid').classList.toggle('list',MODO_VIEW==='list');
   document.querySelectorAll('.view-switch button').forEach(b=>{
     const ativo=b.dataset.view===MODO_VIEW;b.classList.toggle('active',ativo);b.setAttribute('aria-pressed',String(ativo));
@@ -1514,6 +1641,7 @@ function setView(v){
   if(mudou)animarEntrada($('grid'));
 }
 function aplicarMovimento(){
+  limparMovimentoCards();
   const reduzir=!MOVIMENTO||movimentoReduzido.matches;
   document.body.classList.toggle('no-motion',reduzir);
   if(reduzir)cancelarAnimacoes();
@@ -1522,6 +1650,33 @@ function aplicarMovimento(){
 function alternarMovimento(){MOVIMENTO=!MOVIMENTO;salvarPref('estante:motion',MOVIMENTO?'1':'0');aplicarMovimento();}
 if(movimentoReduzido.addEventListener)movimentoReduzido.addEventListener('change',aplicarMovimento);
 else if(movimentoReduzido.addListener)movimentoReduzido.addListener(aplicarMovimento);
+
+/* Registrados uma vez neste documento, nunca ao carregar catálogo ou sessão. */
+$('grid').addEventListener('pointerover',acompanharMouseCards,{passive:true});
+$('grid').addEventListener('pointermove',acompanharMouseCards,{passive:true});
+$('grid').addEventListener('pointerout',sairDoCard,{passive:true});
+$('grid').addEventListener('pointerleave',e=>{
+  if(e.pointerType!=='mouse')return;
+  ponteiroCards={wrap:null,x:0,y:0};agendarQuadroCards();
+},{passive:true});
+$('grid').addEventListener('pointercancel',limparMovimentoCards,{passive:true});
+$('grid').addEventListener('focusin',limparMovimentoCards);
+if(mouseComHover.addEventListener)mouseComHover.addEventListener('change',limparMovimentoCards);
+else if(mouseComHover.addListener)mouseComHover.addListener(limparMovimentoCards);
+window.addEventListener('blur',limparMovimentoCards);
+window.addEventListener('pagehide',limparMovimentoCards);
+window.addEventListener('resize',limparMovimentoCards,{passive:true});
+/* Rolagem: retorno suave ao neutro; não agenda quadros se nada estiver inclinado. */
+document.addEventListener('scroll',()=>{
+  if(!estadosCards.size&&quadroCards===null)return;
+  ponteiroCards={wrap:null,x:0,y:0};agendarQuadroCards();
+},{passive:true,capture:true});
+document.addEventListener('visibilitychange',limparMovimentoCards);
+const observadorMovimentoCards=new MutationObserver(()=>{
+  if(document.body.classList.contains('no-motion'))limparMovimentoCards();
+});
+observadorMovimentoCards.observe(document.body,{attributes:true,attributeFilter:['class']});
+
 aplicarView();aplicarMovimento();
 $('addAppLink').addEventListener('click',e=>{if(!adminValido()){e.preventDefault();toast('Acesso administrativo não validado.');}});
 document.addEventListener('click',e=>{
