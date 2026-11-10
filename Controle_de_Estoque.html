@@ -147,6 +147,8 @@ details.more>summary{cursor:pointer;font-weight:600}details.more[open]>summary{m
 .qsearch{display:flex;gap:8px;margin:0 0 16px}.qsearch input{flex:1;min-width:0}
 .embed-a{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:10px}
 .ticket{padding:18px;margin-top:12px}
+.acc{border:1px solid var(--line);border-radius:12px;margin:12px 0;padding:8px 14px 12px}.acc legend{font:600 12px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;padding:0 6px}
+.acc-i{display:flex;gap:10px;align-items:flex-start;padding:8px 0;cursor:pointer}.acc-i input{width:20px;height:20px;margin-top:2px;accent-color:#000;flex:none}.acc-i small{display:block;color:var(--muted);font-size:12.5px}.acc-i.off{opacity:.5}
 </style>
 </head>
 <body>
@@ -238,14 +240,22 @@ function daysUntil(s) {
 const ROLES = { admin: 'Administrador', gestor: 'Gestor', recebimento: 'Recebimento', armazenagem: 'Armazenagem', separacao: 'Separação', inventario: 'Inventário', qualidade: 'Qualidade (liberação de lotes)' };
 const PERMS = {
   admin: ['*'],
-  gestor: ['dash', 'reports', 'approve', 'orders', 'view', 'history', 'lots', 'cad', 'cfg', 'receive', 'store', 'exit', 'pick', 'count'],
+  gestor: ['dash', 'reports', 'approve', 'orders', 'view', 'history', 'lots', 'cad', 'cfg', 'receive', 'store', 'exit', 'pick', 'count', 'users'],
   recebimento: ['receive', 'view'],
   armazenagem: ['store', 'exit', 'view'],
   separacao: ['pick', 'view'],
   inventario: ['count', 'view'],
   qualidade: ['lots', 'view', 'history', 'reports', 'dash']
 };
-const can = (u, p) => { if (!u) return false; const l = PERMS[u.role] || []; return l.includes('*') || l.includes(p); };
+const permsOf = u => (u && u.role !== 'admin' && Array.isArray(u.perms)) ? u.perms : (PERMS[u && u.role] || []);
+const can = (u, p) => { if (!u) return false; const l = permsOf(u); return l.includes('*') || l.includes(p); };
+const ACCESS_GROUPS = [
+  ['Operação', [['receive', 'Receber mercadoria', 'Conferir e registrar o que chega'], ['store', 'Guardar e mover', 'Doca para endereço e entre endereços'], ['exit', 'Dar baixa', 'Avaria, descarte, devolução, transferência'], ['pick', 'Separar pedidos', 'Executar a separação'], ['orders', 'Gerenciar pedidos', 'Criar, cancelar e encaminhar'], ['count', 'Contar inventário', 'Contagem por endereço']]],
+  ['Qualidade e controle', [['lots', 'Liberar e bloquear lotes', 'Quarentena, liberação, bloqueio'], ['approve', 'Autorizar operações', 'Autoriza com PIN e aprova inventário']]],
+  ['Consulta', [['view', 'Consultar estoque', 'Saldo e cobertura'], ['dash', 'Ver painel', 'Indicadores'], ['history', 'Ver histórico', 'Movimentações e ocorrências'], ['reports', 'Relatórios', 'Excel e PDF']]],
+  ['Administração', [['cad', 'Cadastros', 'Produtos e endereços'], ['users', 'Liberar acessos', 'Criar e alterar usuários'], ['cfg', 'Configurações', 'Regras e backup']]]
+];
+const ACCESS_KEYS = ACCESS_GROUPS.flatMap(g => g[1].map(x => x[0]));
 const need = (u, p) => { if (!can(u, p)) fail('Sem permissão para esta operação.', 'PERM'); };
 
 const DEF_CFG = { alertDays: [180, 90, 60, 30], requireScanner: false, requireLotConfirm: true, defaultRelease: 'liberado' };
@@ -341,7 +351,7 @@ async function hashPw(pw, salt) {
 }
 async function saveUser(actor, d, isNew) {
   const first = Object.keys(S.users).length === 0;
-  if (!first) need(actor, 'cad');
+  if (!first) need(actor, 'users');
   const id = String(d.id || '').trim().toLowerCase();
   if (!/^[a-z0-9_.\-]{3,30}$/.test(id)) fail('Login: 3 a 30 caracteres (letras, números, . _ -).', 'VALID');
   if (!ROLES[d.role]) fail('Perfil inválido.', 'VALID');
@@ -350,7 +360,15 @@ async function saveUser(actor, d, isNew) {
   if (isNew && cur) fail('Já existe um usuário com este login.', 'DUP');
   if (actor && actor.role !== 'admin' && (d.role === 'admin' || (cur && cur.role === 'admin'))) fail('Só um administrador pode criar ou alterar administradores.', 'PERM');
   if (!isNew && !cur) fail('Usuário não encontrado.', 'VALID');
-  const u = Object.assign({}, cur || {}, { id, name: String(d.name).trim(), role: first ? 'admin' : d.role, active: d.active !== false, pending: false, createdAt: (cur && cur.createdAt) || isoNow() });
+  if (actor && actor.role !== 'admin' && cur && cur.id === actor.id && (d.role !== cur.role || (Array.isArray(d.perms) && d.perms.slice().sort().join() !== permsOf(cur).slice().sort().join()))) fail('Você não pode alterar o próprio acesso. Peça a outro responsável.', 'PERM');
+  let perms = null;
+  if (Array.isArray(d.perms) && d.role !== 'admin') {
+    perms = ACCESS_KEYS.filter(k => d.perms.includes(k));
+    const before = cur ? permsOf(cur) : [];
+    if (actor && actor.role !== 'admin') { const bad = perms.filter(k => !can(actor, k) && !before.includes(k)); if (bad.length) fail('Você não pode liberar acessos que você mesmo não tem: ' + bad.join(', ') + '.', 'PERM'); }
+    const def = PERMS[d.role] || []; if (perms.slice().sort().join() === def.slice().sort().join()) perms = null;
+  }
+  const u = Object.assign({}, cur || {}, { id, name: String(d.name).trim(), role: first ? 'admin' : d.role, perms, active: d.active !== false, pending: false, createdAt: (cur && cur.createdAt) || isoNow() });
   if (d.password) {
     if (String(d.password).length < 6) fail('O PIN deve ter ao menos 6 caracteres.', 'VALID');
     u.salt = uid('s'); u.hash = await hashPw(d.password, u.salt);
@@ -359,7 +377,7 @@ async function saveUser(actor, d, isNew) {
     const others = Object.values(S.users).filter(x => x.role === 'admin' && x.active && x.id !== id);
     if (!others.length) fail('É preciso manter ao menos um administrador ativo.', 'VALID');
   }
-  await commit([op('users', u), auditOp(actor, isNew ? 'USUARIO_CRIADO' : 'USUARIO_ALTERADO', id + ' (' + u.role + ')')]);
+  await commit([op('users', u), auditOp(actor, isNew ? 'USUARIO_CRIADO' : 'USUARIO_ALTERADO', id + ' (' + u.role + (u.perms ? ', acessos personalizados: ' + u.perms.join(' ') : '') + ')')]);
   return u;
 }
 async function verifyLogin(login, pw) {
@@ -1607,7 +1625,7 @@ async function exportPdf(rep, name, sub) {
 const View = {};
 const NAV = [
   { id: 'inicio', label: 'Início', perm: 'view|dash' }, { id: 'recebimento', label: 'Receber', perm: 'receive' }, { id: 'mover', label: 'Mover', perm: 'store|exit' },
-  { id: 'separacao', label: 'Separar', perm: 'pick|orders' }, { id: 'estoque', label: 'Estoque', perm: 'view|dash|lots' }, { id: 'mais', label: 'Mais', perm: 'count|approve|history|cad|reports|cfg' }
+  { id: 'separacao', label: 'Separar', perm: 'pick|orders' }, { id: 'estoque', label: 'Estoque', perm: 'view|dash|lots' }, { id: 'mais', label: 'Mais', perm: 'count|approve|history|cad|reports|cfg|users' }
 ];
 const navOk = n => n.perm.split('|').some(p => can(user, p));
 const brandSVG = '<svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="7" fill="var(--accent)"/><g fill="var(--accent-ink)"><rect x="6" y="8" width="2.5" height="16"/><rect x="10.5" y="8" width="1.5" height="16"/><rect x="14" y="8" width="3.5" height="16"/><rect x="19.5" y="8" width="1.5" height="16"/><rect x="23" y="8" width="3" height="16"/></g></svg>';
@@ -2309,8 +2327,8 @@ Act.occres = async t => { const r = await askText('Tratar ocorrência', 'Descrev
 
 /* ---- cadastros ---- */
 View.cadastros = () => {
-  let h = pageHead('Cadastros', 'Produtos, endereços e usuários.') + tabsHTML('cad', [['prod', 'Produtos'], ['addr', 'Endereços'], ['usr', 'Usuários']], 'prod');
-  const t = curTab('cad', 'prod'); return h + (t === 'prod' ? cadProd() : t === 'addr' ? cadAddr() : cadUsr());
+  let h = pageHead('Cadastros', 'Produtos e endereços.') + tabsHTML('cad', [['prod', 'Produtos'], ['addr', 'Endereços']], 'prod');
+  const t = curTab('cad', 'prod'); return h + (t === 'addr' ? cadAddr() : cadProd());
 };
 function cadProd() {
   const f = ui.cad.prod, isNew = f && !S.products[f.id || ''];
@@ -2359,21 +2377,33 @@ Act.labelsheet = async () => {
   await saveFile('etiquetas-enderecos.svg', svg);
 };
 function cadUsr() {
-  const f = ui.cad.usr;
-  let h = f ? card('Editar usuário', '<form data-form="usrsave" class="grid3">' + field('Login (vem do e-mail da Estante)', '<input id="uf_id" value="' + esc(f.id || '') + '" readonly>') + field('Nome', '<input id="uf_name" value="' + esc(f.name || '') + '" required>') +
-    field('Perfil', '<select id="uf_role">' + opts(Object.entries(ROLES), f.role || 'recebimento') + '</select>') +
-    field('Situação', '<select id="uf_act">' + opts([['1', 'Ativo'], ['0', 'Inativo']], (f.active === false && !f.pending) ? '0' : '1') + '</select>') +
-    field('PIN de autorização (opcional)', '<input id="uf_pin" type="password" autocomplete="new-password">', 'Vazio mantém o atual. Mínimo de 6 caracteres. Serve para este usuário autorizar operações de outros.') + '<div class="full row"><button class="btn lg">Salvar usuário</button><button type="button" class="btn ghost" data-act="ufcancel">Cancelar</button></div></form>')
-    : card('', '<p class="muted">Cada pessoa aparece aqui no primeiro acesso pela Estante e fica <b>pendente</b> até você ativar e escolher o perfil.</p>');
-  const list = Object.values(S.users).sort((a, b) => (b.pending ? 1 : 0) - (a.pending ? 1 : 0) || a.name.localeCompare(b.name));
-  return h + card('Usuários (' + list.length + ')', tbl(['Login', 'Nome', 'E-mail', 'Perfil', 'Situação', 'PIN', ''], list.map(u => [esc(u.id), esc(u.name), esc(u.email || '—'), esc(ROLES[u.role]), u.pending && !u.active ? badge('Pendente', 'warn') : u.active ? badge('Ativo', 'ok') : badge('Inativo', 'muted'), u.hash ? badge('Definido', 'ok') : '<span class="muted">—</span>', '<button class="btn sm ghost" data-act="ufedit" data-id="' + esc(u.id) + '">' + (u.pending && !u.active ? 'Ativar' : 'Editar') + '</button>'])));
+  const f = ui.cad.usr, mine = id => user.role === 'admin' || (S.users[id] && S.users[id].role !== 'admin');
+  const cur = f ? (Array.isArray(f.perms) && f.role !== 'admin' ? f.perms : (PERMS[f.role || 'recebimento'] || [])) : [];
+  const roleOpts = Object.entries(ROLES).filter(([k]) => user.role === 'admin' || k !== 'admin');
+  let h = f ? card('Acessos de ' + esc(f.name || f.id), '<form data-form="usrsave">' +
+    '<div class="grid3">' + field('Login (vem do e-mail da Estante)', '<input id="uf_id" value="' + esc(f.id || '') + '" readonly>') + field('Nome', '<input id="uf_name" value="' + esc(f.name || '') + '" required>') +
+    field('Situação', '<select id="uf_act">' + opts([['1', 'Ativo (pode entrar)'], ['0', 'Inativo (sem acesso)']], (f.active === false && !f.pending) ? '0' : '1') + '</select>') + '</div>' +
+    '<div class="grid3">' + field('Perfil (ponto de partida)', '<select id="uf_role" data-roleapply="1">' + opts(roleOpts, f.role || 'recebimento') + '</select>', 'Escolha o perfil e depois ajuste as caixas abaixo, se quiser.') +
+    field('PIN de autorização (opcional)', '<input id="uf_pin" type="password" autocomplete="new-password">', 'Vazio mantém o atual. Mínimo 6 caracteres. Só para quem pode autorizar.') + '</div>' +
+    '<div id="uf_perms">' + ACCESS_GROUPS.map(g => '<fieldset class="acc"><legend>' + esc(g[0]) + '</legend>' + g[1].map(([k, t, d]) => { const can_ = user.role === 'admin' || can(user, k) || cur.includes(k); return '<label class="acc-i' + (can_ ? '' : ' off') + '"><input type="checkbox" id="up_' + k + '" data-perm="' + k + '"' + (cur.includes(k) ? ' checked' : '') + (can_ ? '' : ' disabled') + '><span><b>' + esc(t) + '</b><small>' + esc(d) + '</small></span></label>'; }).join('') + '</fieldset>').join('') + '</div>' +
+    (f.role === 'admin' ? '<p class="muted">Administrador tem acesso total, as caixas não se aplicam.</p>' : '') +
+    '<div class="full row"><button class="btn lg">Salvar acessos</button><button type="button" class="btn ghost" data-act="ufcancel">Cancelar</button></div></form>')
+    : card('', '<p class="muted">Cada pessoa aparece aqui no primeiro acesso pela Estante e fica <b>pendente</b>. Escolha o perfil, ajuste os acessos e ative.</p>');
+  const list = Object.values(S.users).sort((a, b) => (b.pending && !b.active ? 1 : 0) - (a.pending && !a.active ? 1 : 0) || a.name.localeCompare(b.name));
+  const pend = list.filter(u => u.pending && !u.active);
+  if (pend.length && !f) h = card('Aguardando liberação (' + pend.length + ')', tbl(['Nome', 'E-mail', ''], pend.map(u => [esc(u.name), esc(u.email || u.id), '<button class="btn sm" data-act="ufedit" data-id="' + esc(u.id) + '">Liberar acesso</button>']))) + h;
+  return h + card('Usuários (' + list.length + ')', tbl(['Nome', 'E-mail', 'Perfil', 'Acessos', 'Situação', 'PIN', ''], list.map(u => [esc(u.name) + '<br><span class="muted">' + esc(u.id) + '</span>', esc(u.email || '—'), esc(ROLES[u.role]), u.role === 'admin' ? 'Total' : (u.perms ? badge('Personalizado', 'info') + ' ' + u.perms.length + ' de ' + ACCESS_KEYS.length : 'Padrão do perfil'), u.pending && !u.active ? badge('Pendente', 'warn') : u.active ? badge('Ativo', 'ok') : badge('Inativo', 'muted'), u.hash ? badge('Definido', 'ok') : '<span class="muted">—</span>', mine(u.id) ? '<button class="btn sm ghost" data-act="ufedit" data-id="' + esc(u.id) + '">' + (u.pending && !u.active ? 'Ativar' : 'Editar') + '</button>' : '<span class="muted">só admin</span>'])));
 }
+document.addEventListener('change', e => {
+  const t = e.target; if (!t || !t.dataset || !t.dataset.roleapply) return;
+  const def = PERMS[t.value] || []; ACCESS_KEYS.forEach(k => { const c = document.getElementById('up_' + k); if (c && !c.disabled) c.checked = t.value === 'admin' || def.includes(k); });
+});
 Act.ufedit = t => { ui.cad.usr = Object.assign({ _edit: true }, clone(S.users[t.dataset.id])); render({ reset: true }); };
 Act.ufcancel = () => { ui.cad.usr = null; render({ reset: true }); };
 Forms.usrsave = async () => {
   const f = ui.cad.usr;
-  await saveUser(user, { id: $('#uf_id').value, name: $('#uf_name').value, role: $('#uf_role').value, password: $('#uf_pin').value, active: $('#uf_act').value === '1' }, false);
-  ui.cad.usr = null; render({ reset: true }); toast('Usuário salvo.', 'ok');
+  await saveUser(user, { id: $('#uf_id').value, name: $('#uf_name').value, role: $('#uf_role').value, password: $('#uf_pin').value, active: $('#uf_act').value === '1', perms: ACCESS_KEYS.filter(k => { const c = $('#up_' + k); return c && c.checked; }) }, false);
+  ui.cad.usr = null; render({ reset: true }); toast('Acessos salvos.', 'ok');
 };
 
 /* ---- relatórios ---- */
@@ -2612,7 +2642,7 @@ let booted = false;
 const VIEW_ALIAS = {
   armazenagem: ['mover', null], saidas: ['mover', 'baixa'],
   liberacao: ['estoque', 'lib'], cobertura: ['estoque', 'cob'], painel: ['estoque', 'painel'],
-  inventario: ['mais', 'inv'], historico: ['mais', 'hist'], cadastros: ['mais', 'cad'], relatorios: ['mais', 'rel'], config: ['mais', 'cfg']
+  inventario: ['mais', 'inv'], historico: ['mais', 'hist'], acessos: ['mais', 'acc'], cadastros: ['mais', 'cad'], relatorios: ['mais', 'rel'], config: ['mais', 'cfg']
 };
 function resolveView(h) {
   const a = VIEW_ALIAS[h]; if (!a) return h;
@@ -2630,7 +2660,7 @@ function composite(group, title, sub, list) {
 View.estoque = () => composite('estq', 'Estoque', 'Saldo, liberação de lotes, cobertura da demanda e painel.', [
   ['saldo', 'Saldo', 'view', View.estoqueSaldo], ['lib', 'Liberar lotes', 'lots', View.liberacao], ['cob', 'Cobertura da demanda', 'view', View.cobertura], ['painel', 'Painel', 'dash', View.painel]]);
 View.mais = () => composite('mais', 'Mais', 'Inventário, histórico, cadastros, relatórios e configurações.', [
-  ['inv', 'Inventário', 'count|approve', View.inventario], ['hist', 'Histórico', 'history', View.historico], ['cad', 'Cadastros', 'cad', View.cadastros], ['rel', 'Relatórios', 'reports', View.relatorios], ['cfg', 'Configurações', 'cfg', View.config]]);
+  ['inv', 'Inventário', 'count|approve', View.inventario], ['hist', 'Histórico', 'history', View.historico], ['cad', 'Cadastros', 'cad', View.cadastros], ['acc', 'Acessos', 'users', () => cadUsr()], ['rel', 'Relatórios', 'reports', View.relatorios], ['cfg', 'Configurações', 'cfg', View.config]]);
 
 /* ---- Início: a fila do dia ---- */
 View.inicio = () => {
@@ -2647,6 +2677,7 @@ View.inicio = () => {
     ['separacao', null, 'Separar', 'pedido(s) em aberto', openO, 'pick|orders'],
     ['liberacao', null, 'Liberar lotes', 'lote(s) em quarentena', quar, 'lots'],
     ['cobertura', null, 'Faltas na demanda', 'produto(s) sem cobertura', falta, 'view'],
+    ['acessos', null, 'Liberar acessos', 'pessoa(s) aguardando', Object.values(S.users).filter(u => u.pending && !u.active).length, 'users'],
     ['historico', 'occ', 'Ocorrências', 'em aberto', occ, 'history']
   ].filter(t => t[5].split('|').some(p => can(user, p))).sort((a, b) => (b[4] > 0) - (a[4] > 0));
   const pend = items.filter(t => t[4] > 0).length;
