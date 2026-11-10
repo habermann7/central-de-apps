@@ -200,7 +200,7 @@
   },
   {
     "title": "Controle de Estoque",
-    "description": "Recebimento, liberação de lotes, FEFO, inventário e cobertura da demanda",
+    "description": "",
     "file": "Controle_de_Estoque.html",
     "icon": "📦",
     "color": "#4E8368",
