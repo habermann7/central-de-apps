@@ -149,6 +149,7 @@ details.more>summary{cursor:pointer;font-weight:600}details.more[open]>summary{m
 .ticket{padding:18px;margin-top:12px}
 .acc{border:1px solid var(--line);border-radius:12px;margin:12px 0;padding:8px 14px 12px}.acc legend{font:600 12px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;padding:0 6px}
 .acc-i{display:flex;gap:10px;align-items:flex-start;padding:8px 0;cursor:pointer}.acc-i input{width:20px;height:20px;margin-top:2px;accent-color:#000;flex:none}.acc-i small{display:block;color:var(--muted);font-size:12.5px}.acc-i.off{opacity:.5}
+.rx-alert{font-size:18px;padding:16px 18px;border-width:2px}.rx-alert b{margin-right:8px}
 </style>
 </head>
 <body>
@@ -218,7 +219,7 @@ const DOCA = 'DOCA-REC';
 const DOCA_OBJ = { id: DOCA, type: 'dock', blocked: false, capacity: 0, label: 'Doca de recebimento' };
 class WmsError extends Error { constructor(msg, code) { super(msg); this.code = code || 'ERRO'; } }
 const fail = (m, c) => { throw new WmsError(m, c); };
-const COLS = ['products', 'addresses', 'lots', 'stock', 'receipts', 'orders', 'moves', 'counts', 'plans', 'occurrences', 'demands', 'users', 'audit', 'settings'];
+const COLS = ['products', 'addresses', 'lots', 'stock', 'receipts', 'orders', 'moves', 'counts', 'plans', 'occurrences', 'demands', 'users', 'audit', 'settings', 'remessas'];
 const S = {}; COLS.forEach(c => { S[c] = {}; });
 const Clock = { now: () => new Date() };
 const pad = n => String(n).padStart(2, '0');
@@ -237,20 +238,21 @@ function daysUntil(s) {
 }
 
 /* ---- papéis e permissões ---- */
-const ROLES = { admin: 'Administrador', gestor: 'Gestor', recebimento: 'Recebimento', armazenagem: 'Armazenagem', separacao: 'Separação', inventario: 'Inventário', qualidade: 'Qualidade (liberação de lotes)' };
+const ROLES = { admin: 'Administrador', gestor: 'Gestor', recebimento: 'Recebimento', armazenagem: 'Armazenagem', separacao: 'Separação', inventario: 'Inventário', qualidade: 'Qualidade (liberação de lotes)', expedicao: 'Expedição (conferência)' };
 const PERMS = {
   admin: ['*'],
-  gestor: ['dash', 'reports', 'approve', 'orders', 'view', 'history', 'lots', 'cad', 'cfg', 'receive', 'store', 'exit', 'pick', 'count', 'users'],
+  gestor: ['dash', 'reports', 'approve', 'view', 'history', 'lots', 'cad', 'cfg', 'receive', 'store', 'exit', 'ship', 'recvexp', 'count', 'users'],
   recebimento: ['receive', 'view'],
-  armazenagem: ['store', 'exit', 'view'],
-  separacao: ['pick', 'view'],
+  armazenagem: ['store', 'exit', 'ship', 'view'],
+  separacao: ['ship', 'view'],
   inventario: ['count', 'view'],
-  qualidade: ['lots', 'view', 'history', 'reports', 'dash']
+  qualidade: ['lots', 'view', 'history', 'reports', 'dash'],
+  expedicao: ['recvexp', 'view']
 };
 const permsOf = u => (u && u.role !== 'admin' && Array.isArray(u.perms)) ? u.perms : (PERMS[u && u.role] || []);
 const can = (u, p) => { if (!u) return false; const l = permsOf(u); return l.includes('*') || l.includes(p); };
 const ACCESS_GROUPS = [
-  ['Operação', [['receive', 'Receber mercadoria', 'Conferir e registrar o que chega'], ['store', 'Guardar e mover', 'Doca para endereço e entre endereços'], ['exit', 'Dar baixa', 'Avaria, descarte, devolução, transferência'], ['pick', 'Separar pedidos', 'Executar a separação'], ['orders', 'Gerenciar pedidos', 'Criar, cancelar e encaminhar'], ['count', 'Contar inventário', 'Contagem por endereço']]],
+  ['Operação', [['receive', 'Receber mercadoria', 'Conferir e registrar o que chega'], ['store', 'Guardar e mover', 'Doca para endereço e entre endereços'], ['exit', 'Dar baixa', 'Avaria, descarte, devolução, transferência'], ['ship', 'Enviar para a expedição', 'Montar a remessa com o que sai do estoque'], ['recvexp', 'Conferir na expedição', 'Bipar e conferir o que chega'], ['count', 'Contar inventário', 'Contagem por endereço']]],
   ['Qualidade e controle', [['lots', 'Liberar e bloquear lotes', 'Quarentena, liberação, bloqueio'], ['approve', 'Autorizar operações', 'Autoriza com PIN e aprova inventário']]],
   ['Consulta', [['view', 'Consultar estoque', 'Saldo e cobertura'], ['dash', 'Ver painel', 'Indicadores'], ['history', 'Ver histórico', 'Movimentações e ocorrências'], ['reports', 'Relatórios', 'Excel e PDF']]],
   ['Administração', [['cad', 'Cadastros', 'Produtos e endereços'], ['users', 'Liberar acessos', 'Criar e alterar usuários'], ['cfg', 'Configurações', 'Regras e backup']]]
@@ -284,10 +286,37 @@ const getRow = (lotId, addr) => S.stock[rowId(lotId, addr)];
 const freeQty = r => r ? r.qty - r.reserved : 0;
 const findLot = (pid, lotNo) => Object.values(S.lots).find(l => l.productId === pid && l.lotNo === norm(lotNo));
 const getAddr = c => { c = norm(c); return c === DOCA ? DOCA_OBJ : S.addresses[c] || null; };
+/* leitura de código GS1 (DataMatrix/GS1-128): (01)GTIN (10)lote (17)validade (11)fabricação */
+function gs1Date(v) {
+  if (!/^\d{6}$/.test(v)) return '';
+  const yy = +v.slice(0, 2), mm = +v.slice(2, 4); let dd = +v.slice(4, 6); if (mm < 1 || mm > 12) return '';
+  const yyyy = 2000 + yy; if (dd === 0) dd = new Date(yyyy, mm, 0).getDate();
+  return yyyy + '-' + String(mm).padStart(2, '0') + '-' + String(dd).padStart(2, '0');
+}
+function gs1Parse(raw) {
+  let s = String(raw || '').replace(/^\][A-Za-z]\d/, '').trim(); if (s.length < 16) return null;
+  const out = {}; const put = (ai, v) => { if (ai === '01') out.gtin = v; else if (ai === '10') out.lot = v; else if (ai === '17') out.expiry = gs1Date(v); else if (ai === '11') out.mfg = gs1Date(v); else if (ai === '21') out.serial = v; };
+  if (s.includes('(')) { for (const m of s.matchAll(/\((\d{2})\)([^(]*)/g)) put(m[1], m[2].replace(/\x1d/g, '').trim()); }
+  else {
+    if (!/^01\d{14}/.test(s)) return null;
+    const fix = { '01': 14, '11': 6, '13': 6, '15': 6, '17': 6 }; let i = 0;
+    while (i < s.length) {
+      const ai = s.slice(i, i + 2); i += 2;
+      if (fix[ai]) { put(ai, s.slice(i, i + fix[ai])); i += fix[ai]; }
+      else if (ai === '10' || ai === '21') { let j = s.indexOf('\x1d', i); if (j < 0) j = s.length; put(ai, s.slice(i, j)); i = j + 1; }
+      else break;
+    }
+  }
+  if (!out.gtin || !/^\d{14}$/.test(out.gtin)) return null;
+  if (out.lot) out.lot = out.lot.toUpperCase();
+  return out;
+}
+const eanKey = c => String(c || '').replace(/\D/g, '').replace(/^0+/, '');
 function resolveProduct(code) {
   code = String(code || '').trim(); if (!code) return null;
-  const u = code.toUpperCase();
-  return Object.values(S.products).find(p => p.ean === code || p.id === u) || null;
+  const u = code.toUpperCase(), g = gs1Parse(code), all = Object.values(S.products);
+  if (g) { const k = eanKey(g.gtin), p = all.find(x => x.ean && eanKey(x.ean) === k); if (p) return p; }
+  return all.find(p => p.ean === code || p.id === u) || null;
 }
 function lotState(l) { if (!l) return 'inexistente'; if (daysUntil(l.expiry) < 0) return 'vencido'; return l.status; }
 const pickable = l => !!l && l.status === 'liberado' && daysUntil(l.expiry) >= 0;
@@ -341,6 +370,14 @@ const occOp = (user, type, text, ref) => op('occurrences', { id: uid('O'), type,
 
 /* ---- usuários e autenticação ---- */
 async function hashPw(pw, salt) {
+  if (globalThis.crypto && globalThis.crypto.subtle) {
+    const enc = new TextEncoder(), key = await globalThis.crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']);
+    const b = await globalThis.crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode('est:' + salt), iterations: 150000 }, key, 256);
+    return 'p1$' + [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+  }
+  return hashPwLegacy(pw, salt);
+}
+async function hashPwLegacy(pw, salt) {
   const data = new TextEncoder().encode(salt + ':' + pw);
   if (globalThis.crypto && globalThis.crypto.subtle) {
     const b = await globalThis.crypto.subtle.digest('SHA-256', data);
@@ -370,7 +407,7 @@ async function saveUser(actor, d, isNew) {
   }
   const u = Object.assign({}, cur || {}, { id, name: String(d.name).trim(), role: first ? 'admin' : d.role, perms, active: d.active !== false, pending: false, createdAt: (cur && cur.createdAt) || isoNow() });
   if (d.password) {
-    if (String(d.password).length < 6) fail('O PIN deve ter ao menos 6 caracteres.', 'VALID');
+    if (String(d.password).length < 8) fail('O PIN deve ter ao menos 8 caracteres.', 'VALID');
     u.salt = uid('s'); u.hash = await hashPw(d.password, u.salt);
   }
   if (!isNew && cur && cur.role === 'admin' && (u.role !== 'admin' || !u.active)) {
@@ -384,8 +421,9 @@ async function verifyLogin(login, pw) {
   const u = S.users[String(login || '').trim().toLowerCase()];
   if (!u || !u.active) fail('Responsável ou PIN inválidos.', 'AUTH');
   if (!u.hash) fail('Este responsável ainda não definiu o PIN de autorização (botão "PIN de autorização" no menu lateral).', 'AUTH');
-  if ((await hashPw(pw || '', u.salt)) !== u.hash) fail('Responsável ou PIN inválidos.', 'AUTH');
-  return u;
+  if (String(u.hash).startsWith('p1$')) { if ((await hashPw(pw || '', u.salt)) !== u.hash) fail('Responsável ou PIN inválidos.', 'AUTH'); return u; }
+  if ((await hashPwLegacy(pw || '', u.salt)) !== u.hash) fail('Responsável ou PIN inválidos.', 'AUTH');
+  try { const salt = uid('s'), nu = Object.assign({}, u, { salt, hash: await hashPw(pw, salt) }); await commit([op('users', nu)]); return nu; } catch (e) { return u; }
 }
 async function authorize(login, pw, perm) {
   const u = await verifyLogin(login, pw);
@@ -736,6 +774,7 @@ async function reverseMove(user, moveId, reason, authUser) {
   if (!String(reason || '').trim()) fail('Informe o motivo do estorno.', 'VALID');
   const m = S.moves[moveId]; if (!m) fail('Movimentação não encontrada.', 'VALID');
   if (m.type === 'ESTORNO') fail('Um estorno não pode ser estornado.', 'VALID');
+  if (m.type === 'ENVIO_EXP' || m.type === 'RETORNO_EXP') fail('Movimento de remessa à expedição: use Expedição, Remessas (cancelar ou tratar).', 'VALID');
   if (m.type === 'SEPARACAO') fail('Separação vinculada a pedido: registre ocorrência e corrija por ajuste de inventário.', 'VALID');
   return withProductLocks([m.productId], async () => {
     if (Object.values(S.moves).some(x => x.reverses === moveId)) fail('Esta movimentação já foi estornada.', 'DUP');
@@ -1091,7 +1130,7 @@ function mkCmp(key, productId, name, expected, items) {
   return { key, productId, name, expected, received, falta, exc, pct: expected ? Math.round(received / expected * 1000) / 10 : null, lots: Object.values(lots), status, label };
 }
 /* ===== WMS ANALYTICS: indicadores e séries do painel (sem DOM) ===== */
-const OUT_TYPES = ['SEPARACAO', 'SAIDA'];
+const OUT_TYPES = ['SEPARACAO', 'SAIDA', 'ENVIO_EXP'];
 const INNER_TYPES = ['ARMAZENAGEM', 'TRANSFERENCIA'];
 function filterMoves(f) {
   f = f || {};
@@ -1625,7 +1664,7 @@ async function exportPdf(rep, name, sub) {
 const View = {};
 const NAV = [
   { id: 'inicio', label: 'Início', perm: 'view|dash' }, { id: 'recebimento', label: 'Receber', perm: 'receive' }, { id: 'mover', label: 'Mover', perm: 'store|exit' },
-  { id: 'separacao', label: 'Separar', perm: 'pick|orders' }, { id: 'estoque', label: 'Estoque', perm: 'view|dash|lots' }, { id: 'mais', label: 'Mais', perm: 'count|approve|history|cad|reports|cfg|users' }
+  { id: 'expedicao', label: 'Expedição', perm: 'ship|recvexp' }, { id: 'estoque', label: 'Estoque', perm: 'view|dash|lots' }, { id: 'mais', label: 'Mais', perm: 'count|approve|history|cad|reports|cfg|users' }
 ];
 const navOk = n => n.perm.split('|').some(p => can(user, p));
 const brandSVG = '<svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="7" fill="var(--accent)"/><g fill="var(--accent-ink)"><rect x="6" y="8" width="2.5" height="16"/><rect x="10.5" y="8" width="1.5" height="16"/><rect x="14" y="8" width="3.5" height="16"/><rect x="19.5" y="8" width="1.5" height="16"/><rect x="23" y="8" width="3" height="16"/></g></svg>';
@@ -1665,13 +1704,13 @@ async function startSession(u) {
 }
 Act.recheck = async () => { await estanteLogin(); if (user) await startSession(user); else { render({ reset: true }); toast('Ainda aguardando liberação do administrador.', 'info'); } };
 async function setOwnPin(u, pin) {
-  pin = String(pin || ''); if (pin.length < 6) fail('Use ao menos 6 caracteres.', 'VALID');
+  pin = String(pin || ''); if (pin.length < 8) fail('Use ao menos 8 caracteres.', 'VALID');
   const salt = uid('s'), nu = Object.assign({}, S.users[u.id], { salt, hash: await hashPw(pin, salt) });
   await commit([op('users', nu), auditOp(u, 'PIN_ALTERADO', u.id)]); user = nu;
 }
 Act.mypin = () => dialog({
   title: 'PIN de autorização',
-  body: '<p class="muted">Serve para autorizar operações sensíveis (produto vencido, correções, cancelamentos). Mínimo de 6 caracteres. Só você deve saber.</p><label class="fld"><span>Novo PIN</span><input name="p1" type="password" autocomplete="new-password"></label><label class="fld"><span>Repita o PIN</span><input name="p2" type="password" autocomplete="new-password"></label>',
+  body: '<p class="muted">Serve para autorizar operações sensíveis (produto vencido, correções, cancelamentos). Mínimo de 8 caracteres. Só você deve saber.</p><label class="fld"><span>Novo PIN</span><input name="p1" type="password" autocomplete="new-password"></label><label class="fld"><span>Repita o PIN</span><input name="p2" type="password" autocomplete="new-password"></label>',
   ok: 'Salvar PIN', onOk: async f => { if (f.p1.value !== f.p2.value) fail('Os PINs não conferem.', 'VALID'); await setOwnPin(user, f.p1.value); toast('PIN de autorização salvo.', 'ok'); }
 });
 Act.logout = () => { location.href = './index.html'; };
@@ -1712,7 +1751,7 @@ View.inicioOld = () => {
     '<div class="tiles">' + TILES.filter(ok).map((t, i) => '<a class="tile" href="#' + t[0] + '" data-act="go" data-view="' + t[0] + '"' + (t[1] ? ' data-tab="' + t[1] + '"' : '') + '><span class="tn">' + (i + 1) + '</span><strong>' + t[2] + '</strong><small>' + esc(t[3]) + '</small>' + (!t[1] || t[1] === 'doca' ? ((hints[t[0]] ? '<em>' + esc(hints[t[0]]) + '</em>' : '')) : '') + '</a>').join('') + '</div>' +
     (open && can(user, 'history') ? '<p class="note warn">' + open + ' ocorrência(s) aberta(s). <a href="#historico" data-act="go" data-view="historico" data-tab="occ">Ver ocorrências</a></p>' : '');
 };
-Act.go = t => { let v = t.dataset.view; if (t.dataset.tab && v === 'historico') ui.tabs.hist = t.dataset.tab; v = resolveView(v); location.hash = '#' + v; ui.view = v; render({ reset: true }); window.scrollTo(0, 0); };
+Act.go = t => { let v = t.dataset.view; if (t.dataset.tab && v === 'historico') ui.tabs.hist = t.dataset.tab; if (t.dataset.tab && v === 'expedicao') ui.tabs.exp = t.dataset.tab; v = resolveView(v); location.hash = '#' + v; ui.view = v; render({ reset: true }); window.scrollTo(0, 0); };
 
 /* ---- painel ---- */
 const dm = d => d.slice(8) + '/' + d.slice(5, 7);
@@ -1896,6 +1935,8 @@ Scan.rc = async (v, name) => {
   if (!p.active) { render(); fail('Produto inativo: recebimento não permitido.'); }
   const d = ui.rc.demandId && S.demands[ui.rc.demandId];
   ui.rc.product = p.id; ui.rc.unknown = null; render({ reset: true });
+  const g = gs1Parse(v);
+  if (g) { const set = (id, val) => { const e = $(id); if (e && val) e.value = val; }; set('#ri_lot', g.lot); set('#ri_val', g.expiry); set('#ri_mfg', g.mfg); if (g.lot || g.expiry) toast('Lote e validade lidos do código de barras. Confira.', 'info'); }
   if (d && !lineFor(d, p)) toast('Atenção: ' + p.name + ' não consta na demanda.', 'bad'); else beep('ok');
 };
 Act.rcnoprod = () => { ui.rc.product = null; render({ reset: true }); };
@@ -2039,7 +2080,7 @@ document.addEventListener('input', e => {
 const liveIn = (g, k, id, v, ph, type) => '<input id="' + id + '" type="' + (type || 'text') + '" data-live="' + g + '" data-key="' + k + '" value="' + esc(v || '') + '"' + (ph ? ' placeholder="' + esc(ph) + '"' : '') + '>';
 const liveSel = (g, k, id, v, list) => '<select id="' + id + '" data-live="' + g + '" data-key="' + k + '">' + opts(list, v || '') + '</select>';
 const ordBadge = s => badge(s, { 'Aberto': 'info', 'Em separação': 'warn', 'Separado': 'ok', 'Encaminhado': 'ok', 'Cancelado': 'muted', 'Sem estoque': 'bad' }[s] || 'muted');
-const mvBadge = t => badge(t, { RECEBIMENTO: 'info', ARMAZENAGEM: 'ok', TRANSFERENCIA: 'ok', SEPARACAO: 'warn', SAIDA: 'bad', AJUSTE: 'muted', ESTORNO: 'bad' }[t] || 'muted');
+const mvBadge = t => badge(t, { RECEBIMENTO: 'info', ARMAZENAGEM: 'ok', TRANSFERENCIA: 'ok', SEPARACAO: 'warn', ENVIO_EXP: 'warn', RETORNO_EXP: 'info', SAIDA: 'bad', AJUSTE: 'muted', ESTORNO: 'bad' }[t] || 'muted');
 const addrName = a => a === DOCA ? 'Doca' : a || '—';
 function originChips(flow) {
   const by = {}; Object.values(S.stock).forEach(r => { if (r.qty > 0) { by[r.addr] = by[r.addr] || { qty: 0, prods: new Set() }; by[r.addr].qty += r.qty; by[r.addr].prods.add(r.productId); } });
@@ -2295,16 +2336,16 @@ View.historico = () => {
   const t = curTab('hist', 'mov');
   if (t === 'mov') {
     const q = norm(hs.q || ''), list = Object.values(S.moves).filter(m => (!hs.type || m.type === hs.type) && (!hs.user || m.user === hs.user) && (!q || [m.lotNo, prodName(m.productId), m.ref, m.fromAddr, m.toAddr].some(x => norm(x).includes(q)))).sort((a, b) => b.ts.localeCompare(a.ts));
-    h += card('', '<div class="filters">' + field('Tipo', liveSel('hist', 'type', 'h_type', hs.type, [['', 'Todos'], ...['RECEBIMENTO', 'ARMAZENAGEM', 'TRANSFERENCIA', 'SEPARACAO', 'SAIDA', 'AJUSTE', 'ESTORNO'].map(x => [x, x])])) + field('Operador', '<select id="h_user" data-live="hist" data-key="user">' + userOpts(hs.user) + '</select>') + field('Buscar', liveIn('hist', 'q', 'h_q', hs.q, 'Lote, produto, pedido ou endereço')) + '</div>');
+    h += card('', '<div class="filters">' + field('Tipo', liveSel('hist', 'type', 'h_type', hs.type, [['', 'Todos'], ...['RECEBIMENTO', 'ARMAZENAGEM', 'TRANSFERENCIA', 'SEPARACAO', 'ENVIO_EXP', 'RETORNO_EXP', 'SAIDA', 'AJUSTE', 'ESTORNO'].map(x => [x, x])])) + field('Operador', '<select id="h_user" data-live="hist" data-key="user">' + userOpts(hs.user) + '</select>') + field('Buscar', liveIn('hist', 'q', 'h_q', hs.q, 'Lote, produto, pedido ou endereço')) + '</div>');
     h += card('Movimentações (' + list.length + (list.length > 200 ? ', mostrando 200' : '') + ')', tbl(['Quando', 'Tipo', 'Produto', 'Lote', 'Origem', 'Destino', 'Qtd', 'Operador', 'Autorizou', 'Ref. / motivo', ''], list.slice(0, 200).map(m => [fmtTs(m.ts), mvBadge(m.type), esc(prodName(m.productId)), esc(m.lotNo), esc(addrName(m.fromAddr)), esc(addrName(m.toAddr)), nf(m.qty), esc(m.user), esc(m.authBy || '—'), esc([m.ref, m.reason].filter(Boolean).join(' · ')),
-      m.type === 'ESTORNO' ? badge('estorna ' + m.reverses.slice(-5), 'muted') : isReversed(m.id) ? badge('Estornado', 'muted') : (m.type !== 'SEPARACAO' && (can(user, 'approve') || can(user, 'history')) ? '<button class="btn sm ghost" data-act="estorno" data-id="' + esc(m.id) + '">Estornar</button>' : '')]), { num: [6] }));
+      m.type === 'ESTORNO' ? badge('estorna ' + m.reverses.slice(-5), 'muted') : isReversed(m.id) ? badge('Estornado', 'muted') : (!['SEPARACAO', 'ENVIO_EXP', 'RETORNO_EXP'].includes(m.type) && (can(user, 'approve') || can(user, 'history')) ? '<button class="btn sm ghost" data-act="estorno" data-id="' + esc(m.id) + '">Estornar</button>' : '')]), { num: [6] }));
   } else if (t === 'trace') {
     const q = norm(hs.lot || ''), lots = q ? Object.values(S.lots).filter(l => l.lotNo.includes(q) || prodName(l.productId).toUpperCase().includes(q)) : [];
     h += card('', field('Número do lote ou nome do produto', liveIn('hist', 'lot', 'h_lot', hs.lot, 'Digite o lote')));
     if (q && !lots.length) h += card('', empty('Nenhum lote encontrado.'));
     lots.slice(0, 6).forEach(l => {
       const rc = l.receiptId && S.receipts[l.receiptId], mv = Object.values(S.moves).filter(m => m.lotId === l.id).sort((a, b) => a.ts.localeCompare(b.ts));
-      const ev = { RECEBIMENTO: 'Recebido', ARMAZENAGEM: 'Armazenado', TRANSFERENCIA: 'Transferido', SEPARACAO: 'Separado', SAIDA: 'Saída', AJUSTE: 'Ajuste de inventário', ESTORNO: 'Estorno' };
+      const ev = { RECEBIMENTO: 'Recebido', ARMAZENAGEM: 'Armazenado', TRANSFERENCIA: 'Transferido', SEPARACAO: 'Separado', ENVIO_EXP: 'Enviado à expedição', RETORNO_EXP: 'Voltou à doca', SAIDA: 'Saída', AJUSTE: 'Ajuste de inventário', ESTORNO: 'Estorno' };
       h += card(esc(prodName(l.productId)) + ' · lote ' + esc(l.lotNo), '<p class="muted">Validade ' + fmtD(l.expiry) + ' ' + lotBadge(l) + (rc ? ' · documento ' + esc(rc.doc) + ' (' + esc(rc.supplier || 'sem fornecedor') + ')' : '') + '</p>' +
         tbl(['Quando', 'Evento', 'Quem', 'De', 'Para', 'Qtd', 'Referência / autorização'], mv.map(m => [fmtTs(m.ts), esc(ev[m.type] || m.type), esc(m.userName || m.user), esc(addrName(m.fromAddr)), esc(addrName(m.toAddr)), nf(m.qty), esc([m.ref ? 'ref ' + m.ref : '', m.authBy ? 'autorizado por ' + m.authBy : '', m.reason].filter(Boolean).join(' · '))]), { num: [5], empty: 'Sem movimentos.' }));
     });
@@ -2384,7 +2425,7 @@ function cadUsr() {
     '<div class="grid3">' + field('Login (vem do e-mail da Estante)', '<input id="uf_id" value="' + esc(f.id || '') + '" readonly>') + field('Nome', '<input id="uf_name" value="' + esc(f.name || '') + '" required>') +
     field('Situação', '<select id="uf_act">' + opts([['1', 'Ativo (pode entrar)'], ['0', 'Inativo (sem acesso)']], (f.active === false && !f.pending) ? '0' : '1') + '</select>') + '</div>' +
     '<div class="grid3">' + field('Perfil (ponto de partida)', '<select id="uf_role" data-roleapply="1">' + opts(roleOpts, f.role || 'recebimento') + '</select>', 'Escolha o perfil e depois ajuste as caixas abaixo, se quiser.') +
-    field('PIN de autorização (opcional)', '<input id="uf_pin" type="password" autocomplete="new-password">', 'Vazio mantém o atual. Mínimo 6 caracteres. Só para quem pode autorizar.') + '</div>' +
+    field('PIN de autorização (opcional)', '<input id="uf_pin" type="password" autocomplete="new-password">', 'Vazio mantém o atual. Mínimo 8 caracteres. Só para quem pode autorizar.') + '</div>' +
     '<div id="uf_perms">' + ACCESS_GROUPS.map(g => '<fieldset class="acc"><legend>' + esc(g[0]) + '</legend>' + g[1].map(([k, t, d]) => { const can_ = user.role === 'admin' || can(user, k) || cur.includes(k); return '<label class="acc-i' + (can_ ? '' : ' off') + '"><input type="checkbox" id="up_' + k + '" data-perm="' + k + '"' + (cur.includes(k) ? ' checked' : '') + (can_ ? '' : ' disabled') + '><span><b>' + esc(t) + '</b><small>' + esc(d) + '</small></span></label>'; }).join('') + '</fieldset>').join('') + '</div>' +
     (f.role === 'admin' ? '<p class="muted">Administrador tem acesso total, as caixas não se aplicam.</p>' : '') +
     '<div class="full row"><button class="btn lg">Salvar acessos</button><button type="button" class="btn ghost" data-act="ufcancel">Cancelar</button></div></form>')
@@ -2414,16 +2455,17 @@ const REPORTS = [
   { id: 'lote', label: 'Estoque por lote', build: () => ({ cols: ['Produto', 'Lote', 'Validade', 'Status', 'Saldo', 'Reservado', 'Endereços'], rows: Object.values(S.lots).map(l => { const r = Object.values(S.stock).filter(x => x.lotId === l.id && x.qty > 0); return [prodName(l.productId), l.lotNo, fmtD(l.expiry), lotState(l), sumQty(r), r.reduce((s, x) => s + x.reserved, 0), r.map(x => addrName(x.addr) + ' (' + x.qty + ')').join(', ')]; }).filter(r => r[4] > 0).sort((a, b) => a[0].localeCompare(b[0])) }) },
   { id: 'validade', label: 'Estoque por validade', build: () => ({ cols: ['Validade', 'Dias', 'Produto', 'Lote', 'Endereço', 'Qtd', 'Status'], rows: Object.values(S.stock).filter(r => r.qty > 0).sort((a, b) => S.lots[a.lotId].expiry.localeCompare(S.lots[b.lotId].expiry)).map(r => { const l = S.lots[r.lotId]; return [fmtD(l.expiry), daysUntil(l.expiry), prodName(r.productId), l.lotNo, addrName(r.addr), r.qty, lotState(l)]; }) }) },
   { id: 'entradas', label: 'Entradas', period: true, build: f => ({ cols: ['Data', 'Documento', 'Produto', 'Lote', 'Validade', 'Qtd', 'Operador'], rows: filterMoves(f).filter(m => m.type === 'RECEBIMENTO').sort((a, b) => a.ts.localeCompare(b.ts)).map(m => [fmtTs(m.ts), m.ref, prodName(m.productId), m.lotNo, fmtD(m.expiry), m.qty, m.userName || m.user]) }) },
-  { id: 'saidas', label: 'Saídas', period: true, build: f => ({ cols: ['Data', 'Tipo', 'Pedido / ref.', 'Produto', 'Lote', 'Origem', 'Qtd', 'Motivo', 'Operador', 'Autorizou'], rows: filterMoves(f).filter(m => OUT_TYPES.includes(m.type)).sort((a, b) => a.ts.localeCompare(b.ts)).map(m => [fmtTs(m.ts), m.type === 'SAIDA' ? (EXIT_TYPES[m.saida] || 'Saída') : 'Separação', m.ref || '', prodName(m.productId), m.lotNo, addrName(m.fromAddr), m.qty, m.reason || '', m.userName || m.user, m.authBy || '']) }) },
+  { id: 'saidas', label: 'Saídas', period: true, build: f => ({ cols: ['Data', 'Tipo', 'Pedido / ref.', 'Produto', 'Lote', 'Origem', 'Qtd', 'Motivo', 'Operador', 'Autorizou'], rows: filterMoves(f).filter(m => OUT_TYPES.includes(m.type)).sort((a, b) => a.ts.localeCompare(b.ts)).map(m => [fmtTs(m.ts), m.type === 'SAIDA' ? (EXIT_TYPES[m.saida] || 'Saída') : m.type === 'ENVIO_EXP' ? 'Envio à expedição' : 'Separação', m.ref || '', prodName(m.productId), m.lotNo, addrName(m.fromAddr), m.qty, m.reason || '', m.userName || m.user, m.authBy || '']) }) },
   { id: 'transf', label: 'Transferências e armazenagens', period: true, build: f => ({ cols: ['Data', 'Tipo', 'Produto', 'Lote', 'Origem', 'Destino', 'Qtd', 'Operador', 'Autorizou', 'Motivo'], rows: filterMoves(f).filter(m => INNER_TYPES.includes(m.type)).sort((a, b) => a.ts.localeCompare(b.ts)).map(m => [fmtTs(m.ts), m.type, prodName(m.productId), m.lotNo, addrName(m.fromAddr), addrName(m.toAddr), m.qty, m.userName || m.user, m.authBy || '', m.reason || '']) }) },
   { id: 'inventario', label: 'Inventário', period: true, build: f => ({ cols: ['Data', 'Endereço', 'Operador', 'Produto', 'Lote', 'Sistema', 'Físico', 'Diferença', 'Status', 'Aprovador'], rows: Object.values(S.counts).filter(c => (!f.from || dayOf(c.ts) >= f.from) && (!f.to || dayOf(c.ts) <= f.to)).sort((a, b) => a.ts.localeCompare(b.ts)).flatMap(c => c.lines.map(l => [fmtTs(c.ts), c.addr, c.userName, prodName(l.productId), l.lotNo, l.sysQty, l.physQty, l.diff, c.status, c.approvedBy || ''])) }) },
   { id: 'recebimentos', label: 'Recebimentos', period: true, build: f => ({ cols: ['Data', 'Documento / demanda', 'Produto', 'Lote', 'Fabricação', 'Validade', 'Qtd', 'Liberação', 'Divergência', 'Operador', 'Status do recebimento'], rows: Object.values(S.receipts).filter(r => (!f.from || dayOf(r.ts) >= f.from) && (!f.to || dayOf(r.ts) <= f.to)).sort((a, b) => a.ts.localeCompare(b.ts)).flatMap(r => r.items.map(i => [fmtTs(i.ts), r.doc, prodName(i.productId), i.lotNo, i.mfg ? fmtD(i.mfg) : '', fmtD(i.expiry), i.qty, i.release, (i.divergences || []).join('; '), i.user, r.status])) }) },
   { id: 'demandarec', label: 'Comparação entre demanda e recebimento', period: true, build: f => ({ cols: ['Demanda', 'Arquivo', 'Referência', 'Produto', 'Prevista', 'Recebida', 'Faltante', 'Excedente', '% recebido', 'Lotes recebidos', 'Situação'], rows: Object.values(S.demands).filter(d => d.status !== 'cancelada' && (!f.from || dayOf(d.importedAt) >= f.from) && (!f.to || dayOf(d.importedAt) <= f.to)).sort((a, b) => a.importedAt.localeCompare(b.importedAt)).flatMap(d => demandCompare(d.id).map(r => [d.id, d.fileName, d.reference || '', r.name, r.expected, r.received, r.falta, r.exc, r.pct == null ? '' : r.pct, r.lots.map(l => l.lotNo + ': ' + l.qty).join(' | '), r.label])) }) },
   { id: 'faltantes', label: 'Produtos faltantes', period: true, build: f => ({ cols: ['Demanda', 'Produto', 'Prevista', 'Recebida', 'Faltante', 'Situação'], rows: Object.values(S.demands).filter(d => d.status !== 'cancelada' && (!f.from || dayOf(d.importedAt) >= f.from) && (!f.to || dayOf(d.importedAt) <= f.to)).flatMap(d => demandCompare(d.id).filter(r => r.falta > 0).map(r => [d.id, r.name, r.expected, r.received, r.falta, d.status === 'aberta' ? 'em conferência' : r.label])) }) },
   { id: 'excesso', label: 'Produtos recebidos em excesso', period: true, build: f => ({ cols: ['Demanda', 'Produto', 'Prevista', 'Recebida', 'Excedente', 'Situação'], rows: Object.values(S.demands).filter(d => d.status !== 'cancelada' && (!f.from || dayOf(d.importedAt) >= f.from) && (!f.to || dayOf(d.importedAt) <= f.to)).flatMap(d => demandCompare(d.id).filter(r => r.exc > 0).map(r => [d.id, r.name, r.expected, r.received, r.exc, r.label])) }) },
-  { id: 'diverg', label: 'Divergências (recebimento e inventário)', period: true, build: f => ({ cols: ['Data', 'Tipo', 'Descrição', 'Operador', 'Situação', 'Justificativa', 'Autorizou / tratou'], rows: Object.values(S.occurrences).filter(o => /^DIVERGENCIA_/.test(o.type) && (!f.from || dayOf(o.ts) >= f.from) && (!f.to || dayOf(o.ts) <= f.to)).sort((a, b) => a.ts.localeCompare(b.ts)).map(o => [fmtTs(o.ts), o.type === 'DIVERGENCIA_RECEBIMENTO' ? 'Recebimento' : 'Inventário', o.text, o.userName, o.status, o.justification || o.note || '', o.authBy || o.resolvedBy || '']) }) },
+  { id: 'diverg', label: 'Divergências (recebimento e inventário)', period: true, build: f => ({ cols: ['Data', 'Tipo', 'Descrição', 'Operador', 'Situação', 'Justificativa', 'Autorizou / tratou'], rows: Object.values(S.occurrences).filter(o => /^DIVERGENCIA_/.test(o.type) && (!f.from || dayOf(o.ts) >= f.from) && (!f.to || dayOf(o.ts) <= f.to)).sort((a, b) => a.ts.localeCompare(b.ts)).map(o => [fmtTs(o.ts), o.type === 'DIVERGENCIA_RECEBIMENTO' ? 'Recebimento' : o.type === 'DIVERGENCIA_EXPEDICAO' ? 'Expedição' : 'Inventário', o.text, o.userName, o.status, o.justification || o.note || '', o.authBy || o.resolvedBy || '']) }) },
   { id: 'vencidos', label: 'Produtos vencidos', build: () => ({ cols: ['Produto', 'Lote', 'Validade', 'Dias vencido', 'Endereço', 'Qtd'], rows: Object.values(S.stock).filter(r => r.qty > 0 && daysUntil(S.lots[r.lotId].expiry) < 0).map(r => { const l = S.lots[r.lotId]; return [prodName(r.productId), l.lotNo, fmtD(l.expiry), -daysUntil(l.expiry), addrName(r.addr), r.qty]; }) }) },
   { id: 'avencer', label: 'Produtos próximos do vencimento', build: () => { const mx = Math.max(...cfg().alertDays); return { cols: ['Produto', 'Lote', 'Validade', 'Dias restantes', 'Endereço', 'Qtd', 'Status'], rows: Object.values(S.stock).filter(r => r.qty > 0 && daysUntil(S.lots[r.lotId].expiry) >= 0 && daysUntil(S.lots[r.lotId].expiry) <= mx).sort((a, b) => S.lots[a.lotId].expiry.localeCompare(S.lots[b.lotId].expiry)).map(r => { const l = S.lots[r.lotId]; return [prodName(r.productId), l.lotNo, fmtD(l.expiry), daysUntil(l.expiry), addrName(r.addr), r.qty, lotState(l)]; }) }; } },
+  { id: 'remessas', label: 'Remessas à expedição', period: true, build: f => ({ cols: ['Remessa', 'Enviada em', 'Enviou', 'Produto', 'Lote', 'Enviado', 'Conferido', 'Diferença', 'Status', 'Conferiu', 'Justificativa'], rows: Object.values(S.remessas).filter(r => (!f.from || dayOf(r.createdAt) >= f.from) && (!f.to || dayOf(r.createdAt) <= f.to)).sort((a, b) => a.createdAt.localeCompare(b.createdAt)).flatMap(r => r.lines.map(l => [r.id, fmtTs(r.createdAt), r.createdByName, prodName(l.productId), l.lotNo, l.qty, l.conf || 0, (l.conf || 0) - l.qty, REM_ST[r.status][0], r.closedByName || '', r.justification || ''])) }) },
   { id: 'produtividade', label: 'Produtividade por operador', period: true, build: f => ({ cols: ['Operador', 'Movimentações', 'Unidades', 'Dias com atividade', 'Média por dia', 'Detalhe'], rows: produtividade(f).map(u => [u.nome || u.user, u.mov, u.un, u.dias, u.mediaDia, Object.entries(u.tipos).map(([k, v]) => k + ': ' + v).join(', ')]) }) }
 ];
 View.relatorios = () => {
@@ -2584,27 +2626,28 @@ function coverageRows(demandId) {
   return [...by.values()].map(x => {
     const a = x.pid ? availOf(x.pid) : { lib: 0, quar: 0, bloq: 0, venc: 0, doca: 0 };
     const rec = x.pid ? mv.filter(m => m.productId === x.pid && m.type === 'RECEBIMENTO' && m.ts >= x.since).reduce((s, m) => s + m.qty, 0) : 0;
-    const saiu = x.pid ? mv.filter(m => m.productId === x.pid && (m.type === 'SAIDA' || m.type === 'SEPARACAO') && m.ts >= x.since).reduce((s, m) => s + m.qty, 0) : 0;
+    const saiu = x.pid ? mv.filter(m => m.productId === x.pid && ['SAIDA', 'SEPARACAO', 'ENVIO_EXP'].includes(m.type) && m.ts >= x.since).reduce((s, m) => s + m.qty, 0) - mv.filter(m => m.productId === x.pid && m.type === 'RETORNO_EXP' && m.ts >= x.since).reduce((s, m) => s + m.qty, 0) : 0;
+    const cexp = x.pid ? Object.values(S.remessas).filter(r => r.createdAt >= x.since).flatMap(r => r.lines).filter(l => l.productId === x.pid).reduce((s, l) => s + (l.conf || 0), 0) : 0;
     x.rest = Math.max(0, x.need - saiu); const falta = Math.max(0, x.rest - a.lib);
     let st = 'ok', label = 'Atendida';
     if (!x.pid) { st = 'bad'; label = 'Sem cadastro'; }
     else if (falta > 0 && a.lib + a.quar >= x.rest) { st = 'warn'; label = 'Depende de liberação'; } else if (x.rest === 0) { label = 'Já expedida'; }
     else if (falta > 0) { st = 'bad'; label = a.lib + a.quar > 0 ? 'Estoque insuficiente' : 'Sem estoque'; }
-    return Object.assign(x, a, { rec, saiu, falta, st, label, bills: [...x.bills].sort() });
+    return Object.assign(x, a, { rec, saiu, cexp, falta, st, label, bills: [...x.bills].sort() });
   }).sort((p, q) => (q.falta - p.falta) || p.name.localeCompare(q.name));
 }
 function coverageData() {
   const f = ui.f, all = coverageRows(f.cobDem || ''), rows = f.cobSt ? all.filter(r => r.st === f.cobSt) : all;
-  return { all, rows, rep: { title: 'Cobertura da demanda', sub: 'Demanda aberta x estoque liberado em ' + fmtD(todayStr()), cols: ['Código', 'Produto', 'Faturamento', 'Pedidos', 'Necessário', 'Recebido', 'Já saiu', 'Liberado', 'Em quarentena', 'Bloqueado', 'Vencido', 'Falta', 'Situação'], rows: rows.map(r => [r.code, r.name, r.bills.map(fmtD).join(', '), r.ords, r.need, r.rec, r.saiu, r.lib, r.quar, r.bloq, r.venc, r.falta, r.label]) } };
+  return { all, rows, rep: { title: 'Cobertura da demanda', sub: 'Demanda aberta x estoque liberado em ' + fmtD(todayStr()), cols: ['Código', 'Produto', 'Faturamento', 'Pedidos', 'Necessário', 'Recebido', 'Enviado à expedição', 'Conferido na expedição', 'Liberado', 'Em quarentena', 'Bloqueado', 'Vencido', 'Falta', 'Situação'], rows: rows.map(r => [r.code, r.name, r.bills.map(fmtD).join(', '), r.ords, r.need, r.rec, r.saiu, r.cexp, r.lib, r.quar, r.bloq, r.venc, r.falta, r.label]) } };
 }
 View.cobertura = () => {
   const f = ui.f, { all, rows } = coverageData(), open = Object.values(S.demands).filter(d => d.status === 'aberta').sort((a, b) => b.importedAt.localeCompare(a.importedAt));
   const n = st => all.filter(r => r.st === st).length, need = all.reduce((s, r) => s + r.need, 0), falta = all.reduce((s, r) => s + r.falta, 0);
-  let h = pageHead('Cobertura da demanda', 'O que a demanda aberta precisa x o que já entrou (recebimento), já saiu (separação e saídas) e o que está liberado no estoque agora. Mostra o que depende de liberação de lote e o que está em falta.', can(user, 'reports') ? '<button class="btn ghost" data-act="cobx">Excel</button><button class="btn ghost" data-act="cobp">PDF</button>' : '');
+  let h = pageHead('Cobertura da demanda', 'O que a demanda aberta precisa x o que já entrou (recebimento), o que já foi enviado e conferido na expedição e o que está liberado no estoque agora. Mostra o que depende de liberação de lote e o que está em falta.', can(user, 'reports') ? '<button class="btn ghost" data-act="cobx">Excel</button><button class="btn ghost" data-act="cobp">PDF</button>' : '');
   h += card('Filtros', '<form class="filters" data-form="cobf">' + field('Demanda', '<select id="cb_dem"><option value="">Todas as abertas</option>' + open.map(d => '<option value="' + esc(d.id) + '"' + (d.id === f.cobDem ? ' selected' : '') + '>' + esc(d.id + ' · ' + d.fileName) + '</option>').join('') + '</select>') +
     field('Situação', '<select id="cb_st">' + opts([['', 'Todas'], ['ok', 'Atendidas'], ['warn', 'Dependem de liberação'], ['bad', 'Em falta / sem cadastro']], f.cobSt || '') + '</select>') + '<div class="fa"><button class="btn">Aplicar</button></div></form>');
   h += '<div class="kgrid">' + kpiT('Produtos na demanda', nf(all.length), nf(need) + ' un necessárias') + kpiT('Atendidos', nf(n('ok')), 'com estoque liberado') + kpiT('Dependem de liberação', nf(n('warn')), 'cobertos se a quarentena for liberada', n('warn') ? 'warn' : '') + kpiT('Em falta', nf(n('bad')), nf(falta) + ' un a menos do que o necessário', n('bad') ? 'bad' : '') + '</div>';
-  h += card('Produtos (' + rows.length + ')', tbl(['Produto', 'Faturamento', 'Pedidos', 'Necessário', 'Recebido', 'Já saiu', 'Liberado', 'Quarentena', 'Falta', 'Situação'], rows.map(r => [esc(r.code) + '<br><span class="muted">' + esc(r.name) + '</span>', esc(r.bills.map(fmtD).join(', ') || '—'), nf(r.ords), nf(r.need), nf(r.rec), nf(r.saiu), nf(r.lib), nf(r.quar), r.falta ? '<b class="neg">' + nf(r.falta) + '</b>' : '0', badge(r.label, r.st)]), { num: [2, 3, 4, 5, 6, 7, 8], empty: open.length ? 'Nenhum produto neste filtro.' : 'Não há demanda aberta. Importe o Excel em Recebimento.' }));
+  h += card('Produtos (' + rows.length + ')', tbl(['Produto', 'Faturamento', 'Pedidos', 'Necessário', 'Recebido', 'Enviado à expedição', 'Conferido na expedição', 'Liberado', 'Quarentena', 'Falta', 'Situação'], rows.map(r => [esc(r.code) + '<br><span class="muted">' + esc(r.name) + '</span>', esc(r.bills.map(fmtD).join(', ') || '—'), nf(r.ords), nf(r.need), nf(r.rec), nf(r.saiu), nf(r.cexp), nf(r.lib), nf(r.quar), r.falta ? '<b class="neg">' + nf(r.falta) + '</b>' : '0', badge(r.label, r.st)]), { num: [2, 3, 4, 5, 6, 7, 8], empty: open.length ? 'Nenhum produto neste filtro.' : 'Não há demanda aberta. Importe o Excel em Recebimento.' }));
   return h;
 };
 Forms.cobf = () => { ui.f.cobDem = $('#cb_dem').value; ui.f.cobSt = $('#cb_st').value; render(); };
@@ -2640,7 +2683,7 @@ function makeFbDb() {
 let booted = false;
 /* ===== v2: app enxuto. Seis áreas, fluxos de uma tela. O motor (saldo, lote, FEFO, autorização, histórico) é o mesmo. ===== */
 const VIEW_ALIAS = {
-  armazenagem: ['mover', null], saidas: ['mover', 'baixa'],
+  armazenagem: ['mover', null], separacao: ['expedicao', null], saidas: ['mover', 'baixa'],
   liberacao: ['estoque', 'lib'], cobertura: ['estoque', 'cob'], painel: ['estoque', 'painel'],
   inventario: ['mais', 'inv'], historico: ['mais', 'hist'], acessos: ['mais', 'acc'], cadastros: ['mais', 'cad'], relatorios: ['mais', 'rel'], config: ['mais', 'cfg']
 };
@@ -2674,7 +2717,8 @@ View.inicio = () => {
   const items = [
     ['recebimento', null, 'Receber', 'demanda(s) para conferir', openD, 'receive'],
     ['mover', null, 'Guardar da doca', 'item(ns) esperando na doca', dock, 'store'],
-    ['separacao', null, 'Separar', 'pedido(s) em aberto', openO, 'pick|orders'],
+    ['expedicao', 'conf', 'Conferir na expedição', 'remessa(s) para conferir', Object.values(S.remessas).filter(remOpen).length, 'recvexp'],
+    ['expedicao', 'rem', 'Remessas com divergência', 'para tratar', Object.values(S.remessas).filter(r => r.status === 'divergente').length, 'approve'],
     ['liberacao', null, 'Liberar lotes', 'lote(s) em quarentena', quar, 'lots'],
     ['cobertura', null, 'Faltas na demanda', 'produto(s) sem cobertura', falta, 'view'],
     ['acessos', null, 'Liberar acessos', 'pessoa(s) aguardando', Object.values(S.users).filter(u => u.pending && !u.active).length, 'users'],
@@ -2692,8 +2736,8 @@ Forms.inisearch = () => { ui.est.q = $('#ini_q').value.trim(); ui.tabs.estq = 's
 const mvState = () => ui.mv || (ui.mv = { mode: 'mover' });
 const mvOrder = (x, y) => (x.addr === DOCA ? 0 : 1) - (y.addr === DOCA ? 0 : 1) || fefoCmp(x, y);
 function mvFind(v) {
-  const p = resolveProduct(v);
-  if (p) return { kind: 'prod', p, rows: Object.values(S.stock).filter(r => r.productId === p.id && freeQty(r) > 0).sort(mvOrder) };
+  const p = resolveProduct(v), g = gs1Parse(v);
+  if (p) { let rows = Object.values(S.stock).filter(r => r.productId === p.id && freeQty(r) > 0).sort(mvOrder); if (g && g.lot) { const m = rows.filter(r => S.lots[r.lotId].lotNo === norm(g.lot)); if (m.length) rows = m; } return { kind: 'prod', p, rows }; }
   const a = getAddr(v);
   if (a) return { kind: 'addr', a, rows: rowsAt(a.id).filter(r => freeQty(r) > 0).sort(mvOrder) };
   return null;
@@ -2800,6 +2844,277 @@ Act.mvaddr = t => {
   if (row && mv.mode !== 'baixa' && !mv.to) return mvScanTo(t.dataset.addr);
   if (!row) return Act.mvfrom(t);
   toast('Esse produto já tem destino escolhido. Toque em Trocar para mudar.', 'info');
+};
+
+/* ===== Expedição: o estoque envia uma remessa e a expedição confere bipando ===== */
+const REM_ST = { enviada: ['Em trânsito', 'warn'], conferencia: ['Em conferência', 'info'], conferida: ['Conferida', 'ok'], divergente: ['Com divergência', 'bad'], tratada: ['Tratada', 'muted'], cancelada: ['Cancelada', 'muted'] };
+const remBadge = r => badge(REM_ST[r.status][0], REM_ST[r.status][1]);
+const remOpen = r => r.status === 'enviada' || r.status === 'conferencia';
+const remTotals = r => ({ qty: r.lines.reduce((s, l) => s + l.qty, 0), conf: r.lines.reduce((s, l) => s + (l.conf || 0), 0) });
+function remNumber() {
+  const d = todayStr().replace(/-/g, '').slice(2); let n = Object.values(S.remessas).filter(r => r.id.indexOf('REM-' + d) === 0).length + 1, id;
+  do { id = 'REM-' + d + '-' + String(n++).padStart(2, '0'); } while (S.remessas[id]);
+  return id;
+}
+/* envio: a mercadoria sai do endereço e fica "em trânsito" até a expedição conferir */
+async function createRemessa(user, o) {
+  need(user, 'ship');
+  const lines = o.lines || []; if (!lines.length) fail('Inclua ao menos um item na remessa.', 'VALID');
+  const pids = lines.map(l => { const lot = S.lots[l.lotId]; if (!lot) fail('Lote não encontrado.', 'LOTE'); return lot.productId; });
+  return withProductLocks(pids, async () => {
+    const id = remNumber(), moves = [], out = [];
+    for (const l of lines) {
+      const lot = S.lots[l.lotId], qty = Number(l.qty);
+      if (!pickable(lot)) fail('Lote ' + lot.lotNo + ' está ' + lotState(lot) + ': não pode ir para a expedição.', 'LOTE_BLOQ');
+      if (!Number.isInteger(qty) || qty < 1) fail('Quantidade inválida na remessa.', 'QTD');
+      if (l.fromAddr === DOCA || !S.addresses[l.fromAddr]) fail('Envie só o que já está guardado em um endereço. Guarde antes em Mover.', 'ENDERECO');
+      moves.push(mkMove(user, lot, { type: 'ENVIO_EXP', fromAddr: l.fromAddr, toAddr: null, qty, ref: id, reason: o.note || '', scans: [{ step: 'origem', value: l.fromAddr, ok: true }] }));
+      out.push({ productId: lot.productId, lotId: lot.id, lotNo: lot.lotNo, expiry: lot.expiry, fromAddr: l.fromAddr, qty, conf: 0 });
+    }
+    const rem = { id, status: 'enviada', lines: out, pedido: String(o.pedido || '').trim().toUpperCase(), note: String(o.note || '').trim(), createdAt: isoNow(), createdBy: user.id, createdByName: user.name, scans: [] };
+    await postMoves(moves, [op('remessas', rem), auditOp(user, 'REMESSA_ENVIADA', id + ': ' + out.length + ' item(ns), ' + out.reduce((s, l) => s + l.qty, 0) + ' un')]);
+    return rem;
+  });
+}
+/* conferência: cada bipe confere o produto contra a remessa; o que não bate é recusado com aviso */
+async function remScan(user, id, o) {
+  need(user, 'recvexp');
+  await Store.refreshDoc('remessas', id);
+  const cur = S.remessas[id]; if (!cur) fail('Remessa não encontrada.', 'VALID');
+  if (!remOpen(cur)) fail('Esta remessa não está aberta para conferência.', 'STATUS');
+  const r = clone(cur), qty = Number(o.qty || 1); if (!Number.isInteger(qty) || qty < 1) fail('Quantidade por bipe inválida.', 'QTD');
+  let i = o.lineIdx;
+  if (o.code != null) {
+    const p = resolveProduct(o.code);
+    if (!p) fail('PRODUTO DESCONHECIDO: o código ' + o.code + ' não é de nenhum produto cadastrado.', 'FORA');
+    const idx = r.lines.map((l, k) => l.productId === p.id ? k : -1).filter(k => k >= 0);
+    if (!idx.length) fail('FORA DA REMESSA: ' + p.name + ' não consta em ' + id + '. Separe e não confira este item.', 'FORA');
+    if (idx.length === 1) i = idx[0]; else if (o.lotNo) i = idx[0];
+    else if (!idx.includes(i) && !o.lotNo) fail(p.name + ' veio em ' + idx.length + ' lotes nesta remessa (' + idx.map(k => r.lines[k].lotNo).join(', ') + '). Toque no lote que você está conferindo e bipe de novo.', 'LOTE');
+  }
+  if (o.code != null && o.lotNo) {
+    const same = r.lines.map((x, k) => (x.productId === r.lines[i].productId && x.lotNo === norm(o.lotNo)) ? k : -1).filter(k => k >= 0);
+    if (same.length) i = same[0];
+    else fail('LOTE DIFERENTE: a caixa é do lote ' + norm(o.lotNo) + ', mas a remessa enviou ' + [...new Set(r.lines.filter(x => x.productId === r.lines[i].productId).map(x => x.lotNo))].join(', ') + '.', 'LOTE');
+  }
+  const l = r.lines[i]; if (!l) fail('Linha da remessa não encontrada.', 'VALID');
+  if (o.expiry && l.expiry && o.expiry !== l.expiry) fail('VALIDADE DIFERENTE: a caixa vence em ' + fmtD(o.expiry) + ', mas o lote ' + l.lotNo + ' foi enviado com validade ' + fmtD(l.expiry) + '.', 'LOTE');
+  if ((l.conf || 0) + qty > l.qty) fail('A MAIS DO QUE O ENVIADO: ' + prodName(l.productId) + ' lote ' + l.lotNo + ' foi enviado com ' + l.qty + ' un e já tem ' + (l.conf || 0) + ' conferidas.', 'EXCESSO');
+  l.conf = (l.conf || 0) + qty; r.status = 'conferencia';
+  r.scans = (r.scans || []).concat([{ ts: isoNow(), user: user.id, productId: l.productId, lotNo: l.lotNo, qty }]).slice(-300);
+  await commit([op('remessas', r)]);
+  return { rem: r, line: l, done: l.conf === l.qty, all: r.lines.every(x => (x.conf || 0) === x.qty) };
+}
+async function remReset(user, id, idx) {
+  need(user, 'recvexp'); await Store.refreshDoc('remessas', id);
+  const cur = S.remessas[id]; if (!cur || !remOpen(cur)) fail('Esta remessa não está aberta para conferência.', 'STATUS');
+  const r = clone(cur); if (!r.lines[idx]) fail('Linha não encontrada.', 'VALID'); r.lines[idx].conf = 0; await commit([op('remessas', r)]);
+}
+async function remClose(user, id, o) {
+  need(user, 'recvexp'); await Store.refreshDoc('remessas', id);
+  const cur = S.remessas[id]; if (!cur || !remOpen(cur)) fail('Esta remessa não está aberta para conferência.', 'STATUS');
+  const r = clone(cur), diffs = r.lines.filter(l => (l.conf || 0) !== l.qty), ops = [];
+  r.closedAt = isoNow(); r.closedBy = user.id; r.closedByName = user.name;
+  if (!diffs.length) { r.status = 'conferida'; ops.push(auditOp(user, 'REMESSA_CONFERIDA', id + ': tudo certo')); }
+  else {
+    if (!String(o.justification || '').trim()) fail('Informe a justificativa da divergência.', 'JUST');
+    if (!o.authUser || !can(o.authUser, 'approve')) fail('Fechar com divergência exige autorização de responsável.', 'AUTH');
+    r.status = 'divergente'; r.justification = String(o.justification).trim(); r.authBy = o.authUser.id;
+    const txt = id + ': ' + diffs.map(l => prodName(l.productId) + ' lote ' + l.lotNo + ' enviado ' + l.qty + ', conferido ' + (l.conf || 0)).join('; ');
+    ops.push(occOp(user, 'DIVERGENCIA_EXPEDICAO', txt, { remessa: id }), auditOp(user, 'REMESSA_DIVERGENTE', txt + ' · ' + r.justification));
+  }
+  await commit([op('remessas', r), ...ops]);
+  return r;
+}
+/* tratar a diferença: devolver ao estoque (doca) ou registrar a perda */
+async function remTreat(user, id, o) {
+  need(user, 'approve'); await Store.refreshDoc('remessas', id);
+  const cur = S.remessas[id]; if (!cur || cur.status !== 'divergente') fail('Só remessa com divergência pode ser tratada.', 'STATUS');
+  if (!['devolver', 'perda'].includes(o.action)) fail('Ação inválida.', 'VALID');
+  if (!String(o.reason || '').trim()) fail('Informe o motivo.', 'VALID');
+  const r = clone(cur), falt = r.lines.filter(l => l.qty > (l.conf || 0));
+  return withProductLocks(falt.map(l => l.productId), async () => {
+    const moves = o.action === 'devolver' ? falt.map(l => mkMove(user, S.lots[l.lotId], { type: 'RETORNO_EXP', fromAddr: null, toAddr: DOCA, qty: l.qty - (l.conf || 0), ref: id, reason: o.reason, authBy: user.id })) : [];
+    r.status = 'tratada'; r.treatment = o.action; r.treatReason = String(o.reason).trim(); r.treatedBy = user.id; r.treatedAt = isoNow();
+    const occ = Object.values(S.occurrences).find(x => x.ref && x.ref.remessa === id && x.status === 'aberta');
+    const extra = [op('remessas', r), auditOp(user, 'REMESSA_TRATADA', id + ': ' + (o.action === 'devolver' ? 'diferença devolvida à doca' : 'perda registrada') + ' · ' + o.reason)];
+    if (occ) extra.push(op('occurrences', Object.assign({}, occ, { status: 'resolvida', resolution: o.reason, resolvedBy: user.id, resolvedAt: isoNow() })));
+    if (moves.length) await postMoves(moves, extra); else await commit(extra);
+    return r;
+  });
+}
+async function remCancel(user, id, reason, authUser) {
+  need(user, 'ship'); await Store.refreshDoc('remessas', id);
+  const cur = S.remessas[id]; if (!cur || cur.status !== 'enviada') fail('Só dá para cancelar remessa que a expedição ainda não começou a conferir.', 'STATUS');
+  if (!String(reason || '').trim()) fail('Informe o motivo do cancelamento.', 'VALID');
+  if (!authUser || !can(authUser, 'approve')) fail('Cancelar remessa exige autorização de responsável.', 'AUTH');
+  const r = clone(cur);
+  return withProductLocks(r.lines.map(l => l.productId), async () => {
+    const moves = r.lines.map(l => mkMove(user, S.lots[l.lotId], { type: 'RETORNO_EXP', fromAddr: null, toAddr: DOCA, qty: l.qty, ref: id, reason, authBy: authUser.id }));
+    r.status = 'cancelada'; r.cancelReason = String(reason).trim(); r.cancelledBy = user.id; r.cancelledAt = isoNow();
+    await postMoves(moves, [op('remessas', r), auditOp(user, 'REMESSA_CANCELADA', id + ': ' + reason)]);
+    return r;
+  });
+}
+
+/* ---- telas ---- */
+View.expedicao = () => composite('exp', 'Expedição', 'O estoque envia, a expedição confere bipando. Se algo não bater, o app avisa.', [
+  ['env', 'Enviar', 'ship', expEnviar], ['conf', 'Conferir', 'recvexp', expConferir], ['rem', 'Remessas', 'ship|recvexp|approve', expRemessas]]);
+
+const rmLines = () => (ui.rm && ui.rm.lines) || [];
+function expEnviar() {
+  const rm = ui.rm || (ui.rm = { lines: [], note: '', pedido: '', cands: null, rowId: null });
+  const used = id => rm.lines.filter(l => l.rowId === id).reduce((s, l) => s + l.qty, 0);
+  const row = rm.rowId && S.stock[rm.rowId];
+  let h = '';
+  if (row && freeQty(row) - used(row.id) > 0) {
+    const lot = S.lots[row.lotId], p = S.products[row.productId], free = freeQty(row) - used(row.id);
+    h += card(esc(p.name), '<p class="muted">Lote ' + esc(lot.lotNo) + ' · val. ' + fmtD(lot.expiry) + ' · em ' + esc(row.addr) + ' · ' + nf(free) + ' un livres</p><div class="row">' + lotBadge(lot) + ' ' + expBadge(lot.expiry) + '</div>' +
+      '<form data-form="rmadd" class="grid2">' + field('Quantidade a enviar', '<input id="rm_qty" type="number" min="1" max="' + free + '" step="1" inputmode="numeric" required data-autofocus>', 'Livres neste endereço: ' + nf(free)) + '<div class="full row"><button class="btn lg">Adicionar à remessa</button><button type="button" class="btn ghost" data-act="rmreset">Trocar produto</button></div></form>');
+  } else {
+    rm.rowId = null;
+    h += card('', scanField('rm', 'x', 'Bipe o produto que vai para a expedição'), '', 'scancard');
+    if (rm.cands) h += card(rm.cands.title, tbl(['Produto', 'Lote', 'Validade', 'Endereço', 'Livre', ''], rm.cands.ids.map(i => S.stock[i]).filter(r => r).map((r, k) => { const l = S.lots[r.lotId]; return [esc(prodName(r.productId)), esc(l.lotNo) + (k === 0 ? ' ' + badge('vence primeiro', 'info') : ''), fmtD(l.expiry), esc(r.addr), nf(freeQty(r) - used(r.id)), '<button class="btn sm" data-act="rmpick" data-id="' + esc(r.id) + '">Usar</button>']; }), { num: [4] }));
+  }
+  const n = rm.lines.reduce((s, l) => s + l.qty, 0);
+  h += card('Itens da remessa (' + rm.lines.length + ')', rm.lines.length ? tbl(['Produto', 'Lote', 'De', 'Qtd', ''], rm.lines.map((l, i) => [esc(prodName(S.lots[l.lotId].productId)), esc(S.lots[l.lotId].lotNo), esc(l.fromAddr), nf(l.qty), '<button class="btn sm ghost" data-act="rmdel" data-i="' + i + '">Tirar</button>']), { num: [3] }) +
+    '<div class="grid2" style="margin-top:12px">' + field('Pedido / faturamento (opcional)', '<input id="rm_ped" list="rm_peds" value="' + esc(rm.pedido || '') + '" autocomplete="off"><datalist id="rm_peds">' + remPedidos().map(x => '<option value="' + esc(x) + '">').join('') + '</datalist>') + field('Observação (opcional)', '<input id="rm_note" value="' + esc(rm.note || '') + '" placeholder="Ex.: cliente ou transportadora">') + '<div class="fa"><button class="btn lg" data-act="rmsend">Enviar ' + nf(n) + ' un para a expedição</button></div></div>'
+    : '<p class="muted">Bipe os produtos que estão saindo do estoque. Depois é só enviar: a expedição recebe a lista para conferir.</p>');
+  return h;
+}
+Scan.rm = async v => {
+  const rm = ui.rm, p = resolveProduct(v); if (!p) fail('Produto não cadastrado: ' + v);
+  const used = id => rm.lines.filter(l => l.rowId === id).reduce((s, l) => s + l.qty, 0);
+  const all = Object.values(S.stock).filter(r => r.productId === p.id && freeQty(r) > 0);
+  const rows = all.filter(r => r.addr !== DOCA && S.addresses[r.addr] && pickable(S.lots[r.lotId]) && freeQty(r) - used(r.id) > 0).sort(fefoCmp);
+  if (!rows.length) {
+    if (all.some(r => r.addr === DOCA)) fail(p.name + ' ainda está na doca. Guarde antes em Mover.');
+    if (all.length) fail(p.name + ': só há lote em quarentena, bloqueado ou vencido. Não pode ir para a expedição.');
+    fail('Não há ' + p.name + ' com saldo livre no estoque.');
+  }
+  const g = gs1Parse(v); if (g && g.lot) { const m = rows.filter(r => S.lots[r.lotId].lotNo === norm(g.lot)); if (m.length) { rows.length = 0; rows.push(...m); } else toast('O lote ' + norm(g.lot) + ' da caixa não está disponível no estoque.', 'info'); }
+  if (rows.length === 1) { rm.rowId = rows[0].id; rm.cands = null; render({ reset: true }); beep('ok'); return; }
+  rm.cands = { title: p.name + ': escolha o lote (o primeiro é o que vence antes)', ids: rows.map(r => r.id) }; render({ reset: true });
+};
+Act.rmpick = t => { ui.rm.rowId = t.dataset.id; ui.rm.cands = null; render({ reset: true }); };
+Act.rmreset = () => { ui.rm.rowId = null; ui.rm.cands = null; render({ reset: true }); };
+Act.rmdel = t => { ui.rm.lines.splice(Number(t.dataset.i), 1); render(); };
+Forms.rmadd = () => {
+  const rm = ui.rm, row = S.stock[rm.rowId]; if (!row) fail('Escolha o produto.');
+  const qty = Number($('#rm_qty').value), used = rm.lines.filter(l => l.rowId === row.id).reduce((s, l) => s + l.qty, 0);
+  if (!Number.isInteger(qty) || qty < 1) fail('Informe a quantidade.'); if (qty > freeQty(row) - used) fail('Só há ' + nf(freeQty(row) - used) + ' un livres neste endereço.');
+  const first = Object.values(S.stock).filter(r => r.productId === row.productId && r.addr !== DOCA && S.addresses[r.addr] && pickable(S.lots[r.lotId]) && freeQty(r) > 0).sort(fefoCmp)[0];
+  const ex = rm.lines.find(l => l.rowId === row.id);
+  if (ex) ex.qty += qty; else rm.lines.push({ rowId: row.id, lotId: row.lotId, fromAddr: row.addr, qty });
+  if (first && first.lotId !== row.lotId) toast('Atenção: o lote ' + S.lots[first.lotId].lotNo + ' vence antes deste. Confirme se é isso mesmo.', 'info'); else toast('Adicionado.', 'ok');
+  rm.rowId = null; rm.cands = null; render({ reset: true });
+};
+Act.rmsend = async () => {
+  const rm = ui.rm; rm.note = ($('#rm_note') || {}).value || '';
+  const n = rm.lines.reduce((s, l) => s + l.qty, 0);
+  if (!(await confirmBox('Enviar para a expedição', 'Enviar ' + rm.lines.length + ' item(ns), ' + nf(n) + ' unidades? Elas saem do estoque e ficam em trânsito até a expedição conferir.', 'Enviar'))) return;
+  const rem = await createRemessa(user, { lines: rm.lines, note: rm.note, pedido: ($('#rm_ped') || {}).value || '' });
+  ui.rm = { lines: [], note: '', pedido: '', cands: null, rowId: null }; render({ reset: true }); toast('Remessa ' + rem.id + ' enviada. A expedição já pode conferir.', 'ok');
+};
+
+function expConferir() {
+  const rx = ui.rx, r = rx && S.remessas[rx.id];
+  if (!r || !remOpen(r)) {
+    if (rx && r && !remOpen(r)) { ui.rx = null; }
+    const list = Object.values(S.remessas).filter(remOpen).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    return card('', scanField('rx', 'open', 'Bipe o código do romaneio para abrir a remessa', 'Código da remessa (ex.: REM-261110-01)'), '', 'scancard') + card('Remessas esperando conferência (' + list.length + ')', tbl(['Remessa', 'Enviada', 'Por', 'Itens', 'Unidades', 'Conferido', ''], list.map(x => { const T = remTotals(x); return ['<b>' + esc(x.id) + '</b>' + (x.pedido ? '<br><span class="muted">Pedido ' + esc(x.pedido) + '</span>' : '') + (x.note ? '<br><span class="muted">' + esc(x.note) + '</span>' : ''), fmtTs(x.createdAt), esc(x.createdByName), x.lines.length, nf(T.qty), pctBar(T.qty ? Math.round(T.conf * 1000 / T.qty) / 10 : 0, 'ok'), '<button class="btn sm" data-act="rxopen" data-id="' + esc(x.id) + '">' + (T.conf ? 'Continuar' : 'Conferir') + '</button>']; }), { num: [3, 4], empty: 'Nenhuma remessa esperando. Quando o estoque enviar, ela aparece aqui.' }));
+  }
+  const T = remTotals(r), done = T.conf === T.qty;
+  let h = card('Remessa ' + esc(r.id), '<p class="muted">Enviada por ' + esc(r.createdByName) + ' em ' + fmtTs(r.createdAt) + (r.pedido ? ' · pedido ' + esc(r.pedido) : '') + (r.note ? ' · ' + esc(r.note) : '') + '</p>' + pctBar(T.qty ? Math.round(T.conf * 1000 / T.qty) / 10 : 0, done ? 'ok' : 'warn') + '<p><b>' + nf(T.conf) + ' de ' + nf(T.qty) + ' un conferidas</b></p>',
+    '<button class="btn" data-act="rxclose">' + (done ? 'Finalizar: tudo certo' : 'Finalizar com divergência') + '</button><button class="btn ghost" data-act="rxexit">Sair (continua depois)</button>');
+  if (rx.alert) h += '<div class="note ' + (rx.alert.kind === 'ok' ? 'ok' : 'bad') + ' rx-alert" role="alert"><b>' + (rx.alert.kind === 'ok' ? 'CERTO' : 'ATENÇÃO') + '</b> ' + esc(rx.alert.text) + '</div>';
+  h += card('', scanField('rx', 'x', 'Bipe cada produto que chegou') + '<div class="grid2" style="margin-top:8px">' + field('Quantidade por bipe', '<input id="rx_q" type="number" min="1" step="1" value="1" inputmode="numeric">', 'Use 1 para bipar unidade por unidade, ou o total da caixa.') + '</div>', '', 'scancard');
+  h += card('Itens da remessa', tbl(['Produto', 'Lote', 'Enviado', 'Conferido', 'Situação', ''], r.lines.map((l, i) => {
+    const c = l.conf || 0, multi = r.lines.filter(x => x.productId === l.productId).length > 1, sel = rx.sel === i;
+    return [esc(prodName(l.productId)), esc(l.lotNo) + (sel ? ' ' + badge('conferindo', 'info') : ''), nf(l.qty), '<b>' + nf(c) + '</b>', c === l.qty ? badge('Completo', 'ok') : c ? badge('Faltam ' + nf(l.qty - c), 'warn') : badge('Não conferido', 'muted'),
+      (multi && c < l.qty ? '<button class="btn sm ghost" data-act="rxsel" data-i="' + i + '">Conferir este lote</button> ' : '') + (c < l.qty ? '<button class="btn sm ghost" data-act="rxall" data-i="' + i + '">Tudo certo</button> ' : '') + (c ? '<button class="btn sm ghost" data-act="rxzero" data-i="' + i + '">Zerar</button>' : '')];
+  }), { num: [2, 3] }));
+  return h;
+}
+Act.rxopen = t => { ui.rx = { id: t.dataset.id, alert: null, sel: null }; render({ reset: true }); };
+Act.rxexit = () => { ui.rx = null; render({ reset: true }); };
+Act.rxsel = t => { ui.rx.sel = Number(t.dataset.i); ui.rx.alert = { kind: 'ok', text: 'Agora bipe o produto do lote ' + S.remessas[ui.rx.id].lines[ui.rx.sel].lotNo + '.' }; render(); };
+function rxResult(res) {
+  const rx = ui.rx, l = res.line, c = l.conf;
+  rx.alert = { kind: 'ok', text: (res.all ? 'Remessa completa! Pode finalizar. ' : '') + prodName(l.productId) + ' lote ' + l.lotNo + ': ' + nf(c) + ' de ' + nf(l.qty) + (res.done ? ' (completo)' : '') };
+  if (res.done && rx.sel != null && S.remessas[rx.id].lines[rx.sel] === undefined) rx.sel = null;
+}
+Scan.rx = async (v, name) => {
+  if (name === 'open') return rxOpenByCode(v);
+  const rx = ui.rx, q = Number(($('#rx_q') || {}).value) || 1, g = gs1Parse(v);
+  try { const res = await remScan(user, rx.id, { code: v, lineIdx: rx.sel, qty: q, lotNo: g && g.lot, expiry: g && g.expiry }); rxResult(res); beep('ok'); }
+  catch (e) {
+    if (!(e instanceof WmsError) || !['FORA', 'LOTE', 'EXCESSO'].includes(e.code)) throw e;
+    rx.alert = { kind: 'bad', text: e.message }; beep('bad');
+    try { await logAudit(user, 'EXPEDICAO_BIPE_INVALIDO', rx.id + ': ' + e.message); } catch (x) { /* segue */ }
+  }
+  render();
+};
+Act.rxall = async t => {
+  const rx = ui.rx, i = Number(t.dataset.i), l = S.remessas[rx.id].lines[i];
+  const res = await remScan(user, rx.id, { lineIdx: i, qty: l.qty - (l.conf || 0) }); rxResult(res); render();
+};
+Act.rxzero = async t => { await remReset(user, ui.rx.id, Number(t.dataset.i)); ui.rx.alert = null; render(); };
+Act.rxclose = async () => {
+  const rx = ui.rx, r = S.remessas[rx.id], diffs = r.lines.filter(l => (l.conf || 0) !== l.qty), o = {};
+  if (diffs.length) {
+    const j = await dialog({ title: 'Divergência na conferência', ok: 'Continuar', body: '<p class="muted">Não bate com o que o estoque enviou:</p><ul>' + diffs.map(l => '<li>' + esc(prodName(l.productId)) + ' lote ' + esc(l.lotNo) + ': enviado ' + nf(l.qty) + ', conferido ' + nf(l.conf || 0) + '</li>').join('') + '</ul>' + field('Justificativa', '<input name="j" autocomplete="off" required>'), onOk: f => { const v = f.j.value.trim(); if (!v) throw new WmsError('Informe a justificativa.'); return v; } });
+    if (!j) return; o.justification = j;
+    o.authUser = await askAuth('Fechar ' + r.id + ' com divergência: o estoque será avisado e a ocorrência fica aberta.'); if (!o.authUser) return;
+  } else if (!(await confirmBox('Finalizar conferência', 'Tudo conferido e certo. Finalizar ' + esc(r.id) + '?', 'Finalizar'))) return;
+  const res = await remClose(user, rx.id, o); ui.rx = null; render({ reset: true });
+  toast(res.status === 'conferida' ? 'Remessa conferida: tudo certo.' : 'Remessa fechada com divergência. O estoque foi avisado.', res.status === 'conferida' ? 'ok' : 'info');
+};
+
+function expRemessas() {
+  const fq = ui.rmf || (ui.rmf = { q: '' }), q = norm(fq.q || '');
+  const all = Object.values(S.remessas).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  if (!all.length) return card('', '<p class="muted">Nenhuma remessa ainda.</p>');
+  const list = all.filter(r => !q || norm(r.id + ' ' + (r.pedido || '') + ' ' + (r.note || '') + ' ' + r.lines.map(l => prodName(l.productId) + ' ' + l.lotNo).join(' ')).includes(q)).slice(0, 60);
+  const since = Date.now() - 30 * 864e5, rec = all.filter(r => new Date(r.createdAt).getTime() >= since), fech = rec.filter(r => r.closedAt);
+  const avg = fech.length ? fech.reduce((s, r) => s + (new Date(r.closedAt) - new Date(r.createdAt)), 0) / fech.length / 36e5 : null;
+  const dv = fech.filter(r => r.status === 'divergente' || r.status === 'tratada').length, late = all.filter(r => remOpen(r) && Date.now() - new Date(r.createdAt) > 4 * 36e5).length;
+  let top = '<div class="kgrid">' + kpiT('Remessas em 30 dias', nf(rec.length), nf(rec.reduce((s, r) => s + remTotals(r).qty, 0)) + ' un enviadas') + kpiT('Tempo até conferir', avg == null ? '—' : String(avg < 1 ? Math.round(avg * 60) + ' min' : avg.toFixed(1).replace('.', ',') + ' h'), 'média do envio até o fim da conferência') +
+    kpiT('Com divergência', fech.length ? String(Math.round(dv * 100 / fech.length)).replace('.', ',') + '%' : '—', nf(dv) + ' de ' + nf(fech.length) + ' conferidas', dv ? 'warn' : '') + kpiT('Paradas há mais de 4 h', nf(late), 'esperando a expedição conferir', late ? 'warn' : '') + '</div>' +
+    card('', field('Buscar remessa', liveIn('rmf', 'q', 'rmf_q', fq.q, 'Número, pedido, produto ou lote')));
+  return top + list.map(r => {
+    const T = remTotals(r), act = [];
+    if (r.status === 'divergente' && can(user, 'approve')) act.push('<button class="btn sm" data-act="rtdev" data-id="' + esc(r.id) + '">Devolver diferença à doca</button>', '<button class="btn sm ghost" data-act="rtperda" data-id="' + esc(r.id) + '">Registrar perda</button>');
+    if (r.status === 'enviada' && can(user, 'ship')) act.push('<button class="btn sm ghost" data-act="rtcancel" data-id="' + esc(r.id) + '">Cancelar remessa</button>');
+    return '<details class="card more"><summary><b>' + esc(r.id) + '</b> ' + remBadge(r) + '<span class="muted">' + (r.pedido ? ' · pedido ' + esc(r.pedido) : '') + ' · ' + fmtTs(r.createdAt) + ' · ' + esc(r.createdByName) + ' · ' + nf(T.conf) + '/' + nf(T.qty) + ' un</span></summary>' +
+      ((r.pedido ? 'Pedido ' + esc(r.pedido) : '') + (r.note ? (r.pedido ? ' · ' : '') + esc(r.note) : '') ? '<p class="muted">' + (r.pedido ? 'Pedido ' + esc(r.pedido) : '') + (r.note ? (r.pedido ? ' · ' : '') + esc(r.note) : '') + '</p>' : '') +
+      tbl(['Produto', 'Lote', 'De', 'Enviado', 'Conferido', 'Diferença'], r.lines.map(l => [esc(prodName(l.productId)), esc(l.lotNo), esc(l.fromAddr), nf(l.qty), nf(l.conf || 0), l.qty === (l.conf || 0) ? '—' : badge(nf((l.conf || 0) - l.qty), 'bad')]), { num: [3, 4, 5] }) +
+      (r.closedAt ? '<p class="muted">Conferida por ' + esc(r.closedByName) + ' em ' + fmtTs(r.closedAt) + (r.justification ? ' · justificativa: ' + esc(r.justification) : '') + '</p>' : '') +
+      (r.treatment ? '<p class="muted">Tratada: ' + (r.treatment === 'devolver' ? 'diferença devolvida à doca' : 'perda registrada') + ' · ' + esc(r.treatReason) + '</p>' : '') + (r.cancelReason ? '<p class="muted">Cancelada: ' + esc(r.cancelReason) + '</p>' : '') +
+      '<div class="row">' + act.join('') + '<button class="btn sm ghost" data-act="rtprint" data-id="' + esc(r.id) + '">Imprimir romaneio</button></div></details>';
+  }).join('');
+}
+Act.rtdev = async t => { const r = await askText('Devolver diferença à doca', 'Motivo (a diferença volta para a doca e pode ser guardada de novo)'); if (!r) return; await remTreat(user, t.dataset.id, { action: 'devolver', reason: r }); render(); toast('Diferença devolvida à doca.', 'ok'); };
+Act.rtperda = async t => { const r = await askText('Registrar perda', 'Motivo da perda (a diferença não volta ao estoque)'); if (!r) return; await remTreat(user, t.dataset.id, { action: 'perda', reason: r }); render(); toast('Perda registrada.', 'ok'); };
+Act.rtcancel = async t => { const r = await askText('Cancelar remessa', 'Motivo do cancelamento (tudo volta para a doca)'); if (!r) return; const a = await askAuth('Cancelar a remessa ' + t.dataset.id + '.'); if (!a) return; await remCancel(user, t.dataset.id, r, a); render(); toast('Remessa cancelada. Os itens voltaram para a doca.', 'ok'); };
+
+const remPedidos = () => { const set = new Set(); Object.values(S.demands).filter(d => d.status === 'aberta').forEach(d => d.lines.forEach(l => (l.ords || []).forEach(o => set.add(String(o))))); return [...set].slice(0, 400); };
+async function rxOpenByCode(v) {
+  const id = norm(String(v).replace(/\s+/g, '')), r = S.remessas[id];
+  if (!r) fail('Remessa ' + id + ' não encontrada.');
+  if (!remOpen(r)) fail('A remessa ' + id + ' já está ' + REM_ST[r.status][0].toLowerCase() + '.');
+  ui.rx = { id, alert: { kind: 'ok', text: 'Remessa ' + id + ' aberta. Pode bipar os produtos.' }, sel: null }; render({ reset: true }); beep('ok');
+}
+/* romaneio: folha para imprimir com código de barras da remessa */
+Act.rtprint = async t => {
+  const r = S.remessas[t.dataset.id], T = remTotals(r);
+  const html = '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Romaneio ' + esc(r.id) + '</title><style>body{font:14px Arial,sans-serif;margin:28px;color:#000}h1{font-size:22px;margin:0 0 4px}table{border-collapse:collapse;width:100%;margin-top:14px}th,td{border:1px solid #000;padding:6px 8px;text-align:left}th{background:#eee}td.n,th.n{text-align:right}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}.sig{display:flex;gap:40px;margin-top:60px}.sig div{flex:1;border-top:1px solid #000;padding-top:4px}@media print{button{display:none}}</style></head><body>' +
+    '<div class="top"><div><h1>Romaneio de remessa à expedição</h1><div>Remessa <b>' + esc(r.id) + '</b>' + (r.pedido ? ' · Pedido <b>' + esc(r.pedido) + '</b>' : '') + '</div><div>Enviada em ' + fmtTs(r.createdAt) + ' por ' + esc(r.createdByName) + '</div>' + (r.note ? '<div>' + esc(r.note) + '</div>' : '') + '</div><div>' + barcodeSVG(r.id, { h: 60, mod: 2 }) + '</div></div>' +
+    '<table><thead><tr><th>Produto</th><th>Lote</th><th>Validade</th><th class="n">Enviado</th><th class="n">Conferido</th></tr></thead><tbody>' + r.lines.map(l => '<tr><td>' + esc(prodName(l.productId)) + '</td><td>' + esc(l.lotNo) + '</td><td>' + fmtD(l.expiry) + '</td><td class="n">' + nf(l.qty) + '</td><td class="n"></td></tr>').join('') + '<tr><td colspan="3"><b>Total</b></td><td class="n"><b>' + nf(T.qty) + '</b></td><td class="n"></td></tr></tbody></table>' +
+    '<div class="sig"><div>Enviou (estoque)</div><div>Conferiu (expedição)</div></div><p><button onclick="window.print()">Imprimir</button></p></body></html>';
+  let w = null; try { w = window.open('', '_blank'); } catch (e) { w = null; }
+  if (w) { w.document.write(html); w.document.close(); try { w.focus(); setTimeout(() => w.print(), 400); } catch (e) { /* segue */ } }
+  else await saveFile('romaneio-' + r.id + '.html', html);
 };
 
 async function boot() {
