@@ -1056,6 +1056,79 @@ input:focus,select:focus,textarea:focus,
 html[data-motion=off] .fx-bg i,html[data-motion=off] .app-header::after{animation:none!important}
 @media (prefers-reduced-motion:reduce){.fx-bg i,.app-header::after,.brand-symbol::before,.fx-ic *,.fx-live *,.fx-live::after{animation:none!important}}
 
+/* ---------- etapas em cascata ---------- */
+.cas{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:40px;row-gap:12px;padding:12px 18px 6px 0}
+.cas-st{position:relative;margin-right:-18px;padding:0;border:0;background:none;cursor:pointer;text-align:left;color:inherit;font:inherit;min-width:0;z-index:1}
+.cas-st:focus-visible{outline:none}
+.cas-st:focus-visible .cas-bar{outline:2px solid var(--fx1);outline-offset:2px}
+.cas-bar{display:flex;align-items:center;gap:8px;height:100%;padding:0 10px 0 6px;border-radius:11px;font-size:12.5px;font-weight:650;white-space:nowrap;overflow:hidden;
+  transition:transform .18s var(--ease),filter .18s,box-shadow .25s}
+.cas-st:hover .cas-bar{transform:translateX(3px)}
+.cas-st:active .cas-bar{transform:scale(.98)}
+.cas-nd{flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:8px;font:600 11.5px/1 var(--fx-mono)}
+.cas-lb{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.cas-tag{margin-left:auto;flex:none;font:600 11px/1 var(--fx-mono);padding:4px 7px;border-radius:7px;background:rgba(255,255,255,.22)}
+/* feitas: degradê da cor da etapa */
+.cas-st.done .cas-bar{background:linear-gradient(90deg,color-mix(in srgb,var(--c) 88%,#000 0%),color-mix(in srgb,var(--c) 65%,var(--fx3)));color:#fff}
+.cas-st.done .cas-nd{background:rgba(255,255,255,.2)}
+/* atual: luz correndo + brilho */
+.cas-st.cur .cas-bar{color:#fff;background:linear-gradient(100deg,var(--c) 0,color-mix(in srgb,var(--c) 55%,#fff) 50%,var(--c) 100%);background-size:220% 100%;
+  box-shadow:0 10px 26px -10px var(--c),0 0 0 1px color-mix(in srgb,var(--c) 70%,#fff 0%);animation:fx-flow 3s linear infinite}
+.cas-st.cur .cas-nd{background:rgba(255,255,255,.25);animation:fx-beat 2.2s ease-in-out infinite}
+/* próximas: só o contorno */
+.cas-st.next .cas-bar{color:var(--faint);border:1.5px dashed var(--line2);background:color-mix(in srgb,var(--card2) 55%,transparent)}
+.cas-st.next .cas-nd{border:1.5px solid var(--line2)}
+.cas-st.next:hover .cas-bar{color:var(--ink);border-color:var(--c)}
+/* degrau: linha que desce até a próxima etapa */
+.cas-st:not(:last-child)::after{content:"";position:absolute;right:9px;top:100%;width:2px;height:12px;border-radius:2px;background:var(--line2)}
+.cas-st.done::after{background:repeating-linear-gradient(to bottom,var(--c) 0 3px,transparent 3px 6px);background-size:2px 6px;animation:cas-drip .7s linear infinite}
+.cas-st.cur::after{background:linear-gradient(to bottom,var(--c),transparent)}
+@keyframes cas-drip{to{background-position:0 6px}}
+/* entrada em cascata (só quando abre o projeto) */
+.cas-in .cas-st{animation:cas-drop .55s var(--ease) both;animation-delay:calc(var(--i) * 85ms)}
+@keyframes cas-drop{from{opacity:0;transform:translate(-8px,-12px)}to{opacity:1;transform:none}}
+/* pausado */
+.cas.par .cas-st .cas-bar{filter:grayscale(.85);opacity:.6;animation:none}
+.cas.par .cas-st::after{animation:none}
+/* celular: cascata vertical, cada degrau um pouco mais à direita */
+@media(max-width:760px){
+  .cas{grid-template-columns:1fr;grid-auto-rows:42px;padding-right:0}
+  .cas-st{grid-column:1!important;grid-row:auto!important;margin:0 0 0 calc(var(--i) * 12px);width:calc(100% - var(--i) * 12px)}
+  .cas-st:not(:last-child)::after{right:auto;left:18px}
+}
+@media (prefers-reduced-motion:reduce){.cas-st,.cas-st *,.cas-st::after{animation:none!important}}
+
+/* ---------- tema claro harmonizado (frio, suave) ---------- */
+:root[data-ambiente=areia]{
+  --bg:#f3f5fa;--bg2:#eceff6;--card:#ffffff;--card2:#ffffff;
+  --ink:#1c2436;--mut:#5d687c;--faint:#8a94a6;
+  --line:rgba(28,36,54,.08);--line2:rgba(28,36,54,.15);
+  --glow:transparent;--glow2:transparent;
+  --fx1:#5468e8; --fx2:#6f5fd6; --fx3:#9a6fd4; --fx-blob:.09;
+  --fx-glass:rgba(255,255,255,.82); --fx-edge:rgba(28,36,54,.07);
+}
+:root[data-ambiente=areia][data-space=grupo]{--fx1:#2b8f86;--fx2:#3d7fbf;--fx3:#5b6fd0}
+:root[data-ambiente=areia] body{background:#f3f5fa!important}
+:root[data-ambiente=areia] .fx-bg::after{background-image:linear-gradient(rgba(28,36,54,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(28,36,54,.035) 1px,transparent 1px)}
+:root[data-ambiente=areia] .card{box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -16px rgba(40,50,90,.18)}
+:root[data-ambiente=areia] .app-header::after{opacity:.35}
+:root[data-ambiente=areia] .stat b{background:linear-gradient(110deg,var(--fx1),var(--fx3));-webkit-background-clip:text;background-clip:text}
+:root[data-ambiente=areia] .vh h2{background:linear-gradient(100deg,var(--ink) 0,var(--ink) 40%,var(--fx2) 100%);-webkit-background-clip:text;background-clip:text}
+:root[data-ambiente=areia] .nav[aria-current=page]{background:color-mix(in srgb,var(--fx1) 9%,#fff);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--fx1) 22%,transparent);color:var(--ink)}
+:root[data-ambiente=areia] .nav[aria-current=page]::after{box-shadow:none}
+:root[data-ambiente=areia] .btn.pri{box-shadow:0 6px 16px -8px var(--fx2)}
+:root[data-ambiente=areia] .fx-ic{background:color-mix(in srgb,var(--fx1) 8%,#fff);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--fx1) 16%,transparent)}
+:root[data-ambiente=areia] .fx-ic-idea{color:#c88a12}
+:root[data-ambiente=areia] .welcome-quick::before{opacity:.35}
+:root[data-ambiente=areia] .brand-symbol::before{opacity:.45}
+:root[data-ambiente=areia] .cas-st.next .cas-bar{background:#fff}
+/* escuro mais confortável: menos brilho, mesmo azul */
+:root[data-ambiente=noite]{--fx-blob:.22}
+:root[data-ambiente=noite] .app-header::after{opacity:.5}
+:root[data-ambiente=noite] .stat b{background:linear-gradient(110deg,#7dd3fc,var(--fx2) 60%,var(--fx3));-webkit-background-clip:text;background-clip:text}
+:root[data-ambiente=noite] .pc:hover,:root[data-ambiente=noite] .item:hover{box-shadow:0 14px 34px -16px color-mix(in srgb,var(--fx2) 45%,transparent)}
+
+
 </style>
 </head>
 <body>
@@ -1657,11 +1730,17 @@ function cardProj(p){
     <div>${stChip(p.status)}</div></div>`;
 }
 
+let __casVisto='';
 function pipeHtml(p){
   const par=p.status==='paralisado';
   const ref=par?(FLUXO.includes(p.statusAntes)?p.statusAntes:null):p.status;
   const idx=ref?FLUXO.indexOf(ref):-1;
-  return `<div class="pipe${par?' par':''}" role="group" aria-label="Fase do projeto">${FLUXO.map((k,i)=>`<button class="stp${i<idx?' done':i===idx?' cur':''}" data-act="status" data-id="${p.id}" data-v="${k}" aria-pressed="${p.status===k}" style="--c:${stCor(k)}"><span class="nd"></span><span class="lb">${STATUS[k][0]}</span></button>`).join('')}</div>${par?`<div class="hint" style="margin-top:-4px">Pausado${FLUXO.includes(p.statusAntes)?' em “'+STATUS[p.statusAntes][0]+'”':''}.</div>`:''}`;
+  const pct=Math.max(0,Math.min(100,+p.progresso||0));
+  const anima=__casVisto!==p.id; __casVisto=p.id;
+  return `<div class="cas${par?' par':''}${anima?' cas-in':''}" role="group" aria-label="Fase do projeto">${FLUXO.map((k,i)=>{
+    const cls=i<idx?'done':i===idx?'cur':'next';
+    return `<button class="cas-st ${cls}" data-act="status" data-id="${p.id}" data-v="${k}" aria-pressed="${p.status===k}" style="--c:${stCor(k)};--i:${i};grid-column:${i+1};grid-row:${i+1}"><span class="cas-bar"><span class="cas-nd">${i<idx?'✓':i+1}</span><span class="cas-lb">${STATUS[k][0]}</span>${i===idx?`<span class="cas-tag">${par?'pausado':(k==='concluido'?'entregue':pct+'%')}</span>`:''}</span></button>`;
+  }).join('')}</div>${par?`<div class="hint" style="margin-top:-4px">Pausado${FLUXO.includes(p.statusAntes)?' em “'+STATUS[p.statusAntes][0]+'”':''}.</div>`:''}`;
 }
 /* ---------- acompanhamento em PDF ----------
    Monta uma página de relatório e manda para "Imprimir". No computador, escolha "Salvar como PDF". */
