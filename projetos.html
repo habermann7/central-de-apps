@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
 <title>Projetos · Do mapa à entrega</title>
 <style>
 :root{
@@ -912,22 +912,154 @@ main{max-width:1240px}
 .vr-c6{padding:4px 8px}
 @media(max-width:900px){.vr-r{grid-template-columns:84px 1fr 1fr 32px;grid-template-areas:"a b b f" "c c d d" "e e e e";row-gap:8px}.vr-hd{display:none}.vr-c1{grid-area:a}.vr-c2{grid-area:b}.vr-c3{grid-area:c}.vr-c4{grid-area:d}.vr-c5{grid-area:e}.vr-c6{grid-area:f}}
 @media(max-width:740px){.et-i{grid-template-columns:auto 1fr auto}.et-i input[type=date]{grid-column:span 1}.ec-n{width:100px}.ec-hoje{display:none}}
+/* =====================================================================
+   PROJETOS · VISUAL FUTURISTA (v1 · nov/2026)
+   Camada final: degradês, vidro, brilho e movimento em loop.
+   Todo movimento para com "Pausar movimento", com aba escondida
+   e para quem pede menos animação no sistema.
+   ===================================================================== */
+@property --fx-a{syntax:'<angle>';inherits:false;initial-value:0deg}
+:root{
+  --fx1:#38bdf8; --fx2:#818cf8; --fx3:#c084fc; --fx4:#2dd4bf;
+  --fx-grad:linear-gradient(120deg,var(--fx1),var(--fx2) 50%,var(--fx3));
+  --fx-ink:#0b1020;
+  --fx-mono:'IBM Plex Mono',ui-monospace,monospace;
+  --fx-glass:rgba(27,34,46,.62);
+  --fx-edge:rgba(255,255,255,.08);
+  --fx-blob:.30;
+}
+/* ambiente de grupo: degradê verde-água, pra saber na hora onde você está */
+:root[data-space=grupo]{--fx1:#2dd4bf;--fx2:#38bdf8;--fx3:#818cf8}
+:root[data-ambiente=areia]{
+  --fx1:#0ea5e9; --fx2:#6366f1; --fx3:#a855f7;
+  --fx-glass:rgba(255,255,255,.72); --fx-edge:rgba(20,24,40,.08); --fx-blob:.16;
+}
+:root[data-ambiente=areia][data-space=grupo]{--fx1:#0d9488;--fx2:#0284c7;--fx3:#6366f1}
 
-/* Identidade tipográfica · Projetos */
-:root{--font-display:"Space Grotesk",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;--font-body:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif}
-body,button,input,select,textarea{font-family:var(--font-body)}
-.header-identity strong,.vh h2,.project-title,.sec>h3,.pc h3,.kanban-stage-title,.note-placeholder h3,.welcome-quick strong{font-family:var(--font-display)}
-.stat b,.ring b,.kanban-stage,.kanban-stage-count,.nav-counter,.kb-meta b{font-family:var(--font-display);font-variant-numeric:tabular-nums}
-.nav{font-family:var(--font-display);font-weight:500}
-.header-identity strong{letter-spacing:-.4px}
-.vh h2{letter-spacing:-.6px}
-.project-title{letter-spacing:-.6px!important}
-/* Preserva a tipografia original dos papéis e dos controles da nota. */
-.postit,.note-tile{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,system-ui,sans-serif}
-.postit button,.postit input,.postit select,.postit textarea{font-family:inherit}
+body,button,input,select,textarea{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+.num,.stat b,.ring b,.kb-meta b,.kanban-stage,.kanban-stage-count,.nav-counter{font-family:var(--fx-mono);font-variant-numeric:tabular-nums}
+.postit,.note-tile{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+
+/* ---------- fundo: aurora que se move devagar + grade sutil ---------- */
+:root[data-ambiente=noite] body{background:#0c1118!important}
+.fx-bg{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.fx-bg i{position:absolute;width:62vmax;height:62vmax;border-radius:50%;opacity:var(--fx-blob);will-change:transform;animation:fx-float 30s ease-in-out infinite alternate}
+.fx-bg i:nth-child(1){top:-30vmax;left:-18vmax;background:radial-gradient(circle,var(--fx1) 0,transparent 62%)}
+.fx-bg i:nth-child(2){bottom:-34vmax;right:-20vmax;background:radial-gradient(circle,var(--fx3) 0,transparent 62%);animation-duration:38s;animation-delay:-12s}
+.fx-bg i:nth-child(3){top:18%;left:38%;width:44vmax;height:44vmax;background:radial-gradient(circle,var(--fx2) 0,transparent 64%);opacity:calc(var(--fx-blob)*.55);animation-duration:46s;animation-delay:-20s}
+.fx-bg::after{content:"";position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+  background-size:46px 46px;-webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,#000 0,transparent 75%);mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,#000 0,transparent 75%)}
+:root[data-ambiente=areia] .fx-bg::after{background-image:linear-gradient(rgba(20,24,40,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(20,24,40,.05) 1px,transparent 1px)}
+@keyframes fx-float{0%{transform:translate3d(0,0,0) scale(1)}100%{transform:translate3d(9vmax,7vmax,0) scale(1.15)}}
+
+/* ---------- topo ---------- */
+:root[data-ambiente=noite] .app-header{background:rgba(12,17,24,.72);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);border-bottom-color:transparent}
+:root[data-ambiente=areia] .app-header{background:rgba(255,255,255,.7);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%)}
+.app-header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;pointer-events:none;
+  background:linear-gradient(90deg,transparent 0,var(--fx1) 25%,var(--fx3) 50%,var(--fx1) 75%,transparent 100%);background-size:200% 100%;opacity:.65;animation:fx-sweep 9s linear infinite}
+@keyframes fx-sweep{to{background-position:-200% 0}}
+
+/* símbolo da marca: degradê com halo girando */
+.brand-symbol,:root[data-ambiente=noite] .brand-symbol{position:relative;isolation:isolate;background:var(--fx-grad);color:var(--fx-ink)}
+.brand-symbol::before{content:"";position:absolute;inset:-3px;border-radius:13px;z-index:-1;
+  background:conic-gradient(from var(--fx-a),var(--fx1),var(--fx3),var(--fx4),var(--fx1));filter:blur(7px);opacity:.75;animation:fx-rot 6s linear infinite}
+@keyframes fx-rot{to{--fx-a:360deg}}
+
+/* abas */
+.nav{transition:color .2s var(--ease),background .2s var(--ease)}
+.nav[aria-current=page],:root[data-ambiente=noite] .nav[aria-current=page]{
+  background:linear-gradient(135deg,color-mix(in srgb,var(--fx1) 18%,transparent),color-mix(in srgb,var(--fx3) 18%,transparent));
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--fx2) 38%,transparent)}
+.nav[aria-current=page]::after,:root[data-ambiente=noite] .nav[aria-current=page]::after{background:var(--fx-grad);box-shadow:0 0 10px var(--fx2)}
+.nav-counter:not([hidden]){animation:fx-beat 2.4s ease-in-out infinite}
+@keyframes fx-beat{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+
+/* ---------- vidro e bordas em degradê ---------- */
+:root[data-ambiente=noite] .card,:root[data-ambiente=areia] .card{background:var(--fx-glass);border-color:var(--fx-edge);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.pc,.stat,.item,.kanban-ticket,.welcome-quick{position:relative}
+.pc::before,.stat::before,.item::before,.kanban-ticket::before,.welcome-quick::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+  background:var(--fx-grad);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .25s var(--ease)}
+.pc:hover::before,.stat:hover::before,.item:hover::before,.kanban-ticket:hover::before,.pc:focus-visible::before,.item:focus-visible::before{opacity:1}
+.pc:hover,.stat.statb:hover,.item:hover{transform:translateY(-2px);box-shadow:0 14px 34px -14px color-mix(in srgb,var(--fx2) 55%,transparent)}
+.pc,.stat,.item{transition:transform .2s var(--ease),box-shadow .25s var(--ease),border-color .2s}
+.welcome-quick::before{opacity:.55}
+:root[data-ambiente=noite] .welcome-quick{background:linear-gradient(120deg,color-mix(in srgb,var(--fx1) 10%,var(--fx-glass)),color-mix(in srgb,var(--fx3) 10%,var(--fx-glass)))}
+
+/* título da página em degradê */
+.vh h2{display:inline-block;padding-bottom:.08em;background:linear-gradient(100deg,var(--ink) 0,var(--ink) 30%,var(--fx1) 70%,var(--fx3) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ---------- indicadores com ícones animados ---------- */
+.stat b{background:var(--fx-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat::after{display:none}
+.fx-ic{position:absolute;top:18px;right:18px;width:34px;height:34px;display:grid;place-items:center;border-radius:11px;color:var(--fx1);
+  background:linear-gradient(135deg,color-mix(in srgb,var(--fx1) 18%,transparent),color-mix(in srgb,var(--fx3) 18%,transparent));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--fx2) 30%,transparent)}
+.fx-ic svg{width:20px;height:20px;overflow:visible}
+.fx-ic-stack{color:var(--fx2)}.fx-ic-clock{color:var(--fx3)}.fx-ic-idea{color:#fbbf24}
+.fx-spin{transform-origin:12px 12px;animation:fx-turn 3.2s linear infinite}
+.fx-lift{animation:fx-lift 2.8s ease-in-out infinite}
+.fx-tick{transform-origin:12px 12px;animation:fx-turn 8s steps(12) infinite}
+.fx-glow{animation:fx-glow 2.6s ease-in-out infinite}
+@keyframes fx-turn{to{transform:rotate(360deg)}}
+@keyframes fx-lift{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
+@keyframes fx-glow{0%,100%{filter:drop-shadow(0 0 0 transparent);opacity:.75}50%{filter:drop-shadow(0 0 5px #fbbf24);opacity:1}}
+
+/* ---------- projetos em movimento: anel orbitando e pulso ---------- */
+.pc .ring{position:relative}
+.pc.fx-live .ring::after{content:"";position:absolute;inset:-5px;border-radius:50%;
+  background:conic-gradient(from var(--fx-a),transparent 0 62%,var(--c) 88%,transparent 100%);
+  -webkit-mask:radial-gradient(circle,transparent 60%,#000 62%);mask:radial-gradient(circle,transparent 60%,#000 62%);animation:fx-rot 2.8s linear infinite}
+.fx-live .chip{position:relative}
+.pc.fx-live::after{content:"";position:absolute;top:16px;right:16px;width:8px;height:8px;border-radius:50%;background:var(--project-color);box-shadow:0 0 0 0 var(--project-color);animation:fx-ping 2.2s ease-out infinite}
+.pc.fx-live .row:first-child{padding-right:16px}
+.item.fx-live{border-left-color:var(--c)}
+.item.fx-live .t::before{content:"";display:inline-block;width:7px;height:7px;margin:0 8px 2px 0;border-radius:50%;background:var(--c);vertical-align:middle;animation:fx-ping 2.2s ease-out infinite}
+@keyframes fx-ping{0%{box-shadow:0 0 0 0 color-mix(in srgb,currentColor 0%,transparent),0 0 0 0 rgba(129,140,248,.55)}70%{box-shadow:0 0 0 0 transparent,0 0 0 9px rgba(129,140,248,0)}100%{box-shadow:0 0 0 0 transparent,0 0 0 0 rgba(129,140,248,0)}}
+
+/* barras de andamento com fluxo de luz */
+.bar i{background:var(--fx-grad)}
+.kanban-ticket .kb-meter span{background:linear-gradient(90deg,var(--step-color),color-mix(in srgb,var(--step-color) 55%,var(--fx3)))}
+.kanban-ticket.fx-live .kb-meter span{background:linear-gradient(90deg,var(--step-color) 0,color-mix(in srgb,var(--step-color) 35%,#fff) 50%,var(--step-color) 100%);background-size:200% 100%;animation:fx-flow 2.4s linear infinite}
+@keyframes fx-flow{to{background-position:-200% 0}}
+.kanban-ticket .kb-open{border-top-color:transparent;background:linear-gradient(90deg,var(--step-color),color-mix(in srgb,var(--step-color) 40%,var(--fx3))) top/100% 3px no-repeat}
+:root[data-ambiente=noite] .kanban-column{background:rgba(17,23,32,.6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.kanban-stage{box-shadow:0 0 14px -4px var(--step-color)}
+
+/* linha de fases: etapa atual pulsa */
+.stp.cur .nd{animation:fx-halo 2.4s ease-in-out infinite}
+@keyframes fx-halo{0%,100%{box-shadow:0 0 0 5px color-mix(in srgb,var(--c) 22%,transparent)}50%{box-shadow:0 0 0 9px color-mix(in srgb,var(--c) 8%,transparent),0 0 18px color-mix(in srgb,var(--c) 60%,transparent)}}
+
+/* cronograma */
+.gx-hoje{box-shadow:0 0 12px var(--bad);animation:fx-breath 2.6s ease-in-out infinite}
+.gx-b .gx-f{background:linear-gradient(90deg,var(--c),color-mix(in srgb,var(--c) 50%,var(--fx3)))}
+@keyframes fx-breath{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* ---------- botões e campos ---------- */
+.btn.pri,:root[data-ambiente=noite] .btn.pri{white-space:nowrap;background:var(--fx-grad);background-size:180% 100%;border-color:transparent;color:var(--fx-ink);font-weight:700;
+  box-shadow:0 8px 22px -10px var(--fx2);transition:background-position .5s var(--ease),transform .12s var(--ease),box-shadow .25s}
+:root[data-ambiente=areia] .btn.pri{color:#fff}
+.btn.pri:hover,:root[data-ambiente=noite] .btn.pri:hover{background:var(--fx-grad);background-size:180% 100%;background-position:100% 0;border-color:transparent;opacity:1;box-shadow:0 10px 28px -8px var(--fx3)}
+.fab{background:var(--fx-grad)!important;color:var(--fx-ink)!important;border:0!important;box-shadow:0 10px 30px -8px var(--fx2)!important}
+input:focus,select:focus,textarea:focus,
+:root[data-ambiente=noite] input:focus,:root[data-ambiente=noite] select:focus,:root[data-ambiente=noite] textarea:focus{
+  border-color:color-mix(in srgb,var(--fx2) 70%,transparent);box-shadow:0 0 0 3px color-mix(in srgb,var(--fx2) 22%,transparent)}
+:root[data-ambiente=noite] :focus-visible{outline-color:var(--fx1)}
+
+/* ---------- vazio: ícone flutuando ---------- */
+.empty,.kanban-empty{position:relative}
+.empty::before{content:"";display:block;width:34px;height:34px;margin:0 auto 12px;border-radius:12px;background:var(--fx-grad);opacity:.85;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 3 7.5 12 12l9-4.5L12 3Z'/%3E%3Cpath d='m3 12 9 4.5 9-4.5'/%3E%3Cpath d='m3 16.5 9 4.5 9-4.5'/%3E%3C/svg%3E") center/24px no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 3 7.5 12 12l9-4.5L12 3Z'/%3E%3Cpath d='m3 12 9 4.5 9-4.5'/%3E%3Cpath d='m3 16.5 9 4.5 9-4.5'/%3E%3C/svg%3E") center/24px no-repeat;
+  animation:fx-lift 3.2s ease-in-out infinite}
+
+/* ---------- respeito a quem pede menos movimento ---------- */
+html[data-motion=off] .fx-bg i,html[data-motion=off] .app-header::after{animation:none!important}
+@media (prefers-reduced-motion:reduce){.fx-bg i,.app-header::after,.brand-symbol::before,.fx-ic *,.fx-live *,.fx-live::after{animation:none!important}}
+
 </style>
 </head>
 <body>
+<div class="fx-bg" aria-hidden="true"><i></i><i></i><i></i></div>
 <div id="__gateOverlay" style="position:fixed;inset:0;z-index:2147483647;background:#0a0d12;color:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;text-align:center;padding:20px;">
   <div style="max-width:320px;width:100%;">
     <div id="__gateMsg" style="font-size:14px;color:#8a93a3;line-height:1.6;">Verificando acesso...</div>
@@ -1328,7 +1460,7 @@ function renderSafe(){
 
 function projRow(p,extra){
   const prox=(p.proximaAcao||'').trim();
-  return `<button class="item" data-act="abrir" data-id="${p.id}" style="border-left:3px solid ${stCor(p.status)}">
+  return `<button class="item${MOV.includes(p.status)?' fx-live':''}" data-act="abrir" data-id="${p.id}" style="border-left:3px solid ${stCor(p.status)};--c:${stCor(p.status)}">
     <div class="grow"><div class="t">${esc(p.nome)}</div>
     <div class="s">${prox?'→ '+esc(prox):'<span style="color:var(--bad)">definir próxima ação</span>'}</div></div>
     ${extra||''}${prazoChip(p.prazo)}${stChip(p.status)}</button>`;
@@ -1346,10 +1478,10 @@ function vHoje(){
   <form class="card capture-card sec" data-form="captura-hoje"><label class="f" for="capH">Anotação rápida</label><p class="section-hint" style="margin-bottom:9px">Salva na sua caixa de entrada pessoal para organizar depois.</p>
     <div class="row"><input id="capH" type="text" class="big" placeholder="Ideia, tarefa, lembrete…" autocomplete="off" style="flex:1"><button class="btn pri" type="submit">Anotar</button></div></form>
   <div class="stats sec">
-    <div class="card stat"><b class="num">${lista('projetos').filter(p=>MOV.includes(p.status)).length}</b><span>Em andamento</span></div>
-    <div class="card stat"><b class="num">${ativos().length}</b><span>Projetos ativos</span></div>
-    <button class="card stat statb" data-go="aguardando"><b class="num">${agAbertos().length}</b><span>Respostas pendentes →</span></button>
-    <button class="card stat statb" data-go="caixa"><b class="num">${inbox().length}</b><span>Ideias na caixa →</span></button>
+    <div class="card stat"><span class="fx-ic fx-ic-orbit" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-opacity=".35" stroke-width="1.6"/><g class="fx-spin"><circle cx="12" cy="4" r="2.2" fill="currentColor"/></g><circle cx="12" cy="12" r="2.4" fill="currentColor"/></svg></span><b class="num">${lista('projetos').filter(p=>MOV.includes(p.status)).length}</b><span>Em andamento</span></div>
+    <div class="card stat"><span class="fx-ic fx-ic-stack" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path class="fx-lift" d="M12 3 3 7.5 12 12l9-4.5L12 3Z"/><path d="m3 12 9 4.5 9-4.5" stroke-opacity=".7"/><path d="m3 16.5 9 4.5 9-4.5" stroke-opacity=".4"/></svg></span><b class="num">${ativos().length}</b><span>Projetos ativos</span></div>
+    <button class="card stat statb" data-go="aguardando"><span class="fx-ic fx-ic-clock" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path class="fx-tick" d="M12 12V6.5"/><path d="M12 12l3.2 2" stroke-opacity=".55"/></svg></span><b class="num">${agAbertos().length}</b><span>Respostas pendentes →</span></button>
+    <button class="card stat statb" data-go="caixa"><span class="fx-ic fx-ic-idea" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path class="fx-glow" d="M9 17h6M10 20.5h4M12 3.5a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V17h5.2v-.7c0-.8.4-1.5 1-2A6 6 0 0 0 12 3.5Z"/></svg></span><b class="num">${inbox().length}</b><span>Ideias na caixa →</span></button>
   </div>
   ${atencao.length?`<div class="sec"><h3>Atenção</h3><div class="list">${atencao.map(p=>projRow(p,parados().some(x=>x.id===p.id)?`<span class="chip warn">sem mexer ${dias(p.atualizadoEm||p.criadoEm)}d</span>`:'')).join('')}</div></div>`:''}
   <div class="sec"><h3>Próximos passos dos projetos</h3>${fazendo.length?`<div class="list">${fazendo.map(p=>projRow(p)).join('')}</div>`:'<div class="empty">Nenhum projeto em movimento. Marque um projeto como Em Andamento, Em Produção ou Em Homologação.</div>'}</div>
@@ -1499,7 +1631,7 @@ function cardKanban(p){
   const prox=(p.proximaAcao||'').trim(),pct=Math.max(0,Math.min(100,+p.progresso||0)),par=p.status==='paralisado';
   const nn=lista('notas').filter(n=>n.projetoId===p.id).length;
   const opcoes=[...FLUXO,'paralisado'].filter(st=>st!==p.status);
-  return `<article class="kanban-ticket" data-drag-id="${esc(p.id)}" draggable="true" style="--step-color:${stCor(p.status)}">
+  return `<article class="kanban-ticket${MOV.includes(p.status)?' fx-live':''}" data-drag-id="${esc(p.id)}" draggable="true" style="--step-color:${stCor(p.status)}">
     <button type="button" class="kb-open" data-act="abrir" data-id="${esc(p.id)}" aria-label="Abrir projeto ${esc(p.nome)}">
       <div class="kb-head"><h4 class="kb-title">${esc(p.nome||'Sem nome')}</h4>${prazoChip(p.prazo)}</div>
       ${p.status==='concluido'&&!prox?'':`<div class="kb-next${!prox?' kb-no-next':''}"><span class="kb-label">Próxima ação</span>${prox?esc(prox):'Ainda não definida'}</div>`}
@@ -1513,7 +1645,7 @@ function cardKanban(p){
 function cardProj(p){
   const prox=(p.proximaAcao||'').trim(), par=p.status==='paralisado', pct=Math.min(100,+p.progresso||0);
   const nn=lista('notas').filter(n=>n.projetoId===p.id).length;
-  return `<div class="card pc" style="--project-color:${stCor(p.status)}" data-act="abrir" data-id="${p.id}" tabindex="0" role="button">
+  return `<div class="card pc${MOV.includes(p.status)?' fx-live':''}" style="--project-color:${stCor(p.status)}" data-act="abrir" data-id="${p.id}" tabindex="0" role="button">
     <div class="row" style="justify-content:space-between;align-items:flex-start;gap:8px"><h3>${esc(p.nome)}</h3>${prazoChip(p.prazo)}</div>
     <div class="row" style="gap:14px;align-items:center">
       <div class="ring" style="--p:${pct};--c:${corP(p)}" aria-label="Andamento ${pct}%"><b class="num">${par?'II':pct+'%'}</b></div>
@@ -2133,7 +2265,7 @@ if(window.__gateOk)start();
  t.onclick=()=>{theme=theme==='noite'?'areia':'noite';save('qg-visual-v3',theme);apply()};
  m.onclick=()=>{motion=motion==='on'?'off':'on';save('qg-movimento',motion);apply()};
  reduced.addEventListener('change',apply);apply();
- document.addEventListener('visibilitychange',()=>{document.getAnimations().forEach(a=>{if(a.animationName==='qg-drift'||a.animationName==='qg-orbit'){if(document.hidden)a.pause();else a.play()}})});
+ document.addEventListener('visibilitychange',()=>{document.getAnimations().forEach(a=>{if(/^(fx-|qg-drift|qg-orbit)/.test(a.animationName||'')){if(document.hidden)a.pause();else a.play()}})});
 })();
 </script>
 </body>
