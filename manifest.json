@@ -166,17 +166,6 @@
     "category": "PCP"
   },
   {
-    "title": "RUMO",
-    "description": "Seus projetos e anotações num lugar só",
-    "file": "rumo.html",
-    "icon": "🗂️",
-    "color": "#4d9fff",
-    "grupos": [
-      "PROJETOS"
-    ],
-    "category": "Projetos"
-  },
-  {
     "title": "Non Retail BSB",
     "description": "Estudos de equivalência, laboratórios e medicamentos de referência",
     "file": "Non_Retail_BSB.html",
