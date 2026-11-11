@@ -285,7 +285,16 @@ const rowId = (lotId, addr) => lotId + '__' + addr;
 const getRow = (lotId, addr) => S.stock[rowId(lotId, addr)];
 const freeQty = r => r ? r.qty - r.reserved : 0;
 const findLot = (pid, lotNo) => Object.values(S.lots).find(l => l.productId === pid && l.lotNo === norm(lotNo));
-const getAddr = c => { c = norm(c); return c === DOCA ? DOCA_OBJ : S.addresses[c] || null; };
+const getAddr = c => {
+  c = norm(c).replace(/^\][A-Z]\d/, '');
+  if (c === DOCA) return DOCA_OBJ;
+  if (S.addresses[c]) return S.addresses[c];
+  return /^\d{8}$/.test(c) ? Object.values(S.addresses).find(a => a.cod === c) || null : null;
+};
+/* código numérico de endereço (EAN-8: 7 dígitos + dígito verificador; começa com 2 = uso interno, não colide com produto) */
+const ean8Check = d7 => { let t = 0; for (let i = 0; i < 7; i++) t += Number(d7[i]) * (i % 2 === 0 ? 3 : 1); return (10 - t % 10) % 10; };
+const ean8Make = seq => { const b = '2' + String(seq).padStart(6, '0'); return b + ean8Check(b); };
+const nextAddrSeq = () => Object.values(S.addresses).reduce((m, a) => /^2\d{7}$/.test(a.cod || '') ? Math.max(m, parseInt(a.cod.slice(1, 7), 10)) : m, 0) + 1;
 /* leitura de código GS1 (DataMatrix/GS1-128): (01)GTIN (10)lote (17)validade (11)fabricação */
 function gs1Date(v) {
   if (!/^\d{6}$/.test(v)) return '';
@@ -478,6 +487,7 @@ async function saveAddress(user, d, isNew) {
     id: code, rua: d.rua || '', corredor: d.corredor || '', estante: d.estante || '', prateleira: d.prateleira || '', nivel: d.nivel || '', posicao: d.posicao || '',
     capacity: cap, type: 'storage', blocked: cur ? cur.blocked : false, createdAt: (cur && cur.createdAt) || isoNow()
   });
+  if (!a.cod) a.cod = ean8Make(nextAddrSeq());
   await commit([op('addresses', a), auditOp(user, isNew ? 'ENDERECO_CRIADO' : 'ENDERECO_ALTERADO', code)]);
   return a;
 }
@@ -487,14 +497,21 @@ async function generateAddresses(user, spec) {
   const R = rng(spec.ruaDe, spec.ruaAte), E = rng(spec.estDe, spec.estAte), P = rng(spec.prDe, spec.prAte), N = rng(spec.nvDe, spec.nvAte);
   if (!R.length || !E.length || !P.length || !N.length) fail('Intervalos inválidos.', 'VALID');
   if (R.length * E.length * P.length * N.length > 300) fail('Gere no máximo 300 endereços por vez.', 'VALID');
-  const cap = Number(spec.capacity || 0), ops = [];
+  const cap = Number(spec.capacity || 0), ops = []; let seq = nextAddrSeq();
   for (const r of R) for (const e of E) for (const p of P) for (const n of N) {
     const code = addrCode({ rua: r, estante: e, prateleira: p, nivel: n });
     if (S.addresses[code]) continue;
-    ops.push(op('addresses', { id: code, rua: r, corredor: '', estante: e, prateleira: p, nivel: n, posicao: '', capacity: cap, type: 'storage', blocked: false, createdAt: isoNow() }));
+    ops.push(op('addresses', { id: code, rua: r, corredor: '', estante: e, prateleira: p, nivel: n, posicao: '', capacity: cap, type: 'storage', blocked: false, createdAt: isoNow(), cod: ean8Make(seq++) }));
   }
   if (ops.length) { ops.push(auditOp(user, 'ENDERECOS_GERADOS', ops.length + ' endereços')); await commit(ops); }
   return ops.length ? ops.length - 1 : 0;
+}
+/* endereços antigos (criados antes do código numérico) ganham o código na primeira vez que a etiqueta é gerada */
+async function ensureAddrCodes(user) {
+  const miss = Object.values(S.addresses).filter(a => !a.cod).sort((a, b) => a.id.localeCompare(b.id)); if (!miss.length) return 0;
+  need(user, 'cad'); let seq = nextAddrSeq();
+  const ops = miss.map(a => op('addresses', Object.assign({}, a, { cod: ean8Make(seq++) })));
+  ops.push(auditOp(user, 'ENDERECOS_CODIGO_NUMERICO', miss.length + ' endereços')); await commit(ops); return miss.length;
 }
 async function setAddressBlocked(user, code, blocked, reason) {
   if (!(can(user, 'cad') || can(user, 'approve'))) fail('Sem permissão para esta operação.', 'PERM');
@@ -1284,6 +1301,26 @@ function barcodeSVG(text, o) {
   const W = x + q, H = h + (lab ? 20 : 0);
   return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" role="img" aria-label="Código de barras ' + String(text).replace(/[<>&"]/g, '') + '"><rect width="' + W + '" height="' + H + '" fill="#fff"/><g fill="#000" shape-rendering="crispEdges">' + rects + '</g>' +
     (lab ? '<text x="' + (W / 2) + '" y="' + (h + 15) + '" text-anchor="middle" font-family="monospace" font-size="14" fill="#000">' + String(text).replace(/[<>&"]/g, '') + '</text>' : '') + '</svg>';
+}
+/* ===== Código de barras EAN-8 (etiqueta de endereço, tamanho real em mm) ===== */
+const EAN_L = ['0001101', '0011001', '0010011', '0111101', '0100011', '0110001', '0101111', '0111011', '0110111', '0001011'];
+const EAN_R = EAN_L.map(c => c.replace(/[01]/g, x => x === '0' ? '1' : '0'));
+function ean8Bits(code) {
+  const d = String(code).split('').map(Number); let b = '101';
+  for (let i = 0; i < 4; i++) b += EAN_L[d[i]]; b += '01010'; for (let i = 4; i < 8; i++) b += EAN_R[d[i]]; return b + '101';
+}
+const LABEL_SIZES = { '40x25': [40, 25], '50x30': [50, 30], '60x40': [60, 40], '100x50': [100, 50] };
+function addrLabelSVG(a, wmm, hmm, ox, oy, bare) {
+  wmm = wmm || 50; hmm = hmm || 30; ox = ox || 0; oy = oy || 0; const U = 10, W = wmm * U, H = hmm * U, bits = ean8Bits(a.cod);
+  const mw = Math.min(W * 0.9 / 81, 5), bw = 67 * mw, x0 = (W - bw) / 2, ty = H * 0.075, th = Math.min(H * 0.2, 56), by = ty + th + H * 0.03, bh = H * 0.42, dy = by + bh + Math.min(H * 0.13, 40);
+  let r = '', x = x0; for (const ch of bits) { if (ch === '1') r += '<rect x="' + x.toFixed(2) + '" y="' + by.toFixed(2) + '" width="' + mw.toFixed(3) + '" height="' + bh.toFixed(2) + '"/>'; x += mw; }
+  const fs = Math.min(th * 0.95, (W * 0.94) / Math.max(10, a.id.length * 0.62)), dsz = Math.min(H * 0.12, 36), d = a.cod;
+  const body = '<g transform="translate(' + ox + ',' + oy + ')"><rect width="' + W + '" height="' + H + '" fill="#fff"' + (bare === true ? '' : ' stroke="#bbb" stroke-dasharray="6 6"') + '/>' +
+    '<text x="' + W / 2 + '" y="' + (ty + th * 0.85) + '" text-anchor="middle" font-family="monospace" font-weight="700" font-size="' + fs.toFixed(1) + '" fill="#000">' + esc(a.id) + '</text>' +
+    '<g fill="#000" shape-rendering="crispEdges">' + r + '</g>' +
+    '<text x="' + (x0 + 17 * mw).toFixed(1) + '" y="' + dy.toFixed(1) + '" text-anchor="middle" font-family="monospace" font-size="' + dsz.toFixed(1) + '" fill="#000">' + d.slice(0, 4) + '</text>' +
+    '<text x="' + (x0 + 50 * mw).toFixed(1) + '" y="' + dy.toFixed(1) + '" text-anchor="middle" font-family="monospace" font-size="' + dsz.toFixed(1) + '" fill="#000">' + d.slice(4) + '</text></g>';
+  return bare === 'g' ? body : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" width="' + wmm + 'mm" height="' + hmm + 'mm" role="img" aria-label="Etiqueta ' + esc(a.id) + '">' + body + '</svg>';
 }
 /* ===== UI: infraestrutura (persistência, diálogos, bipagem, gráficos, exportação) ===== */
 const $ = (s, r) => (r || document).querySelector(s);
@@ -2397,7 +2434,7 @@ function cadAddr() {
   const list = Object.values(S.addresses).sort((a, b) => a.id.localeCompare(b.id));
   let h = card('Novo endereço', '<form data-form="addrsave" class="grid3">' + [['Rua', 'rua'], ['Corredor', 'cor'], ['Estante', 'est'], ['Prateleira', 'pra'], ['Nível', 'niv'], ['Posição', 'pos']].map(([l, k]) => field(l, '<input id="af_' + k + '" placeholder="' + (l === 'Rua' ? '01' : '') + '">')).join('') + field('Capacidade (un)', '<input id="af_cap" type="number" min="0" value="0">', '0 = sem limite') + field('Código personalizado (opcional)', '<input id="af_code" placeholder="Gerado: R01-E02-P03-N01">') + '<div class="full"><button class="btn">Cadastrar endereço</button></div></form>');
   h += card('Gerar endereços em lote', '<form data-form="addrgen" class="grid3">' + [['rua', 'Rua'], ['est', 'Estante'], ['pr', 'Prateleira'], ['nv', 'Nível']].map(([k, l]) => field(l + ' de', '<input id="ag_' + k + 'De" type="number" min="1" value="1">') + field(l + ' até', '<input id="ag_' + k + 'Ate" type="number" min="1" value="' + (k === 'rua' ? 1 : 2) + '">')).join('') + field('Capacidade (un)', '<input id="ag_cap" type="number" min="0" value="500">') + '<div class="full row"><button class="btn">Gerar endereços</button></div></form>', '', '');
-  return h + card('Endereços (' + list.length + ')', '<div class="row"><button class="btn ghost" data-act="labelsheet">Baixar etiquetas de todos (SVG)</button></div>' + tbl(['Código', 'Capacidade', 'Ocupação', 'Situação', ''], list.map(a => [esc(a.id), a.capacity ? nf(a.capacity) : 'sem limite', nf(occupancy(a.id)), a.blocked ? badge('Bloqueado', 'bad') : occupancy(a.id) ? badge('Ocupado', 'info') : badge('Vazio', 'ok'), '<button class="btn sm ghost" data-act="barcode" data-code="' + esc(a.id) + '" data-title="Endereço">Etiqueta</button> <button class="btn sm ghost" data-act="addrblock" data-id="' + esc(a.id) + '">' + (a.blocked ? 'Desbloquear' : 'Bloquear') + '</button>']), { num: [1, 2], empty: 'Nenhum endereço cadastrado.' }));
+  return h + card('Endereços (' + list.length + ')', '<div class="row"><button class="btn ghost" data-act="labelsheet">Baixar etiquetas de todos (SVG)</button></div>' + tbl(['Código', 'Capacidade', 'Ocupação', 'Situação', ''], list.map(a => [esc(a.id), a.capacity ? nf(a.capacity) : 'sem limite', nf(occupancy(a.id)), a.blocked ? badge('Bloqueado', 'bad') : occupancy(a.id) ? badge('Ocupado', 'info') : badge('Vazio', 'ok'), '<button class="btn sm ghost" data-act="barcode" data-code="' + esc(a.id) + '" data-title="Endereço" data-addr="1">Etiqueta</button> <button class="btn sm ghost" data-act="addrblock" data-id="' + esc(a.id) + '">' + (a.blocked ? 'Desbloquear' : 'Bloquear') + '</button>']), { num: [1, 2], empty: 'Nenhum endereço cadastrado.' }));
 }
 Forms.addrsave = async () => {
   const g = id => $('#' + id).value.trim(), d = { rua: g('af_rua'), corredor: g('af_cor'), estante: g('af_est'), prateleira: g('af_pra'), nivel: g('af_niv'), posicao: g('af_pos'), capacity: g('af_cap'), id: g('af_code') };
@@ -2407,14 +2444,22 @@ Forms.addrgen = async () => {
   const g = id => $('#' + id).value, n = await generateAddresses(user, { ruaDe: g('ag_ruaDe'), ruaAte: g('ag_ruaAte'), estDe: g('ag_estDe'), estAte: g('ag_estAte'), prDe: g('ag_prDe'), prAte: g('ag_prAte'), nvDe: g('ag_nvDe'), nvAte: g('ag_nvAte'), capacity: g('ag_cap') });
   render({ reset: true }); toast(n + ' endereço(s) criado(s).', n ? 'ok' : 'info');
 };
-Act.barcode = t => {
+Act.barcode = async t => {
   const code = t.dataset.code, title = t.dataset.title;
+  if (t.dataset.addr) {
+    await ensureAddrCodes(user); const a = S.addresses[code]; if (!a) fail('Endereço não encontrado.', 'VALID');
+    const opts = Object.keys(LABEL_SIZES).map(k => '<option value="' + k + '"' + (k === '50x30' ? ' selected' : '') + '>' + k.replace('x', ' × ') + ' mm</option>').join('');
+    dialog({ title: esc(a.id), ok: 'Baixar etiqueta (SVG)', cancel: 'Fechar',
+      body: '<div class="bc">' + addrLabelSVG(a, 50, 30, 0, 0, true) + '</div><p class="muted">EAN-8 <b>' + esc(a.cod) + '</b> (leitores comuns de produto leem). Escolha o tamanho da sua etiqueta e imprima a 100% (sem “ajustar à página”).</p>' + field('Tamanho da etiqueta', '<select name="sz">' + opts + '</select>'),
+      onOk: async f => { const [w, h] = LABEL_SIZES[f.sz.value]; await saveFile('etiqueta-' + a.id + '.svg', addrLabelSVG(a, w, h, 0, 0, true)); return true; } });
+    return;
+  }
   dialog({ title: esc(title), ok: 'Baixar etiqueta (SVG)', cancel: 'Fechar', body: '<div class="bc">' + barcodeSVG(code, { h: 70, mod: 2 }) + '</div><p class="muted">Code 128. Imprima ou aponte o leitor para a tela.</p>', onOk: async () => { await saveFile('etiqueta-' + code + '.svg', barcodeSVG(code, { h: 80, mod: 3 })); return true; } });
 };
 Act.labelsheet = async () => {
-  const list = Object.keys(S.addresses).sort(); if (!list.length) fail('Nenhum endereço cadastrado.');
-  const cw = 470, ch = 112, cols = 2, rows = Math.ceil(list.length / cols);
-  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + cw * cols + ' ' + ch * rows + '" width="' + cw * cols + '" height="' + ch * rows + '"><rect width="100%" height="100%" fill="#fff"/>' + list.map((c, i) => '<g transform="translate(' + (i % cols) * cw + ',' + Math.floor(i / cols) * ch + ')">' + barcodeSVG(c, { h: 70, mod: 2 }) + '</g>').join('') + '</svg>';
+  await ensureAddrCodes(user); const list = Object.values(S.addresses).sort((a, b) => a.id.localeCompare(b.id)); if (!list.length) fail('Nenhum endereço cadastrado.');
+  const cw = 500, ch = 300, cols = 4, rows = Math.ceil(list.length / cols);
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + cw * cols + ' ' + ch * rows + '" width="' + cw * cols / 10 + 'mm" height="' + ch * rows / 10 + 'mm"><rect width="100%" height="100%" fill="#fff"/>' + list.map((a, i) => addrLabelSVG(a, 50, 30, (i % cols) * cw, Math.floor(i / cols) * ch, 'g')).join('') + '</svg>';
   await saveFile('etiquetas-enderecos.svg', svg);
 };
 function cadUsr() {
