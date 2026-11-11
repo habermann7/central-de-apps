@@ -1101,6 +1101,11 @@ html[data-motion=off] .fx-bg i,html[data-motion=off] .app-header::after{animatio
 }
 @media (prefers-reduced-motion:reduce){.cas-st,.cas-st *,.cas-st::after{animation:none!important}}
 
+/* sem números: feita = ✓, atual = ponto pulsando, próxima = círculo vazio */
+.cas-nd{border-radius:50%;width:22px;height:22px;font-size:12px}
+.cas-st.cur .cas-nd::after{content:"";width:8px;height:8px;border-radius:50%;background:#fff}
+.cas-st.next .cas-nd{background:transparent}
+
 /* ---------- tema claro harmonizado (frio, suave) ---------- */
 :root[data-ambiente=areia]{
   --bg:#f3f5fa;--bg2:#eceff6;--card:#ffffff;--card2:#ffffff;
@@ -1742,8 +1747,22 @@ function pipeHtml(p){
   const anima=__casVisto!==p.id; __casVisto=p.id;
   return `<div class="cas${par?' par':''}${anima?' cas-in':''}" role="group" aria-label="Fase do projeto">${FLUXO.map((k,i)=>{
     const cls=i<idx?'done':i===idx?'cur':'next';
-    return `<button class="cas-st ${cls}" data-act="status" data-id="${p.id}" data-v="${k}" title="${STATUS[k][0]}" aria-pressed="${p.status===k}" style="--c:${stCor(k)};--i:${i}"><span class="cas-bar"><span class="cas-nd">${i<idx?'✓':i+1}</span><span class="cas-lb">${STATUS[k][0]}</span>${i===idx?`<span class="cas-tag">${par?'pausado':(k==='concluido'?'entregue':pct+'%')}</span>`:''}</span></button>`;
+    return `<button class="cas-st ${cls}" data-act="status" data-id="${p.id}" data-v="${k}" title="${STATUS[k][0]}" aria-pressed="${p.status===k}" style="--c:${stCor(k)};--i:${i}"><span class="cas-bar"><span class="cas-nd">${i<idx?'✓':''}</span><span class="cas-lb">${STATUS[k][0]}</span>${i===idx?`<span class="cas-tag">${par?'pausado':(k==='concluido'?'entregue':'agora')}</span>`:''}</span></button>`;
   }).join('')}</div>${par?`<div class="hint" style="margin-top:-4px">Pausado${FLUXO.includes(p.statusAntes)?' em “'+STATUS[p.statusAntes][0]+'”':''}.</div>`:''}`;
+}
+
+/* progresso estimado ⇄ etapas: cada faixa de % corresponde a uma etapa */
+function etapaDoPct(v){ v=+v||0; let e='mapeamento'; FLUXO.forEach(k=>{ if(PRESET[k]!=null&&v>=PRESET[k]&&k!=='mapeamento')e=k; }); return e; }
+function casPreview(v){
+  const box=document.querySelector('.cas'); if(!box||box.classList.contains('par'))return;
+  const idx=FLUXO.indexOf(etapaDoPct(v));
+  box.querySelectorAll('.cas-st').forEach((b,i)=>{
+    b.classList.toggle('done',i<idx); b.classList.toggle('cur',i===idx); b.classList.toggle('next',i>idx);
+    const nd=b.querySelector('.cas-nd'); if(nd)nd.textContent=i<idx?'✓':'';
+    const tg=b.querySelector('.cas-tag');
+    if(i===idx&&!tg)b.querySelector('.cas-bar').insertAdjacentHTML('beforeend','<span class="cas-tag">'+(FLUXO[i]==='concluido'?'entregue':'agora')+'</span>');
+    if(i!==idx&&tg)tg.remove();
+  });
 }
 /* ---------- acompanhamento em PDF ----------
    Monta uma página de relatório e manda para "Imprimir". No computador, escolha "Salvar como PDF". */
@@ -2262,7 +2281,8 @@ document.addEventListener('change',e=>{
   if(t.dataset.f&&t.dataset.id){
     let v=t.value; const f=t.dataset.f;
     if(f==='progresso')v=+v; if(f==='nome'){v=v.trim(); if(!v){render(false);return;}}
-    const ex={[f]:v}; if(f==='progresso'&&v===100&&(obj('projetos')[t.dataset.id]||{}).status!=='concluido'){}
+    const ex={[f]:v};
+    if(f==='progresso'){ const pj=obj('projetos')[t.dataset.id]||{}; if(pj.status!=='paralisado'){ const et=etapaDoPct(v); if(et!==pj.status){ ex.status=et; ex.statusAntes=null; ex.concluidoEm=et==='concluido'?now():null; toast('Etapa ajustada para '+STATUS[et][0]); } } }
     tocaProjeto(t.dataset.id,ex);
   } else if(t.dataset.ag){ upd('aguardando/'+t.dataset.id,{[t.dataset.ag]:t.value.trim()}); }
   else if(t.dataset.nf){ salvaNota(t); }
@@ -2274,7 +2294,7 @@ document.addEventListener('input',e=>{
     const pos=t.selectionStart,field=t.id; render(false); const n=$('#'+field);
     if(n){n.focus();n.setSelectionRange(pos,pos);} return;
   }
-  if(t.id==='pr'){ const v=$('#prv'),b=$('#prb'),c=corProg(t.value); if(v){v.textContent=t.value+'%';v.style.color=c;} if(b){b.style.width=t.value+'%';b.style.background=c;} t.style.accentColor=c; return; }
+  if(t.id==='pr'){ const v=$('#prv'),b=$('#prb'),c=corProg(t.value); if(v){v.textContent=t.value+'%';v.style.color=c;} if(b){b.style.width=t.value+'%';b.style.background=c;} t.style.accentColor=c; casPreview(t.value); return; }
   if(t.dataset.nf){ const s=$('#saved'); if(s)s.textContent='Salvando…'; clearTimeout(nTimer); nTimer=setTimeout(()=>salvaNota(t),600); }
 });
 function salvaNota(t){
