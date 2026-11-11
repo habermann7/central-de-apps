@@ -208,5 +208,15 @@
       "EXPEDIÇÃO"
     ],
     "category": "Expedição"
+  },
+  {
+    "title": "Projetos",
+    "description": "",
+    "file": "projetos.html",
+    "icon": "🧩",
+    "color": "#4d9fff",
+    "grupos": [
+      "PROJETOS"
+    ]
   }
 ]
