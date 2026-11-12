@@ -1747,7 +1747,7 @@ function pipeHtml(p){
   const anima=__casVisto!==p.id; __casVisto=p.id;
   return `<div class="cas${par?' par':''}${anima?' cas-in':''}" role="group" aria-label="Fase do projeto">${FLUXO.map((k,i)=>{
     const cls=i<idx?'done':i===idx?'cur':'next';
-    return `<button class="cas-st ${cls}" data-act="status" data-id="${p.id}" data-v="${k}" title="${STATUS[k][0]}" aria-pressed="${p.status===k}" style="--c:${stCor(k)};--i:${i}"><span class="cas-bar"><span class="cas-nd">${i<idx?'✓':''}</span><span class="cas-lb">${STATUS[k][0]}</span>${i===idx?`<span class="cas-tag">${par?'pausado':(k==='concluido'?'entregue':'agora')}</span>`:''}</span></button>`;
+    return `<button class="cas-st ${cls}" data-act="status" data-id="${p.id}" data-v="${k}" aria-pressed="${p.status===k}" style="--c:${stCor(k)};--i:${i}"><span class="cas-bar"><span class="cas-nd">${i<idx?'✓':''}</span><span class="cas-lb">${STATUS[k][0]}</span>${i===idx?`<span class="cas-tag">${par?'pausado':(k==='concluido'?'entregue':'agora')}</span>`:''}</span></button>`;
   }).join('')}</div>${par?`<div class="hint" style="margin-top:-4px">Pausado${FLUXO.includes(p.statusAntes)?' em “'+STATUS[p.statusAntes][0]+'”':''}.</div>`:''}`;
 }
 
