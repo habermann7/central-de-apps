@@ -173,6 +173,14 @@ table.idx{width:100%;border-collapse:collapse}
 .alist{border-top:0}
 .art{display:grid;grid-template-columns:30px minmax(0,1fr) 64px 200px 36px;gap:4px 14px;padding:16px 0;border-bottom:1px solid var(--rule);align-items:start}
 .art .n{font:500 11.5px var(--est-mono);color:var(--est-faint);padding-top:9px}
+.art .star{grid-column:1;grid-row:2;appearance:none;border:0;background:none;width:30px;height:30px;margin-left:-7px;border-radius:8px;cursor:pointer;font-size:19px;line-height:1;color:var(--est-faint);transition:color .15s var(--est-ease),transform .15s var(--est-ease),background .15s}
+.art .star:hover{color:#D99A00;background:var(--est-warn-bg)}
+.art .star:active{transform:scale(.85)}
+.art .star:focus-visible{outline:2px solid var(--est-accent);outline-offset:1px}
+.art .star.on{color:#E0A100;animation:star-pop .28s var(--est-ease)}
+.art.fav{background:linear-gradient(90deg,var(--est-warn-bg),transparent 55%);box-shadow:inset 3px 0 0 #E0A100;padding-left:10px;margin-left:-10px;border-radius:4px}
+@keyframes star-pop{0%{transform:scale(.6)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
+.seg button.favf.on{color:#B07A00}
 .art textarea{font-weight:600;min-height:0;height:auto;resize:none;overflow:hidden;line-height:1.4;padding-top:6px}
 .art .sub{grid-column:2/-1;display:flex;gap:8px 14px;align-items:center;flex-wrap:wrap;margin-top:2px;font-size:12.5px}
 .art .sub3{grid-column:2/-1;margin-top:2px}
@@ -199,7 +207,7 @@ table.idx{width:100%;border-collapse:collapse}
   .wrap{padding:0 16px 56px}.title h1{font-size:28px}.facts{width:100%}.fact{flex:1;padding:0 12px}
   .idx th.h-via,.idx td.c-via,.idx th.h-ev,.idx td.ev{display:none}
   .addform .g{grid-template-columns:1fr 1fr}.addform .g input:first-child{grid-column:1/-1}.addform .g select{grid-column:1/-1}
-  .art{grid-template-columns:1fr 36px;gap:6px}.art .n{display:none}.art textarea{grid-column:1}.art .ano,.art .tp{grid-column:1/-1}.art .sub{grid-column:1/-1}.art .x{grid-column:2;grid-row:1}
+  .art{grid-template-columns:1fr 34px 36px;gap:6px}.art .n{display:none}.art textarea{grid-column:1}.art .ano,.art .tp{grid-column:1/-1}.art .sub,.art .sub2,.art .sub3{grid-column:1/-1}.art .star{grid-column:2;grid-row:1;margin:0}.art .x{grid-column:3;grid-row:1}.art.fav{padding-left:8px;margin-left:-8px}
   .head input.big{font-size:26px}.leg{grid-template-columns:1fr}
 }
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
@@ -244,7 +252,7 @@ table.idx{width:100%;border-collapse:collapse}
 <div id="app"><div class="topbar"><div class="wrap"><div class="eyebrow"><svg class="book-mark" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3H4v18h5M7 3v18M4 7h3M4 17h3M9 12h3m5-6 5 3v6l-5 3-5-3V9z"/></svg><span class="book-trail"><a href="./index.html" id="backLink">&larr; Central de Apps</a> / Book científico</span></div><div class="acts"></div></div></div><div class="wrap"><div class="title"><div><h1>Book científico</h1></div></div><div class="skel"></div><div class="skel"></div><div class="skel"></div></div></div>
 <div id="printRoot"></div>
 <datalist id="bases"><option>PubMed</option><option>Scopus</option><option>Web of Science</option><option>Embase</option><option>Cochrane Library</option><option>LILACS</option><option>SciELO</option><option>Google Acadêmico</option><option>ScienceDirect</option></datalist>
-<datalist id="vias"><option>Oral</option><option>Injetável (intravenosa)</option><option>Injetável (intramuscular)</option><option>Injetável (subcutânea)</option><option>Tópica</option><option>Oftálmica</option><option>Nasal</option><option>Inalatória</option><option>Sublingual</option><option>Retal</option><option>Vaginal</option><option>Transdérmica</option></datalist>
+<datalist id="vias"><option>Oral</option><option>Injetável (intravenosa)</option><option>Injetável (intramuscular)</option><option>Injetável (subcutânea)</option><option>Tópica</option><option>Oftálmica</option><option>Nasal</option><option>Inalatória</option><option>Sublingual</option><option>Retal</option><option>Vaginal</option><option>Transdérmica</option><option>Pellet (implante absorvível)</option></datalist>
 <script>
 (function(){
 'use strict';
@@ -259,13 +267,13 @@ const ROOT='bookCientifico';
 /* Tipos de estudo, do mais forte ao mais fraco (pirâmide de evidência, estilo Oxford CEBM / formulary dossiers) */
 const TIPOS=[
  ['meta','Meta-análise'],['rs','Revisão sistemática'],['ecr','Ensaio clínico randomizado'],['be','Bioequivalência / farmacocinético'],
- ['coorte','Estudo de coorte'],['cc','Caso-controle'],['serie','Série / relato de caso'],['dir','Diretriz / consenso'],
+ ['coorte','Estudo de coorte'],['cc','Caso-controle'],['observ','Observacional'],['serie','Relato de caso'],['dir','Diretriz / consenso'],
  ['rev','Revisão narrativa'],['pre','Pré-clínico / in vitro'],['out','Outro']
 ];
 const TN=Object.fromEntries(TIPOS);
 const COR=Object.fromEntries(TIPOS.map((t,i)=>[t[0],'hsl(218 '+(62-i*3)+'% '+(24+i*4.6)+'%)']));
 const ALTA=['meta','rs','ecr'];
-const S={ativos:{},view:'home',id:null,q:'',ord:'ev',modo:'indice',addOpen:false,loaded:false,err:null,pend:false,del:null,anexoCache:{},blocoNovo:false,blocosSalvando:false};
+const S={ativos:{},view:'home',id:null,q:'',soFav:false,ord:'ev',modo:'indice',addOpen:false,loaded:false,err:null,pend:false,del:null,anexoCache:{},blocoNovo:false,blocosSalvando:false};
 const $=(s,r)=>(r||document).querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const db=()=>firebase.database();
@@ -347,7 +355,7 @@ function artRow(a,x,i){
   const c=COR[TN[x.tipo]?x.tipo:'out'], del=S.del==='a'+x.k;
   const doc=x.anexo?'<span class="doc"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg><span title="'+esc(x.anexo.nome)+'">'+esc(x.anexo.nome)+'</span><b class="mono" style="font-size:11px;color:var(--est-mut)">'+fmtMB(x.anexo.tam||0)+'</b></span><button class="btn sm" data-act="anx-abrir" data-a="'+x.k+'">Abrir</button><button class="btn sm txt bad" data-act="anx-del" data-a="'+x.k+'">'+(S.del==='x'+x.k?'Confirmar remoção':'Remover anexo')+'</button>'
     :'<button class="btn sm" data-act="anx-add" data-a="'+x.k+'">+ Anexar arquivo</button><span class="hint">PDF, imagem ou documento · até 5 MB</span>';
-  return '<div class="art" style="--c:'+c+'"><span class="n">'+String(i+1).padStart(2,'0')+'</span><textarea rows="1" data-a="'+x.k+'" data-f="titulo" placeholder="Título do artigo" aria-label="Título do artigo">'+esc(x.titulo||'')+'</textarea>'+
+  return '<div class="art'+(x.estrela?' fav':'')+'" style="--c:'+c+'"><span class="n">'+String(i+1).padStart(2,'0')+'</span><button class="star'+(x.estrela?' on':'')+'" data-act="art-fav" data-a="'+x.k+'" aria-pressed="'+(x.estrela?'true':'false')+'" title="'+(x.estrela?'Tirar a prioridade':'Marcar como artigo prioritário')+'" aria-label="'+(x.estrela?'Tirar a prioridade':'Marcar como artigo prioritário')+'">'+(x.estrela?'★':'☆')+'</button><textarea rows="1" data-a="'+x.k+'" data-f="titulo" placeholder="Título do artigo" aria-label="Título do artigo">'+esc(x.titulo||'')+'</textarea>'+
    '<input class="ano mono" data-a="'+x.k+'" data-f="ano" inputmode="numeric" maxlength="4" placeholder="Ano" value="'+esc(x.ano||'')+'" aria-label="Ano" style="text-align:center">'+
    '<select class="tp" data-a="'+x.k+'" data-f="tipo" aria-label="Tipo de estudo" style="border-left:3px solid '+c+';padding-left:8px"><option value="">Tipo de estudo…</option>'+TIPOS.map(t=>'<option value="'+t[0]+'"'+(x.tipo===t[0]?' selected':'')+'>'+t[1]+'</option>').join('')+'</select>'+
    '<button class="btn sm txt bad x'+(del?' on':'')+'" data-act="art-del" data-a="'+x.k+'" title="Remover artigo" aria-label="Remover artigo">'+(del?'Remover?':'✕')+'</button>'+
@@ -383,7 +391,9 @@ function vAtivo(){
   const a=lista().find(x=>x.id===S.id);
   if(!a) return topbar()+'<div class="wrap"><div class="empty">Ativo não encontrado. <button class="btn" data-act="home">Voltar ao book</button></div></div>';
   const prog=a.encontrados>0?Math.min(100,Math.round(a.arts.length/a.encontrados*100)):0;
-  const arts=a.arts.slice().sort(S.ord==='ev'?(p,q)=>{const r=t=>{const i=TIPOS.findIndex(x=>x[0]===t);return i<0?99:i};return r(p.tipo)-r(q.tipo)||(+q.ano||0)-(+p.ano||0);}:(p,q)=>(+q.ano||0)-(+p.ano||0)||(q.t||0)-(p.t||0));
+  const ordA=S.ord==='ev'?(p,q)=>{const r=t=>{const i=TIPOS.findIndex(x=>x[0]===t);return i<0?99:i};return r(p.tipo)-r(q.tipo)||(+q.ano||0)-(+p.ano||0);}:(p,q)=>(+q.ano||0)-(+p.ano||0)||(q.t||0)-(p.t||0);
+  const nFav=a.arts.filter(x=>x.estrela).length;
+  const arts=a.arts.filter(x=>!S.soFav||x.estrela).sort((p,q)=>(q.estrela?1:0)-(p.estrela?1:0)||ordA(p,q));
   const qs=queryStr(a), pm='https://pubmed.ncbi.nlm.nih.gov/?term='+encodeURIComponent(qs), gs='https://scholar.google.com/scholar?q='+encodeURIComponent(scholarStr(a));
   const del=S.del==='ativo';
   const add=S.addOpen||!a.arts.length;
@@ -397,9 +407,9 @@ function vAtivo(){
    (qs?'<div class="query">'+esc(qs)+'</div><div class="row"><button class="btn sm" data-act="copiar">Copiar busca</button><a class="btn sm" href="'+pm+'" target="_blank" rel="noopener">PubMed ↗</a><a class="btn sm" href="'+gs+'" target="_blank" rel="noopener">Google Acadêmico ↗</a></div>':'')+'</div>'+
    '<div class="field" style="margin-bottom:0"><label class="lb">Artigos encontrados na busca</label><div class="found"><input data-f="encontrados" inputmode="numeric" value="'+(a.encontrados||'')+'" placeholder="0" aria-label="Total encontrado"><span class="hint">no total · <b class="mono">'+a.arts.length+'</b> registrado'+(a.arts.length===1?'':'s')+' no book</span></div>'+(a.encontrados>0?'<div class="meter" title="'+prog+'%"><i style="width:'+prog+'%"></i></div>':'')+'</div>'+
    '<div class="field" style="margin:16px 0 0"><label class="lb">Observação</label><textarea data-f="observacao" placeholder="Anotações livres sobre este ativo…">'+esc(a.observacao||'')+'</textarea></div></section>'+
-  '<section><div class="sec-h"><h2>Artigos científicos<small>'+a.arts.length+'</small></h2><span class="acts"><span class="seg"><button data-act="ord" data-o="ev" class="'+(S.ord==='ev'?'on':'')+'">Evidência</button><button data-act="ord" data-o="ano" class="'+(S.ord==='ano'?'on':'')+'">Ano</button></span><button class="btn sm pri" data-act="add-toggle">'+(add&&a.arts.length?'Fechar':'+ Artigo')+'</button></span></div>'+evBlock(a)+
+  '<section><div class="sec-h"><h2>Artigos científicos<small>'+a.arts.length+'</small></h2><span class="acts"><span class="seg"><button data-act="ord" data-o="ev" class="'+(S.ord==='ev'?'on':'')+'">Evidência</button><button data-act="ord" data-o="ano" class="'+(S.ord==='ano'?'on':'')+'">Ano</button></span><span class="seg"><button data-act="so-fav" class="favf'+(S.soFav?' on':'')+'" aria-pressed="'+(S.soFav?'true':'false')+'" title="Mostrar só os artigos prioritários">★ '+nFav+'</button></span><button class="btn sm pri" data-act="add-toggle">'+(add&&a.arts.length?'Fechar':'+ Artigo')+'</button></span></div>'+evBlock(a)+
    (add?'<div class="addform"><div class="g"><div><label class="lb">Título</label><input id="nt" placeholder="Título do artigo"></div><div><label class="lb">Ano</label><input id="na" class="mono" inputmode="numeric" maxlength="4" placeholder="2024"></div><div><label class="lb">Tipo de estudo</label><select id="nty"><option value="">Selecione…</option>'+TIPOS.map(t=>'<option value="'+t[0]+'">'+t[1]+'</option>').join('')+' </select></div></div><div class="g2"><div><label class="lb">Revista</label><input id="nrv" placeholder="Nome da revista"></div><div><label class="lb">Base de dados</label><input id="nbs" list="bases" placeholder="Onde foi encontrado"></div></div><div style="margin-bottom:10px"><label class="lb">Observação</label><input id="nob" placeholder="Anotação sobre o artigo (opcional)"></div><div class="row"><input id="nl" placeholder="Link para acesso (https://…)" style="background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:8px 10px"><button class="btn pri" data-act="art-add">Adicionar artigo</button></div></div>':'')+
-   '<div class="alist">'+(arts.length?arts.map((x,i)=>artRow(a,x,i)).join(''):'<div class="empty">Nenhum artigo registrado ainda.</div>')+'</div></section></div></div>';
+   '<div class="alist">'+(arts.length?arts.map((x,i)=>artRow(a,x,i)).join(''):'<div class="empty">'+(S.soFav&&a.arts.length?'Nenhum artigo marcado com ★ ainda.':'Nenhum artigo registrado ainda.')+'</div>')+'</div></section></div></div>';
 }
 function render(){
   const a=document.activeElement;
@@ -502,7 +512,7 @@ document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-act]'); if(!b||!$('#app').contains(b)) return;
   const act=b.dataset.act;
   if(act==='novo') return novoAtivo();
-  if(act==='abrir'){S.view='ativo';S.id=b.dataset.id;S.del=null;S.blocoNovo=false;render();window.scrollTo(0,0);return;}
+  if(act==='abrir'){S.view='ativo';S.id=b.dataset.id;S.soFav=false;S.del=null;S.blocoNovo=false;render();window.scrollTo(0,0);return;}
   if(act==='home'){S.view='home';S.id=null;S.del=null;S.blocoNovo=false;render();window.scrollTo(0,0);return;}
   if(act==='ord'){S.ord=b.dataset.o;render();return;}
   if(act==='modo'){S.modo=b.dataset.m;try{localStorage.setItem('book_modo',S.modo);}catch(_){}render();return;}
@@ -528,6 +538,8 @@ document.addEventListener('click',async e=>{
   }
   if(act==='copiar'){const t=queryStr(lista().find(x=>x.id===S.id));try{await navigator.clipboard.writeText(t);toast('Busca copiada');}catch(_){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Busca copiada');}catch(__){toast('Copie manualmente: '+t,true);}ta.remove();}return;}
   if(act==='art-add') return addArtigo();
+  if(act==='art-fav'){const k=b.dataset.a,at=((cur().artigos||{})[k]||{}).estrela;return setArt(k,'estrela',at?null:true);}
+  if(act==='so-fav'){S.soFav=!S.soFav;render();return;}
   if(act==='art-del') return confirma('a'+b.dataset.a,async()=>{const k=b.dataset.a;try{await ref('ativos/'+S.id+'/artigos/'+k).remove();await ref('anexos/'+k).remove();toast('Artigo removido');}catch(er){toast('Erro: '+(er.message||er),true);}});
   if(act==='ativo-del') return confirma('ativo',async()=>{const a=lista().find(x=>x.id===S.id);try{for(const x of a.arts) if(x.anexo) await ref('anexos/'+x.k).remove();await ref('ativos/'+S.id).remove();S.view='home';S.id=null;S.blocoNovo=false;toast('Ativo excluído');}catch(er){toast('Erro: '+(er.message||er),true);}});
   if(act==='anx-add') return pickFile(b.dataset.a);
@@ -591,10 +603,10 @@ function imprimir(id){
   let h='';
   if(!id) h+='<section class="pg p-cover"><div><div class="p-bar"></div><svg class="book-mark" width="84" height="84" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3H4v18h5M7 3v18M4 7h3M4 17h3M9 12h3m5-6 5 3v6l-5 3-5-3V9z"/></svg><div class="p-sec" style="margin-top:8mm">Central de Apps</div><h1>Book científico</h1><div style="color:#667085;font-size:12pt;max-width:120mm">Portfólio de ativos e evidência científica</div></div><div><div class="p-sec">Sumário</div><ul class="p-toc" style="list-style:none;padding:0;margin:0">'+L.map(a=>'<li><span class="mono">'+nn(a)+'</span><b>'+esc(a.nome||'')+'</b><span>'+a.arts.length+' artigo'+(a.arts.length===1?'':'s')+'</span></li>').join('')+'</ul><div style="margin-top:8mm;color:#667085;font-size:9.5pt">'+L.length+' ativo'+(L.length===1?'':'s')+' · '+tot+' artigos · emitido em '+hoje+'</div></div></section>';
   h+=L.map(a=>{
-    const arts=a.arts.slice().sort((p,q)=>{const r=t=>{const i=TIPOS.findIndex(x=>x[0]===t);return i<0?99:i};return r(p.tipo)-r(q.tipo)||(+q.ano||0)-(+p.ano||0);});
+    const arts=a.arts.slice().sort((p,q)=>{const r=t=>{const i=TIPOS.findIndex(x=>x[0]===t);return i<0?99:i};return (q.estrela?1:0)-(p.estrela?1:0)||r(p.tipo)-r(q.tipo)||(+q.ano||0)-(+p.ano||0);});
     const k=(n,v)=>'<tr><td class="k">'+n+'</td><td>'+(v||'<span style="color:#98A2B3">—</span>')+'</td></tr>';
     return '<section class="pg"><div class="p-h"><div class="no">Ativo '+nn(a)+'</div><h2>'+esc(a.nome||'')+'</h2></div><div class="p-sec">Portfólio</div><table class="p-t">'+k('Apresentação',esc(a.apresentacao))+k('Descrição',esc(a.descricao).replace(/\n/g,'<br>'))+k('Via de administração',esc(a.via))+k('Observação',esc(a.observacao).replace(/\n/g,'<br>'))+k('Filtro de busca',esc(queryStr(a)))+k('Artigos encontrados',a.encontrados?a.encontrados+' no total · '+a.arts.length+' registrados':a.arts.length+' registrados')+'</table>'+
-     '<div class="p-sec">Artigos científicos ('+a.arts.length+')</div>'+(arts.length?'<table class="p-t"><thead><tr><th>#</th><th>Título</th><th>Revista</th><th>Base</th><th>Ano</th><th>Tipo de estudo</th><th>Anexo</th></tr></thead><tbody>'+arts.map((x,i)=>'<tr><td class="mono">'+String(i+1).padStart(2,'0')+'</td><td><b>'+esc(x.titulo||'')+'</b>'+(x.link?'<div style="font:8pt var(--est-mono);color:#2258A0;overflow-wrap:anywhere">'+esc(x.link)+'</div>':'')+(x.obs?'<div style="font-size:8.5pt;color:#475467;margin-top:2px">Obs.: '+esc(x.obs).replace(/\n/g,'<br>')+'</div>':'')+'</td><td>'+esc(x.revista||'—')+'</td><td>'+esc(x.base||'—')+'</td><td class="mono">'+esc(x.ano||'')+'</td><td><span class="p-dot" style="background:'+COR[TN[x.tipo]?x.tipo:'out']+'"></span>'+esc(TN[x.tipo]||'—')+'</td><td>'+(x.anexo?'Sim':'—')+'</td></tr>').join('')+'</tbody></table>':'<p style="color:#98A2B3">Nenhum artigo registrado.</p>')+'</section>';}).join('');
+     '<div class="p-sec">Artigos científicos ('+a.arts.length+')</div>'+(arts.length?'<table class="p-t"><thead><tr><th>#</th><th>Título</th><th>Revista</th><th>Base</th><th>Ano</th><th>Tipo de estudo</th><th>Anexo</th></tr></thead><tbody>'+arts.map((x,i)=>'<tr><td class="mono">'+String(i+1).padStart(2,'0')+'</td><td><b>'+(x.estrela?'<span style="color:#B07A00">★</span> ':'')+esc(x.titulo||'')+'</b>'+(x.link?'<div style="font:8pt var(--est-mono);color:#2258A0;overflow-wrap:anywhere">'+esc(x.link)+'</div>':'')+(x.obs?'<div style="font-size:8.5pt;color:#475467;margin-top:2px">Obs.: '+esc(x.obs).replace(/\n/g,'<br>')+'</div>':'')+'</td><td>'+esc(x.revista||'—')+'</td><td>'+esc(x.base||'—')+'</td><td class="mono">'+esc(x.ano||'')+'</td><td><span class="p-dot" style="background:'+COR[TN[x.tipo]?x.tipo:'out']+'"></span>'+esc(TN[x.tipo]||'—')+'</td><td>'+(x.anexo?'Sim':'—')+'</td></tr>').join('')+'</tbody></table>':'<p style="color:#98A2B3">Nenhum artigo registrado.</p>')+'</section>';}).join('');
   $('#printRoot').innerHTML=h; setTimeout(()=>window.print(),80);
 }
 
