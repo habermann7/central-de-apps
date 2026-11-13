@@ -41,7 +41,7 @@ a{color:inherit}
 .logo{display:flex;gap:11px;align-items:center;padding:0 6px 18px;border-bottom:1px solid rgba(255,255,255,.07)}
 .logo .mk{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#e2607a,#a8264a);display:grid;place-items:center;flex:none;box-shadow:0 4px 12px rgba(0,0,0,.25)}
 body.anim .mk-truck{animation:mkDrive 2.6s ease-in-out infinite}
-body.anim .mk-wheel{transform-origin:center;animation:mkSpin 1s linear infinite}
+body.anim .mk-wheel{transform-box:fill-box;transform-origin:center;animation:mkSpin 1s linear infinite}
 @keyframes mkDrive{0%,100%{transform:translateX(0)}50%{transform:translateX(1.4px)}}
 @keyframes mkSpin{to{transform:rotate(360deg)}}
 .logo b{display:block;font-weight:800;font-size:19px;color:#fff;letter-spacing:-.01em;line-height:1.1}
