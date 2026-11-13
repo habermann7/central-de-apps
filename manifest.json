@@ -207,5 +207,15 @@
     "grupos": [
       "PROJETOS"
     ]
+  },
+  {
+    "title": "MAMPHARMA",
+    "description": "",
+    "file": "mampharma.html",
+    "icon": "🧩",
+    "color": "#4d9fff",
+    "grupos": [
+      "ROLLOUT"
+    ]
   }
 ]
