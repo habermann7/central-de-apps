@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Roll out</title>
+<title>MAM PHARMA</title>
 <style>
 /* =====================================================================
    ESTANTE · PADRÃO VISUAL (v1 · nov/2026)
@@ -310,14 +310,13 @@ textarea.est-input{resize:vertical;min-height:58px;font-family:var(--est-font)}
 <div class="wrap">
   <header class="top">
     <div>
-      <div class="est-eyebrow">Central de Apps · Roll out</div>
-      <h1 class="est-title" id="ttl">Roll out</h1>
+      <div class="est-eyebrow">Central de Apps · MAM PHARMA</div>
+      <h1 class="est-title" id="ttl">MAM PHARMA</h1>
       <p class="est-desc" id="dsc">Acompanhamento do roll out: marque cada item como concluído conforme avança.</p>
     </div>
     <div class="top-actions">
       <span class="saved" id="saved"></span>
       <button class="est-btn sm" data-a="export"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 13h10"/></svg>Exportar</button>
-      <input type="file" id="planoin" accept=".json" hidden>
       <input type="file" id="docin" multiple hidden>
     </div>
   </header>
@@ -328,8 +327,8 @@ textarea.est-input{resize:vertical;min-height:58px;font-family:var(--est-font)}
 <script>
 (function(){
 'use strict';
-/* a "casca" do painel fica aqui; o conteúdo do plano vem do banco depois do login */
-var ATV=[],TST=[],DEC=[],EQ=[],ETAPAS=[],META={};
+/* ===================== DADOS DO PLANO (embutidos) ===================== */
+var ATV=[["01", "Definição", "Validar escopo, módulos e processos da indústria", "Gerente + consultoria", [], "Escopo e exclusões aprovados"], ["02", "Definição", "Confirmar estrutura de empresa no Protheus e separação da farmácia", "Consultoria + TI", ["01"], "Desenho técnico e compartilhamentos documentados"], ["03", "Definição", "Nomear responsáveis das áreas e aprovadores", "Gerente", ["01"], "Referências das 15 áreas indicadas"], ["04", "Definição", "Confirmar cronograma, orçamento e disponibilidade das equipes", "Gerente + consultoria", ["01", "03"], "Datas, esforço e custos aprovados"], ["05", "Ambiente", "Inventariar configuração já feita e pendências", "Consultoria + TI", ["02"], "Inventário com evidências e lacunas"], ["06", "Ambiente", "Confirmar DEV e liberar homologação separada da produção", "Consultoria + TI", ["05"], "Ambientes identificados, acessíveis e com dados de teste"], ["07", "Ambiente", "Validar infraestrutura, terminais, impressoras e conectividade", "TI + áreas", ["06"], "Recursos testados por local e turno"], ["08", "Cadastros", "Definir Master Data e responsabilidade por produtos", "Cadastro + financeiro + consultoria", ["01", "03"], "Fluxo e aprovadores de cadastro definidos"], ["09", "Configuração", "Revisar parâmetros fiscais, contábeis e financeiros", "Fiscal + financeiro + consultoria", ["02", "05"], "Parâmetros conferidos pelas áreas"], ["10", "Configuração", "Validar estrutura de produtos, produção, lotes e qualidade", "PCP + qualidade + farmacêutico", ["08"], "Produto piloto, fórmula e processo fornecidos pelas áreas"], ["11", "Configuração", "Validar automações e integrações previstas na imagem", "Consultoria + TI + áreas", ["01", "05"], "Aplicabilidade, falhas, alertas e responsáveis definidos"], ["12", "Acessos", "Levantar usuários, perfis, turnos e simultaneidade", "TI + líderes", ["03"], "Equipes e acessos preenchida e aprovada"], ["13", "Acessos", "Validar capacidade e licenciamento para a demanda confirmada", "TI + consultoria", ["12"], "Capacidade e licenças verificadas"], ["14", "Acessos", "Criar perfis e testar separação de dados e autorizações", "TI + consultoria + líderes", ["06", "12"], "Acesso permitido e negado testados"], ["15", "Dados", "Planejar carga inicial de cadastros e saldos aplicáveis", "Consultoria + áreas", ["08", "09", "10"], "Origem, responsável e conciliação definidos"], ["16", "Testes", "Aprovar roteiro de testes e critérios de aceite", "Consultoria + TI + áreas", ["01", "03", "10"], "Roteiro validado e responsáveis nomeados"], ["17", "Dados", "Executar carga piloto e conciliar dados", "Consultoria + áreas", ["06", "15"], "Quantidades, lotes e saldos conferidos"], ["18", "Testes", "Executar testes por processo e registrar evidências", "Áreas + consultoria + TI", ["09", "10", "11", "14", "16", "17"], "Resultados, falhas e evidências registrados"], ["19", "Testes", "Executar fluxo integrado da compra ao fornecimento à farmácia", "Áreas + consultoria + TI", ["18"], "Fluxo ponta a ponta aprovado pelas áreas"], ["20", "Testes", "Corrigir falhas e repetir cenários afetados", "Consultoria + TI + áreas", ["18", "19"], "Falhas resolvidas e retestes aprovados"], ["21", "Treinamento", "Validar público, turmas, horários e instrutores", "TI + consultoria + líderes", ["12", "16"], "Plano de treinamento aprovado"], ["22", "Treinamento", "Preparar material e ministrar treinamento prático", "TI + consultoria", ["20", "21"], "Presença, exercício e avaliação registrados"], ["23", "Homologação", "Obter aceite de processos, dados, acessos e treinamento", "Gerente + líderes", ["20", "22"], "Aceites formais e pendências avaliadas"], ["24", "Virada", "Preparar plano de virada, backup e retorno", "TI + consultoria + áreas", ["15", "23"], "Sequência, responsáveis e critérios de retorno aprovados"], ["25", "Virada", "Decidir liberação da entrada em produção", "Gerente + áreas + consultoria", ["23", "24"], "Decisão registrada com base nos aceites"], ["26", "Virada", "Executar carga final, conciliar e liberar operação", "TI + consultoria + áreas", ["25"], "Carga conferida e operação liberada"], ["27", "Estabilização", "Acompanhar primeiras operações e tratar incidentes", "TI + consultoria + áreas", ["26"], "Incidentes priorizados com responsáveis"], ["28", "Encerramento", "Transferir suporte, documentação e encerrar o roll out", "Gerente + TI + consultoria", ["27"], "Suporte definido e encerramento aprovado"]],TST=[["T01", "Acessos", "Usuário acessa somente a empresa e rotinas autorizadas", "TI + líderes", "Acesso permitido e negado conforme perfil"], ["T02", "Cadastros", "Cadastrar e aprovar produto pelo fluxo de Master Data", "Cadastro + financeiro", "Produto disponível sem duplicidade e com aprovação"], ["T03", "Compras / estoque", "Receber matéria-prima do produto piloto", "Compras + estoque", "Documento e quantidade conciliados, lote e validade conferidos"], ["T04", "Qualidade", "Bloquear material e liberar após aprovação", "Qualidade + estoque", "Uso impedido antes da liberação, conforme regra aprovada"], ["T05", "Produção", "Abrir ordem com fórmula e processo aprovados", "PCP laboratório + farmacêutico", "Ordem contém produto, materiais e quantidades esperadas"], ["T06", "Produção", "Consumir matéria-prima por lote e apontar produção", "PCP laboratório", "Consumo e produto acabado conciliados com lotes rastreáveis"], ["T07", "Produção", "Registrar perdas, estornos e diferenças de consumo", "PCP + custos", "Movimentos autorizados e saldos conciliados"], ["T08", "Qualidade", "Liberar ou reprovar lote de produto acabado", "Qualidade", "Destino e bloqueios refletem decisão registrada"], ["T09", "Estoque", "Tratar lote vencido ou bloqueado", "Estoque + qualidade", "Movimento indevido impedido conforme regra validada"], ["T10", "Expedição", "Separar e conferir fornecimento à STINPHARMA", "Expedição + comercial", "Produto, lote, quantidade e destinatário corretos"], ["T11", "Fiscal / faturamento", "Emitir documento da venda à farmácia", "Fiscal + faturamento", "Operação fiscal aprovada pela área e retorno registrado"], ["T12", "Automação", "Simular rejeição e reprocessar faturamento automático", "Faturamento + TI", "Erro visível, responsável acionado e reprocessamento sem duplicidade"], ["T13", "Financeiro", "Conferir títulos, pagamento e recebimento", "Financeiro", "Documentos, baixas e saldos conciliados"], ["T14", "Custos / contábil", "Conferir custos e lançamentos do fluxo integrado", "Custos + contabilidade", "Valores conciliados e aprovados pela área"], ["T15", "Rastreabilidade", "Localizar origem e destino de lote do produto piloto", "Qualidade + SAC + PCP", "Lotes de insumos, produção e entregas identificáveis"], ["T16", "Devolução", "Simular devolução e tratamento do lote", "Fiscal + qualidade + estoque", "Documento, bloqueio e saldos tratados conforme fluxo aprovado"], ["T17", "RH / interface", "Validar rotinas e troca de dados com IRKO, se aplicável", "RH + TI", "Retornos e responsabilidades conferidos"], ["T18", "Receitas / job", "Validar aplicabilidade do job de receitas à indústria", "Farmacêutico + TI", "Escopo confirmado ou cenário marcado não aplicável com justificativa"], ["T19", "Continuidade", "Simular falha, restauração e retorno da operação", "TI + consultoria", "Retorno executado em teste com evidência e tempo registrado"], ["T20", "Integrado", "Compra, recebimento, produção, qualidade e entrega à farmácia", "Todas as áreas envolvidas", "Fluxo completo conciliado e aceito pelas áreas"]],DEC=[["D01", "Estrutura Protheus", "Como separar a MAM PHARMA da farmácia e quais cadastros compartilhar?", "Consultoria + TI", "Estrutura ainda em desenho. CNPJ com raiz própria."], ["D02", "Prontidão", "O que está pronto e o que falta configurar?", "Consultoria + TI", "Informado como possivelmente pronto, ainda sem testes."], ["D03", "Módulos", "Quais módulos e integrações fazem parte do roll out?", "Gerente + consultoria", "Indefinidos. Lista da farmácia é somente referência."], ["D04", "Ambientes", "DEV existe? Quando homologação estará disponível?", "Consultoria + TI", "Não confirmado."], ["D05", "Datas e orçamento", "Qual cronograma viabiliza a previsão de janeiro de 2027?", "Gerente + consultoria", "Cronograma indefinido. Estimar esforço e custos."], ["D06", "Equipe", "Quem representa cada área e aprova seus processos?", "Gerente", "Nomes e disponibilidade ainda não informados."], ["D07", "Demanda de acessos", "Quantos usuários, simultâneos e perfis são necessários?", "TI + líderes", "141 pessoas como base inicial, revisável. Não equivale a licenças."], ["D08", "Produto piloto", "Qual produto, fórmula e processo serão usados nos testes?", "PCP + qualidade + farmacêutico", "Não definidos na conversa."], ["D09", "Master Data", "Quem será responsável pelo cadastro de produto?", "Cadastro + financeiro", "Mudança citada na imagem, a confirmar."], ["D10", "Automações", "Jobs de faturamento e receitas se aplicam e já estão prontos?", "Consultoria + TI + áreas", "Imagem contém previsão de processo, não comprova que está pronto."], ["D11", "Clientes", "A indústria venderá para terceiros?", "Gerente + comercial", "Fornecimento à farmácia confirmado. Demais clientes indefinidos."], ["D12", "Dados iniciais", "Quais cadastros e saldos entrarão na nova empresa?", "Consultoria + áreas", "Origem, carga e conciliação a definir."], ["D13", "Treinamento", "Qual público, limite por turma, instrutores e datas?", "TI + consultoria + líderes", "Público a validar por função e processo."], ["D14", "Qualidade e requisitos", "Quais controles e evidências o sistema precisa atender na indústria?", "Qualidade + responsável técnico", "Requisitos específicos a levantar com as áreas."], ["D15", "Virada e suporte", "Quem autoriza a virada, aciona o retorno e atende incidentes?", "Gerente + TI + consultoria", "Definir critérios, responsáveis e canais."]],EQ=[["RH", 5, 2, "Processo padronizado no sistema com suporte da IRKO (contabilidade)", "Validar suporte da IRKO e fluxo de RH.", "Fluxo de RH e interface com IRKO"], ["FINANCEIRO", 9, 4, "Retirado o processo de cadastro de produto para Master Data a colocar em uso", "Confirmar transferência do cadastro de produto para Master Data.", "Pagamentos, recebimentos e conciliação"], ["CADASTRO", 4, 1, "Item acima", "Definir governança de produtos e responsável por Master Data.", "Cadastro e aprovação de produtos / Master Data"], ["TI/PMO", 5, 1, "A verificar — previsão: cuidam de todos os processos e empresas simultaneamente", "Validar disponibilidade compartilhada entre as empresas.", "Acessos, suporte e monitoramento"], ["FATURAMENTO", 2, 1, "Job automático — apenas usuário para tratamento de reprovações do SEFAZ, se necessário", "Automação proposta na imagem. Validar execução, rejeições e reprocessamento.", "Faturamento e tratamento de rejeições"], ["FISCAL", 3, 3, "Manter", "Validar regras e cenários fiscais da nova empresa.", "Regras fiscais e conferências"], ["FACILITS", 3, 2, "Manter", "Confirmar atividades e necessidade de acesso ao ERP.", "Rotinas aplicáveis de facilities"], ["QUALIDADE", 2, 1, "Manter", "Validar controles de qualidade no fluxo de produção e estoque.", "Controles de qualidade e liberação"], ["SAC", 3, 1, "Manter", "Definir registro de reclamações e rastreabilidade.", "Registro e encaminhamento de reclamações"], ["FARMACÊUTICO", 11, 2, "Receita inteligente — job de verificação e análise automática de score de receitas", "Confirmar se o fluxo de receitas se aplica à indústria.", "Rotinas farmacêuticas aplicáveis à indústria"], ["COMERCIAL", 120, 50, "Podendo redefinir — seguir com 50", "Manter 50 na base. Validar atuação e canais de venda.", "Fluxo comercial e clientes aplicáveis"], ["DIRETOR", 4, 2, "Manter", "Definir aprovações e consultas gerenciais.", "Consultas e aprovações gerenciais"], ["MKT", 3, 1, "Manter", "Confirmar participação e acesso ao ERP.", "Rotinas aplicáveis de marketing"], ["PCP - EXPEDIÇÃO", 34, 35, "Manter", "Validar separação, conferência, expedição e uso por turno.", "Separação, conferência e expedição"], ["PCP - LABORATÓRIO", 35, 35, "Manter", "Validar produção, apontamentos, consumo e controles por lote.", "Ordem de produção, consumo e apontamentos"]],ETAPAS=[],META={"titulo": "MAM PHARMA — Roll out do Protheus", "descricao": "Acompanhamento do roll out: marque cada item como concluído conforme avança. Previsão de operação em janeiro de 2027 (dia e viabilidade a confirmar após cronograma e testes).", "previsao": "Previsão de operação em janeiro de 2027 · data a confirmar", "alvo": "2027-01-01", "notaEquipes": "141 é a base inicial adotada. Pessoas não equivalem a usuários ou licenças: preencha usuários ERP e simultâneos conforme o levantamento (atividade 12)."};
 var ST_ATV=["A validar","Em andamento","Concluído"];
 var ST_TST=["Não executado","Em execução","Aprovado","Reprovado"];
 var ST_DEC=["Pendente","Em discussão","Decidido"];
@@ -338,10 +337,10 @@ var TABS=[["geral","Visão geral"],["plano","Plano"],["testes","Testes"],["decis
 /* ===================== ESTADO ===================== */
 var LS_OLD=["mam"+"pharma","implantacao","v1"].join("_"),LS_MIG="rollout_mig_dispensado";
 var MAXF=5000000;
-var FB={ref:null,db:null,uid:"",email:"",admin:false,started:false};
+var FB={ref:null,db:null,uid:"",email:"",started:false};
 var S={atv:{},tst:{},dec:{},trn:{},eq:{},docs:[]};
 var PLANO=null;
-var ui={tab:"geral",open:{},grp:{},q:{plano:"",testes:"",decisoes:"",docs:""},f:{plano:{etapa:"",st:""},testes:{st:""},decisoes:{st:""},docs:{k:""}},just:null,busy:0,confirm:null,target:null,load:{plano:false,estado:false,docs:false},err:"",pend:false,mig:null,online:true};
+var ui={tab:"geral",open:{},grp:{},q:{plano:"",testes:"",decisoes:"",docs:""},f:{plano:{etapa:"",st:""},testes:{st:""},decisoes:{st:""},docs:{k:""}},just:null,busy:0,confirm:null,target:null,load:{plano:true,estado:false,docs:false},err:"",pend:false,mig:null,online:true};
 var IDX=0;
 var DEF={atv:{status:"A validar",resp:"",ini:"",fim:"",obs:""},tst:{res:"Não executado",exec:"",data:"",pre:"",evid:"",aceite:false},dec:{status:"Pendente",decisao:"",resp:"",prazo:""},trn:{part:"",lim:"",instr:"",data:"",evid:"",status:"A definir"},eq:{mam:null,usr:"",sim:"",aprov:""}};
 function K(s){return String(s).replace(/[.$#\[\]\/]/g,"_");}
@@ -367,7 +366,7 @@ function applyPlano(p){
   CORP=null;
   var t=document.getElementById("ttl"),d=document.getElementById("dsc");
   if(t&&META.titulo)t.textContent=META.titulo;if(d&&META.descricao)d.textContent=META.descricao;
-  document.title=META.titulo||"Roll out";
+  document.title=META.titulo||"MAM PHARMA";
 }
 
 /* ===================== UTIL ===================== */
@@ -618,9 +617,6 @@ function migCard(){
   if(!ui.mig)return"";
   return '<div class="est-card rs" style="margin-bottom:14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:220px"><b>Marcações antigas neste navegador</b><div class="note" style="margin:4px 0 0">Encontrei '+ui.mig.n+' itens marcados na versão anterior (que ficava só neste navegador). Importar para o painel compartilhado? O que já estiver marcado aqui não é sobrescrito.'+(ui.mig.docs?' Documentos anexados na versão antiga não vêm junto: anexe de novo.':'')+'</div></div><button class="est-btn primary sm" data-a="migrar">Importar</button><button class="est-btn sm ghost" data-a="migNo">Agora não</button></div>';
 }
-function emptyPlano(){
-  return '<div class="est-card" style="text-align:center;padding:40px 20px"><h3 class="sec" style="justify-content:center">Plano ainda não carregado</h3><p class="est-desc" style="margin:0 auto 18px">'+(FB.admin?'Escolha o arquivo do plano (.json) para carregar no banco. Ele fica só no banco, nunca dentro da página.':'O plano ainda não foi carregado. Peça para um administrador carregar.')+'</p>'+(FB.admin?'<button class="est-btn primary" data-a="loadPlano">Carregar plano</button>':'')+'</div>';
-}
 function vGeral(){
   IDX=0;var s=stats(),p=pct(s.ad,ATV.length),C=2*Math.PI*56;
   var prox=ATV.filter(function(a){return !atvDone(a[0])&&pend(a).length===0;});
@@ -642,7 +638,7 @@ function vGeral(){
   if(!dp.length)h+='<div class="est-vazio">Nenhuma decisão pendente.</div>';
   dp.slice(0,5).forEach(function(d){h+='<div class="nx">'+chkBtn("dec",d[0],"")+'<div class="t"><span class="num" style="color:var(--est-faint)">'+d[0]+'</span> '+esc(d[2])+'<small>'+esc(d[3])+'</small></div></div>';});
   if(dp.length>5)h+='<div class="note" style="margin-top:8px">+ '+(dp.length-5)+' na aba Decisões</div>';
-  return h+'</div></div>'+(FB.admin?'<p class="note" style="margin-top:18px">Administrador: <button class="est-btn sm ghost" data-a="loadPlano">Substituir plano por outro arquivo</button></p>':"");
+  return h+'</div></div>';
 }
 function seg(tab,key,list,all,counts){
   var cur=ui.f[tab][key];
@@ -722,14 +718,13 @@ function renderTabs(){
 function render(anim){
   setAnim(anim);renderTabs();var v=document.getElementById("view"),h;
   if(ui.err){v.innerHTML='<div class="est-erro">'+esc(ui.err)+'</div>';return;}
-  if(!ui.load.plano){v.innerHTML='<div class="skl est-skeleton"></div><div class="skl est-skeleton"></div><div class="skl est-skeleton"></div>';return;}
-  if(PLANO===false){v.innerHTML=emptyPlano();return;}
+  if(!ui.load.estado){v.innerHTML='<div class="skl est-skeleton"></div><div class="skl est-skeleton"></div><div class="skl est-skeleton"></div>';return;}
   switch(ui.tab){case"plano":h=vPlano();break;case"testes":h=vTestes();break;case"decisoes":h=vDec();break;case"treino":h=vTreino();break;case"equipes":h=vEquipes();break;case"docs":h=vDocs();break;default:h=vGeral();}
   v.innerHTML=h;
   if(ui.tab==="plano")rPlano();if(ui.tab==="testes")rTestes();if(ui.tab==="decisoes")rDec();if(ui.tab==="docs")rDocs();
 }
 function relist(){
-  if(ui.err||!ui.load.plano||PLANO===false){render(false);return;}
+  if(ui.err||!ui.load.estado){render(false);return;}
   renderTabs();if(ui.tab==="plano")rPlano();else if(ui.tab==="testes")rTestes();else if(ui.tab==="decisoes")rDec();else render(false);
 }
 function afterChange(){setAnim(false);relist();ui.just=null;}
@@ -745,7 +740,6 @@ document.addEventListener("click",function(ev){
   else if(a==="goEtapa"){ui.tab="plano";ui.f.plano={etapa:el.getAttribute("data-v"),st:""};ui.q.plano="";render(true);window.scrollTo({top:0});}
   else if(a==="tog"){var c=el.getAttribute("data-c"),t=TOG[c],o=c==="atv"?A(id):c==="tst"?T(id):c==="dec"?D(id):R(id);put(c,id,t[0],o[t[0]]===t[1]?t[2]:t[1]);ui.just=c+id;afterChange();}
   else if(a==="export"){exportar();}
-  else if(a==="loadPlano"){document.getElementById("planoin").click();}
   else if(a==="migrar"){migrar();}
   else if(a==="migNo"){dispensarMig();}
   else if(a==="pick"){ui.target=null;document.getElementById("docin").click();}
@@ -763,7 +757,6 @@ document.addEventListener("change",function(ev){
   else if(el.hasAttribute("data-c")){var r=el.getAttribute("data-c").split("|");put(r[0],r[1],r[2],el.checked);afterChange();}
   else if(el.hasAttribute("data-dl")){setLink(el.getAttribute("data-dl"),el.value);}
   else if(el.hasAttribute("data-ef")){ui.f.plano.etapa=el.value;render(true);}
-  else if(el.id==="planoin"){carregarPlano(el.files[0]);el.value="";}
   else if(el.id==="docin"){var tg=ui.target;ui.target=null;ingest(el.files,tg);el.value="";}
 });
 function patch(el,p){
@@ -791,18 +784,12 @@ document.addEventListener("focusout",function(){if(ui.pend)setTimeout(function()
 function setStatus(){var el=document.getElementById("saved");if(!el)return;el.textContent=ui.online?"Sincronizado · "+FB.email:"Sem conexão · tentando reconectar";}
 function onErr(e){try{console.warn(e);}catch(x){}ui.err="Sem acesso aos dados deste painel. Confirme com o administrador se você está no grupo ROLLOUT.";ui.load={plano:true,estado:true,docs:true};render(false);}
 function listen(){
-  FB.ref.child("plano").on("value",function(snap){
-    var v=snap.val(),ok=false;
-    if(v&&v.json){try{applyPlano(JSON.parse(v.json));PLANO=v;ok=true;}catch(e){}}
-    if(!ok){PLANO=false;ATV=[];TST=[];DEC=[];EQ=[];ETAPAS=[];CORP=null;}
-    var f=!ui.load.plano;ui.load.plano=true;refresh(f);
-  },onErr);
   FB.ref.child("estado").on("value",function(snap){
     var v=snap.val()||{},n={atv:v.atv||{},tst:v.tst||{},dec:v.dec||{},trn:v.trn||{},eq:v.eq||{}};
     var same=stable(n)===stable({atv:S.atv,tst:S.tst,dec:S.dec,trn:S.trn,eq:S.eq});
     var f=!ui.load.estado;
     if(same&&!f)return;
-    S.atv=n.atv;S.tst=n.tst;S.dec=n.dec;S.trn=n.trn;S.eq=n.eq;ui.load.estado=true;refresh(false);
+    S.atv=n.atv;S.tst=n.tst;S.dec=n.dec;S.trn=n.trn;S.eq=n.eq;ui.load.estado=true;refresh(f);
   },onErr);
   FB.ref.child("docs").on("value",function(snap){
     var v=snap.val()||{};
@@ -840,26 +827,13 @@ function exportar(){
     toast("Cópia exportada (marcações e lista de documentos, sem os arquivos).");
   }catch(e){toast("Falha ao exportar.",true);}
 }
-function carregarPlano(file){
-  if(!file||!FB.admin||!FB.ref)return;
-  var rd2=new FileReader();
-  rd2.onload=function(){
-    try{
-      var p=JSON.parse(rd2.result);
-      if(!p||!Array.isArray(p.atv)||!p.atv.length||!Array.isArray(p.tst)||!Array.isArray(p.dec)||!Array.isArray(p.eq))throw 0;
-      FB.ref.child("plano").set({json:JSON.stringify(p),versao:Date.now(),por:FB.email}).then(function(){toast("Plano carregado.");}).catch(fail);
-    }catch(e){toast("Arquivo de plano inválido.",true);}
-  };
-  rd2.onerror=function(){toast("Não consegui ler o arquivo.",true);};rd2.readAsText(file);
-}
 function startFb(user){
   if(FB.started)return;FB.started=true;
   FB.uid=user.uid;FB.email=user.email||"";
   try{FB.db=firebase.database();FB.ref=FB.db.ref("rolloutMampharma");}catch(e){document.getElementById("view").innerHTML='<div class="est-erro">Não consegui conectar ao banco.</div>';return;}
   checkMig();setStatus();render(true);
-  FB.db.ref("centralApps/usuarios/"+FB.uid).once("value").then(function(s){FB.admin=!!(s.val()&&s.val().admin===true);}).catch(function(){FB.admin=false;}).then(function(){
-    listen();
-  });
+  applyPlano({atv:ATV,tst:TST,dec:DEC,eq:EQ,meta:META});
+  listen();
 }
 window.__startApp=function(){
   try{
