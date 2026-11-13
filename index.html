@@ -96,6 +96,7 @@ input::placeholder{color:#69727e;opacity:1}
 .float-field.active .float-label{transform:translateY(-25px)}
 .float-field input{width:100%;background:transparent;border:none;border-bottom:2px solid var(--border);padding:9px 0;font-size:14.5px;color:var(--text);transition:border-color var(--fast) ease;border-radius:0}
 .float-field input:focus{border-bottom-color:#33353b;box-shadow:none}
+.float-field input:focus-visible{outline:none}
 .login-status{margin-top:13px;font-size:12px;min-height:1px;line-height:1.6;overflow-wrap:anywhere}
 .login-status.err{color:var(--danger)}
 .login-status.ok{color:#3f6550}
@@ -608,6 +609,8 @@ const firebaseConfig={
   measurementId:"G-6C0TLHH2VP"
 };
 firebase.initializeApp(firebaseConfig);
+/* Garante que o login fique salvo no navegador (sem isso, alguns navegadores podem esquecer a sessão e pedir login de novo a cada visita). */
+firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){});
 
 /*
 PENDÊNCIAS EXTERNAS — fontes não fornecidas, sem alteração nesta entrega:
